@@ -8,8 +8,8 @@ See the file 'doc/LICENSE' for the license information
 
 '''
 from __future__ import with_statement
-from plugins import core
-from model import api
+from faraday.client.plugins import core
+from faraday.client.model import api
 from urlparse import urlsplit
 import socket
 import sys
@@ -124,9 +124,7 @@ class Site(object):
 
     def __init__(self, item_node):
         self.node = item_node
-
-        self.url = self.get_text_from_subnode('StartURL')
-        url_data = urlsplit(self.url)
+        url_data = self.get_url(self.node)
 
         self.protocol = url_data.scheme
         self.host = url_data.hostname
@@ -163,6 +161,16 @@ class Site(object):
                 level='ERROR')
             return None
         return host
+
+    def get_url(self, node):
+        url = self.get_text_from_subnode('StartURL')
+        url_data = urlsplit(url)
+        if not url_data.scheme:
+            # Getting url from subnode 'Crawler'
+            url_aux = get_attrib_from_subnode(node, 'Crawler', 'StartUrl')
+            url_data = urlsplit(url_aux)
+
+        return url_data
 
 
 class Item(object):
