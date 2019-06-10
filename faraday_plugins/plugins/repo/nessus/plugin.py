@@ -8,8 +8,8 @@ See the file 'doc/LICENSE' for the license information
 
 '''
 from __future__ import with_statement
-from plugins import core
-from model import api
+from faraday.client.plugins import core
+from faraday.client.model import api
 import re
 import os
 import socket
@@ -123,10 +123,10 @@ class NessusPlugin(core.PluginBase):
 
             if self._isIPV4(ip):
                 i_id = self.createAndAddInterface(
-                    h_id, ip, mac, ipv4_address=ip, hostname_resolution=host)
+                    h_id, ip, mac, ipv4_address=ip, hostname_resolution=[host])
             else:
                 i_id = self.createAndAddInterface(
-                    h_id, ip, mac, ipv6_address=ip, hostname_resolution=host)
+                    h_id, ip, mac, ipv6_address=ip, hostname_resolution=[host])
 
             srv = {}
             web = False

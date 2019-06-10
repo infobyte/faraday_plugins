@@ -8,7 +8,7 @@ See the file 'doc/LICENSE' for the license information
 '''
 
 from __future__ import with_statement
-from plugins import core
+from faraday.client.plugins import core
 import re
 import os
 import sys
@@ -40,15 +40,71 @@ class DnsmapParser(object):
     """
 
     def __init__(self, output):
-
         self.items = []
-        lists = output.split("\n")
+        if "\n\n" in output:
+            self.parse_txt(output)
+        else:
+            self.parse_csv(output)
 
-        for line in lists:
-            mitem = line.split(',')
-            if len(mitem) > 1:
-                item = {'host': mitem[0], 'ip': mitem[1]}
-                self.items.append(item)
+    def parse_txt(self, output):
+        hosts = self.split_output_lines(output)
+
+        for host_data in hosts:
+            if len(host_data) == 2:
+                ip = self.clean_ip(host_data[1])
+                hostname = host_data[0]
+                self.add_host_info_to_items(ip, hostname)
+            elif len(host_data) > 2:
+                hostname = host_data.pop(0)
+                for ip_address in host_data:
+                    ip = self.clean_ip(ip_address)
+                    self.add_host_info_to_items(ip, hostname)
+
+    def parse_csv(self, output):
+        hosts = filter(None, output.splitlines())
+
+        for host in hosts:
+            host_data = host.split(",", 1)
+            if host_data[1].count(',') == 0:
+                ip = host_data[1]
+                hostname = host_data[0]
+                self.add_host_info_to_items(ip, hostname)
+            else:
+                hostname = host_data.pop(0)
+                ips = host_data[0].split(",")
+                for ip_address in ips:
+                    self.add_host_info_to_items(ip_address, hostname)
+
+    def split_output_lines(self, output):
+        splitted = output.splitlines()
+        hosts_list = []
+        aux_list = []
+        for i in range(0, len(splitted)):
+            if not splitted[i]:
+                hosts_list.append(aux_list)
+                aux_list = []
+                continue
+            else:
+                aux_list.append(splitted[i])
+
+        return hosts_list
+
+    def clean_ip(self, item):
+        ip = item.split(':', 1)
+        return ip[1].strip()
+
+    def add_host_info_to_items(self, ip_address, hostname):
+        data = {}
+        exists = False
+        for item in self.items:
+            if ip_address in item['ip']:
+                item['hosts'].append(hostname)
+                exists = True
+
+        if not exists:
+            data['ip'] = ip_address
+            data['hosts'] = [hostname]
+            self.items.append(data)
 
 
 class DnsmapPlugin(core.PluginBase):
@@ -58,8 +114,8 @@ class DnsmapPlugin(core.PluginBase):
 
         core.PluginBase.__init__(self)
         self.id = "Dnsmap"
-        self.name = "Dnsmap XML Output Plugin"
-        self.plugin_version = "0.0.2"
+        self.name = "Dnsmap Output Plugin"
+        self.plugin_version = "0.3"
         self.version = "0.30"
         self.options = None
         self._current_output = None
@@ -67,13 +123,13 @@ class DnsmapPlugin(core.PluginBase):
         self._command_regex = re.compile(
             r'^(sudo dnsmap|dnsmap|\.\/dnsmap).*?')
 
-        self.xml_arg_re = re.compile(r"^.*(-c\s*[^\s]+).*$")
+        self.xml_arg_re = re.compile(r"^.*(-r\s*[^\s]+).*$")
 
         global current_path
 
         self._output_file_path = os.path.join(
             self.data_path,
-            "%s_%s_output-%s.xml" % (
+            "%s_%s_output-%s.txt" % (
                 self.get_ws(),
                 self.id,
                 random.uniform(1, 10)
@@ -91,16 +147,11 @@ class DnsmapPlugin(core.PluginBase):
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.
         """
-
         parser = DnsmapParser(output)
-
         for item in parser.items:
-            h_id = self.createAndAddHost(item['ip'])
-            self.createAndAddInterface(
-                h_id,
-                item['ip'],
-                ipv4_address=item['ip'],
-                hostname_resolution=item['host'])
+            h_id = self.createAndAddHost(
+                        item['ip'],
+                        hostnames=item['hosts'])
 
         return True
 
@@ -112,10 +163,10 @@ class DnsmapPlugin(core.PluginBase):
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:
-            return "%s -c %s \n" % (command_string, self._output_file_path)
+            return "%s -r %s \\n" % (command_string, self._output_file_path)
         else:
             return re.sub(arg_match.group(1),
-                          r"-c %s" % self._output_file_path,
+                          r"-r %s" % self._output_file_path,
                           command_string)
 
 
