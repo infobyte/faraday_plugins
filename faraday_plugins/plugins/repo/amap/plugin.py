@@ -4,10 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginBase
-import argparse
-import shlex
 import socket
-import random
 import re
 import os
 

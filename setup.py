@@ -15,6 +15,6 @@ setup(
     description='',
     include_package_data=True,
     install_requires=[
-            'Click',
+            'Click', 'simplejson'
         ],
 )
