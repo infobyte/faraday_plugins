@@ -13,6 +13,13 @@ python setup.py install
 python -m faraday-plugins list
 ```
 
+> Test autodetect plugin from report
+
+```shell script
+python -m faraday-plugins detect /path/to/report.xml
+```
+
+
 > Test report with plugin
 
 ```shell script
