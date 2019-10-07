@@ -1,5 +1,5 @@
 import click
-from .plugins.manager import PluginsManager
+from .plugins.manager import PluginsManager, ReportAnalyzer
 
 
 @click.group()
@@ -19,6 +19,16 @@ def process(plugin_id, report_file):
     else:
         click.echo(f"Unknown Plugin: {plugin_id}")
 
+@cli.command()
+@click.argument('report_file')
+def detect(report_file):
+    plugins_manager = PluginsManager()
+    analyzer = ReportAnalyzer(plugins_manager)
+    plugin = analyzer.get_plugin(report_file)
+    if plugin:
+        click.echo(plugin)
+    else:
+        click.echo(f"Failed to detect")
 
 @cli.command()
 def list():
