@@ -7,6 +7,7 @@ import pkgutil
 from importlib import import_module
 from importlib.machinery import SourceFileLoader
 
+from . import repo
 
 logger = logging.getLogger("faraday").getChild(__name__)
 
@@ -90,6 +91,7 @@ class ReportAnalyzer:
                         logger.error("Error in plugin analysis: (%s) %s", _plugin_id, e)
         return plugin
 
+
 class PluginsManager:
 
     def __init__(self):
@@ -98,13 +100,9 @@ class PluginsManager:
         self._load_plugins()
 
     def _load_plugins(self):
-        try:
-            import faraday_plugins.plugins.repo
-        except ImportError as e:
-            logger.warning("Faraday Plugins missing, no plugins will be available")
-        else:
-            logger.info("Loading Native Plugins...")
-            for _, name, _ in filter(lambda x: x[2], pkgutil.iter_modules(faraday_plugins.plugins.repo.__path__)):
+        logger.info("Loading Native Plugins...")
+        if not self.plugins:
+            for _, name, _ in filter(lambda x: x[2], pkgutil.iter_modules(repo.__path__)):
                 try:
                     plugin_module = import_module(f"faraday_plugins.plugins.repo.{name}.plugin")
                     if hasattr(plugin_module, "createPlugin"):
@@ -121,9 +119,6 @@ class PluginsManager:
                     logger.error("Cant load plugin module: %s [%s]", name, e)
             try:
                 import faraday.server.config
-            except ImportError as e:
-                pass
-            else:
                 if os.path.isdir(faraday.server.config.faraday_server.custom_plugins_folder):
                     logger.info("Loading Custom Plugins...")
                     dir_name_regexp = re.compile(r"^[\d\w\-\_]+$")
@@ -138,7 +133,11 @@ class PluginsManager:
                                 if file_ext.lower() == '.py':
                                     if name not in self.plugin_modules:
                                         loader = SourceFileLoader(name, module_filename)
-                                        self.plugin_modules[name] = loader.load_module()
+                                        plugin_module = loader.load_module()
+                                        plugin_instance = plugin_module.createPlugin()
+                                        plugin_id = plugin_instance.id.lower()
+                                        if plugin_id not in self.plugin_modules:
+                                            self.plugin_modules[plugin_id] = plugin_module
                                     else:
                                         logger.debug("Plugin with same name already loaded [%s]", name)
                                 logger.debug('Loading plugin {0}'.format(name))
@@ -146,6 +145,8 @@ class PluginsManager:
                                 logger.debug("An error ocurred while loading plugin %s.\n%s", module_filename,
                                              traceback.format_exc())
                                 logger.warning(e)
+            except Exception as e:
+                logger.info("Can't import faraday server, no custom plugins will be loaded")
             logger.info("%s plugins loaded", len(self.plugin_modules))
 
     def get_plugin(self, plugin_id):
