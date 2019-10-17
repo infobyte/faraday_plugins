@@ -1,7 +1,9 @@
 import os
 
+import json
 import pytest
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
+from faraday_plugins.plugins.plugin import PluginBase
 
 
 def list_report_files():
@@ -16,7 +18,10 @@ def list_report_files():
 def test_autodetection_on_all_report_collection(report_filename):
     plugins_manager = PluginsManager()
     analyzer = ReportAnalyzer(plugins_manager)
-    plugin = analyzer.get_plugin(report_filename)
+    plugin: PluginBase = analyzer.get_plugin(report_filename)
     assert plugin, report_filename
-
-    #assert True == False
+    plugin.processReport(report_filename)
+    plugin_json = json.loads(plugin.get_json())
+    assert "hosts" in plugin_json
+    assert "command" in plugin_json
+    assert len(plugin_json) == 2
