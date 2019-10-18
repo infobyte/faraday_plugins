@@ -5,12 +5,24 @@ import pytest
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 from faraday_plugins.plugins.plugin import PluginBase
 
+BLACK_LIST = [
+    'LICENSE',
+    'README.md',
+    '.gitignore',
+    '.gitkeep',
+]
 
 def list_report_files():
     report_filenames = os.walk('./report-collection')
 
     for root, directory, filenames in report_filenames:
+        if '.git' in directory:
+            continue
         for filename in filenames:
+            if filename in BLACK_LIST:
+                continue
+            if '.git' in root:
+                continue
             yield os.path.join(root, filename)
 
 
