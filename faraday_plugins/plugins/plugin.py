@@ -8,9 +8,7 @@ import os
 import re
 import uuid
 import logging
-import traceback
-import deprecation
-import json
+import simplejson as json
 from datetime import datetime
 
 logger = logging.getLogger("faraday").getChild(__name__)
