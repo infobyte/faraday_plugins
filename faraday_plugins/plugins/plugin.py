@@ -8,7 +8,6 @@ import os
 import re
 import uuid
 import logging
-import deprecation
 import simplejson as json
 from datetime import datetime
 
