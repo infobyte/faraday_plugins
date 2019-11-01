@@ -116,7 +116,7 @@ class WPScanPlugin(PluginBase):
                             title = vuln['title']  # title
                             risk = self.risks[vuln['vuln_type']]  # vuln type (xss,rce,lfi,etc) - risk
                             location = wp_url+'wp-content/'+name+'/'+p+'/'
-                            if vuln['references'].has_key('url') == True:  # if references
+                            if 'url' in vuln['references']  # if references
                                 refs = vuln['references']['url'] #references[]
                             else:
                                 refs = []  # references null
@@ -136,7 +136,7 @@ class WPScanPlugin(PluginBase):
             for vuln in j[version]['vulnerabilities']: # iter vulnerabilities
                 title = vuln['title']  # title
                 risk = self.risks[vuln['vuln_type']]  # vuln type (xss,rce,lfi,etc) - risk
-                if vuln['references'].has_key('url') == True:  # if references
+                if 'url' in vuln['references']:  # if references
                     refs = vuln['references']['url']  # references[]
                 else:
                     refs = []  # references null
