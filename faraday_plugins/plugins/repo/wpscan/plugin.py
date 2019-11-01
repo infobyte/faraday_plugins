@@ -4,11 +4,11 @@ Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
 import socket
 import json
-import os
+from faraday_plugins.plugins.plugin import PluginBase
+
 
 __author__ = "Joaquin L. Pereyra | Federico Fernandez"
 __copyright__ = "Copyright (c) 2016, Infobyte LLC"
@@ -116,7 +116,7 @@ class WPScanPlugin(PluginBase):
                             title = vuln['title']  # title
                             risk = self.risks[vuln['vuln_type']]  # vuln type (xss,rce,lfi,etc) - risk
                             location = wp_url+'wp-content/'+name+'/'+p+'/'
-                            if 'url' in vuln['references']  # if references
+                            if 'url' in vuln['references']:  # if references
                                 refs = vuln['references']['url'] #references[]
                             else:
                                 refs = []  # references null
