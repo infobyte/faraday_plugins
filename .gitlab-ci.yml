@@ -1,0 +1,34 @@
+stages:
+  - pre_testing
+  - testing
+
+before_script:
+  - apt-get update -qy
+  - pip install pip -U
+
+flake8:
+    image: python:3
+    stage: pre_testing
+    before_script:
+      - pip install flake8
+      # Help flake8 to find the Python files without .py extension.
+      - find * -type f -name '*.py' > files.txt
+      - find * -type f -print0 | xargs -0 file | grep 'Python script' | cut -d':' -f1 >> files.txt
+      - sort -u files.txt | tee files.processed
+    script:
+        - python -m flake8 --statistics --count $(cat files.processed)
+    after_script:
+        - wc -l files.processed
+
+tests:
+    image: python:3
+    stage: testing
+    coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
+    before_script:
+      - pip3 install virtualenv pytest pytest-xdist pytest-cov
+      - virtualenv -p python3 faraday_venv
+      -  git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
+    script:
+      - source faraday_venv/bin/activate
+      - python3 setup.py install
+      - pytest tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings
