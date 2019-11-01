@@ -7,12 +7,13 @@ See the file 'doc/LICENSE' for the license information
 import os
 import logging
 import faraday_plugins
+from urllib.parse import urlsplit
+
 
 SERVICE_MAPPER = None
 
 logger = logging.getLogger(__name__)
 
-from urllib.parse import urlsplit
 
 def get_vulnweb_url_fields(url):
     """Given a URL, return kwargs to pass to createAndAddVulnWebToService."""

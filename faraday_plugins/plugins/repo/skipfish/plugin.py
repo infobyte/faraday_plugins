@@ -4,12 +4,12 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
 import json
 import socket
 import random
+from faraday_plugins.plugins.plugin import PluginBase
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -41,11 +41,11 @@ class SkipfishParser:
 
         tmp = open(skipfish_filepath + "/samples.js", "r").read()
         data = self.extract_data(
-                    tmp,
-                    "var issue_samples =", "];",
-                    lambda x: x.replace("'", '"'),
-                    False,
-                    False)
+            tmp,
+            "var issue_samples =", "];",
+            lambda x: x.replace("'", '"'),
+            False,
+            False)
         # Escape characters not allowed in JSON, repr fix this with double Escape
         # Also remove \n character and space for have a valid JSON.
         issues = json.loads(repr(data[1]).replace("\\n"," ").replace("'","") + "]")

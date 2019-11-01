@@ -3,11 +3,11 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-import sys
 import logging
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+
 
 try:
     import xml.etree.cElementTree as ET
@@ -73,9 +73,9 @@ class QualysguardXmlParser():
             self.items = []
             return
 
-        if type_report is 'ASSET_DATA_REPORT':
+        if type_report == 'ASSET_DATA_REPORT':
             self.items = [data for data in self.get_items_asset_report(tree)]
-        elif type_report is 'SCAN':
+        elif type_report == 'SCAN':
             self.items = [data for data in self.get_items_scan_report(tree)]
 
     def parse_xml(self, xml_output):

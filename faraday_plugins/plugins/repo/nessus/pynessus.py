@@ -20,9 +20,7 @@
 #
 # 2010-08-12:	0.1.0: Initial version.
 # 2011-03-12:	0.2.1: Added a bunch of methods and robustified everything.
-from __future__ import absolute_import
-from __future__ import print_function
-
+import ctypes
 import sys
 try:
     from urllib2 import ProxyHandler, build_opener, urlopen, install_opener
@@ -166,7 +164,7 @@ class NessusServer:
     def list_plugins(self):
         """List plugins"""
         data = make_args(token=self.token)
-        resp = _call('plugins/list', data)
+        resp = self._call('plugins/list', data)
 
     def list_policies(self):
         """List policies"""

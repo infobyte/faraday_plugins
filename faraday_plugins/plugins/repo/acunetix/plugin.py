@@ -300,4 +300,3 @@ if __name__ == "__main__":
             print(f"Report not found: {report_file}")
     else:
         print(f"USAGE {sys.argv[0]} REPORT_FILE")
-

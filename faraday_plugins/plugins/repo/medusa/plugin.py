@@ -3,11 +3,12 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
 import random
 import socket
+from faraday_plugins.plugins.plugin import PluginBase
+
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -29,10 +30,14 @@ class MedusaParser:
     """
 
     def __init__(self, xml_output):
-        self.srv = {'ftp': '21', 'http': '80', 'imap': '143', 'mssql': '1433', 'mysql': '3306', 'ncp': '524', 'nntp': '119',
-                    'pcanywhere': '5631', 'pop3': '110', 'postgres': '5432', 'rexec': '512', 'rlogin': '513', 'rsh': '514',
-                    'smbnt': 'smbnt', 'smtp': '25', 'smtp-vrfy': 'smtp-vrfy', 'snmp': '161', 'ssh': '22', 'svn': '3690',
-                    'telnet': '23', 'vmauthd': 'vmauthd', 'vnc': '5900', 'web-form': 'web-form', 'wrapper': 'wrapper'}
+        self.srv = {
+            'ftp': '21',  'http': '80', 'imap': '143', 'mssql': '1433', 'mysql': '3306',
+            'ncp': '524', 'nntp': '119', 'pcanywhere': '5631', 'pop3': '110', 'postgres': '5432',
+            'rexec': '512', 'rlogin': '513', 'rsh': '514', 'smbnt': 'smbnt', 'smtp': '25',
+            'smtp-vrfy': 'smtp-vrfy', 'snmp': '161', 'ssh': '22', 'svn': '3690',
+            'telnet': '23', 'vmauthd': 'vmauthd', 'vnc': '5900', 'web-form': 'web-form',
+            'wrapper': 'wrapper'
+        }
 
         lines = xml_output.splitlines()
         self.items = []
@@ -48,10 +53,11 @@ class MedusaParser:
             if reg:
         
                 item = {
-                'service': reg.group(1),
-                'host': reg.group(2),
-                'user': reg.group(3),
-                'pass': reg.group(4)}
+                    'service': reg.group(1),
+                    'host': reg.group(2),
+                    'user': reg.group(3),
+                    'pass': reg.group(4)
+                }
 
                 print("ITEM" + str(item))
                 item['ip'] = self.getAddress(item['host'])
@@ -88,8 +94,6 @@ class MedusaPlugin(PluginBase):
 
         self.host = None
         self.port = ""
-
-
 
     def parseOutputString(self, output, debug=False):
         """
@@ -134,10 +138,10 @@ class MedusaPlugin(PluginBase):
                 item['pass'])
 
             self.createAndAddVulnToService(h_id,
-             s_id,
-             "Weak Credentials",
-             "[medusa found the following credentials]\nuser:%s\npass:%s" % ( item['user'], item['pass']),
-             severity="high")
+                s_id,
+                "Weak Credentials",
+                "[medusa found the following credentials]\nuser:%s\npass:%s" % (item['user'], item['pass']),
+                severity="high")
 
         del parser
 
@@ -177,6 +181,7 @@ class MedusaPlugin(PluginBase):
 def createPlugin():
     return MedusaPlugin()
 
+
 if __name__ == "__main__":
     import sys
     import os
@@ -190,5 +195,3 @@ if __name__ == "__main__":
             print(f"Report not found: {report_file}")
     else:
         print(f"USAGE {sys.argv[0]} REPORT_FILE")
-
-# I'm Py3

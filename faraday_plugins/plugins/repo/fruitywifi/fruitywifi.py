@@ -15,17 +15,16 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import absolute_import
-from __future__ import print_function
 
-import sys, getopt
+import sys
+import getopt
 import json
 import requests
 
 requests.packages.urllib3.disable_warnings()  # DISABLE SSL CHECK WARNINGS
 
 gVersion = "1.0"
-server = "http://127.0.0.1:8000";
+server = "http://127.0.0.1:8000"
 token = "e5dab9a69988dd65e578041416773149ea57a054"
 
 
@@ -70,10 +69,11 @@ def parseOptions(argv):
         usage()
         sys.exit(2)
 
+
 (execute, token, server) = parseOptions(sys.argv[1:])
 
 
-class webclient:
+class Webclient:
 
     def __init__(self, server, token):
 
@@ -116,7 +116,7 @@ class webclient:
         return response
 
 try:
-    w = webclient(server, token)
+    w = Webclient(server, token)
     w.login()
     w.loginCheck()
 except Exception as e:

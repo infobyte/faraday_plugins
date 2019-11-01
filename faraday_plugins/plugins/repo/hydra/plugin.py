@@ -88,7 +88,7 @@ class HydraPlugin(PluginBase):
             service = item['plugin']
             port = item['port']
 
-            if item['ip'] not in hosts == False:
+            if item['ip'] not in hosts:
                 hosts[item['ip']] = []
 
             hosts[item['ip']].append([item['login'], item['password']])

@@ -171,7 +171,7 @@ class Item:
         self.node = item_node
         self.host = self.get_text_from_subnode('host')
         self.subnet = self.get_text_from_subnode('subnet')
-        if self.subnet is '':
+        if self.subnet == '':
             self.subnet = self.host
         self.port = "None"
         self.severity = self.severity_mapper()

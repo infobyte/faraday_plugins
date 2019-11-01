@@ -6,7 +6,6 @@ See the file 'doc/LICENSE' for the license information
 import re
 import os
 import socket
-import sys
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 
@@ -338,9 +337,9 @@ class ZapPlugin(PluginXMLFormat):
 def createPlugin():
     return ZapPlugin()
 
+
 if __name__ == "__main__":
     import sys
-    import os
     if len(sys.argv) == 2:
         report_file = sys.argv[1]
         if os.path.isfile(report_file):
@@ -351,5 +350,3 @@ if __name__ == "__main__":
             print(f"Report not found: {report_file}")
     else:
         print(f"USAGE {sys.argv[0]} REPORT_FILE")
-
-# I'm Py3
