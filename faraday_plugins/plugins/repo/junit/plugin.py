@@ -4,9 +4,10 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import os
 from lxml import etree
+from faraday_plugins.plugins.plugin import PluginBase
+
 
 try:
     import xml.etree.cElementTree as ET
@@ -74,7 +75,6 @@ class JunitXmlParser:
         @return xml_tree An xml tree instance. None if error.
         """
         try:
-#             return ET.fromstring(xml_output)
             tree = etree.fromstring(xml_output)
         except SyntaxError as err:
             print("SyntaxError: %s. %s" % (err, xml_output))
@@ -142,8 +142,10 @@ class JunitPlugin(PluginBase):
             self.createAndAddVulnToHost(h_id, name=item.name, desc=item.message, ref=[], severity="High")
         del parser
 
+
 def createPlugin():
     return JunitPlugin()
+
 
 if __name__ == "__main__":
     import sys
@@ -158,5 +160,3 @@ if __name__ == "__main__":
             print(f"Report not found: {report_file}")
     else:
         print(f"USAGE {sys.argv[0]} REPORT_FILE")
-
-# I'm Py3
