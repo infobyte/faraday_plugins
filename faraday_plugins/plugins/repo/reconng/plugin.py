@@ -177,7 +177,7 @@ class ReconngPlugin(PluginXMLFormat):
     def resolve_host(self, host):
         try:
             return socket.gethostbyname(host)
-        except:
+        except Exception:
             pass
         return host
 

@@ -186,7 +186,7 @@ class SkipfishPlugin(PluginBase):
 
                 try:
                     res = open("%s/request.dat" % sample["dir"], "r").read()
-                except:
+                except Exception:
                     pass
 
                 d = hostc[sample["url"]]
@@ -202,7 +202,7 @@ class SkipfishPlugin(PluginBase):
     def resolve(self, host):
         try:
             return socket.gethostbyname(host)
-        except:
+        except Exception:
             pass
         return host
 
