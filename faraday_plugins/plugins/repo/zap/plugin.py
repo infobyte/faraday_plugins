@@ -241,7 +241,6 @@ class Item:
         }
         self.items.append(item)
 
-
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
         Finds a subnode in the host node and the retrieves a value from it.
@@ -272,8 +271,6 @@ class ZapPlugin(PluginXMLFormat):
         self._current_output = None
         self.target = None
         self._command_regex = re.compile(r'^(zap|sudo zap|\.\/zap).*?')
-
-
 
     def parseOutputString(self, output, debug=False):
         """
@@ -311,7 +308,7 @@ class ZapPlugin(PluginXMLFormat):
             )
 
             for item in site.items:
-                v_id = self.createAndAddVulnWebToService(
+                self.createAndAddVulnWebToService(
                     h_id,
                     s_id,
                     item.name,

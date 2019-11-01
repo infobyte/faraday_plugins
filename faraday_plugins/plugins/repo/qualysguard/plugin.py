@@ -365,7 +365,6 @@ class QualysguardPlugin(PluginXMLFormat):
             r'^(sudo qualysguard|\.\/qualysguard).*?')
         self.open_options = {"mode": "r", "encoding": "utf-8"}
 
-
     def parseOutputString(self, output, debug=False):
 
         parser = QualysguardXmlParser(output)
