@@ -4,6 +4,13 @@ from re import search
 with open('faraday_plugins/__init__.py', 'rt', encoding='utf8') as f:
     version = search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
+
+install_requires = [
+    'Click',
+    'simplejson'
+]
+
+
 setup(
     name='faraday-plugins',
     version=version,
@@ -14,7 +21,5 @@ setup(
     author_email='',
     description='',
     include_package_data=True,
-    install_requires=[
-            'Click', 'simplejson'
-        ],
+    install_requires=install_requires,
 )
