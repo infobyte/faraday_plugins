@@ -10,19 +10,19 @@ python setup.py install
 > List Plugins
 
 ```shell script
-python -m faraday-plugins list
+python -m faraday_plugins list
 ```
 
 > Test autodetect plugin from report
 
 ```shell script
-python -m faraday-plugins detect /path/to/report.xml
+python -m faraday_plugins detect /path/to/report.xml
 ```
 
 
 > Test report with plugin
 
 ```shell script
-python -m faraday-plugins process appscan /path/to/report.xml
+python -m faraday_plugins process appscan /path/to/report.xml
 ```
 
