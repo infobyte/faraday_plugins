@@ -3,9 +3,10 @@ Faraday Penetration Test IDE
 Copyright (C) 2018 Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
+import re
+
 from faraday_plugins.plugins.plugin import PluginBase
 from faraday_plugins.plugins.plugins_utils import get_vulnweb_url_fields
-import re
 
 try:
     import xml.etree.ElementTree as ET
@@ -24,6 +25,7 @@ class WebInspectParser():
     def __init__(self, output):
         self.xml = ET.fromstring(output)
         self.issues = self.xml.findall("Issues/Issue")
+
 
     def parse_severity(self, severity):
 
@@ -81,7 +83,7 @@ class WebInspectParser():
 
                 value = self.return_text(tag,issue)
 
-                if value != None:
+                if value is not None:
 
                     faraday_obj_name = obj_property[0]
                     faraday_field = obj_property[1]
@@ -162,8 +164,10 @@ class WebInspectPlugin(PluginBase):
     def processCommandString(self, username, current_path, command_string):
         return None
 
+
 def createPlugin():
     return WebInspectPlugin()
+
 
 if __name__ == "__main__":
     import sys
@@ -178,4 +182,3 @@ if __name__ == "__main__":
             print(f"Report not found: {report_file}")
     else:
         print(f"USAGE {sys.argv[0]} REPORT_FILE")
-# I'm Py3

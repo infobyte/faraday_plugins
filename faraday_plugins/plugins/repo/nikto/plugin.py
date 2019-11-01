@@ -3,13 +3,13 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins import plugins_utils
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-import sys
 import random
 from html.parser import HTMLParser
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins import plugins_utils
+
 
 try:
     import xml.etree.cElementTree as ET
@@ -318,8 +318,8 @@ class NiktoPlugin(PluginXMLFormat):
         for host in parser.hosts:
 
             h_id = self.createAndAddHost(
-                    host.targetip,
-                    hostnames=[host.targethostname]
+                host.targetip,
+                hostnames=[host.targethostname]
             )
 
             s_id = self.createAndAddServiceToHost(

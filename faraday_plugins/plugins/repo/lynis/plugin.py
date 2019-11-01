@@ -156,7 +156,7 @@ class LynisLogDataExtracter():
     def local_service(self, service_data, local_services):
         ip = self.get_ip_and_port(service_data)[0][0]
         local = True
-        if not ip in local_services and not ip.startswith(':'):
+        if ip not in local_services and not ip.startswith(':'):
             local = False
 
         return local

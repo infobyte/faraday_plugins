@@ -4,10 +4,10 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-import sys
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+
 
 try:
     import xml.etree.cElementTree as ET
@@ -95,7 +95,7 @@ class Item:
         self.vulns = self.getResults(item_node)
         self.ports = {}
         for v in self.vulns:
-            if not v.port in self.ports:
+            if v.port not in self.ports:
                 self.ports[v.port] = []
             self.ports[v.port].append(v)
 

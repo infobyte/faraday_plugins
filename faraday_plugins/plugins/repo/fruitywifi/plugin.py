@@ -6,7 +6,7 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginBase
 import re
-import os, json
+import json
 import traceback
 
 __author__ = "xtr4nge"
@@ -69,13 +69,13 @@ class FruityWiFiPlugin(PluginBase):
             self.createAndAddInterface(
                 h_id, ip_address, ipv6_address=ip_address, hostname_resolution=[hostname])
 
-        v_id = self.createAndAddVulnToHost(
-                h_id,
-                vuln_name,
-                desc=desc,
-                ref=["http://www.fruitywifi.com/"],
-                severity=severity
-                )
+        self.createAndAddVulnToHost(
+            h_id,
+            vuln_name,
+            desc=desc,
+            ref=["http://www.fruitywifi.com/"],
+            severity=severity
+        )
     
     def parseOutputString(self, output, debug=False):
         

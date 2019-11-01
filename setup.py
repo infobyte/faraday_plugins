@@ -7,7 +7,8 @@ with open('faraday_plugins/__init__.py', 'rt', encoding='utf8') as f:
 
 install_requires = [
     'Click',
-    'simplejson'
+    'simplejson',
+    'requests',
 ]
 
 

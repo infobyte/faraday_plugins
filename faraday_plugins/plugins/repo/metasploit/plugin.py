@@ -169,7 +169,7 @@ class Host:
         for n in self.node.findall('notes/note'):
             note = HostNote(n)
             key = self.id + "_" + note.service_id
-            if not key in self.notesByService:
+            if key not in self.notesByService:
                 self.notesByService[key] = []
 
             self.notesByService[key].append(note)
@@ -177,7 +177,7 @@ class Host:
         for c in self.node.findall('creds/cred'):
             cred = HostCred(c)
             key = cred.port
-            if not key in self.credsByService:
+            if key not in self.credsByService:
                 self.credsByService[key] = []
 
             self.credsByService[key].append(cred)
@@ -306,7 +306,7 @@ class HostVuln:
         self.desc = self.get_text_from_subnode('info')
         self.refs = [r.text for r in self.node.findall('refs/ref')]
         self.exploited_date = self.get_text_from_subnode('exploited-at')
-        self.exploited = (self.exploited_date != None)
+        self.exploited = (self.exploited_date is not None)
         self.isWeb = False
 
     def get_text_from_subnode(self, subnode_xpath_expr):

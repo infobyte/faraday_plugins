@@ -36,7 +36,7 @@ class WPScanPlugin(PluginBase):
         self.plugin_version = "0.2"
         self.version = "3.4.5"
         self._command_regex = re.compile(
-                r"^((sudo )?(ruby )?(\.\/)?(wpscan)(.rb)?)")
+            r"^((sudo )?(ruby )?(\.\/)?(wpscan)(.rb)?)")
         self.wpPath = self.get_wpscan_filepath()
         self.addSetting("WPscan path", str, self.wpPath)
         self.themes = {}
@@ -160,13 +160,14 @@ class WPScanPlugin(PluginBase):
             port = self.getPort(wp_url.group(1), service)
             host_ip = socket.gethostbyname_ex(base_url)[2][0]
             host_id = self.createAndAddHost(
-                                            host_ip,
-                                            hostnames=[base_url])
+                host_ip,
+                hostnames=[base_url])
 
-            service_id = self.createAndAddServiceToHost(host_id,
-                                                        service,
-                                                        "tcp",
-                                                        ports=[port])
+            service_id = self.createAndAddServiceToHost(
+                host_id,
+                service,
+                "tcp",
+                ports=[port])
 
             potential_vulns = re.findall(r"(\[\!\].*)", output)
             for potential_vuln in potential_vulns:
@@ -174,10 +175,13 @@ class WPScanPlugin(PluginBase):
                 if vuln_name is not None:
                     vuln = potential_vuln  # they grow up so fast
                     path = self.__get_path_from_vuln(vuln)
-                    self.createAndAddVulnWebToService(host_id, service_id,
-                                                    name=vuln_name,
-                                                    website=base_url,
-                                                    path=path, severity=severity)
+                    self.createAndAddVulnWebToService(
+                        host_id,
+                        service_id,
+                        name=vuln_name,
+                        website=base_url,
+                        path=path,
+                        severity=severity)
 
             if len(self.plugins) > 0:
                 self.addThemesOrPluginsVulns(

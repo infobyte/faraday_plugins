@@ -4,8 +4,8 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
+from faraday_plugins.plugins.plugin import PluginBase
 
 __author__ = "Ezequiel Tavella - @EzequielTBH"
 __copyright__ = "Copyright 2015, @EzequielTBH"
@@ -30,7 +30,7 @@ class traceroutePlugin(PluginBase):
         print("[*]Parsing Output...")
 
         # Check no results.
-        if output.startswith("traceroute to") == False:
+        if not output.startswith("traceroute to"):
             return
 
         # Check if last parameter is host or ( packetlen or data size).
@@ -60,6 +60,7 @@ class traceroutePlugin(PluginBase):
 
 def createPlugin():
     return traceroutePlugin()
+
 
 if __name__ == "__main__":
     import sys

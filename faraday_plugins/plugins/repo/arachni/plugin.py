@@ -93,7 +93,7 @@ class Issue():
         # Get value of tag xml
         description = self.node.find(tag)
 
-        if description != None and description.text != None:
+        if description is not None and description.text is not None:
             return description.text.encode('ascii', 'ignore')
         else:
             return 'None'
@@ -108,7 +108,7 @@ class Issue():
 
         result = main_entity.find(child_tag)
 
-        if result != None and result.text != None:
+        if result is not None and result.text is not None:
             return result.text.encode('ascii', 'ignore')
         else:
             return 'None'
@@ -238,7 +238,7 @@ class System():
         # Return value of tag
         description = self.node.find(tag)
 
-        if description != None and description.text != None:
+        if description and description.text:
             return description.text
         else:
             return 'None'
@@ -479,10 +479,10 @@ class ArachniPlugin(PluginXMLFormat):
         cmd_prefix_match = re.match(r"(^.*?)arachni ", command_string)
         cmd_prefix = cmd_prefix_match.group(1)
         reporter_cmd = "%s%s --reporter=\"xml:outfile=%s\" \"%s\"" % (
-                                            cmd_prefix,
-                                            "arachni_reporter",
-                                            self._output_file_path,
-                                            afr_output_file_path)
+            cmd_prefix,
+            "arachni_reporter",
+            self._output_file_path,
+            afr_output_file_path)
         return "/usr/bin/env -- bash -c '%s  2>&1 && if [ -e \"%s\" ];then %s 2>&1;fi'" % (main_cmd, afr_output_file_path, reporter_cmd)
 
 
