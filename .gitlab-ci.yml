@@ -29,9 +29,9 @@ tests:
       - virtualenv -p python3 faraday_venv
       - source faraday_venv/bin/activate
       - pip3 install pytest pytest-xdist pytest-cov
-      - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
+      - mkdir run_from
+      - cd run_from && git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
     script:
       - source faraday_venv/bin/activate
       - python3 setup.py install
-      - mkdir run_from
       - cd run_from && pytest ../tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings
