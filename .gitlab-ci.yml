@@ -25,9 +25,10 @@ tests:
     stage: testing
     coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
     before_script:
+      - pip3 install virtualenv
       - virtualenv -p python3 faraday_venv
       - source faraday_venv/bin/activate
-      - pip3 install virtualenv pytest pytest-xdist pytest-cov
+      - pip3 install pytest pytest-xdist pytest-cov
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
     script:
       - source faraday_venv/bin/activate
