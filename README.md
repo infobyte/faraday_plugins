@@ -1,8 +1,7 @@
 ## Install
 
 ```shell script
-cd faraday-plugins
-python setup.py install
+pip install faraday-plugins
 ```
 
 ## Commands
