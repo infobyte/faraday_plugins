@@ -1,6 +1,7 @@
 stages:
   - pre_testing
   - testing
+  - publish
 
 before_script:
   - apt-get update -qy
@@ -36,3 +37,18 @@ tests:
       - source faraday_venv/bin/activate
       - python3 setup.py install
       - cd run_from && pytest ../tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings
+
+publish_pipy:
+    image: python:3
+    stage: publish
+    before_script:
+      - pip3 install virtualenv
+      - virtualenv -p python3 faraday_venv twine
+      - source faraday_venv/bin/activate
+    script:
+      - python setup.py sdist bdist_wheel
+      - twine upload dist/* -u $TWINE_USERNAME -p $TWINE_PASSWORD
+
+    only:
+      variables:
+        - $CI_COMMIT_TAG =~ /^v[0-9.]+$/
