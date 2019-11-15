@@ -13,7 +13,7 @@ flake8:
     before_script:
       - pip install flake8
       # Help flake8 to find the Python files without .py extension.
-      - find * -type f -name '*.py' > files.txt
+      - find * -type f -name 'faraday_plugins/*.py' > files.txt
       - find * -type f -print0 | xargs -0 file | grep 'Python script' | cut -d':' -f1 >> files.txt
       - sort -u files.txt | tee files.processed
     script:
