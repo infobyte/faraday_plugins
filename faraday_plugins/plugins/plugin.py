@@ -307,10 +307,10 @@ class PluginBase:
             query = ""
         if ref is None:
             ref = []
-        vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref, "external_id": external_id,
-                         "type": "VulnerabilityWeb", "resolution": resolution, "data": data, "website": website,
-                         "path": path, "request": request, "response": response, "method": method, "pname": pname,
-                         "params": params, "query": query, "category": category}
+        vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
+                         "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
+                         "data": data, "website": website, "path": path, "request": request, "response": response,
+                         "method": method, "pname": pname, "params": params, "query": query, "category": category}
         service = self.get_from_cache(service_id)
         service["vulnerabilities"].append(vulnerability)
         vulnerability_id = self.save_cache(vulnerability)
@@ -329,8 +329,7 @@ class PluginBase:
     def createAndAddNoteToNote(self, host_id, service_id, note_id, name, text):
         return None
 
-    def createAndAddCredToService(self, host_id, service_id, username,
-                                  password):
+    def createAndAddCredToService(self, host_id, service_id, username, password):
         credential = {"name": "credential", "username": username, "password": password}
         service = self.get_from_cache(service_id)
         service["credentials"].append(credential)
@@ -355,6 +354,7 @@ class PluginBase:
         self.logger.debug("Generate Json")
         return json.dumps(self.get_data())
 
+# TODO Borrar
 class PluginTerminalOutput(PluginBase):
     def __init__(self):
         super().__init__()
@@ -366,6 +366,7 @@ class PluginTerminalOutput(PluginBase):
             self.logger.error(e)
 
 
+# TODO Borrar
 class PluginCustomOutput(PluginBase):
     def __init__(self):
         super().__init__()
@@ -406,7 +407,7 @@ class PluginXMLFormat(PluginByExtension):
                 match = (main_tag == self.identifier_tag)
             elif type(self.identifier_tag) == list:
                 match = (main_tag in self.identifier_tag)
-        self.logger.debug("Tag Match: [%s =/in %s] -> %s", main_tag, self.identifier_tag, match)
+            self.logger.debug("Tag Match: [%s =/in %s] -> %s", main_tag, self.identifier_tag, match)
         return match
 
 
@@ -417,10 +418,13 @@ class PluginJsonFormat(PluginByExtension):
         self.json_keys = set()
         self.extension = ".json"
 
-    def report_belongs_to(self, **kwargs):
+    def report_belongs_to(self, file_json_keys=None, **kwargs):
         match = False
         if super().report_belongs_to(**kwargs):
-            pass
+            if file_json_keys is None:
+                file_json_keys = {}
+            match = self.json_keys.issubset(file_json_keys)
+            self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", file_json_keys, self.json_keys, match)
         return match
 
 
