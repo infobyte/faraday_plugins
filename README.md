@@ -27,6 +27,8 @@ python -m faraday_plugins process appscan /path/to/report.xml
 
 > Plugin Logger
 
+To use it you must call ```self.logger.debug("some message")```
+
 ```shell script
 export PLUGIN_DEBUG=1
 python -m faraday_plugins process appscan /path/to/report.xml
