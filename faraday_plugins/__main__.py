@@ -1,5 +1,17 @@
+import logging
 import os
+import sys
 import click
+
+root_logger = logging.getLogger("faraday")
+if not root_logger.handlers:
+    PLUGIN_DEBUG = os.environ.get("PLUGIN_DEBUG", "0")
+    if PLUGIN_DEBUG == "1":
+        out_hdlr = logging.StreamHandler(sys.stdout)
+        out_hdlr.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s [%(filename)s:%(lineno)s - %(funcName)s()]  %(message)s'))
+        out_hdlr.setLevel(logging.DEBUG)
+        root_logger.addHandler(out_hdlr)
+        root_logger.setLevel(logging.DEBUG)
 from .plugins.manager import PluginsManager, ReportAnalyzer
 
 

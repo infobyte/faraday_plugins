@@ -414,7 +414,7 @@ class ArachniPlugin(PluginXMLFormat):
             self.protocol,
             'tcp',
             ports=[self.port],
-            status='Open',
+            status='open',
             version='',
             description='')
 

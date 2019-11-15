@@ -3,6 +3,7 @@ import traceback
 import re
 import os
 import sys
+import json
 import pkgutil
 from importlib import import_module
 from importlib.machinery import SourceFileLoader
@@ -64,6 +65,7 @@ class ReportAnalyzer:
         file_name_base, file_extension = os.path.splitext(file_name)
         file_extension = file_extension.lower()
         main_tag = None
+        file_json_keys = {}
         logger.debug("Analyze report File")
         # Try to parse as xml
         try:
@@ -78,12 +80,20 @@ class ReportAnalyzer:
                 logger.debug("Found XML content on file: %s - Main tag: %s", report_path, main_tag)
             except Exception as e:
                 logger.debug("Non XML content [%s] - %s", report_path, e)
+                try:
+                    report_file.seek(0)
+                    json_data = json.load(report_file)
+                    file_json_keys = set(json_data.keys())
+                    logger.debug("Found JSON content on file: %s - Keys: %s", report_path, file_json_keys)
+                except Exception as e:
+                    logger.debug("Non JSON content [%s] - %s", report_path, e)
             finally:
                 report_file.close()
                 for _plugin_id, _plugin in self.plugin_manager.get_plugins():
-                    logger.debug("Try: %s", _plugin_id)
+                    logger.debug("Try plugin: %s", _plugin_id)
                     try:
-                        if _plugin.report_belongs_to(main_tag=main_tag, report_path=report_path, extension=file_extension):
+                        if _plugin.report_belongs_to(main_tag=main_tag, report_path=report_path,
+                                                     extension=file_extension, file_json_keys=file_json_keys):
                             plugin = _plugin
                             logger.debug("Plugin by File Found: %s", plugin.id)
                             break
