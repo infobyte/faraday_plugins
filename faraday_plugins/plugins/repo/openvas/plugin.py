@@ -193,6 +193,7 @@ class Item:
             info = port.split("/")
             self.protocol = info[1]
             self.service = info[0]  # this value is general
+        self.data = self.get_text_from_subnode('description')
         self.nvt = self.node.findall('nvt')[0]
         self.node = self.nvt
         self.id = self.node.get('oid')
@@ -209,7 +210,8 @@ class Item:
             self.description = tags_data['description']
             self.resolution = tags_data['solution']
             self.cvss_vector = tags_data['cvss_base_vector']
-
+            if tags_data['impact']:
+                self.data += '\n\nImpact: {}'.format(tags_data['impact'])
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
@@ -293,7 +295,8 @@ class Item:
         data = {
             'solution': '',
             'cvss_base_vector': '',
-            'description': ''
+            'description': '',
+            'impact': ''
         }
         for tag in tags:
             splited_tag = tag.split('=', 1)
@@ -391,7 +394,8 @@ class OpenvasPlugin(PluginXMLFormat):
                             severity=item.severity,
                             resolution=item.resolution,
                             ref=ref,
-                            external_id=item.id)
+                            external_id=item.id,
+                            data=item.data)
                 else:
                     if item.service:
                         web = re.search(
@@ -421,7 +425,8 @@ class OpenvasPlugin(PluginXMLFormat):
                                 severity=item.severity,
                                 ref=ref,
                                 resolution=item.resolution,
-                                external_id=item.id)
+                                external_id=item.id,
+                                data=item.data)
                     elif item.severity not in self.ignored_severities:
                         self.createAndAddVulnToService(
                             h_id,
@@ -431,7 +436,8 @@ class OpenvasPlugin(PluginXMLFormat):
                             severity=item.severity,
                             ref=ref,
                             resolution=item.resolution,
-                            external_id=item.id)
+                            external_id=item.id,
+                            data=item.data)
         del parser
 
     def _isIPV4(self, ip):
