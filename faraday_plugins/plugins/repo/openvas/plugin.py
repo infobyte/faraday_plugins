@@ -178,10 +178,12 @@ class Item:
         self.service = "Unknown"
         self.protocol = ""
         port = self.get_text_from_subnode('port')
-
         if "general" not in port:
             # service vuln
-            info = port.split("/")
+            if '(' in port:
+                info = self.clean_port_string(port)
+            else:
+                info = port.split("/")
             self.port = info[0]
             self.protocol = info[1]
             host_details = hosts[self.host].get('details')
@@ -253,6 +255,15 @@ class Item:
             myreturn = re.sub("\s+", " ", value)
 
         return myreturn.strip()
+
+    def clean_port_string(self, port):
+        data = ['', '']
+        port_list = re.split(r' \(|\)', port)
+        for item in port_list:
+            if '/' in item:
+                data = item.split('/')
+
+        return data
 
     def get_service_from_details(self, name, value_list, port):
         # detail:
