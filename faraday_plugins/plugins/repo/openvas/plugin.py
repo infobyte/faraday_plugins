@@ -8,6 +8,8 @@ import re
 import os
 from collections import defaultdict
 
+from copy import copy
+
 try:
     import xml.etree.cElementTree as ET
     import xml.etree.ElementTree as ET_ORIG
@@ -173,29 +175,19 @@ class Item:
         self.subnet = self.get_text_from_subnode('subnet')
         if self.subnet == '':
             self.subnet = self.host
-        self.port = "None"
+        self.port = None
         self.severity = self.severity_mapper()
         self.service = "Unknown"
         self.protocol = ""
-        port = self.get_text_from_subnode('port')
-        if "general" not in port:
-            # service vuln
-            if '(' in port:
-                info = self.clean_port_string(port)
-            else:
-                info = port.split("/")
-            self.port = info[0]
-            self.protocol = info[1]
-            host_details = hosts[self.host].get('details')
-            self.service = self.get_service(port, host_details)
+        port_string = self.get_text_from_subnode('port')
+        info = port_string.split("/")
+        self.protocol = "".join(filter(lambda x: x.isalpha() or x in ("-", "_"), info[1]))
+        self.port = "".join(filter(lambda x: x.isdigit(), info[0])) or None
+        if not self.port:
+            self.service = info[0]
         else:
-            # general was found in port data
-            # this is a host vuln
-            # this case will have item.port = 'None'
-            info = port.split("/")
-            self.protocol = info[1]
-            self.service = info[0]  # this value is general
-        self.data = self.get_text_from_subnode('description')
+            host_details = hosts[self.host].get('details')
+            self.service = self.get_service(port_string, self.port, host_details)
         self.nvt = self.node.findall('nvt')[0]
         self.node = self.nvt
         self.id = self.node.get('oid')
@@ -232,11 +224,17 @@ class Item:
             severity = 'Critical'
         return severity
 
-    def get_service(self, port, details_from_host):
+    def get_service(self, port_string, port, details_from_host):
         # details_from_host:
         # name: name of detail
         # value: list with the values associated with the name
-        for name, value in details_from_host.items():
+        details_from_host_copy = copy(details_from_host)
+        services = details_from_host_copy.pop("Services", None)
+        if services:
+            service_detail = self.get_service_from_details("Services", services, port)
+            if service_detail:
+                return service_detail
+        for name, value in details_from_host_copy.items():
             service_detail = self.get_service_from_details(name, value, port)
             if service_detail:
                 return service_detail
@@ -244,9 +242,8 @@ class Item:
         # the file port_mapper.txt
         services_mapper = filter_services()
         for service in services_mapper:
-            if service[0] == port:
+            if service[0] == port_string:
                 return service[1]
-
         return "Unknown"
 
     def do_clean(self, value):
@@ -256,46 +253,35 @@ class Item:
 
         return myreturn.strip()
 
-    def clean_port_string(self, port):
-        data = ['', '']
-        port_list = re.split(r' \(|\)', port)
-        for item in port_list:
-            if '/' in item:
-                data = item.split('/')
-
-        return data
-
     def get_service_from_details(self, name, value_list, port):
         # detail:
         # name: name of detail
         # value_list: list with the values associated with the name
         res = None
         priority = 0
-
-        for value in value_list:
-            if name == 'Services':
-                aux_port = port.split('/')[0]
+        if name == 'Services':
+            for value in value_list:
                 value_splited = value.split(',')
-                if value_splited[0] == aux_port:
+                if value_splited[0] == port:
                     res = value_splited[2]
-                    priority = 3
+                    break
+        else:
+            for value in value_list:
+                if '/' in value:
+                    auxiliar_value = value.split('/')[0]
+                    if auxiliar_value == port:
+                        res = name
+                        priority = 2
 
-            elif '/' in value and priority != 3:
-                auxiliar_value = value.split('/')[0]
-                if auxiliar_value == port.split('/')[0]:
-                    res = name
-                    priority = 2
+                elif value.isdigit() and priority == 0:
+                    if value == port:
+                        res = name
+                        priority = 1
 
-            elif value.isdigit() and priority == 0:
-                if value == port.split('/')[0]:
-                    res = name
-                    priority = 1
-
-            elif '::' in value and priority == 0:
-                aux_value = value.split('::')[0]
-                auxiliar_port = port.split('/')[0]
-                if aux_value == auxiliar_port:
-                    res = name
+                elif '::' in value and priority == 0:
+                    aux_value = value.split('::')[0]
+                    if aux_value == port:
+                        res = name
         return res
 
     def get_data_from_tags(self, tags_text):
@@ -396,7 +382,7 @@ class OpenvasPlugin(PluginXMLFormat):
                         hostnames=[item.host])
                     ids[item.subnet] = h_id
 
-                if item.port == "None":
+                if not item.port:
                     if item.severity not in self.ignored_severities:
                         v_id = self.createAndAddVulnToHost(
                             h_id,
