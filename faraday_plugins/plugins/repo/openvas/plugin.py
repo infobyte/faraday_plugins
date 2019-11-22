@@ -253,15 +253,6 @@ class Item:
 
         return myreturn.strip()
 
-    def clean_port_string(self, port):
-        data = ['', '']
-        port_list = re.split(r' \(|\)', port)
-        for item in port_list:
-            if '/' in item:
-                data = item.split('/')
-
-        return data
-
     def get_service_from_details(self, name, value_list, port):
         # detail:
         # name: name of detail
