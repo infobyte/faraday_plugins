@@ -199,6 +199,7 @@ class Item:
         self.resolution = ''
         self.cvss_vector = ''
         self.tags = self.get_text_from_subnode('tags')
+        self.data = self.get_text_from_subnode('description')
         if self.tags:
             tags_data = self.get_data_from_tags(self.tags)
             self.description = tags_data['description']
