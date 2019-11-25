@@ -233,6 +233,7 @@ class FortifyParser:
 
                     for repro_step in issue_data.findall('./ReproSteps'):
                         step = repro_step.ReproStep
+                        
                         if step is not None:
                             try:
                                 params = step.PostParams.text
