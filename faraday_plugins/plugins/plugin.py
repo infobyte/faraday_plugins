@@ -304,6 +304,14 @@ class PluginBase:
             params = ""
         if query is None:
             query = ""
+        if website is None:
+            website = ""
+        if path is None:
+            path = ""
+        if request is None:
+            request = ""
+        if response is None:
+            response = ""
         if ref is None:
             ref = []
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
