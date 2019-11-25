@@ -239,31 +239,31 @@ class FortifyParser:
                             except AttributeError:
                                 pass
 
-                    if not hostname:
-                        # This seems to be a mobile app
-                        hostname = session.URL.text
+                        if not hostname:
+                            # This seems to be a mobile app
+                            hostname = session.URL.text
 
-                    if not port:
-                        service_data['name'] = step.Url.text
-                        service_data['port'] = step.sourceline
+                        if not port:
+                            service_data['name'] = step.Url.text
+                            service_data['port'] = step.sourceline
 
-                    self.sast_vulns.append({
-                        "host": hostname,
-                        "severity": severity,
-                        "service": service_data,
-                        "name": name,
-                        "description": description,
-                        "external_id": external_id,
-                        "references": references,
-                        "method": method,
-                        "query": query,
-                        "response": response,
-                        "request": request,
-                        "path": path,
-                        "params": params,
-                        "status_code": status_code,
-                        "website": session.URL.text
-                    })
+                        self.sast_vulns.append({
+                            "host": hostname,
+                            "severity": severity,
+                            "service": service_data,
+                            "name": name,
+                            "description": description,
+                            "external_id": external_id,
+                            "references": references,
+                            "method": method,
+                            "query": query,
+                            "response": response,
+                            "request": request,
+                            "path": path,
+                            "params": params,
+                            "status_code": status_code,
+                            "website": session.URL.text
+                        })
 
     def _extract_vulns(self):
         # make list of false positives
