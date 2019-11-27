@@ -3,6 +3,8 @@ import os
 import sys
 import click
 
+from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
+
 root_logger = logging.getLogger("faraday")
 if not root_logger.handlers:
     PLUGIN_DEBUG = os.environ.get("PLUGIN_DEBUG", "0")
@@ -12,7 +14,6 @@ if not root_logger.handlers:
         out_hdlr.setLevel(logging.DEBUG)
         root_logger.addHandler(out_hdlr)
         root_logger.setLevel(logging.DEBUG)
-from .plugins.manager import PluginsManager, ReportAnalyzer
 
 
 @click.group()
