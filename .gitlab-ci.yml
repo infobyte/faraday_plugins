@@ -24,6 +24,7 @@ tests:
     image: python:3
     stage: testing
     coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
+    allow_failure: true
     before_script:
       - pip3 install virtualenv
       - virtualenv -p python3 faraday_venv
