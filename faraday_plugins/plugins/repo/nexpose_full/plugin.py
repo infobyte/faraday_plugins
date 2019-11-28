@@ -5,17 +5,17 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-
 import re
 import os
-import sys
 
 try:
     import xml.etree.cElementTree as ET
     import xml.etree.ElementTree as ET_ORIG
+
     ETREE_VERSION = ET_ORIG.VERSION
 except ImportError:
     import xml.etree.ElementTree as ET
+
     ETREE_VERSION = ET.VERSION
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
@@ -143,7 +143,7 @@ class NexposeFullXmlParser:
         @returns vulns A dict of Vulnerability Definitions
         """
         vulns = dict()
-        #CVSS V3
+        # CVSS V3
         SEVERITY_MAPPING_DICT = {'0': 'info', '1': 'low', '2': 'low', '3': 'low', '4': 'med', '5': 'med', '6': 'med',
                                  '7': 'high', '8': 'high', '9': 'critical', '10': 'critical'}
 
@@ -204,6 +204,7 @@ class NexposeFullXmlParser:
             for node in nodes.iter('node'):
                 host = dict()
                 host['name'] = node.get('address')
+                host['mac'] = node.get('hardware-address')
                 host['hostnames'] = list()
                 host['os'] = ""
                 host['services'] = list()
@@ -261,7 +262,6 @@ class NexposeFullPlugin(PluginXMLFormat):
         self._current_output = None
         self._command_regex = re.compile(r'^(sudo nexpose|\.\/nexpose).*?')
 
-
     def parseOutputString(self, output, debug=False):
 
         parser = NexposeFullXmlParser(output)
@@ -269,15 +269,25 @@ class NexposeFullPlugin(PluginXMLFormat):
         for item in parser.items:
 
             h_id = self.createAndAddHost(item['name'], item['os'], hostnames=item['hostnames'])
+            pattern = '([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
+            match = re.search(pattern, item['mac'])
+            if match:
+                i_id = self.createAndAddInterface(
+                    h_id,
+                    item['name'],
+                    mac='blasmatch',
+                    ipv4_address=item['name'],
+                    hostname_resolution=item['hostnames'])
+            else:
+                i_id = self.createAndAddInterface(
+                    h_id,
+                    item['name'],
+                    mac=':'.join(item['mac'][i:i + 2] for i in range(0, 12, 2)),
+                    ipv4_address=item['name'],
+                    hostname_resolution=item['hostnames'])
 
-            i_id = self.createAndAddInterface(
-                h_id,
-                item['name'],
-                ipv4_address=item['name'],
-                hostname_resolution=item['hostnames'])
 
             for v in item['vulns']:
-
                 v_id = self.createAndAddVulnToHost(
                     h_id,
                     v['name'],
@@ -285,7 +295,6 @@ class NexposeFullPlugin(PluginXMLFormat):
                     v['refs'],
                     v['severity'],
                     v['resolution'])
-
 
             for s in item['services']:
                 web = False
@@ -310,7 +319,7 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['refs'],
                             v['severity'],
                             v['resolution'],
-                            path=v.get('path',''))
+                            path=v.get('path', ''))
                     else:
                         v_id = self.createAndAddVulnToService(
                             h_id,
@@ -333,9 +342,11 @@ class NexposeFullPlugin(PluginXMLFormat):
 def createPlugin():
     return NexposeFullPlugin()
 
+
 if __name__ == "__main__":
     import sys
     import os
+
     if len(sys.argv) == 2:
         report_file = sys.argv[1]
         if os.path.isfile(report_file):
