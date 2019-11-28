@@ -185,14 +185,16 @@ class PluginBase:
         """
         raise NotImplementedError('This method must be implemented.')
 
+    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None, scan_template="", site_name="",
+                         site_importance="", risk_score=""):
 
-    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None):
         if not hostnames:
             hostnames = []
         if os is None:
             os = "unknown"
         host = {"ip": name, "os": os, "hostnames": hostnames, "description": "",  "mac": mac,
-                "credentials": [], "services": [], "vulnerabilities": [],
+                "credentials": [], "services": [], "vulnerabilities": [], "scan_template": scan_template,
+                "site_name": site_name, "site_importance": site_importance, "risk_score": risk_score
                 }
         host_id = self.save_host_cache(host)
         return host_id
@@ -229,7 +231,8 @@ class PluginBase:
 
     # @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
     #                         current_version=VERSION,
-    #                         details="Interface object removed. Use host or service instead. Service will be attached to Host!")
+    #                         details="Interface object removed. Use host or service instead. Service will be attached
+    # to Host!")
     def createAndAddServiceToInterface(self, host_id, interface_id, name,
                                        protocol="tcp?", ports=None,
                                        status="open", version="unknown",
@@ -257,31 +260,36 @@ class PluginBase:
         return service_id
 
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
-                               severity="", resolution="", data="", external_id=None):
+                               severity="", resolution="", vulnerable_since="", scan_id="", pci="", data="",
+                               external_id=None):
         if ref is None:
             ref = []
-        vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref, "external_id": external_id,
-                         "type": "Vulnerability", "resolution": resolution, "data": data}
+        vulnerability = {"name": name, " desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
+                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution,
+                         "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data}
         host = self.get_from_cache(host_id)
+
         host["vulnerabilities"].append(vulnerability)
         vulnerability_id = len(host["vulnerabilities"]) - 1
         return vulnerability_id
 
     # @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
     #                         current_version=VERSION,
-    #                         details="Interface object removed. Use host or service instead. Vuln will be added to Host")
+    #                         details="Interface object removed. Use host or service instead. Vuln will be added
+    # to Host")
     def createAndAddVulnToInterface(self, host_id, interface_id, name,
                                     desc="", ref=None, severity="",
                                     resolution="", data=""):
-        return self.createAndAddVulnToHost(host_id, name, desc=desc, ref=ref, severity=severity,
-                                           resolution=resolution, data=data)
+        return self.createAndAddVulnToHost(host_id, name, desc=desc, ref=ref, severity=severity, resolution=resolution,
+                                           data=data)
 
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
-                                  ref=None, severity="", resolution="", data="", external_id=None):
+                                  ref=None, severity="", resolution="", risk="", data="", external_id=None):
         if ref is None:
             ref = []
-        vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref, "external_id": external_id,
-                         "type": "Vulnerability", "resolution": resolution, "data": data}
+        vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
+                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "riskB": risk,
+                         "data": data}
         service = self.get_from_cache(service_id)
         service["vulnerabilities"].append(vulnerability)
         vulnerability_id = self.save_cache(vulnerability)
@@ -433,7 +441,4 @@ class PluginJsonFormat(PluginByExtension):
             match = self.json_keys.issubset(file_json_keys)
             self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", file_json_keys, self.json_keys, match)
         return match
-
-
-
 # I'm Py3

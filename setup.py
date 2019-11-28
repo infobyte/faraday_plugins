@@ -9,6 +9,9 @@ install_requires = [
     'Click',
     'simplejson',
     'requests',
+    'lxml',
+    'html2text',
+    'beautifulsoup4',
 ]
 
 
