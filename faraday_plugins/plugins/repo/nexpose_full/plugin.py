@@ -129,6 +129,9 @@ class NexposeFullXmlParser:
                 if test.get('id').lower() in vulnsDefinitions:
                     vuln = vulnsDefinitions[test.get('id').lower()].copy()
                     key = test.get('key', '')
+                    vuln['pci'] = test.get('pci-compliance-status')
+                    vuln['vulnerable_since'] = test.get('vulnerable-since')
+                    vuln['scan_id'] = test.get('scan-id')
                     if key.startswith('/'):
                         # It has the path where the vuln was found
                         # Example key: "/comments.asp||content"
@@ -151,7 +154,6 @@ class NexposeFullXmlParser:
             for vulnDef in vulnsDef.iter('vulnerability'):
                 vid = vulnDef.get('id').lower()
                 vector = vulnDef.get('cvssVector')
-
                 vuln = {
                     'desc': "",
                     'name': vulnDef.get('title'),
@@ -159,7 +161,8 @@ class NexposeFullXmlParser:
                     'resolution': "",
                     'severity': SEVERITY_MAPPING_DICT[vulnDef.get('severity')],
                     'tags': list(),
-                    'is_web': vid.startswith('http-')
+                    'is_web': vid.startswith('http-'),
+                    'risk': vulnDef.get('riskScore'),
                 }
 
                 for item in list(vulnDef):
@@ -168,12 +171,21 @@ class NexposeFullXmlParser:
                             vuln['desc'] += self.parse_html_type(htmlType)
                     if item.tag == 'exploits':
                         for exploit in list(item):
-                            if exploit.get('title') and exploit.get('link'):
+                            if exploit.get('title') and exploit.get('link') and exploit.get('type') \
+                                    and exploit.get('sklLevel'):
                                 title = exploit.get('title').encode(
                                     "ascii", errors="backslashreplace").strip()
                                 link = exploit.get('link').encode(
                                     "ascii", errors="backslashreplace").strip()
-                                vuln['refs'].append(title + b' ' + link)
+                                type = exploit.get('type').encode(
+                                    "ascii", errors="backslashreplace").strip()
+                                skillLevel = exploit.get('sklLevel').encode(
+                                    "ascii", errors="backslashreplace").strip()
+                                vuln['refs'].append(title + b' ' + link +  b' ' + type +  b' ' + skillLevel)
+                    if item.tag == 'malware':
+                        for names in item.findall("name"):
+                            nameMalware = names.text
+                            vuln['refs'].append(nameMalware)
                     if item.tag == 'references':
                         for ref in list(item):
                             if ref.text:
@@ -182,8 +194,7 @@ class NexposeFullXmlParser:
                                 vuln['refs'].append(rf)
                     if item.tag == 'solution':
                         for htmlType in list(item):
-                            vuln[
-                                'resolution'] += self.parse_html_type(htmlType)
+                            vuln['resolution'] += self.parse_html_type(htmlType)
                     """
                     # there is currently no method to register tags in vulns
                     if item.tag == 'tags':
@@ -209,6 +220,10 @@ class NexposeFullXmlParser:
                 host['os'] = ""
                 host['services'] = list()
                 host['vulns'] = self.parse_tests_type(node, vulns)
+                host['scan-template'] = node.get('scan-template')
+                host['scan-name'] = node.get('scan-name')
+                host['scan-importance'] = node.get('scan-importance')
+                host['risk-score'] = node.get('risk-score')
 
                 for names in node.iter('names'):
                     for name in list(names):
@@ -267,17 +282,24 @@ class NexposeFullPlugin(PluginXMLFormat):
         parser = NexposeFullXmlParser(output)
 
         for item in parser.items:
-
-            h_id = self.createAndAddHost(item['name'], item['os'], hostnames=item['hostnames'])
+            h_id = self.createAndAddHost(item['name'], item['os'], hostnames=item['hostnames'],
+                                         scan_template=item['scan-template'], site_name=item['scan-name'],
+                                         site_importance=item['scan-importance'], risk_score=item['risk-score']
+                                         )
             pattern = '([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
             match = re.search(pattern, item['mac'])
             if match:
                 i_id = self.createAndAddInterface(
                     h_id,
                     item['name'],
-                    mac='blasmatch',
+                    mac=item['mac'],
                     ipv4_address=item['name'],
-                    hostname_resolution=item['hostnames'])
+                    hostname_resolution=item['hostnames'],
+                    scan_template=item['scan-template'],
+                    site_name=item['scan-name'],
+                    site_importance=item['scan-importance'],
+                    risk_score=item['risk-score'],
+                )
             else:
                 i_id = self.createAndAddInterface(
                     h_id,
@@ -288,13 +310,18 @@ class NexposeFullPlugin(PluginXMLFormat):
 
 
             for v in item['vulns']:
+                v['data'] = {"vulnerable_since": v['vulnerable_since'], "scan_id": v['scan_id'], "PCI": v['pci']}
                 v_id = self.createAndAddVulnToHost(
                     h_id,
                     v['name'],
                     v['desc'],
                     v['refs'],
                     v['severity'],
-                    v['resolution'])
+                    v['resolution'],
+                    v['vulnerable_since'],
+                    v['scan_id'],
+                    v['pci']
+                )
 
             for s in item['services']:
                 web = False
@@ -310,6 +337,7 @@ class NexposeFullPlugin(PluginXMLFormat):
                     version=version)
 
                 for v in s['vulns']:
+
                     if v['is_web']:
                         v_id = self.createAndAddVulnWebToService(
                             h_id,
@@ -319,6 +347,7 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['refs'],
                             v['severity'],
                             v['resolution'],
+                            v['risk'],
                             path=v.get('path', ''))
                     else:
                         v_id = self.createAndAddVulnToService(
@@ -328,7 +357,9 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['desc'],
                             v['refs'],
                             v['severity'],
-                            v['resolution'])
+                            v['resolution'],
+                            v['risk']
+                        )
 
         del parser
 
