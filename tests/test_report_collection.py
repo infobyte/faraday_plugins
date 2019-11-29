@@ -26,11 +26,22 @@ def list_report_files():
             yield os.path.join(root, filename)
 
 
+@pytest.mark.skip(reason="Skip auto detection test until we review all the report files")
 @pytest.mark.parametrize("report_filename", list_report_files())
-def test_autodetection_on_all_report_collection(report_filename):
+def test_autodetected_on_all_report_collection(report_filename):
     plugins_manager = PluginsManager()
     analyzer = ReportAnalyzer(plugins_manager)
     plugin: PluginBase = analyzer.get_plugin(report_filename)
+    assert plugin, report_filename
+
+
+@pytest.mark.parametrize("report_filename", list_report_files())
+def test_detected_tools_on_all_report_collection(report_filename):
+    plugins_manager = PluginsManager()
+    analyzer = ReportAnalyzer(plugins_manager)
+    plugin: PluginBase = analyzer.get_plugin(report_filename)
+    if not plugin:
+        return
     assert plugin, report_filename
     plugin.processReport(report_filename)
     plugin_json = json.loads(plugin.get_json())
