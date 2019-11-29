@@ -200,7 +200,7 @@ class FortifyParser:
                     params = ''
                     check_type = issue_data.CheckTypeID
                     if check_type.text.lower() != 'vulnerability':
-                        # TODO: when plugins accept tags, we shoudl this as a tag.
+                        # TODO: when plugins accept tags, we should this as a tag.
                         pass
                     name = issue_data.Name.text
                     external_id = issue_data.VulnerabilityID.text
