@@ -217,8 +217,10 @@ class NexposeFullXmlParser:
                 host['name'] = node.get('address')
                 host['mac'] = node.get('hardware-address')
                 host['hostnames'] = list()
-                host['os'] = ""
+                host['os'] = list()
                 host['services'] = list()
+                host['fingerprints'] = list()
+                host['fingerprints_software'] = list()
                 host['vulns'] = self.parse_tests_type(node, vulns)
                 host['scan-template'] = node.get('scan-template')
                 host['scan-name'] = node.get('scan-name')
@@ -230,11 +232,25 @@ class NexposeFullXmlParser:
                         host['hostnames'].append(name.text)
 
                 for fingerprints in node.iter('fingerprints'):
-                    os = fingerprints.find('os')
-                    if os is not None:
-                        host['os'] = os.get('product', "")
-                        if os.get('version') is not None:
-                            host['os'] += " " + os.get('version')
+                    for os_data in fingerprints.iter('os'):
+                        data = {
+                            'certainty': os_data.get('certainty'),
+                            'vendor': os_data.get('vendor'),
+                            'family': os_data.get('family'),
+                            'product': os_data.get('product'),
+                            'version': os_data.get('version'),
+                            'arch': os_data.get('arch'),
+                            'device-class': os_data.get('device-class'),
+                        }
+                        host['os'].append(data)
+
+                    for fingerprints_tag in fingerprints.iter('fingerprint'):
+                        data_fingerprints_tag = {
+                            'certainty': fingerprints_tag.get('certainty'),
+                            'product': fingerprints_tag.get('product'),
+                            'version': fingerprints_tag.get('version'),
+                        }
+                        host['fingerprints'].append(data_fingerprints_tag)
 
                 for endpoints in node.iter('endpoints'):
                     for endpoint in list(endpoints):
@@ -252,9 +268,18 @@ class NexposeFullXmlParser:
                                     for config in list(configs):
                                         if "banner" in config.get('name'):
                                             svc['version'] = config.get('name')
-
                         host['services'].append(svc)
 
+                for softwaretag in node.iter('software'):
+                    for soft_data in softwaretag.iter('fingerprint'):
+                        data_soft = {
+                            'certainty': soft_data.get('certainty'),
+                            'vendor': soft_data.get('vendor'),
+                            'family': soft_data.get('family'),
+                            'product': soft_data.get('product'),
+                            'version': soft_data.get('version'),
+                        }
+                        host['fingerprints_software'].append(data_soft)
                 hosts.append(host)
 
         return hosts
@@ -284,10 +309,16 @@ class NexposeFullPlugin(PluginXMLFormat):
         for item in parser.items:
             h_id = self.createAndAddHost(item['name'], item['os'], hostnames=item['hostnames'],
                                          scan_template=item['scan-template'], site_name=item['scan-name'],
-                                         site_importance=item['scan-importance'], risk_score=item['risk-score']
+                                         site_importance=item['scan-importance'], risk_score=item['risk-score'],
+                                         fingerprints=item['fingerprints'],
+                                         fingerprints_software=item['fingerprints_software']
                                          )
             pattern = '([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
-            match = re.search(pattern, item['mac'])
+            if not item['mac']:
+                item['mac'] = '0000000000000000'
+                match = re.search(pattern, item['mac'])
+            else:
+                match = re.search(pattern, item['mac'])
             if match:
                 i_id = self.createAndAddInterface(
                     h_id,
@@ -299,6 +330,8 @@ class NexposeFullPlugin(PluginXMLFormat):
                     site_name=item['scan-name'],
                     site_importance=item['scan-importance'],
                     risk_score=item['risk-score'],
+                    fingerprints=item['fingerprints'],
+                    fingerprints_software=item['fingerprints_software'],
                 )
             else:
                 i_id = self.createAndAddInterface(
@@ -307,7 +340,6 @@ class NexposeFullPlugin(PluginXMLFormat):
                     mac=':'.join(item['mac'][i:i + 2] for i in range(0, 12, 2)),
                     ipv4_address=item['name'],
                     hostname_resolution=item['hostnames'])
-
 
             for v in item['vulns']:
                 v['data'] = {"vulnerable_since": v['vulnerable_since'], "scan_id": v['scan_id'], "PCI": v['pci']}
