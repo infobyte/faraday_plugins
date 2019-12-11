@@ -227,24 +227,19 @@ class W3afPlugin(PluginXMLFormat):
             "-h": "Display this help message.",
         }
 
-
     def parseOutputString(self, output, debug=False):
 
         parser = W3afXmlParser(output)
-
         ip = self.resolve(parser.host)
         h_id = self.createAndAddHost(ip)
-        i_id = self.createAndAddInterface(
-            h_id, ip, ipv4_address=ip, hostname_resolution=[parser.host])
-        s_id = self.createAndAddServiceToInterface(h_id, i_id, "http",
-                                                   "tcp",
-                                                   ports=[parser.port],
-                                                   status="open")
+        i_id = self.createAndAddInterface(h_id, ip, ipv4_address=ip, hostname_resolution=[parser.host])
+        s_id = self.createAndAddServiceToInterface(h_id, i_id, "http", "tcp", ports=[parser.port], status="open")
 
         for item in parser.items:
             v_id = self.createAndAddVulnWebToService(h_id, s_id, item.name,
-                                                     item.detail, pname=item.param, path=item.url, website=parser.host, severity=item.severity,
-                                                     method=item.method, request=item.req, resolution=item.resolution, ref=item.ref, response=item.resp)
+                                                     item.detail, pname=item.param, path=item.url, website=parser.host,
+                                                     severity=item.severity, method=item.method, request=item.req,
+                                                     resolution=item.resolution, ref=item.ref, response=item.resp)
         del parser
 
     def resolve(self, host):
@@ -263,19 +258,5 @@ class W3afPlugin(PluginXMLFormat):
 
 def createPlugin():
     return W3afPlugin()
-
-if __name__ == "__main__":
-    import sys
-    import os
-    if len(sys.argv) == 2:
-        report_file = sys.argv[1]
-        if os.path.isfile(report_file):
-            plugin = createPlugin()
-            plugin.processReport(report_file)
-            print(plugin.get_json())
-        else:
-            print(f"Report not found: {report_file}")
-    else:
-        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3

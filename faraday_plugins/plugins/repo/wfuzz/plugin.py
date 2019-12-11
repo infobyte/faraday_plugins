@@ -79,40 +79,13 @@ class WfuzzPlugin(PluginBase):
             chars = item['chars']
             words = item['words']
             name = "Wfuzz found: {path} with status {status} on url {url}".format(path=path, status=status, url=url)
-            desc = 'Wfuzz found a response with status {status}. Response contains: \n* {words} words \n* {lines} lines \n* {chars} chars'.format(
-                words=words,
-                url=url,
-                lines=lines,
-                chars=chars,
-                status=status
-            )
-            self.createAndAddVulnWebToService(host_id,
-                service_id,
-                name,
-                desc,
-                severity="info",
-                website=target,
-                path=path
-            )
+            desc = 'Wfuzz found a response with status {status}. Response contains: \n* {words} words \n* {lines} ' \
+                   'lines \n* {chars} chars'.format(words=words, url=url, lines=lines, chars=chars, status=status)
+            self.createAndAddVulnWebToService(host_id, service_id, name, desc, severity="info", website=target,
+                                              path=path)
 
 
 def createPlugin():
     return WfuzzPlugin()
-
-
-if __name__ == "__main__":
-    import sys
-    import os
-    if len(sys.argv) == 2:
-        report_file = sys.argv[1]
-        if os.path.isfile(report_file):
-            plugin = createPlugin()
-            plugin.processReport(report_file)
-            print(plugin.get_json())
-        else:
-            print(f"Report not found: {report_file}")
-    else:
-        print(f"USAGE {sys.argv[0]} REPORT_FILE")
-
 
 # I'm Py3
