@@ -11,6 +11,7 @@ import socket
 import os
 import random
 import re
+import os
 
 try:
     import xml.etree.cElementTree as ET
@@ -283,7 +284,6 @@ class Plugins():
         self.healthmap = self.getHealthmap()
         self.waf = self.getWaf()
 
-
     def getHealthmap(self):
 
         # Get info about healthmap
@@ -484,7 +484,9 @@ class ArachniPlugin(PluginXMLFormat):
             "arachni_reporter",
             self._output_file_path,
             afr_output_file_path)
-        return "/usr/bin/env -- bash -c '%s  2>&1 && if [ -e \"%s\" ];then %s 2>&1;fi'" % (main_cmd, afr_output_file_path, reporter_cmd)
+        return "/usr/bin/env -- bash -c '%s  2>&1 && if [ -e \"%s\" ];then %s 2>&1;fi'" % (main_cmd,
+                                                                                           afr_output_file_path,
+                                                                                           reporter_cmd)
 
 
     def getHostname(self, url):
@@ -524,17 +526,4 @@ class ArachniPlugin(PluginXMLFormat):
 def createPlugin():
     return ArachniPlugin()
 
-if __name__ == "__main__":
-    import sys
-    import os
-    if len(sys.argv) == 2:
-        report_file = sys.argv[1]
-        if os.path.isfile(report_file):
-            plugin = createPlugin()
-            plugin.processReport(report_file)
-            print(plugin.get_json())
-        else:
-            print(f"Report not found: {report_file}")
-    else:
-        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

@@ -8,6 +8,7 @@ from faraday_plugins.plugins.plugin import PluginBase
 import re
 import json
 import traceback
+import os
 
 __author__ = "xtr4nge"
 __copyright__ = "Copyright (c) 2016, FruityWiFi"
@@ -137,21 +138,8 @@ class FruityWiFiPlugin(PluginBase):
         return "python " + os.path.dirname(__file__) + "/fruitywifi.py " + params
         #return None
 
+
 def createPlugin():
     return FruityWiFiPlugin()
-
-if __name__ == "__main__":
-    import sys
-    import os
-    if len(sys.argv) == 2:
-        report_file = sys.argv[1]
-        if os.path.isfile(report_file):
-            plugin = createPlugin()
-            plugin.processReport(report_file)
-            print(plugin.get_json())
-        else:
-            print(f"Report not found: {report_file}")
-    else:
-        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3
