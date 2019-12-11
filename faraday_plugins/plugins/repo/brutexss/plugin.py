@@ -23,7 +23,8 @@ class brutexss (PluginBase):
         self.plugin_version = "0.0.2"
         self.version = "1.0.0"
         self.protocol ='tcp'
-        self._command_regex = re.compile(r'^(sudo brutexss|brutexss|sudo brutexss\.py|brutexss\.py|python brutexss\.py|\.\/brutexss\.py).*?')
+        self._command_regex = re.compile(r'^(sudo brutexss|brutexss|sudo brutexss\.py|brutexss\.py|python brutexss\.py|'
+                                         r'\.\/brutexss\.py).*?')
 
     def parseOutputString(self, output, debug=False):
         lineas = output.split("\n")
@@ -46,9 +47,11 @@ class brutexss (PluginBase):
                     found_vuln=len(parametro) > 0
                     host_id = self.createAndAddHost(url)
                     address=socket.gethostbyname(url)
-                    interface_id = self.createAndAddInterface(host_id,address,ipv4_address=address,hostname_resolution=[url])
+                    interface_id = self.createAndAddInterface(host_id, address, ipv4_address=address,
+                                                              hostname_resolution=[url])
                     service_id = self.createAndAddServiceToInterface(host_id, interface_id, self.protocol, 'tcp',
-                                                                     ports=[port], status='Open', version="", description="")
+                                                                     ports=[port], status='Open', version="",
+                                                                     description="")
         if found_vuln:
             self.createAndAddVulnWebToService(host_id,service_id, name="xss", desc="XSS", ref='', severity='med',
                                               website=url, path='', method='', pname='', params=''.join(parametro),
@@ -61,17 +64,4 @@ class brutexss (PluginBase):
 def createPlugin():
     return brutexss()
 
-if __name__ == "__main__":
-    import sys
-    import os
-    if len(sys.argv) == 2:
-        report_file = sys.argv[1]
-        if os.path.isfile(report_file):
-            plugin = createPlugin()
-            plugin.processReport(report_file)
-            print(plugin.get_json())
-        else:
-            print(f"Report not found: {report_file}")
-    else:
-        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

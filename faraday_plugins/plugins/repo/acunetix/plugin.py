@@ -231,7 +231,6 @@ class AcunetixPlugin(PluginXMLFormat):
         self._current_output = None
         self.target = None
 
-
     def parseOutputString(self, output, debug=False):
         """
         This method will discard the output the shell sends, it will read it
@@ -278,25 +277,9 @@ class AcunetixPlugin(PluginXMLFormat):
                     ref=item.ref)
         del parser
 
-
     def setHost(self):
         pass
 
 
 def createPlugin():
     return AcunetixPlugin()
-
-
-if __name__ == "__main__":
-    import sys
-    import os
-    if len(sys.argv) == 2:
-        report_file = sys.argv[1]
-        if os.path.isfile(report_file):
-            plugin = createPlugin()
-            plugin.processReport(report_file)
-            print(plugin.get_json())
-        else:
-            print(f"Report not found: {report_file}")
-    else:
-        print(f"USAGE {sys.argv[0]} REPORT_FILE")
