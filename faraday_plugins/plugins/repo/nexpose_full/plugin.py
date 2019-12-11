@@ -405,3 +405,4 @@ class NexposeFullPlugin(PluginXMLFormat):
 def createPlugin():
     return NexposeFullPlugin()
 
+# I'm Py3
