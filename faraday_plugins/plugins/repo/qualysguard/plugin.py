@@ -399,16 +399,16 @@ class QualysguardPlugin(PluginXMLFormat):
                         external_id=v.external_id)
 
                 else:
-
                     web = False
+                    port = v.port.decode("utf-8")
+                    name = v.name.decode("utf-8")
                     s_id = self.createAndAddServiceToHost(
                         h_id,
                         v.port,
                         v.protocol,
-                        ports=[str(v.port)],
+                        ports=[port],
                         status='open')
-
-                    if v.port in ['80', '443'] or re.search('ssl|http', v.name):
+                    if port in ['80', '443'] or re.search('ssl|http', name):
                         web = True
                     else:
                         web = False
