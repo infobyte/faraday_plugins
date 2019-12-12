@@ -7,7 +7,7 @@ import re
 import os
 import socket
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-
+from urllib.parse import urlparse
 
 try:
     import xml.etree.cElementTree as ET
@@ -206,25 +206,11 @@ class Item:
         self.requests = "\n".join([i['uri'] for i in self.items])
 
     def parse_uri(self, uri):
-        mregex = re.search(
-            "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp"
-            ";%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]"
-            "{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}"
-            "|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}"
-            "|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|"
-            "[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|"
-            "int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2"
-            "}))[\:]*([0-9]+)*([/]*($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+))"
-            ".*?$",
-            uri)
-
-        protocol = mregex.group(1)
-        host = mregex.group(4)
-        port = 80
-        if protocol == 'https':
-            port = 443
-        if mregex.group(11) is not None:
-            port = mregex.group(11)
+        
+        url_parse = urlparse(uri)
+        protocol = url_parse.scheme
+        host = url_parse.netloc
+        port = url_parse.port
 
         try:
             params = [i.split('=')[0]
