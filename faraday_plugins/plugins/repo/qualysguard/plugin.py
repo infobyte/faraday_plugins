@@ -400,8 +400,14 @@ class QualysguardPlugin(PluginXMLFormat):
 
                 else:
                     web = False
-                    port = v.port.decode("utf-8")
-                    name = v.name.decode("utf-8")
+
+                    try:
+                        port = v.port.decode("utf-8")
+                        name = v.name.decode("utf-8")
+                    except (UnicodeDecodeError, AttributeError):
+                        port = v.port
+                        name = v.name
+
                     s_id = self.createAndAddServiceToHost(
                         h_id,
                         v.port,
