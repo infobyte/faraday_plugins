@@ -11,6 +11,7 @@ import socket
 import os
 import random
 import re
+from urllib.parse import urlparse
 import os
 
 try:
@@ -26,14 +27,14 @@ __version__ = '1.0.2'
 __status__ = 'Development'
 
 
-class ArachniXmlParser():
-
+class ArachniXmlParser:
     def __init__(self, xml_output):
         self.tree = self.parse_xml(xml_output)
         if self.tree:
             self.issues = self.getIssues(self.tree)
             self.plugins = self.getPlugins(self.tree)
             self.system = self.getSystem(self.tree)
+
         else:
             self.system = None
             self.issues = None
@@ -45,26 +46,22 @@ class ArachniXmlParser():
         except SyntaxError as err:
             print('SyntaxError In xml: %s. %s' % (err, xml_output))
             return None
-
         return tree
 
     def getIssues(self, tree):
-
         # Get vulnerabilities.
         issues_tree = tree.find('issues')
         for self.issue_node in issues_tree:
             yield Issue(self.issue_node)
 
     def getPlugins(self, tree):
-
         # Get info about plugins executed in scan.
         plugins_tree = tree.find('plugins')
         return Plugins(plugins_tree)
 
     def getSystem(self, tree):
-
-        # Get options of scan.
-        return System(tree)
+        system_tree = tree.find('system')
+        return System(system_tree)
 
 
 class Issue():
@@ -72,21 +69,16 @@ class Issue():
     def __init__(self, issue_node):
 
         self.node = issue_node
-
         self.name = self.getDesc('name')
         self.severity = self.getDesc('severity')
         self.cwe = self.getDesc('cwe')
-
         self.remedy_guidance = self.getDesc('remedy_guidance')
         self.description = self.getDesc('description')
-
         self.var = self.getChildTag('vector', 'affected_input_name')
         self.url = self.getChildTag('vector', 'url')
         self.method = self.getChildTag('vector', 'method')
-
         self.references = self.getReferences()
         self.parameters = self.getParameters()
-
         self.request = self.getRequest()
         self.response = self.getResponse()
 
@@ -120,9 +112,7 @@ class Issue():
         Returns current issue references on this format
         {'url': 'http://www.site.com', 'name': 'WebSite'}.
         """
-
         result = []
-
         references = self.node.find('references')
 
         if not references:
@@ -139,14 +129,14 @@ class Issue():
         # Get parameters of query
         result = []
 
-        parameters = self.node.find('vector').find('inputs')
+        try:
+            parameters = self.node.find('vector').find('inputs')
+            for param in parameters.findall('input'):
+                name = param.get('name')
+                result.append(name)
+        except:
+            parameters = ''
 
-        if not parameters:
-            return ''
-
-        for param in parameters.findall('input'):
-            name = param.get('name')
-            result.append(name)
 
         return ' - '.join(result)
 
@@ -181,12 +171,11 @@ class System():
     def __init__(self, node):
 
         self.node = node
-
-        self.user_agent = 'None'
-        self.url = 'None'
-        self.audited_elements = 'None'
-        self.modules = 'None'
-        self.cookies = 'None'
+        self.user_agent = None
+        self.url = None
+        self.audited_elements = None
+        self.modules = ''
+        self.cookies = None
 
         self.getOptions()
 
@@ -203,37 +192,21 @@ class System():
         if options:
             options_string = options.text
         else:
-            return
+            options_string = None
 
-
-        regex_modules = re.compile('checks:\n([\w\d\s\W\D\S]{0,})(platforms:)')
-        regex_user_agent = re.compile('user_agent:(.+)')
-        regex_cookies = re.compile('cookies: {()}')
-        regex_url = re.compile('url:(.+)')
-
-        regex_audited_elements = re.compile(
-            'audit:\n([\w\d\s\W\D\S]{0,})input:|session:'
-        )
-
-        result = re.search(regex_modules, options_string)
-        if result.group(1):
-            self.modules = result.group(1)
-
-        result = re.search(regex_user_agent, options_string)
-        if result.group(1):
-            self.user_agent = result.group(1)
-
-        result = re.search(regex_cookies, options_string)
-        if result.group(1):
-            self.cookies = result.group(1)
-
-        result = re.search(regex_url, options_string)
-        if result.group(1):
-            self.url = result.group(1)
-
-        result = re.search(regex_audited_elements, options_string)
-        if result.group(1):
-            self.audited_elements = result.group(1)
+        self.user_agent = self.node.find('user_agent').text
+        self.url = self.node.find('url').text
+        tags_audited_elements = self.node.find('audited_elements')
+        element_text = []
+        for element in tags_audited_elements:
+            element_text.append(element.text)
+        self.audited_elements = element_text
+        tag_module = self.node.find('modules')
+        module_text = []
+        for module in tag_module:
+            module_text.append(module.attrib['name'])
+        self.modules = module_text
+        self.cookies = self.node.find('cookies').text
 
     def getDesc(self, tag):
 
@@ -243,28 +216,15 @@ class System():
         if description and description.text:
             return description.text
         else:
-            return 'None'
+            return None
 
     def getNote(self):
-
-        # Create string with scan information.
-        result = (
-            'Scan url:\n' +
-            self.url +
-            '\nUser Agent:\n' +
-            self.user_agent +
-            '\nVersion Arachni:\n' +
-            self.version +
-            '\nStart time:\n' +
-            self.start_time +
-            '\nFinish time:\n' +
-            self.finish_time +
-            '\nAudited Elements:\n' +
-            self.audited_elements +
-            '\nModules:\n' +
-            self.modules +
-            '\nCookies:\n' +
-            self.cookies)
+        result = ('Scan url:\n {} \nUser Agent:\n {} \nVersion Arachni:\n {} \nStart time:\n {} \nFinish time:\n {}'
+                     '\nAudited Elements:\n {} \nModules:\n {} \nCookies:\n {}').format(self.url, self.user_agent,
+                                                                                        self.version, self.start_time,
+                                                                                        self.finish_time,
+                                                                                        self.audited_elements,
+                                                                                        self.modules, self.cookies)
 
         return result
 
@@ -280,9 +240,9 @@ class Plugins():
     def __init__(self, plugins_node):
 
         self.plugins_node = plugins_node
-
         self.healthmap = self.getHealthmap()
         self.waf = self.getWaf()
+        self.ip = plugins_node.find('resolver').find('results').find('hostname').get('ipaddress')
 
     def getHealthmap(self):
 
@@ -397,7 +357,8 @@ class ArachniPlugin(PluginXMLFormat):
             return
 
         self.hostname = self.getHostname(parser.system.url)
-        self.address = self.getAddress(self.hostname)
+        self.address = self.getAddress(parser.plugins.ip)
+
 
         # Create host and interface
         host_id = self.createAndAddHost(self.address)
@@ -419,16 +380,14 @@ class ArachniPlugin(PluginXMLFormat):
             version='',
             description='')
 
-
         # Create issues.
         for issue in parser.issues:
-
-            description = issue.description.replace('  ', ' ').replace('\n', ' ').replace('.  ', '.\n\n')
-            resol = issue.remedy_guidance.replace('  ', ' ').replace('\n', ' ').replace('.  ', '.\n\n')
+            description = str(issue.description)
+            resol = str(issue.remedy_guidance)
 
             references = issue.references
             if issue.cwe != 'None':
-                references.append('CWE-' + issue.cwe)
+                references.append('CWE-' + str(issue.cwe))
 
             if resol == 'None':
                 resol = ''
@@ -488,29 +447,18 @@ class ArachniPlugin(PluginXMLFormat):
                                                                                            afr_output_file_path,
                                                                                            reporter_cmd)
 
-
     def getHostname(self, url):
 
         # Strips protocol and gets hostname from URL.
-        reg = re.search(
-            '(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*('
-            '(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5'
-            ']|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0'
-            '-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0'
-            '-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+'
-            '\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pr'
-            'o|aero|coop|museum|[a-zA-Z]{2}))[\:]*([0-9]+)*([/]*($|[a-zA-Z0-9\.\,\?'
-            '\'\\\+&amp;%\$#\=~_\-]+)).*?$',
-            url
-        )
-
-        self.protocol = reg.group(1)
-        self.hostname = reg.group(4)
+        url_parse = urlparse(url)
+        self.protocol = url_parse.scheme
+        self.hostname = url_parse.netloc
 
         if self.protocol == 'https':
             self.port = 443
-        if reg.group(11) is not None:
-            self.port = reg.group(11)
+        elif self.protocol == 'http':
+            if not self.port:
+                self.port = 80
 
         return self.hostname
 
