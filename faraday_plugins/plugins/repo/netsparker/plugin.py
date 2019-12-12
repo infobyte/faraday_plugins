@@ -1,4 +1,4 @@
-"""
+""""
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
@@ -7,9 +7,7 @@ See the file 'doc/LICENSE' for the license information
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-import sys
 import socket
-import urllib
 from bs4 import BeautifulSoup
 
 try:
@@ -97,7 +95,12 @@ class Item:
         self.url = self.get_text_from_subnode("url")
 
         host = re.search(
-            "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))[\:]*([0-9]+)*([/]*($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+)).*?$", self.url)
+            "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]"
+            "{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2"
+            "[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]"
+            "{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|"
+            "pro|aero|coop|museum|[a-zA-Z]{2}))[\:]*([0-9]+)*([/]*($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+)).*?$",
+            self.url)
 
         self.protocol = host.group(1)
         self.hostname = host.group(4)
@@ -181,7 +184,6 @@ class Item:
             sub_node = self.node.find(subnode_xpath_expr)
             if sub_node is not None:
                 return sub_node.text
-
         return None
 
 
@@ -225,11 +227,20 @@ class NetsparkerPlugin(PluginXMLFormat):
                                                            ports=[str(i.port)],
                                                            status="open")
                 first = False
-            
+            if i.resolution is not None:
+                resolution = BeautifulSoup(i.resolution, "lxml").text
+            else:
+                resolution = ""
+
+            if i.desc is not None:
+                desc = BeautifulSoup(i.desc, "lxml").text
+            else:
+                desc = ""
+
             v_id = self.createAndAddVulnWebToService(h_id, s_id, i.name, ref=i.ref, website=i.hostname, 
-                                                     severity=i.severity, desc=BeautifulSoup(i.desc, "lxml").text,
-                                                      path=i.url, method=i.method, request=i.request, response=i.response,
-                                                     resolution=BeautifulSoup(i.resolution, "lxml").text,pname=i.param, data=i.data)
+                                                     severity=i.severity, desc=desc, path=i.url, method=i.method,
+                                                     request=i.request, response=i.response, resolution=resolution,
+                                                     pname=i.param, data=i.data)
 
         del parser
 
