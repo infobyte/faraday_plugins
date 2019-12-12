@@ -25,7 +25,8 @@ class dirbPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "2.22"
         self.regexpUrl = r'((http[s]?)\:\/\/([\w\.]+)[.\S]+)'
-        self._command_regex = re.compile(r'^(?:sudo dirb|dirb|\.\/dirb|sudo \.\/dirb)\s+(?:(http[s]?)\:\/\/([\w\.]+)[.\S]+)')
+        self._command_regex = re.compile(r'^(?:sudo dirb|dirb|\.\/dirb|sudo \.\/dirb)\s+(?:(http[s]?)'
+                                         r'\:\/\/([\w\.]+)[.\S]+)')
         self.text = []
 
     def getPort(self, host, proto):
@@ -88,13 +89,16 @@ class dirbPlugin(PluginBase):
             host_id = self.createAndAddHost(ip)
             iface_id = self.createAndAddInterface(host_id, ip, ipv4_address = ip)
 
-            serv_id  = self.createAndAddServiceToInterface(host_id, iface_id, proto, protocol = proto, ports =[puerto], status = status)
+            serv_id  = self.createAndAddServiceToInterface(host_id, iface_id, proto, protocol=proto, ports=[puerto],
+                                                           status=status)
 
             if len(self.text) > 0:
-                self.createAndAddVulnWebToService(host_id, serv_id, 'Url Fuzzing', severity=0, desc=self.text, website=domain)
+                self.createAndAddVulnWebToService(host_id, serv_id, 'Url Fuzzing', severity=0, desc=self.text,
+                                                  website=domain)
 
             if len(paths) > 0:
-                self.createAndAddVulnWebToService(host_id, serv_id, "Directory Listing", severity = "med", website = domain, request = paths, method = "GET")
+                self.createAndAddVulnWebToService(host_id, serv_id, "Directory Listing", severity="med", website=domain,
+                                                  request=paths, method="GET")
 
         return True
 
@@ -116,20 +120,8 @@ class dirbPlugin(PluginBase):
             extra_arg +=" -S"
         return "%s%s" % (command_string, extra_arg)
 
+
 def createPlugin():
     return dirbPlugin()
 
-if __name__ == "__main__":
-    import sys
-    import os
-    if len(sys.argv) == 2:
-        report_file = sys.argv[1]
-        if os.path.isfile(report_file):
-            plugin = createPlugin()
-            plugin.processReport(report_file)
-            print(plugin.get_json())
-        else:
-            print(f"Report not found: {report_file}")
-    else:
-        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3
