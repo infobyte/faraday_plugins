@@ -11,7 +11,7 @@ install_requires = [
     'requests',
     'lxml',
     'html2text',
-    'beautifulsoup4'
+    'beautifulsoup4',
 ]
 
 
