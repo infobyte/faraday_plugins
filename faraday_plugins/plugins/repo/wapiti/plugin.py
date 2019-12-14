@@ -119,7 +119,10 @@ class Item:
     def __init__(self, item_node):
         self.node = item_node
         self.url = self.get_url(item_node)
-        self.ip = socket.gethostbyname(self.url.hostname)
+        if self.url.hostname is not None:
+            self.ip = socket.gethostbyname(self.url.hostname)
+        else:
+            self.ip = '0.0.0.0'
         self.hostname = self.url.hostname
         self.port = self.get_port(self.url)
         self.scheme = self.url.scheme
@@ -237,7 +240,8 @@ class WapitiPlugin(PluginXMLFormat):
         self.port = "80"
         self.xml_arg_re = re.compile(r"^.*(-oX\s*[^\s]+).*$")
         self._command_regex = re.compile(
-            r'^(python wapiti|wapiti|sudo wapiti|sudo wapiti\.py|wapiti\.py|python wapiti\.py|\.\/wapiti\.py|wapiti|\.\/wapiti|python wapiti|python \.\/wapiti).*?')
+            r'^(python wapiti|wapiti|sudo wapiti|sudo wapiti\.py|wapiti\.py|python wapiti\.py|\.\/wapiti\.py|wapiti|\.'
+            r'\/wapiti|python wapiti|python \.\/wapiti).*?')
         self._completition = {
             "": "python wapiti.py http://server.com/base/url/ [options]",
             "-s": "&lt;url&gt; ",
@@ -256,8 +260,10 @@ class WapitiPlugin(PluginXMLFormat):
             "--remove": "&lt;parameter_name&gt; ",
             "-n": "&lt;limit&gt; ",
             "--nice": "&lt;limit&gt; ",
-            "-m": "&lt;module_options&gt; Set the modules and HTTP methods to use for attacks. Example: -m \"-all,xss:get,exec:post\"",
-            "--module": "&lt;module_options&gt; Set the modules and HTTP methods to use for attacks. Example: -m \"-all,xss:get,exec:post\"",
+            "-m": "&lt;module_options&gt; Set the modules and HTTP methods to use for attacks. Example: -m \"-all,"
+                  "xss:get,exec:post\"",
+            "--module": "&lt;module_options&gt; Set the modules and HTTP methods to use for attacks. Example: -m \"-"
+                        "all,xss:get,exec:post\"",
             "-u": "Use color to highlight vulnerables parameters in output",
             "--underline": "Use color to highlight vulnerables parameters in output",
             "-v": "&lt;level&gt; ",
@@ -294,7 +300,11 @@ class WapitiPlugin(PluginXMLFormat):
         parser = WapitiXmlParser(output)
         for item in parser.items:
             host_id = self.createAndAddHost(item.ip, hostnames=[item.hostname])
-            service_id = self.createAndAddServiceToHost(host_id, item.scheme, protocol='tcp', ports=[item.port])
+            if item.port is None:
+                port = 0
+            else:
+                port = item.port
+            service_id = self.createAndAddServiceToHost(host_id, item.scheme, protocol='tcp', ports=[port])
             for vuln in item.vulns:
                 for entry in vuln['entries']:
                     vuln_id = self.createAndAddVulnWebToService(host_id,
@@ -322,6 +332,7 @@ class WapitiPlugin(PluginXMLFormat):
             "{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|"
             "pro|aero|coop|museum|[a-zA-Z]{2}))[\:]*([0-9]+)*([/]*($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+)).*?$",
             command_string)
+
         self.protocol = host.group(1)
         self.host = host.group(4)
         if host.group(11) is not None:
