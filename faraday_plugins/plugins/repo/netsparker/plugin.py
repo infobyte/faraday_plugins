@@ -138,7 +138,9 @@ class Item:
 
         self.extra = []
         for v in item_node.findall("extrainformation/info"):
-            self.extra.append(v.get('name') + ":" + v.text)
+            name = v.get('name')
+            if name:
+                self.extra.append("{name}:{v.text}")
 
         self.node = item_node
         self.node = item_node.find("classification")
