@@ -167,7 +167,6 @@ class NessusPlugin(PluginXMLFormat):
                     web = re.search(r'^(www|http)', v.get('svc_name'))
                     if v.get('svc_name') in srv:
                         srv[v.get('svc_name')] = 1
-
                     if web:
                         v_id = self.createAndAddVulnWebToService(h_id, s_id, v.get('plugin_name'),
                                                                  desc=desc, data=data, website=host, severity=v.get('severity'),
