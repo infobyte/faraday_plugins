@@ -8,6 +8,7 @@ import re
 import socket
 import json
 from faraday_plugins.plugins.plugin import PluginJsonFormat
+from urllib.parse import urlparse
 
 
 __author__ = "Nicolas Rebagliati"
@@ -27,10 +28,12 @@ class WPScanJsonParser:
 
     def parse_url(self, url):
         # Strips protocol and gets hostname from URL.
-        reg = re.search('(?:(?P<protocol>http.*)://)?(?P<hostname>[^:/ ]+).?(?P<port>[0-9]*).*', url)
-        protocol = reg.group('protocol')
-        hostname = reg.group('hostname')
-        port = reg.group('port')
+
+        url_parse = urlparse(url)
+        protocol = url_parse.scheme
+        hostname = url_parse.netloc
+        port = url_parse.port
+
         if protocol == 'https':
             port = 443
         elif protocol == 'http':
