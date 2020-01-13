@@ -304,7 +304,7 @@ class PluginBase:
         if ref is None:
             ref = []
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
-                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "riskB": risk,
+                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "risk": risk,
                          "data": data, "run_date": self.get_utctimestamp(run_date)}
         service = self.get_from_cache(service_id)
         service["vulnerabilities"].append(vulnerability)
