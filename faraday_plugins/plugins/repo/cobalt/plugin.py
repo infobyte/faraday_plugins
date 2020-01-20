@@ -9,7 +9,8 @@ from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
 from urllib.parse import urlparse
-import csv, io, json
+import csv
+import io 
 
 current_path = os.path.abspath(os.getcwd())
 
