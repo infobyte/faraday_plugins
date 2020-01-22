@@ -24,6 +24,7 @@ class PluginBase:
         # an existant plugin with the same id.
         # TODO: Make script that list current ids.
         self.id = None
+        self.auto_load = True
         self._rid = id(self)
         self.version = None
         self.name = None
