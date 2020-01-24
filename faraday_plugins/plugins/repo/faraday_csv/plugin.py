@@ -6,7 +6,8 @@ See the file 'doc/LICENSE' for the license information
 import json;
 import csv
 
-from faraday_plugins.plugins.plugin import PluginByExtension
+from faraday_plugins.plugins.plugin import PluginByExtension, PluginCSVFormat
+
 
 class CSVParser:
     def __init__(self, csv_output):
@@ -94,25 +95,20 @@ class CSVParser:
 
         return new_headers
 
-class CSVPlugin(PluginByExtension):
+
+class FaradayCSVPlugin(PluginCSVFormat):
     def __init__(self):
         super().__init__()
-        self.id = "CSV"
-        self.name = "CSV Plugin"
+        self.id = "faraday_csv"
+        self.name = "Faraday CSV Plugin"
         self.plugin_version = "1.0"
         self.options = None
-        self.extension = [".csv"]
-
-    def report_belongs_to(self, **kwargs):
-        if super().report_belongs_to(**kwargs):
-            report_path = kwargs.get("report_path", "")
-            try:
-                with open(report_path) as fi:  
-                    dialect = csv.Sniffer().sniff(fi.read(1024))
-                return True
-            except csv.Error:
-                return False
-        return False
+        self.csv_headers = {
+        "confirmed", "id", "date", "name", "severity", "service",
+        "target", "desc", "status", "hostnames", "comments", "owner", "os", "resolution", "easeofresolution", "web_vulnerability",
+        "data", "website", "path", "status_code", "request", "method", "params", "pname", "query",
+        "policyviolations", "external_id", "impact_confidentiality", "impact_integrity", "impact_availability",
+        "impact_accountability"}
 
     def parseOutputString(self, output, debug=False):
         parser = CSVParser(output)
@@ -187,4 +183,4 @@ class CSVPlugin(PluginByExtension):
                         )
 
 def createPlugin():
-    return CSVPlugin()
+    return FaradayCSVPlugin()

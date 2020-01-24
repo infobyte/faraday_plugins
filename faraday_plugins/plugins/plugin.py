@@ -4,6 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+import csv
 import os
 import re
 import uuid
@@ -446,4 +447,20 @@ class PluginJsonFormat(PluginByExtension):
             match = self.json_keys.issubset(file_json_keys)
             self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", file_json_keys, self.json_keys, match)
         return match
-# I'm Py3
+
+
+class PluginCSVFormat(PluginByExtension):
+
+    def __init__(self):
+        super().__init__()
+        self.extension = ".csv"
+        self.csv_headers = set()
+
+    def report_belongs_to(self, file_csv_headers=None, **kwargs):
+        match = False
+        if super().report_belongs_to(**kwargs):
+            if file_csv_headers is None:
+                file_csv_headers = set()
+            match = self.csv_headers.issubset(file_csv_headers)
+            self.logger.debug("CSV Headers Match: [%s =/in %s] -> %s", file_csv_headers, self.csv_headers, match)
+        return match

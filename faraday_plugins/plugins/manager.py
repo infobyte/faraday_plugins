@@ -7,6 +7,8 @@ import json
 import pkgutil
 from importlib import import_module
 from importlib.machinery import SourceFileLoader
+import csv
+from io import StringIO
 
 from . import repo
 
@@ -66,6 +68,7 @@ class ReportAnalyzer:
         file_extension = file_extension.lower()
         main_tag = None
         file_json_keys = {}
+        csv_headers = set()
         logger.debug("Analyze report File")
         # Try to parse as xml
         try:
@@ -87,13 +90,22 @@ class ReportAnalyzer:
                     logger.debug("Found JSON content on file: %s - Keys: %s", report_path, file_json_keys)
                 except Exception as e:
                     logger.debug("Non JSON content [%s] - %s", report_path, e)
+                    try:
+                        report_file.seek(0)
+                        reader_file_string = StringIO(report_file.read().decode('utf-8'))
+                        reader = csv.DictReader(reader_file_string)
+                        file_csv_headers = set(reader.fieldnames)
+                        logger.debug("Found JSON content on file: %s - Keys: %s", report_path, file_json_keys)
+                    except Exception as e:
+                        logger.debug("Non JSON content [%s] - %s", report_path, e)
             finally:
                 report_file.close()
                 for _plugin_id, _plugin in self.plugin_manager.get_plugins():
                     logger.debug("Try plugin: %s", _plugin_id)
                     try:
                         if _plugin.report_belongs_to(main_tag=main_tag, report_path=report_path,
-                                                     extension=file_extension, file_json_keys=file_json_keys):
+                                                     extension=file_extension, file_json_keys=file_json_keys,
+                                                     file_csv_headers=file_csv_headers):
                             plugin = _plugin
                             logger.debug("Plugin by File Found: %s", plugin.id)
                             break
