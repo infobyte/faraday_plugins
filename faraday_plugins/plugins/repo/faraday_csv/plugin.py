@@ -108,7 +108,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
         "target", "desc", "status", "hostnames", "comments", "owner", "os", "resolution", "easeofresolution", "web_vulnerability",
         "data", "website", "path", "status_code", "request", "method", "params", "pname", "query",
         "policyviolations", "external_id", "impact_confidentiality", "impact_integrity", "impact_availability",
-        "impact_accountability"}
+        "impact_accountability", "obj_type", "parent_id", "parent_type"}
 
     def parseOutputString(self, output, debug=False):
         parser = CSVParser(output)
