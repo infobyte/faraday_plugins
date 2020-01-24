@@ -8,7 +8,6 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 import socket
-import os
 import random
 import re
 from urllib.parse import urlparse
