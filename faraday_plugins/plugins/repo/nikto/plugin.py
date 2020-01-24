@@ -3,8 +3,8 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import plugin_utils
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins import plugins_utils
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
 import sys
@@ -49,7 +49,7 @@ class NiktoXmlParser:
         tree = self.parse_xml(xml_output)
 
         if tree:
-            self.hosts = list(self.get_hosts(tree))
+            self.hosts = [host for host in self.get_hosts(tree)]
         else:
             self.hosts = []
 
@@ -225,7 +225,7 @@ class Host:
         self.starttime = self.node.get('starttime')
         self.sitename = self.node.get('sitename')
         self.siteip = self.node.get('hostheader')
-        self.items = list(self.get_items())
+        self.items = [item for item in self.get_items()]
 
     def get_items(self):
         """
@@ -302,9 +302,7 @@ class NiktoPlugin(PluginXMLFormat):
             "-vhost+": "Virtual host (for Host header)",
         }
 
-        global current_path
-        self._output_file_path = os.path.join(self.data_path,
-                                              "nikto_output-%s.xml" % self._rid)
+
 
     def parseOutputString(self, output, debug=False):
         """
@@ -341,7 +339,7 @@ class NiktoPlugin(PluginXMLFormat):
                     ref=item.osvdbid,
                     method=item.method,
                     params=', '.join(item.params),
-                    **plugin_utils.get_vulnweb_url_fields(item.namelink)
+                    **plugins_utils.get_vulnweb_url_fields(item.namelink)
                 )
 
         del parser
@@ -381,5 +379,17 @@ class NiktoPlugin(PluginXMLFormat):
 def createPlugin():
     return NiktoPlugin()
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

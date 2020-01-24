@@ -4,8 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday.client.plugins import core
-from faraday.client.model import api
+from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
 import socket
@@ -22,7 +21,7 @@ __email__ = "mbruno@infobytesec.com"
 __status__ = "Development"
 
 
-class CmdFtpPlugin(core.PluginBase):
+class CmdFtpPlugin(PluginBase):
     """
     This plugin handles ftp command.
     Basically detects if user was able to connect to a device
@@ -80,7 +79,7 @@ class CmdFtpPlugin(core.PluginBase):
                 status="open")
 
         if debug is True:
-            api.devlog("Debug is active")
+            self.logger.info("Debug is active")
 
         return True
 
@@ -98,5 +97,17 @@ class CmdFtpPlugin(core.PluginBase):
 def createPlugin():
     return CmdFtpPlugin()
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

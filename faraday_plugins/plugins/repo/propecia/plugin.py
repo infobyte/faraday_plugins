@@ -4,8 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday.client.plugins import core
-from faraday.client.model import api
+from faraday_plugins.plugins.plugin import PluginBase
 import re
 
 
@@ -19,7 +18,7 @@ __email__ = "fedek@infobytesec.com"
 __status__ = "Development"
 
 
-class CmdPropeciaPlugin(core.PluginBase):
+class CmdPropeciaPlugin(PluginBase):
     """
     This plugin handles propecia command.
     Basically inserts into the tree the ouput of this tool
@@ -45,7 +44,7 @@ class CmdPropeciaPlugin(core.PluginBase):
             r"(\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b)", output)
 
         if host_info is None:
-            api.log("No hosts detected")
+            self.logger.info("No hosts detected")
         else:
             for host in output.splitlines():
                 if host != "":
@@ -59,7 +58,7 @@ class CmdPropeciaPlugin(core.PluginBase):
                                                                version="",
                                                                description="")
         if debug is True:
-            api.devlog("Debug is active")
+            self.logger.info("Debug is active")
 
         return True
 
@@ -75,5 +74,18 @@ class CmdPropeciaPlugin(core.PluginBase):
 def createPlugin():
     return CmdPropeciaPlugin()
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3

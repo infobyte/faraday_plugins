@@ -12,11 +12,8 @@ import os
 import sys
 import base64
 from bs4 import BeautifulSoup, Comment
-from faraday.client.plugins.plugin import PluginXMLFormat
-try:
-    from urlparse import urlsplit
-except ImportError:
-    from urllib.parse import urlsplit
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from urllib.parse import urlsplit
 import distutils.util #pylint: disable=import-error
 
 
@@ -61,7 +58,7 @@ class BurpXmlParser:
 
         tree = self.parse_xml(xml_output)
         if tree:
-            self.items = list(self.get_items(tree))
+            self.items = [data for data in self.get_items(tree)]
         else:
             self.items = []
 
@@ -229,12 +226,7 @@ class BurpPlugin(PluginXMLFormat):
         self.options = None
         self._current_output = None
         self.target = None
-        self._command_regex = re.compile(r'^(sudo burp|\.\/burp).*?')
 
-        global current_path
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "burp_output-%s.xml" % self._rid)
 
     def parseOutputString(self, output, debug=False):
 
@@ -315,11 +307,18 @@ class BurpPlugin(PluginXMLFormat):
 def createPlugin():
     return BurpPlugin()
 
-if __name__ == '__main__':
-    parser = BurpXmlParser(sys.argv[1])
-    for item in parser.items:
-        if item.status == 'up':
-            print(item)
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

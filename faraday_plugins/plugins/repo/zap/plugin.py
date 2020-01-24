@@ -7,14 +7,12 @@ import re
 import os
 import socket
 import sys
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 
 try:
     import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-
+    ETREE_VERSION = ET.VERSION
 except ImportError:
     import xml.etree.ElementTree as ET
     ETREE_VERSION = ET.VERSION
@@ -33,7 +31,10 @@ __email__ = "famato@infobytesec.com"
 __status__ = "Development"
 
 
-class ParserEtToAscii(ET_ORIG.TreeBuilder):
+class ParserEtToAscii(ET.TreeBuilder):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        print(self._data)
 
     def data(self, data):
         self._data.append(data.encode("ascii", errors="backslashreplace"))
@@ -58,7 +59,7 @@ class ZapXmlParser:
         tree = self.parse_xml(xml_output)
 
         if tree is not None:
-            self.sites = list(self.get_items(tree))
+            self.sites = [data for data in self.get_items(tree)]
         else:
             self.sites = []
 
@@ -72,7 +73,7 @@ class ZapXmlParser:
         @return xml_tree An xml tree instance. None if error.
         """
         try:
-            parser = ET_ORIG.XMLParser(target=ParserEtToAscii())
+            parser = ET.XMLParser(target=ET.TreeBuilder())
             parser.feed(xml_output)
             tree = parser.close()
 
@@ -273,9 +274,7 @@ class ZapPlugin(PluginXMLFormat):
         self.target = None
         self._command_regex = re.compile(r'^(zap|sudo zap|\.\/zap).*?')
 
-        global current_path
 
-        self._output_file_path = os.path.join(self.data_path, "zap_output-%s.xml" % self._rid)
 
     def parseOutputString(self, output, debug=False):
         """
@@ -339,6 +338,18 @@ class ZapPlugin(PluginXMLFormat):
 def createPlugin():
     return ZapPlugin()
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3

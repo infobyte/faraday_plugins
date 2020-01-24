@@ -5,12 +5,12 @@ See the file 'doc/LICENSE' for the license information
 
 """
 
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
 import socket
 
-import faraday.client.plugins.repo.nessus.dotnessus_v2 as dotnessus_v2
+import faraday_plugins.plugins.repo.nessus.dotnessus_v2 as dotnessus_v2
 
 
 
@@ -76,8 +76,6 @@ class NessusPlugin(PluginXMLFormat):
         self.protocol = None
         self.fail = None
 
-        global current_path
-        self.output_path = os.path.join(self.data_path, "nessus_output-%s.txt" % self._rid)
 
     def canParseCommandString(self, current_input):
         if self._command_regex.match(current_input.strip()):
@@ -202,4 +200,17 @@ class NessusPlugin(PluginXMLFormat):
 def createPlugin():
     return NessusPlugin()
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

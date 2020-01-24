@@ -3,11 +3,9 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
-from faraday.client.model import api
+from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
-import sys
 import random
 
 current_path = os.path.abspath(os.getcwd())
@@ -50,7 +48,7 @@ class HydraParser:
                 self.items.append(item)
 
 
-class HydraPlugin(core.PluginBase):
+class HydraPlugin(PluginBase):
     """
     Example plugin to parse hydra output.
     """
@@ -68,10 +66,6 @@ class HydraPlugin(core.PluginBase):
             r'^(sudo hydra|sudo \.\/hydra|hydra|\.\/hydra).*?')
         self.host = None
 
-        global current_path
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "hydra_output-%s.txt" % self._rid)
 
     def parseOutputString(self, output, debug=False):
         """
@@ -171,5 +165,18 @@ class HydraPlugin(core.PluginBase):
 def createPlugin():
     return HydraPlugin()
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3

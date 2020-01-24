@@ -16,8 +16,8 @@ except ImportError:
     import xml.etree.ElementTree as ET
     ETREE_VERSION = ET.VERSION
 
-from faraday.client.plugins.plugin import PluginXMLFormat
-from faraday.client.plugins.plugins_utils import filter_services
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import filter_services
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
@@ -328,8 +328,6 @@ class OpenvasPlugin(PluginXMLFormat):
         self._command_regex = re.compile(
             r'^(openvas|sudo openvas|\.\/openvas).*?')
 
-        global current_path
-        self._output_file_path = os.path.join(self.data_path, "openvas_output-%s.xml" % self._rid)
 
     def report_belongs_to(self, **kwargs):
         if super().report_belongs_to(**kwargs):
@@ -452,6 +450,18 @@ class OpenvasPlugin(PluginXMLFormat):
 def createPlugin():
     return OpenvasPlugin()
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3

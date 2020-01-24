@@ -6,7 +6,7 @@ See the file 'doc/LICENSE' for the license information
 import re
 import socket
 from os import path
-from faraday.client.plugins import core
+from faraday_plugins.plugins.plugin import PluginBase
 from urllib.parse import urlparse
 
 __author__ = "Andres Tarantini"
@@ -19,7 +19,7 @@ __email__ = "atarantini@gmail.com"
 __status__ = "Development"
 
 
-class PeepingTomPlugin(core.PluginBase):
+class PeepingTomPlugin(PluginBase):
     """
     Handle PeepingTom (https://bitbucket.org/LaNMaSteR53/peepingtom) output
     """
@@ -74,5 +74,18 @@ class PeepingTomPlugin(core.PluginBase):
 def createPlugin():
     return PeepingTomPlugin()
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3

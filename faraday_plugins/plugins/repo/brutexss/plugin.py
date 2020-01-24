@@ -6,8 +6,7 @@ See the file 'doc/LICENSE' for the license information
 import re
 import socket
 from urllib.parse import urlparse
-
-from faraday.client.plugins import core
+from faraday_plugins.plugins.plugin import PluginBase
 
 __author__ = "Roberto Focke"
 __copyright__ = "Copyright (c) 2017, Infobyte LLC"
@@ -15,7 +14,7 @@ __license__ = ""
 __version__ = "1.0.0"
 
 
-class brutexss (core.PluginBase):
+class brutexss (PluginBase):
 
     def __init__(self):
         super().__init__()
@@ -63,5 +62,17 @@ class brutexss (core.PluginBase):
 def createPlugin():
     return brutexss()
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

@@ -3,10 +3,8 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
-from faraday.client.model import api
+from faraday_plugins.plugins.plugin import PluginBase
 import re
-import sys
 from urllib.request import urlopen
 import json
 
@@ -20,7 +18,7 @@ __email__ = "famato@infobytesec.com"
 __status__ = "Development"
 
 
-class BeefPlugin(core.PluginBase):
+class BeefPlugin(PluginBase):
     """
     Example plugin to parse beef output.
     """
@@ -55,7 +53,7 @@ class BeefPlugin(core.PluginBase):
                 "Host") + "/api/hooks?token=" + self.getSetting("Authkey"))
             data = json.loads(f.read())
         except:
-            api.devlog("[BeEF] - Connection with api")
+            self.logger.info("[BeEF] - Connection with api")
             return
 
         if "hooked-browsers" in data:
@@ -106,4 +104,17 @@ class BeefPlugin(core.PluginBase):
 def createPlugin():
     return BeefPlugin()
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

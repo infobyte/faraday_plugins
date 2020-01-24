@@ -5,8 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 
-from faraday.client.plugins.plugin import PluginXMLFormat
-from faraday.client.model import api
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
 import socket
@@ -54,7 +53,7 @@ class W3afXmlParser:
         tree = self.parse_xml(xml_output)
 
         if tree:
-            self.items = list(self.get_items(tree))
+            self.items = [data for data in self.get_items(tree)]
         else:
             self.items = []
 
@@ -213,7 +212,7 @@ class W3afPlugin(PluginXMLFormat):
 
     def __init__(self):
         super().__init__()
-        self.identifier_tag = "w3af-run"
+        self.identifier_tag = ["w3af-run", "w3afrun"]
         self.id = "W3af"
         self.name = "W3af XML Output Plugin"
         self.plugin_version = "0.0.2"
@@ -228,9 +227,6 @@ class W3afPlugin(PluginXMLFormat):
             "-h": "Display this help message.",
         }
 
-        global current_path
-        self._output_file_path = os.path.join(self.data_path,
-                                              "w3af_output-%s.xml" % self._rid)
 
     def parseOutputString(self, output, debug=False):
 
@@ -268,5 +264,18 @@ class W3afPlugin(PluginXMLFormat):
 def createPlugin():
     return W3afPlugin()
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3

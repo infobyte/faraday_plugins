@@ -4,10 +4,9 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
+from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
-import sys
 import random
 from collections import defaultdict
 
@@ -80,6 +79,7 @@ class DnsmapParser:
             if not splitted[i]:
                 hosts_list.append(aux_list)
                 aux_list = []
+                continue
             else:
                 aux_list.append(splitted[i])
         return hosts_list
@@ -92,7 +92,7 @@ class DnsmapParser:
         self.items[ip_address].append(hostname)
 
 
-class DnsmapPlugin(core.PluginBase):
+class DnsmapPlugin(PluginBase):
     """Example plugin to parse dnsmap output."""
 
     def __init__(self):
@@ -107,16 +107,6 @@ class DnsmapPlugin(core.PluginBase):
         self._command_regex = re.compile(r'^(sudo dnsmap|dnsmap|\.\/dnsmap).*?')
         self.xml_arg_re = re.compile(r"^.*(-r\s*[^\s]+).*$")
 
-        global current_path
-
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "%s_%s_output-%s.txt" % (
-                self.get_ws(),
-                self.id,
-                random.uniform(1, 10)
-            )
-        )
 
     def canParseCommandString(self, current_input):
         if self._command_regex.match(current_input.strip()):
@@ -152,4 +142,17 @@ class DnsmapPlugin(core.PluginBase):
 def createPlugin():
     return DnsmapPlugin()
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

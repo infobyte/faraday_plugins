@@ -5,7 +5,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import csv
 from io import StringIO
-from faraday.client.plugins import core
+from faraday_plugins.plugins.plugin import PluginBase
 
 
 def calculate_severity(number):
@@ -63,7 +63,7 @@ class Ip360Parser:
 
         return result
 
-class Ip360Plugin(core.PluginBase):
+class Ip360Plugin(PluginBase):
     """
     Example plugin to parse Ip360 output.
     """
@@ -116,4 +116,17 @@ class Ip360Plugin(core.PluginBase):
 def createPlugin():
     return Ip360Plugin()
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

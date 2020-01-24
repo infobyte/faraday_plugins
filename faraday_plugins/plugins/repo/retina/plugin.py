@@ -4,7 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
 import sys
@@ -45,7 +45,7 @@ class RetinaXmlParser:
     def __init__(self, xml_output):
         tree = self.parse_xml(xml_output)
         if tree:
-            self.items = list(self.get_items(tree))
+            self.items = [data for data in self.get_items(tree)]
         else:
             self.items = []
 
@@ -186,9 +186,6 @@ class RetinaPlugin(PluginXMLFormat):
         self._current_output = None
         self._command_regex = re.compile(r'^(sudo retina|\.\/retina).*?')
 
-        global current_path
-        self._output_file_path = os.path.join(self.data_path,
-                                              "retina_output-%s.xml" % self._rid)
 
     def parseOutputString(self, output, debug=False):
 
@@ -243,5 +240,18 @@ class RetinaPlugin(PluginXMLFormat):
 def createPlugin():
     return RetinaPlugin()
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3

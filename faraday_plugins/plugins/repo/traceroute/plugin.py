@@ -4,7 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday.client.plugins import core
+from faraday_plugins.plugins.plugin import PluginBase
 import re
 
 __author__ = "Ezequiel Tavella - @EzequielTBH"
@@ -14,7 +14,7 @@ __license__ = "GPL v3"
 __version__ = "1.0.0"
 
 
-class traceroutePlugin(core.PluginBase):
+class traceroutePlugin(PluginBase):
 
     def __init__(self):
         super().__init__()
@@ -61,5 +61,17 @@ class traceroutePlugin(core.PluginBase):
 def createPlugin():
     return traceroutePlugin()
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

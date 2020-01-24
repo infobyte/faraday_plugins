@@ -6,8 +6,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
-from faraday.client.model import api
+from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
 import sys
@@ -50,7 +49,7 @@ class DnsreconXmlParser:
         tree = self.parse_xml(xml_output)
 
         if tree:
-            self.hosts = list(self.get_hosts(tree))
+            self.hosts = [host for host in self.get_hosts(tree)]
         else:
             self.hosts = []
 
@@ -158,7 +157,7 @@ class Item:
         return None
 
 
-class DnsreconPlugin(core.PluginBase):
+class DnsreconPlugin(PluginBase):
     """
     Example plugin to parse dnsrecon output.
     """
@@ -175,10 +174,6 @@ class DnsreconPlugin(core.PluginBase):
         self._command_regex = re.compile(
             r'^(sudo dnsrecon|dnsrecon|sudo dnsrecon\.py|dnsrecon\.py|python dnsrecon\.py|\.\/dnsrecon\.py).*?')
 
-        global current_path
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "dnsrecon_output-%s.xml" % self._rid)
 
     def validHosts(self, hosts):
         valid_records = ["NS", "CNAME", "A", "MX", "info"]
@@ -270,5 +265,19 @@ class DnsreconPlugin(core.PluginBase):
 
 def createPlugin():
     return DnsreconPlugin()
+
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3

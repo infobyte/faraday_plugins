@@ -5,7 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 
-from faraday.client.plugins import core
+from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
 import socket
@@ -71,7 +71,7 @@ class DnswalkParser:
             return hostname
 
 
-class DnswalkPlugin(core.PluginBase):
+class DnswalkPlugin(PluginBase):
     """
     Example plugin to parse dnswalk output.
     """
@@ -146,5 +146,17 @@ class DnswalkPlugin(core.PluginBase):
 def createPlugin():
     return DnswalkPlugin()
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

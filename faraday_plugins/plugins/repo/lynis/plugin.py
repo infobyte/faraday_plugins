@@ -7,8 +7,8 @@ import re
 import os
 from collections import defaultdict
 
-from faraday.client.plugins.plugin import PluginByExtension
-from faraday.client.plugins.plugins_utils import filter_services, get_all_protocols
+from faraday_plugins.plugins.plugin import PluginByExtension
+from faraday_plugins.plugins.plugins_utils import filter_services, get_all_protocols
 
 
 current_path = os.path.abspath(os.getcwd())
@@ -354,5 +354,17 @@ class LynisPlugin(PluginByExtension):
 def createPlugin():
     return LynisPlugin()
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

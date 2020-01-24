@@ -6,8 +6,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins.plugin import PluginXMLFormat
-from faraday.client.model import api
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 import socket
 import os
 import random
@@ -199,10 +198,12 @@ class System():
     def getOptions(self):
 
         # Get values of options scan
-        options_string = self.node.find('options').text
-
-        if not options_string:
+        options = self.node.find('options')
+        if options:
+            options_string = options.text
+        else:
             return
+
 
         regex_modules = re.compile('checks:\n([\w\d\s\W\D\S]{0,})(platforms:)')
         regex_user_agent = re.compile('user_agent:(.+)')
@@ -282,6 +283,7 @@ class Plugins():
         self.healthmap = self.getHealthmap()
         self.waf = self.getWaf()
 
+
     def getHealthmap(self):
 
         # Get info about healthmap
@@ -296,28 +298,32 @@ class Plugins():
         for url in map_results:
 
             if url.tag == 'with_issues':
-                list_urls.append('With Issues: ' + url.text)
+                list_urls.append(f"With Issues: {url.text}")
             else:
-                list_urls.append('Without Issues: ' + url.text)
+                list_urls.append(f"Without Issues: {url.text}")
+
+        def get_value(name, node=None):
+            if not node:
+                node = healthmap_tree
+            x = healthmap_tree.find(name)
+            if x:
+                return x.text
+            else:
+                return ""
 
         try:
+            plugin_name = get_value('name')
+            description = get_value('description')
+            results = get_value('results')
+            total = get_value('total', results)
+            with_issues = get_value('with_issues', results)
+            without_issues = get_value('without_issues', results)
+            issue_percentage = get_value('issue_percentage', results)
 
-            result = (
-                'Plugin Name: ' +
-                healthmap_tree.find('name').text +
-                '\nDescription: ' +
-                healthmap_tree.find('description').text +
-                '\nStatistics:' +
-                '\nTotal: ' +
-                healthmap_tree.find('results').find('total').text +
-                '\nWith Issues: ' +
-                healthmap_tree.find('results').find('with_issues').text +
-                '\nWithout Issues: ' +
-                healthmap_tree.find('results').find('without_issues').text +
-                '\nIssues percentage: ' +
-                healthmap_tree.find('results').find('issue_percentage').text +
-                '\nResults Map:\n' +
-                '\n'.join(list_urls))
+            urls = '\n'.join(list_urls)
+            result = (f"Plugin Name: {plugin_name}\nDescription: {description}\nStatistics:\nTotal: {total}"
+                      f"\nWith Issues: {with_issues}\nWithout Issues: {without_issues}"
+                      f"\nIssues percentage: {issue_percentage}\nResults Map:\n {urls}")
             return result
 
         except:
@@ -328,21 +334,24 @@ class Plugins():
         # Get info about waf plugin.
         waf_tree = self.plugins_node.find('waf_detector')
 
+        def get_value(name, node=None):
+            if not node:
+                node = waf_tree
+            x = waf_tree.find(name)
+            if x:
+                return x.text
+            else:
+                return ""
+
         try:
-
-            result = (
-                'Plugin Name: ' +
-                waf_tree.find('name').text +
-                '\nDescription: ' +
-                waf_tree.find('description').text +
-                '\nResults:' +
-                '\nMessage: ' +
-                waf_tree.find('results').find('message').text +
-                '\nStatus: ' +
-                waf_tree.find('results').find('status').text)
-
+            plugin_name = get_value('name')
+            description = get_value('description')
+            results = waf_tree.find('results')
+            message = get_value('message', results)
+            status = get_value('status', results)
+            result = (f"Plugin Name: {plugin_name}\nDescription: {description}\nResults:"
+                      f"\nMessage: {message}\nStatus: {status}")
             return result
-
         except:
             return 'None'
 
@@ -353,7 +362,7 @@ class ArachniPlugin(PluginXMLFormat):
 
     def __init__(self):
         super().__init__()
-        self.identifier_tag = "report"
+        self.identifier_tag = ["report", "arachni_report"]
         self.id = 'Arachni'
         self.name = 'Arachni XML Output Plugin'
         self.plugin_version = '1.0.1'
@@ -371,7 +380,7 @@ class ArachniPlugin(PluginXMLFormat):
             report_path = kwargs.get("report_path", "")
             with open(report_path) as f:
                 output = f.read()
-            return re.search("https://raw.githubusercontent.com/Arachni/arachni/", output) is not None
+            return re.search("/Arachni/arachni/", output) is not None
         return False
 
     def parseOutputString(self, output, debug=False):
@@ -515,5 +524,17 @@ class ArachniPlugin(PluginXMLFormat):
 def createPlugin():
     return ArachniPlugin()
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

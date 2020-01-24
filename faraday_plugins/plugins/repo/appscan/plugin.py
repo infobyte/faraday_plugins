@@ -8,12 +8,9 @@ See the file 'doc/LICENSE' for the license information
 """
 
 import socket
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 from lxml import objectify
-try:
-    from urlparse import urlparse
-except ImportError:
-    from urllib.parse import urlparse
+from urllib.parse import urlparse
 
 __author__ = "Alejando Parodi, Ezequiel Tavella"
 __copyright__ = "Copyright (c) 2015, Infobyte LLC"
@@ -26,10 +23,11 @@ __status__ = "Development"
 
 
 def cleaner_unicode(string):
-    if string is not None:
-        return string.encode('ascii', errors='backslashreplace')
-    else:
-        return string
+    return string
+    # if string is not None:
+    #     return string.encode('ascii', errors='backslashreplace')
+    # else:
+    #     return string
 
 
 class AppscanParser():
@@ -145,6 +143,7 @@ class AppscanPlugin(PluginXMLFormat):
         self.name = "Appscan XML Plugin"
         self.plugin_version = "0.0.1"
         self.options = None
+        self.open_options = {"mode": "r", "encoding": "utf-8"}
 
     def parseOutputString(self, output, debug=False):
         try:
@@ -196,21 +195,21 @@ class AppscanPlugin(PluginXMLFormat):
         except Exception as e:
             self.logger.error("Parsing Output Error: %s", e)
 
-    def processCommandString(self, username, current_path, command_string):
-        return
-
 
 def createPlugin():
     return AppscanPlugin()
 
-
-if __name__ == '__main__':
-    parser = AppscanPlugin()
-    with open('/home/javier/Reports_Testing/appscan-demo_testfire.xml', 'r') as report:
-        parser.parseOutputString(report.read())
-        for item in parser.items:
-            if item.status == 'up':
-                print(item)
-
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

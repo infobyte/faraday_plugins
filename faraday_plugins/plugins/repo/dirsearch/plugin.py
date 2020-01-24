@@ -4,7 +4,6 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-import os
 import json
 import shlex
 import socket
@@ -13,8 +12,8 @@ import tempfile
 import urllib.parse as urlparse
 
 
-from faraday.client.plugins.plugin import PluginTerminalOutput
-from faraday.client.plugins.plugin_utils import get_vulnweb_url_fields
+from faraday_plugins.plugins.plugin import PluginTerminalOutput
+from faraday_plugins.plugins.plugins_utils import get_vulnweb_url_fields
 
 
 __author__ = "Matías Lang"
@@ -176,5 +175,17 @@ class DirsearchPlugin(PluginTerminalOutput):
 def createPlugin():
     return DirsearchPlugin()
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

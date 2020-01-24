@@ -3,7 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
+from faraday_plugins.plugins.plugin import PluginBase
 import argparse
 import shlex
 import socket
@@ -14,7 +14,7 @@ import os
 current_path = os.path.abspath(os.getcwd())
 
 
-class AmapPlugin(core.PluginBase):
+class AmapPlugin(PluginBase):
     """ Example plugin to parse amap output."""
 
     def __init__(self):
@@ -28,18 +28,13 @@ class AmapPlugin(core.PluginBase):
         self._command_regex = re.compile(r'^(amap|sudo amap).*?')
         self._hosts = []
 
-        global current_path
-        self._file_output_path = os.path.join(
-            self.data_path,
-            "amap_output-%s.txt" % random.uniform(1, 10))
-
     def parseOutputString(self, output, debug=False):
-        if not os.path.exists(self._file_output_path):
-            return False
-
-        if not debug:
-            with open(self._file_output_path) as f:
-                output = f.read()
+        # if not os.path.exists(self._file_output_path):
+        #     return False
+        #
+        # if not debug:
+        #     with open(self._file_output_path) as f:
+        #         output = f.read()
 
         services = {}
         for line in output.split('\n'):
@@ -140,50 +135,6 @@ class AmapPlugin(core.PluginBase):
         except socket.error as msg:
             return hostname
 
-    def processCommandString(self, username, current_path, command_string):
-        """
-        Adds the -m parameter to get machine readable output.
-        """
-        arg_match = self.file_arg_re.match(command_string)
-
-        parser = argparse.ArgumentParser()
-
-        parser.add_argument('-6', action='store_true')
-        parser.add_argument('-o')
-        parser.add_argument('-m')
-
-        self._output_file_path = os.path.join(
-            self.data_path, "%s_%s_output-%s.xml" % (
-                self.get_ws(),
-                self.id,
-                random.uniform(1, 10)))
-
-        if arg_match is None:
-            final = re.sub(
-                r"(^.*?amap)",
-                r"\1 -o %s -m " % self._file_output_path,
-                command_string)
-        else:
-            final = re.sub(
-                arg_match.group(1),
-                r"-o %s -m " % self._file_output_path,
-                command_string)
-
-        cmd = shlex.split(re.sub(r'\-h|\-\-help', r'', final))
-        if "-6" in cmd:
-            cmd.remove("-6")
-            cmd.insert(1, "-6")
-
-        args = None
-        if len(cmd) > 4:
-            try:
-                args, unknown = parser.parse_known_args(cmd)
-            except SystemExit:
-                pass
-
-        self.args = args
-        return final
-
     def setHost(self):
         pass
 
@@ -191,5 +142,17 @@ class AmapPlugin(core.PluginBase):
 def createPlugin():
     return AmapPlugin()
 
-
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

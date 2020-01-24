@@ -5,7 +5,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import socket
-from faraday.client.plugins import core
+from faraday_plugins.plugins.plugin import PluginBase
 
 __author__ = "Roberto Focke"
 __copyright__ = "Copyright (c) 2017, Infobyte LLC"
@@ -13,7 +13,7 @@ __license__ = ""
 __version__ = "1.0.0"
 
 
-class xsssniper (core.PluginBase):
+class xsssniper(PluginBase):
 
     def __init__(self):
         super().__init__()
@@ -25,7 +25,7 @@ class xsssniper (core.PluginBase):
         self._command_regex = re.compile(r'^(sudo xsssniper|xsssniper|sudo xsssniper\.py|xsssniper\.py|sudo python xsssniper\.py|.\/xsssniper\.py|python xsssniper\.py)')
 
     def parseOutputString(self, output, debug=False):
-        parametro=[]
+        parametro = []
         lineas = output.split("\n")
         aux = 0
         for linea in lineas:
@@ -44,11 +44,14 @@ class xsssniper (core.PluginBase):
                 lista_parametros=linea.split('=')
                 aux=len(lista_parametros)
             if ((linea.find("param:")>0)):
-                list2= re.findall("\w+",linea)
+                list2 = re.findall("\w+",linea)
                 parametro.append(list2[1])
-                service_id = self.createAndAddServiceToInterface(host_id,interface_id,self.protocol,'tcp',ports=['80'],status='Open',version="", description="")
-        if aux !=0:
-            self.createAndAddVulnWebToService(host_id,service_id,name="xss",desc="XSS",ref='',severity='med',website=url[0],path='',method=metodo,pname='',params=''.join(parametro),request='',response='')
+                service_id = self.createAndAddServiceToInterface(host_id, interface_id, self.protocol, 'tcp',
+                                                                 ports=['80'], status='Open', version="", description="")
+        if aux != 0:
+            self.createAndAddVulnWebToService(host_id, service_id, name="xss", desc="XSS", ref='', severity='med',
+                                              website=url[0], path='', method=metodo, pname='',
+                                              params=''.join(parametro), request='', response='')
 
     def processCommandString(self, username, current_path, command_string):
         return None
@@ -57,5 +60,18 @@ class xsssniper (core.PluginBase):
 def createPlugin():
     return xsssniper()
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3

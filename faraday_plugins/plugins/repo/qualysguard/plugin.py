@@ -3,7 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
 import sys
@@ -74,9 +74,9 @@ class QualysguardXmlParser():
             return
 
         if type_report is 'ASSET_DATA_REPORT':
-            self.items = list(self.get_items_asset_report(tree))
+            self.items = [data for data in self.get_items_asset_report(tree)]
         elif type_report is 'SCAN':
-            self.items = list(self.get_items_scan_report(tree))
+            self.items = [data for data in self.get_items_scan_report(tree)]
 
     def parse_xml(self, xml_output):
         """
@@ -132,7 +132,7 @@ class ItemAssetReport():
 
         self.node = item_node
         self.ip = self.get_text_from_subnode('IP')
-        self.hostname = self.get_text_from_subnode('DNS') or ''
+
         self.os = self.get_text_from_subnode('OPERATING_SYSTEM')
         self.vulns = self.getResults(tree)
 
@@ -168,7 +168,6 @@ class ResultsAssetReport():
         self.port = self.get_text_from_subnode(self.node, 'PORT')
         self.protocol = self.get_text_from_subnode(self.node, 'PROTOCOL')
         self.name = self.get_text_from_subnode(self.node, 'QID')
-        self.external_id = self.name
         self.result = self.get_text_from_subnode(self.node, 'RESULT')
 
         self.severity_dict = {
@@ -201,10 +200,7 @@ class ResultsAssetReport():
 
         # References
         self.ref = []
-
-        cve_id = self.get_text_from_glossary('CVE_ID_LIST/CVE_ID/ID')
-        if cve_id:
-            self.ref.append(cve_id)
+        self.ref.append(self.get_text_from_glossary('CVE_ID_LIST/CVE_ID/ID'))
 
         if self.cvss:
             self.ref.append('CVSS SCORE: ' + self.cvss)
@@ -307,21 +303,13 @@ class ResultsScanReport():
         self.protocol = parent.get('protocol')
         self.name = self.node.get('number')
         self.external_id = self.node.get('number')
+        self.severity = self.node.get('severity')
         self.title = self.get_text_from_subnode('TITLE')
         self.cvss = self.get_text_from_subnode('CVSS_BASE')
         self.diagnosis = self.get_text_from_subnode('DIAGNOSIS')
         self.solution = self.get_text_from_subnode('SOLUTION')
         self.result = self.get_text_from_subnode('RESULT')
         self.consequence = self.get_text_from_subnode('CONSEQUENCE')
-
-        self.severity_dict = {
-            '1': 'info',
-            '2': 'info',
-            '3': 'med',
-            '4': 'high',
-            '5': 'critical'}
-
-        self.severity = self.severity_dict.get(self.node.get('severity'), 'info')
 
         self.desc = cleaner_results(self.diagnosis)
         if self.result:
@@ -375,11 +363,8 @@ class QualysguardPlugin(PluginXMLFormat):
         self._current_output = None
         self._command_regex = re.compile(
             r'^(sudo qualysguard|\.\/qualysguard).*?')
+        self.open_options = {"mode": "r", "encoding": "utf-8"}
 
-        global current_path
-        self._output_file_path = os.path.join(
-            self.data_path,
-            'qualysguard_output-%s.xml' % self._rid)
 
     def parseOutputString(self, output, debug=False):
 
@@ -397,7 +382,7 @@ class QualysguardPlugin(PluginXMLFormat):
                         h_id,
                         v.title if v.title else v.name,
                         ref=v.ref,
-                        severity=v.severity,
+                        severity=str(int(v.severity) - 1),
                         resolution=v.solution if v.solution else '',
                         desc=v.desc,
                         external_id=v.external_id)
@@ -424,7 +409,7 @@ class QualysguardPlugin(PluginXMLFormat):
                             v.title if v.title else v.name,
                             ref=v.ref,
                             website=item.ip,
-                            severity=v.severity,
+                            severity=str(int(v.severity) - 1),
                             desc=v.desc,
                             resolution=v.solution if v.solution else '',
                             external_id=v.external_id)
@@ -435,7 +420,7 @@ class QualysguardPlugin(PluginXMLFormat):
                             s_id,
                             v.title if v.title else v.name,
                             ref=v.ref,
-                            severity=v.severity,
+                            severity=str(int(v.severity) - 1),
                             desc=v.desc,
                             resolution=v.solution if v.solution else '',
                             external_id=v.external_id)
@@ -453,4 +438,17 @@ def createPlugin():
     return QualysguardPlugin()
 
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

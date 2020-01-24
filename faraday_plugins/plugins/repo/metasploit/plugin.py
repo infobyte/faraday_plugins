@@ -3,8 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins.plugin import PluginXMLFormat
-from faraday.client.model import api
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
 import sys
@@ -49,14 +48,14 @@ class MetasploitXmlParser:
             for site in tree.findall('web_sites/web_site'):
                 servicesByWebsite[site.find('id').text] = site.find('service-id').text
             webVulnsByService = {}
-            for v in self.get_vulns(tree, servicesByWebsite):
+            for v in [data for data in self.get_vulns(tree, servicesByWebsite)]:
                 if v.service_id not in webVulnsByService:
                     webVulnsByService[v.service_id] = []
                 webVulnsByService[v.service_id].append(v)
 
-            self.hosts = list(self.get_items(
+            self.hosts = [data for data in self.get_items(
                 tree,
-                webVulnsByService))
+                webVulnsByService)]
         else:
             self.hosts = []
 
@@ -342,8 +341,6 @@ class MetasploitPlugin(PluginXMLFormat):
         self.target = None
         self._command_regex = re.compile(r'^(metasploit|sudo metasploit|\.\/metasploit).*?')
 
-        global current_path
-        self._output_file_path = os.path.join(self.data_path, "metasploit_output-%s.xml" % self._rid)
 
     def parseOutputString(self, output, debug=False):
         """
@@ -420,4 +417,17 @@ def createPlugin():
     return MetasploitPlugin()
 
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

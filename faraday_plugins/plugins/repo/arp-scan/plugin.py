@@ -3,8 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
-from faraday.client.model import api
+from faraday_plugins.plugins.plugin import PluginBase
 import re
 
 __author__ = "Federico Kirschbaum"
@@ -17,7 +16,7 @@ __email__ = "fedek@infobytesec.com"
 __status__ = "Development"
 
 
-class CmdArpScanPlugin(core.PluginBase):
+class CmdArpScanPlugin(PluginBase):
     """
     This plugin handles arp-scan command.
     Basically inserts into the tree the ouput of this tool
@@ -45,7 +44,7 @@ class CmdArpScanPlugin(core.PluginBase):
         host_mac_addr = re.search(r"([\dA-F]{2}(?:[-:][\dA-F]{2}){5})", output, re.IGNORECASE)
 
         if host_info is None:
-            api.devlog("No hosts detected")
+            self.logger.info("No hosts detected")
         else:
 
             for line in output.split('\n'):
@@ -67,4 +66,18 @@ class CmdArpScanPlugin(core.PluginBase):
 
 def createPlugin():
     return CmdArpScanPlugin()
+
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

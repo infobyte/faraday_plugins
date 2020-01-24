@@ -9,7 +9,7 @@ import os
 import socket
 
 from urllib.parse import urlparse
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 try:
     import xml.etree.cElementTree as ET
     import xml.etree.ElementTree as ET_ORIG
@@ -46,7 +46,7 @@ class WapitiXmlParser:
     def __init__(self, xml_output):
         tree = self.parse_xml(xml_output)
         if tree:
-            self.items = list(self.get_items(tree))
+            self.items = [data for data in self.get_items(tree)]
         else:
             self.items = []
 
@@ -120,7 +120,7 @@ class Item:
         self.node = item_node
         self.url = self.get_url(item_node)
         self.ip = socket.gethostbyname(self.url.hostname)
-        self.hostname  = self.url.hostname
+        self.hostname = self.url.hostname
         self.port = self.get_port(self.url)
         self.scheme = self.url.scheme
         self.vulns = self.get_vulns(item_node)
@@ -144,7 +144,7 @@ class Item:
         return None
 
     def get_url(self, item_node):
-        target = self.get_info(item_node,'target')
+        target = self.get_info(item_node, 'target')
         return urlparse(target)
 
     def get_info(self, item_node,name):
@@ -276,9 +276,6 @@ class WapitiPlugin(PluginXMLFormat):
             "--help": "To print this usage message",
         }
 
-        global current_path
-        self._output_file_path = os.path.join(self.data_path, "wapiti_output-%s.xml" % self._rid)
-
     def report_belongs_to(self, **kwargs):
         if super().report_belongs_to(**kwargs):
             report_path = kwargs.get("report_path", "")
@@ -338,4 +335,17 @@ def createPlugin():
     return WapitiPlugin()
 
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3

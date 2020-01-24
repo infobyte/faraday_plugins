@@ -17,8 +17,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
     ETREE_VERSION = ET.VERSION
 
-from faraday.client.plugins.plugin import PluginXMLFormat
-from faraday.client.model import api
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
@@ -90,9 +89,7 @@ def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
 
     if ETREE_VERSION[0] <= 1 and ETREE_VERSION[1] < 3:
 
-        match_obj = re.search(
-            "([^\@]+?)\[\@([^=]*?)=\'([^\']*?)\'",
-            subnode_xpath_expr)
+        match_obj = re.search("([^\@]+?)\[\@([^=]*?)=\'([^\']*?)\'", subnode_xpath_expr)
 
         if match_obj is not None:
             node_to_find = match_obj.group(1)
@@ -124,8 +121,7 @@ class Site:
         self.host = url_data.hostname
 
         # Use the port in the URL if it is defined, or 80 or 443 by default
-        self.port = url_data.port or (443 if url_data.scheme == "https"
-                                      else 80)
+        self.port = url_data.port or (443 if url_data.scheme == "https" else 80)
 
         self.ip = self.resolve(self.host)
         self.os = self.get_text_from_subnode('Os')
@@ -150,9 +146,7 @@ class Site:
         try:
             return socket.gethostbyname(host)
         except:
-            api.log(
-                '[ERROR] Acunetix XML Plugin: Ip of host unknown ' + host,
-                level='ERROR')
+            print('[ERROR] Acunetix XML Plugin: Ip of host unknown ' + host)
             return None
         return host
 
@@ -236,12 +230,7 @@ class AcunetixPlugin(PluginXMLFormat):
         self.options = None
         self._current_output = None
         self.target = None
-        self._command_regex = re.compile(r'^(acunetix|sudo acunetix|\.\/acunetix).*?')
 
-        global current_path
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "acunetix_output-%s.xml" % self._rid)
 
     def parseOutputString(self, output, debug=False):
         """
@@ -251,7 +240,6 @@ class AcunetixPlugin(PluginXMLFormat):
         NOTE: if 'debug' is true then it is being run from a test case and the
         output being sent is valid.
         """
-
         parser = AcunetixXmlParser(output)
 
         for site in parser.sites:
@@ -290,8 +278,6 @@ class AcunetixPlugin(PluginXMLFormat):
                     ref=item.ref)
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass
@@ -299,3 +285,19 @@ class AcunetixPlugin(PluginXMLFormat):
 
 def createPlugin():
     return AcunetixPlugin()
+
+
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
+

@@ -3,8 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
-import pprint
+from faraday_plugins.plugins.plugin import PluginBase
 import re
 
 __author__ = "Federico Fernandez - @q3rv0"
@@ -15,7 +14,7 @@ __maintainer__ = "Federico Fernandez"
 __email__ = "fede.merlo26@gmail.com"
 __status__ = "Development"
 
-class NetdiscoverPlugin(core.PluginBase):
+class NetdiscoverPlugin(PluginBase):
 
     def __init__(self):
         super().__init__()
@@ -33,8 +32,8 @@ class NetdiscoverPlugin(core.PluginBase):
 
             for stdout in reg:
                 ip_address = stdout[0]
-                mac        = stdout[2]
-                hostname   = stdout[6].strip()
+                mac = stdout[2]
+                hostname = stdout[6].strip()
 
                 h_id = self.createAndAddHost(ip_address)
                 self.createAndAddInterface(h_id, ip_address, ipv4_address=ip_address, mac=mac, hostname_resolution=[hostname])
@@ -48,5 +47,18 @@ class NetdiscoverPlugin(core.PluginBase):
 def createPlugin():
     return NetdiscoverPlugin()
 
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 
 # I'm Py3

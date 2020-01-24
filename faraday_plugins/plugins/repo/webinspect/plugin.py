@@ -3,8 +3,8 @@ Faraday Penetration Test IDE
 Copyright (C) 2018 Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
-from faraday.client.plugins.plugin_utils import get_vulnweb_url_fields
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import get_vulnweb_url_fields
 import re
 
 try:
@@ -111,7 +111,7 @@ class WebInspectParser():
         return result
 
 
-class WebInspectPlugin(core.PluginBase):
+class WebInspectPlugin(PluginBase):
     """
     This plugin handles WebInspect reports.
     """
@@ -164,4 +164,18 @@ class WebInspectPlugin(core.PluginBase):
 
 def createPlugin():
     return WebInspectPlugin()
+
+if __name__ == "__main__":
+    import sys
+    import os
+    if len(sys.argv) == 2:
+        report_file = sys.argv[1]
+        if os.path.isfile(report_file):
+            plugin = createPlugin()
+            plugin.processReport(report_file)
+            print(plugin.get_json())
+        else:
+            print(f"Report not found: {report_file}")
+    else:
+        print(f"USAGE {sys.argv[0]} REPORT_FILE")
 # I'm Py3
