@@ -439,7 +439,7 @@ class PluginJsonFormat(PluginByExtension):
         match = False
         if super().report_belongs_to(**kwargs):
             if file_json_keys is None:
-                file_json_keys = {}
+                file_json_keys = set()
             match = self.json_keys.issubset(file_json_keys)
             self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", file_json_keys, self.json_keys, match)
         return match
