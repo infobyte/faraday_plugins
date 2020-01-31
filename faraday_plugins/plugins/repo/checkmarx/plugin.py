@@ -82,10 +82,9 @@ class Querys():
 
 
 class CheckmarxPlugin(PluginXMLFormat):
-
     def __init__(self):
         super().__init__()
-        self.identifier_tag = ["report", "checkmarx_report"]
+        self.identifier_tag = ["report", "CxXMLResults"]
         self.id = 'Checkmarx'
         self.name = 'Checkmarx XML Output Plugin'
         self.plugin_version = '1.0.0'
