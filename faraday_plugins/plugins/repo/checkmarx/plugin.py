@@ -104,52 +104,59 @@ class CheckmarxPlugin(PluginXMLFormat):
             print('Error in xml report... Exiting...')
             return
 
-        url = urlparse(parser.cx_xml_results_attribs['DeepLink'])
-        project_name = 'ProjectName' in parser.cx_xml_results_attribs
-        if project_name:
-            host_id = self.createAndAddHost(self.address, hostnames=[url.netloc],
-                                            scan_template=parser.cx_xml_results_attribs['ProjectName'])
-            interface_id = self.createAndAddInterface(host_id, self.address, ipv4_address=self.address,
-                                                      hostname_resolution=[url.netloc])
-            service_to_host = self.createAndAddServiceToHost(host_id, name=url.netloc, protocol=url.scheme,
-                                                              ports=url.port)
+        deeplink_check = 'categories' in parser.cx_xml_results_attribs
 
-            service_to_interface = self.createAndAddServiceToInterface(host_id, interface_id, name=url.scheme,
-                                                                       ports=url.port)
+        if deeplink_check:
+            url = urlparse(parser.cx_xml_results_attribs['DeepLink'])
+            project_name = 'ProjectName' in parser.cx_xml_results_attribs
+            if project_name:
+                host_id = self.createAndAddHost(self.address, hostnames=[url.netloc],
+                                                scan_template=parser.cx_xml_results_attribs['ProjectName'])
+                interface_id = self.createAndAddInterface(host_id, self.address, ipv4_address=self.address,
+                                                          hostname_resolution=[url.netloc])
+                service_to_host = self.createAndAddServiceToHost(host_id, name=url.netloc, protocol=url.scheme,
+                                                                  ports=url.port)
 
-        else:
-            host_id = self.createAndAddHost(self.address, hostnames=[url.netloc])
+                service_to_interface = self.createAndAddServiceToInterface(host_id, interface_id, name=url.scheme,
+                                                                           ports=url.port)
 
-            interface_id = self.createAndAddInterface(host_id, self.address, ipv4_address=self.address,
-                                                      hostname_resolution=[url.netloc])
-            service_to_host = self.createAndAddServiceToHost(host_id, name=url.scheme, ports=url.port)
-
-            service_to_interface = self.createAndAddServiceToInterface(host_id, interface_id, name=url.scheme,
-                                                                       ports=url.port)
-
-        for vulns in parser.query:
-
-            categories = 'categories' in vulns.query_attrib
-            if categories:
-                self.vuln_desc = vulns.query_attrib['categories']
             else:
-                self.vuln_desc = None
-            self.vuln_name = vulns.query_attrib['name']
-            self.vuln_severity = vulns.query_attrib['Severity']
-            self.vuln_scan_id = vulns.query_attrib['cweId']
-            self.resolution = vulns.path_node
-            self.website = []
-            self.pathfile = []
-            for v_result in vulns.result:
-                self.website.append(v_result['DeepLink'])
-                self.pathfile.append(v_result['FileName'])
+                host_id = self.createAndAddHost(self.address, hostnames=[url.netloc])
 
-            self.createAndAddVulnToHost(host_id, self.vuln_name, severity=self.vuln_severity,
-                                        resolution=self.resolution, vulnerable_since="", scan_id=self.vuln_scan_id)
+                interface_id = self.createAndAddInterface(host_id, self.address, ipv4_address=self.address,
+                                                          hostname_resolution=[url.netloc])
+                service_to_host = self.createAndAddServiceToHost(host_id, name=url.scheme, ports=url.port)
 
-            self.createAndAddVulnWebToService(host_id, service_to_interface,  self.vuln_name,
-                                              severity=self.vuln_severity, resolution=self.resolution,
-                                              website=self.website, path=self.pathfile)
+                service_to_interface = self.createAndAddServiceToInterface(host_id, interface_id, name=url.scheme,
+                                                                           ports=url.port)
+
+            for vulns in parser.query:
+
+                categories = 'categories' in vulns.query_attrib
+                if categories:
+                    self.vuln_desc = vulns.query_attrib['categories']
+                else:
+                    self.vuln_desc = None
+                self.vuln_name = vulns.query_attrib['name']
+                self.vuln_severity = vulns.query_attrib['Severity']
+                self.vuln_scan_id = vulns.query_attrib['cweId']
+                self.resolution = vulns.path_node
+                self.website = []
+                self.pathfile = []
+                for v_result in vulns.result:
+                    self.website.append(v_result['DeepLink'])
+                    self.pathfile.append(v_result['FileName'])
+
+                self.createAndAddVulnToHost(host_id, self.vuln_name, severity=self.vuln_severity,
+                                            resolution=self.resolution, vulnerable_since="", scan_id=self.vuln_scan_id)
+
+                self.createAndAddVulnWebToService(host_id, service_to_interface,  self.vuln_name,
+                                                  severity=self.vuln_severity, resolution=self.resolution,
+                                                  website=self.website, path=self.pathfile)
+        else:
+            print('Error in xml report... Exiting...')
+            return
+
 
 def createPlugin():
     return CheckmarxPlugin()
