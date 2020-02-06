@@ -126,6 +126,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                 os=host['os'],
                 hostnames=host['hostnames'],
                 mac=host['mac'],
+                description=host['host_description']
             )
 
             for _id, service_data in value['services'].items():
