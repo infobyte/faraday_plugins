@@ -58,6 +58,7 @@ class CSVParser:
                 row['comments'] = json.loads(row['comments'].replace("\'", "\""))
                 row['refs'] = json.loads(row['refs'].replace("\'", "\""))
                 row['policyviolations'] = json.loads(row['policyviolations'].replace("\'", "\""))
+                row['impact'] = self.parse_vuln_impact(row)
 
                 if row['parent_type'] == 'Host':
                     parent_id = row['parent_id']
@@ -95,6 +96,14 @@ class CSVParser:
 
         return new_headers
 
+    def parse_vuln_impact(self, vuln_data):
+        impact = {
+            "accountability":True if vuln_data['impact_accountability'] == "True" else False,
+            "confidentiality":True if vuln_data['impact_confidentiality'] == "True" else False,
+            "availability":True if vuln_data['impact_availability'] == "True" else False,
+            "integrity":True if vuln_data['impact_integrity'] == "True" else False,
+        }
+        return impact
 
 class FaradayCSVPlugin(PluginCSVFormat):
     def __init__(self):
@@ -104,11 +113,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
         self.plugin_version = "1.0"
         self.options = None
         self.csv_headers = {
-        "confirmed", "id", "date", "name", "severity", "service",
-        "target", "desc", "status", "hostnames", "comments", "owner", "os", "resolution", "easeofresolution", "web_vulnerability",
-        "data", "website", "path", "status_code", "request", "method", "params", "pname", "query",
-        "policyviolations", "external_id", "impact_confidentiality", "impact_integrity", "impact_availability",
-        "impact_accountability", "obj_type", "parent_id", "parent_type"}
+            "host_id", "ip", "hostnames", "host_description", "os", "mac",
+        "host_owned", "host_creator_id", "obj_type"}
 
     def parseOutputString(self, output, debug=False):
         parser = CSVParser(output)
@@ -135,17 +141,21 @@ class FaradayCSVPlugin(PluginCSVFormat):
                 services_ids[service_data['service_id']] = s_id
             
             for vuln in value['vulns']:
-                import pdb; pdb.set_trace()
                 if vuln['parent_type'] == 'Host':
                     self.createAndAddVulnToHost(# TODO faltan campos (confirmed, target, status, comments, owner,ease, policy, impact, creator, custom fields 
                         h_id,
                         name=vuln['data']['vuln_name'],
-                        desc="Testing",
+                        desc=vuln['data']['vuln_desc'],
                         ref=vuln['data']['refs'],
                         severity=vuln['data']['severity'],
                         resolution=vuln['data']['resolution'],
                         data=vuln['data']['data'],
-                        external_id=vuln['data']['external_id']
+                        external_id=vuln['data']['external_id'],
+                        confirmed=vuln['data']['confirmed'],
+                        status=vuln['data']['vuln_status'],
+                        easeofresolution=vuln['data']['easeofresolution'] or None,
+                        impact=vuln['data']['impact'],
+                        policyviolations=vuln['data']['policyviolations'],
                     )
                 elif vuln['parent_type'] == 'Service':
                     service_id = services_ids[vuln['parent_id']]
@@ -167,7 +177,13 @@ class FaradayCSVPlugin(PluginCSVFormat):
                             params=vuln['data']['params'],
                             query=vuln['data']['query'],
                             data=vuln['data']['data'],
-                            external_id=vuln['data']['external_id']
+                            external_id=vuln['data']['external_id'],
+                            confirmed=vuln['data']['confirmed'],
+                            status=vuln['data']['vuln_status'],
+                            easeofresolution=vuln['data']['easeofresolution'] or None,
+                            impact=vuln['data']['impact'],
+                            policyviolations=vuln['data']['policyviolations'],
+                            status_code=vuln['data']['status_code']
                         )
                     else:
                         self.createAndAddVulnToService(# TODO faltan campos (status_code) ademas de los de createAndAddVulnToHost
@@ -179,7 +195,12 @@ class FaradayCSVPlugin(PluginCSVFormat):
                             severity=vuln['data']['severity'],
                             resolution=vuln['data']['resolution'],
                             data=vuln['data']['data'],
-                            external_id=vuln['data']['external_id']
+                            external_id=vuln['data']['external_id'],
+                            confirmed=vuln['data']['confirmed'],
+                            status=vuln['data']['vuln_status'],
+                            easeofresolution=vuln['data']['easeofresolution'] or None,
+                            impact=vuln['data']['impact'],
+                            policyviolations=vuln['data']['policyviolations']
                         )
 
 def createPlugin():
