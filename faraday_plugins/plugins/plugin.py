@@ -190,13 +190,14 @@ class PluginBase:
         raise NotImplementedError('This method must be implemented.')
 
     def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None, scan_template="", site_name="",
-                         site_importance="", risk_score="", fingerprints="", fingerprints_software=""):
+                         site_importance="", risk_score="", fingerprints="", fingerprints_software="",
+                         description=""):
 
         if not hostnames:
             hostnames = []
         if os is None:
             os = "unknown"
-        host = {"ip": name, "os": os, "hostnames": hostnames, "description": "",  "mac": mac,
+        host = {"ip": name, "os": os, "hostnames": hostnames, "description": description,  "mac": mac,
                 "credentials": [], "services": [], "vulnerabilities": [], "scan_template": scan_template,
                 "site_name": site_name, "site_importance": site_importance, "risk_score": risk_score,
                 "fingerprints": fingerprints, "fingerprints_software": fingerprints_software
