@@ -68,7 +68,7 @@ class ReportAnalyzer:
         file_extension = file_extension.lower()
         main_tag = None
         file_json_keys = {}
-        csv_headers = set()
+        file_csv_headers = set()
         logger.debug("Analyze report File")
         # Try to parse as xml
         try:
