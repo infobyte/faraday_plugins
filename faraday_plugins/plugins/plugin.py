@@ -266,14 +266,22 @@ class PluginBase:
 
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
                                severity="", resolution="", vulnerable_since="", scan_id="", pci="", data="",
-                               external_id=None):
+                               external_id=None, confirmed=False, status="", easeofresolution=None, impact=None,
+                               policyviolations=None):
         if ref is None:
             ref = []
-        vulnerability = {"name": name, " desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
+        if status == "":
+            status = "opened"
+        if impact is None:
+            impact = {}
+        if policyviolations is None:
+            policyviolations = []
+        vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution,
-                         "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data}
+                         "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data,
+                         "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
+                         "impact": impact, "policyviolations": policyviolations}
         host = self.get_from_cache(host_id)
-
         host["vulnerabilities"].append(vulnerability)
         vulnerability_id = len(host["vulnerabilities"]) - 1
         return vulnerability_id
@@ -289,12 +297,21 @@ class PluginBase:
                                            data=data)
 
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
-                                  ref=None, severity="", resolution="", risk="", data="", external_id=None):
+                                  ref=None, severity="", resolution="", risk="", data="", external_id=None,
+                                  confirmed=False, status="", easeofresolution=None, impact=None,
+                                  policyviolations=None):
         if ref is None:
             ref = []
+        if status == "":
+            status = "opened"
+        if impact is None:
+            impact = {}
+        if policyviolations is None:
+            policyviolations = []
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "riskB": risk,
-                         "data": data}
+                         "data": data, "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution, "impact": impact,
+                         "policyviolations": policyviolations}
         service = self.get_from_cache(service_id)
         service["vulnerabilities"].append(vulnerability)
         vulnerability_id = self.save_cache(vulnerability)
@@ -304,7 +321,9 @@ class PluginBase:
                                      ref=None, severity="", resolution="",
                                      website="", path="", request="",
                                      response="", method="", pname="",
-                                     params="", query="", category="", data="", external_id=None):
+                                     params="", query="", category="", data="", external_id=None,
+                                     confirmed=False, status="", easeofresolution=None, impact=None,
+                                     policyviolations=None, status_code=None):
         if params is None:
             params = ""
         if response is None:
@@ -327,10 +346,19 @@ class PluginBase:
             response = ""
         if ref is None:
             ref = []
+        if status == "":
+            status = "opened"
+        if impact is None:
+            impact = {}
+        if policyviolations is None:
+            policyviolations = []
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
                          "data": data, "website": website, "path": path, "request": request, "response": response,
-                         "method": method, "pname": pname, "params": params, "query": query, "category": category}
+                         "method": method, "pname": pname, "params": params, "query": query, "category": category,
+                         "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
+                         "impact": impact, "policyviolations": policyviolations,
+                         "status_code": status_code}
         service = self.get_from_cache(service_id)
         service["vulnerabilities"].append(vulnerability)
         vulnerability_id = self.save_cache(vulnerability)
