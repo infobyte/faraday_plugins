@@ -38,8 +38,8 @@ class CSVParser:
                 change_headers = True
 
             elif row['obj_type'] == 'host':
-                # Convert string to list and set the right JSON quoting
-                row['hostnames'] = json.loads(row['hostnames'].replace("\'", "\""))
+                # Convert string to list
+                row['hostnames'] = literal_eval(row['hostnames'])
                 host_id = row.pop('host_id')
                 items_dict[host_id] = {
                     'host': row,
@@ -54,14 +54,13 @@ class CSVParser:
                 services_id[service_id] = parent_id
 
             elif row['obj_type'] == 'vulnerability':
-                # Convert string to list and set the right JSON quoting 
-                row['hostnames'] = json.loads(row['hostnames'].replace("\'", "\""))
-                row['comments'] = json.loads(row['comments'].replace("\'", "\""))
-                row['refs'] = json.loads(row['refs'].replace("\'", "\""))
-                row['policyviolations'] = json.loads(row['policyviolations'].replace("\'", "\""))
+                # Convert string to list
+                row['hostnames'] = literal_eval(row['hostnames'])
+                row['comments'] = literal_eval(row['comments'])
+                row['refs'] = literal_eval(row['refs'])
+                row['policyviolations'] = literal_eval(row['policyviolations'])
                 row['custom_fields'] = self.parse_custom_fields(row)
                 row['impact'] = self.parse_vuln_impact(row)
-
                 if row['parent_type'] == 'Host':
                     parent_id = row['parent_id']
                     items_dict[parent_id]['vulns'].append(
