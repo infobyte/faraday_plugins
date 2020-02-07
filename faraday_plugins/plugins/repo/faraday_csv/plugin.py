@@ -3,7 +3,6 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-import json;
 import csv
 from ast import literal_eval
 
@@ -81,7 +80,6 @@ class CSVParser:
                         }
                     )
 
-        print(json.dumps(items_dict, sort_keys=True, indent=4))
         return items_dict
 
     def set_new_headers(self, row):
