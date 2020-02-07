@@ -268,7 +268,7 @@ class PluginBase:
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
                                severity="", resolution="", vulnerable_since="", scan_id="", pci="", data="",
                                external_id=None, confirmed=False, status="", easeofresolution=None, impact=None,
-                               policyviolations=None):
+                               policyviolations=None, custom_fields=None):
         if ref is None:
             ref = []
         if status == "":
@@ -281,7 +281,8 @@ class PluginBase:
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution,
                          "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data,
                          "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
-                         "impact": impact, "policyviolations": policyviolations}
+                         "impact": impact, "policyviolations": policyviolations,
+                         "custom_fields": custom_fields}
         host = self.get_from_cache(host_id)
         host["vulnerabilities"].append(vulnerability)
         vulnerability_id = len(host["vulnerabilities"]) - 1
@@ -300,7 +301,7 @@ class PluginBase:
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", risk="", data="", external_id=None,
                                   confirmed=False, status="", easeofresolution=None, impact=None,
-                                  policyviolations=None):
+                                  policyviolations=None, custom_fields=None):
         if ref is None:
             ref = []
         if status == "":
@@ -312,7 +313,7 @@ class PluginBase:
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "riskB": risk,
                          "data": data, "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution, "impact": impact,
-                         "policyviolations": policyviolations}
+                         "policyviolations": policyviolations, "custom_fields": custom_fields}
         service = self.get_from_cache(service_id)
         service["vulnerabilities"].append(vulnerability)
         vulnerability_id = self.save_cache(vulnerability)
@@ -324,7 +325,7 @@ class PluginBase:
                                      response="", method="", pname="",
                                      params="", query="", category="", data="", external_id=None,
                                      confirmed=False, status="", easeofresolution=None, impact=None,
-                                     policyviolations=None, status_code=None):
+                                     policyviolations=None, status_code=None, custom_fields=None):
         if params is None:
             params = ""
         if response is None:
@@ -359,7 +360,7 @@ class PluginBase:
                          "method": method, "pname": pname, "params": params, "query": query, "category": category,
                          "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
                          "impact": impact, "policyviolations": policyviolations,
-                         "status_code": status_code}
+                         "status_code": status_code, "custom_fields": custom_fields}
         service = self.get_from_cache(service_id)
         service["vulnerabilities"].append(vulnerability)
         vulnerability_id = self.save_cache(vulnerability)
