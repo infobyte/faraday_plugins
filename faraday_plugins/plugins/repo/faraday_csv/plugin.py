@@ -5,6 +5,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import json;
 import csv
+from ast import literal_eval
 
 from faraday_plugins.plugins.plugin import PluginByExtension, PluginCSVFormat
 
@@ -58,6 +59,7 @@ class CSVParser:
                 row['comments'] = json.loads(row['comments'].replace("\'", "\""))
                 row['refs'] = json.loads(row['refs'].replace("\'", "\""))
                 row['policyviolations'] = json.loads(row['policyviolations'].replace("\'", "\""))
+                row['custom_fields'] = self.parse_custom_fields(row)
                 row['impact'] = self.parse_vuln_impact(row)
 
                 if row['parent_type'] == 'Host':
@@ -104,6 +106,28 @@ class CSVParser:
             "integrity":True if vuln_data['impact_integrity'] == "True" else False,
         }
         return impact
+
+    def parse_custom_fields(self, vuln):
+        custom_fields = {}
+        vuln_headers = [
+            "confirmed", "vuln_id", "date", "vuln_name", "severity", "service",
+            "target", "vuln_desc", "vuln_status", "hostnames", "comments",
+            "vuln_owner", "os", "resolution", "refs", "easeofresolution",
+            "web_vulnerability", "data", "website", "path", "status_code",
+            "request", "response", "method", "params", "pname", "query",
+            "policyviolations", "external_id", "impact_confidentiality",
+            "impact_integrity", "impact_availability", "impact_accountability",
+            "vuln_creator", "obj_type", "parent_id", "parent_type"
+        ]
+        # The additional fields between vuln_headers and vuln.keys() are the Custom Fields
+        custom_fields_names = set(vuln.keys()).difference(vuln_headers)
+        for name in custom_fields_names:
+            cf_value = vuln[name]
+            try:
+                custom_fields[name] = literal_eval(cf_value)
+            except (ValueError, SyntaxError):
+                custom_fields[name] = cf_value
+        return custom_fields
 
 class FaradayCSVPlugin(PluginCSVFormat):
     def __init__(self):
@@ -157,6 +181,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         easeofresolution=vuln['data']['easeofresolution'] or None,
                         impact=vuln['data']['impact'],
                         policyviolations=vuln['data']['policyviolations'],
+                        custom_fields=vuln['data']['custom_fields']
                     )
                 elif vuln['parent_type'] == 'Service':
                     service_id = services_ids[vuln['parent_id']]
@@ -184,7 +209,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                             easeofresolution=vuln['data']['easeofresolution'] or None,
                             impact=vuln['data']['impact'],
                             policyviolations=vuln['data']['policyviolations'],
-                            status_code=vuln['data']['status_code']
+                            status_code=vuln['data']['status_code'],
+                            custom_fields=vuln['data']['custom_fields']
                         )
                     else:
                         self.createAndAddVulnToService(# TODO faltan campos (status_code) ademas de los de createAndAddVulnToHost
@@ -201,7 +227,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                             status=vuln['data']['vuln_status'],
                             easeofresolution=vuln['data']['easeofresolution'] or None,
                             impact=vuln['data']['impact'],
-                            policyviolations=vuln['data']['policyviolations']
+                            policyviolations=vuln['data']['policyviolations'],
+                            custom_fields=vuln['data']['custom_fields']
                         )
 
 def createPlugin():
