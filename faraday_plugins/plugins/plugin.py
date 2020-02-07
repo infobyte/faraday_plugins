@@ -277,6 +277,8 @@ class PluginBase:
             impact = {}
         if policyviolations is None:
             policyviolations = []
+        if custom_fields is None:
+            custom_fields = {}
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution,
                          "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data,
@@ -310,6 +312,8 @@ class PluginBase:
             impact = {}
         if policyviolations is None:
             policyviolations = []
+        if custom_fields is None:
+            custom_fields = {}
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "riskB": risk,
                          "data": data, "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution, "impact": impact,
@@ -354,6 +358,8 @@ class PluginBase:
             impact = {}
         if policyviolations is None:
             policyviolations = []
+        if custom_fields is None:
+            custom_fields = {}
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
                          "data": data, "website": website, "path": path, "request": request, "response": response,
