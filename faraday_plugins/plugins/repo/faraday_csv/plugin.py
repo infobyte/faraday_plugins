@@ -14,15 +14,6 @@ class CSVParser:
         self.items = self.parse_csv(csv_output)
 
     def parse_csv(self, output):
-        """"
-            {
-                host_id: {
-                    host: [],
-                    services: {},
-                    vulns:[]
-                }
-            }
-        """
         items_dict = {}
         change_headers = False
         services_id = {} # dict with a service id as key and its parent id as value 
@@ -135,14 +126,15 @@ class FaradayCSVPlugin(PluginCSVFormat):
         self.options = None
         self.csv_headers = {
             "host_id", "ip", "hostnames", "host_description", "os", "mac",
-        "host_owned", "host_creator_id", "obj_type"}
+            "host_owned", "host_creator_id", "obj_type"
+        }
 
     def parseOutputString(self, output, debug=False):
         parser = CSVParser(output)
         services_ids = {}
         for key, value in parser.items.items():
             host = value['host']
-            h_id = self.createAndAddHost(# TODO faltan campos (desc, owned, creator_id)
+            h_id = self.createAndAddHost(
                 name=host['ip'],
                 os=host['os'],
                 hostnames=host['hostnames'],
@@ -151,7 +143,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
             )
 
             for _id, service_data in value['services'].items():
-                s_id = self.createAndAddServiceToHost(# TODO faltan campos (owned, creator_id)
+                s_id = self.createAndAddServiceToHost(
                     h_id,
                     name=service_data['service_name'],
                     protocol=service_data['protocol'],
@@ -164,7 +156,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
             
             for vuln in value['vulns']:
                 if vuln['parent_type'] == 'Host':
-                    self.createAndAddVulnToHost(# TODO faltan campos (confirmed, target, status, comments, owner,ease, policy, impact, creator, custom fields 
+                    self.createAndAddVulnToHost(
                         h_id,
                         name=vuln['data']['vuln_name'],
                         desc=vuln['data']['vuln_desc'],
