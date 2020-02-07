@@ -6,7 +6,7 @@ See the file 'doc/LICENSE' for the license information
 import csv
 from ast import literal_eval
 
-from faraday_plugins.plugins.plugin import PluginByExtension, PluginCSVFormat
+from faraday_plugins.plugins.plugin import PluginCSVFormat
 
 
 class CSVParser:
