@@ -113,7 +113,7 @@ class Item:
         self.protocol = self.url.scheme
         self.hostname = self.url.netloc
         self.port = self.url.port
-        if self.port == None:
+        if self.port is None:
             self.port = '80'
         self.type = self.get_text_from_subnode("type")
         self.name = self.get_text_from_subnode("name")
