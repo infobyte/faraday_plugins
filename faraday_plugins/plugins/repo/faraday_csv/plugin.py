@@ -126,7 +126,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
         self.options = None
         self.csv_headers = {
             "host_id", "ip", "hostnames", "host_description", "os", "mac",
-            "host_owned", "host_creator_id", "obj_type"
+            "host_owned", "host_creator_id", "date", "update_date", "obj_type"
         }
 
     def parseOutputString(self, output, debug=False):
