@@ -98,7 +98,7 @@ class CSVParser:
     def parse_custom_fields(self, vuln):
         custom_fields = {}
         vuln_headers = [
-            "confirmed", "vuln_id", "date", "vuln_name", "severity", "service",
+            "confirmed", "vuln_id", "date", "update_date", "vuln_name", "severity", "service",
             "target", "vuln_desc", "vuln_status", "hostnames", "comments",
             "vuln_owner", "os", "resolution", "refs", "easeofresolution",
             "web_vulnerability", "data", "website", "path", "status_code",
