@@ -10,8 +10,8 @@ install_requires = [
     'simplejson',
     'requests',
     'lxml',
-    'html2text==2019.8.11',
-    'beautifulsoup4==4.7.1',
+    'html2text',
+    'beautifulsoup4',
 ]
 
 
