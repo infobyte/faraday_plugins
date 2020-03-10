@@ -175,7 +175,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                 elif vuln['parent_type'] == 'Service':
                     service_id = services_ids[vuln['parent_id']]
                     if vuln['data']['web_vulnerability']:
-                        self.createAndAddVulnWebToService(# TODO faltan campos (status_code) ademas de los de createAndAddVulnToHost
+                        self.createAndAddVulnWebToService(
                             h_id,
                             service_id,
                             name=vuln['data']['vuln_name'],
@@ -198,11 +198,11 @@ class FaradayCSVPlugin(PluginCSVFormat):
                             easeofresolution=vuln['data']['easeofresolution'] or None,
                             impact=vuln['data']['impact'],
                             policyviolations=vuln['data']['policyviolations'],
-                            status_code=vuln['data']['status_code'],
+                            status_code=vuln['data']['status_code'] or None,
                             custom_fields=vuln['data']['custom_fields']
                         )
                     else:
-                        self.createAndAddVulnToService(# TODO faltan campos (status_code) ademas de los de createAndAddVulnToHost
+                        self.createAndAddVulnToService(
                             h_id,
                             service_id,
                             name=vuln['data']['name'],
