@@ -36,14 +36,14 @@ def test_autodetected_on_all_report_collection(report_filename):
 
 
 @pytest.mark.parametrize("report_filename", list_report_files())
-def test_detected_tools_on_all_report_collection(report_filename):
+def test_detected_tools_on_all_report_collection(report_filename, benchmark):
     plugins_manager = PluginsManager()
     analyzer = ReportAnalyzer(plugins_manager)
     plugin: PluginBase = analyzer.get_plugin(report_filename)
     if not plugin:
         return
     assert plugin, report_filename
-    plugin.processReport(report_filename)
+    benchmark(plugin.processReport, report_filename)
     plugin_json = json.loads(plugin.get_json())
     assert "hosts" in plugin_json
     assert "command" in plugin_json
