@@ -350,7 +350,6 @@ class ResultsScanReport():
         @return An attribute value
         """
         sub_node = self.node.find(subnode_xpath_expr)
-        print(sub_node)
         if sub_node is not None:
             return cleaner_results(sub_node.text)
 
