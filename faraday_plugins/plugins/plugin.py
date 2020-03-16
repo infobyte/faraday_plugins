@@ -38,6 +38,8 @@ class PluginBase:
         self.command_id = None
         self.cache = {}
         self._hosts_cache = {}
+        self._service_cache = {}
+        self._vulns_cache = {}
         self.start_date = datetime.now()
         self.logger = logger.getChild(self.__class__.__name__)
         self.open_options = {"mode": "r", "encoding": "utf-8"}
@@ -89,18 +91,68 @@ class PluginBase:
             severity = numeric_severities.get(severity, 'unclassified')
         return severity
 
+    # Caches
     def get_from_cache(self, cache_id):
         return self.cache.get(cache_id, None)
 
-    def save_host_cache(self, obj):
-        cache_id = f"ip:{obj['ip']}_os:{obj['os']}"
+    def save_host_cache(self, host):
+        cache_id = self.get_host_cache_id(host)
         if cache_id not in self._hosts_cache:
-            obj_uuid = self.save_cache(obj)
-            self.vulns_data["hosts"].append(obj)
+            obj_uuid = self.save_cache(host)
+            self.vulns_data["hosts"].append(host)
             self._hosts_cache[cache_id] = obj_uuid
         else:
             obj_uuid = self._hosts_cache[cache_id]
         return obj_uuid
+
+    def save_service_cache(self, host_id, service):
+        cache_id = self.get_host_service_cache_id(host_id, service)
+        if cache_id not in self._service_cache:
+            obj_uuid = self.save_cache(service)
+            host = self.get_from_cache(host_id)
+            host["services"].append(service)
+            self._service_cache[cache_id] = obj_uuid
+        else:
+            obj_uuid = self._service_cache[cache_id]
+        return obj_uuid
+
+    def save_service_vuln_cache(self, service_id, vuln):
+        cache_id = self.get_service_vuln_cache_id(service_id, vuln)
+        if cache_id not in self._vulns_cache:
+            obj_uuid = self.save_cache(vuln)
+            service = self.get_from_cache(service_id)
+            service["vulnerabilities"].append(vuln)
+            self._vulns_cache[cache_id] = obj_uuid
+        else:
+            obj_uuid = self._vulns_cache[cache_id]
+        return obj_uuid
+
+    def save_host_vuln_cache(self, host_id, vuln):
+        cache_id = self.get_host_vuln_cache_id(host_id, vuln)
+        if cache_id not in self._vulns_cache:
+            obj_uuid = self.save_cache(vuln)
+            host = self.get_from_cache(host_id)
+            host["vulnerabilities"].append(vuln)
+            self._vulns_cache[cache_id] = obj_uuid
+        else:
+            obj_uuid = self._vulns_cache[cache_id]
+        return obj_uuid
+
+    @staticmethod
+    def get_host_cache_id(host):
+        return f"ip:{host['ip']}_os:{host['os']}"
+
+    @staticmethod
+    def get_host_service_cache_id(host_id, service):
+        return f"host:{host_id}_protocol:{service['protocol']}_port:{service['port']}"
+
+    @staticmethod
+    def get_service_vuln_cache_id(service_id, vuln):
+        return f"service:{service_id}_name:{vuln['name']}_desc:{vuln['desc']}_severity:{vuln['severity']}"
+
+    @staticmethod
+    def get_host_vuln_cache_id(host_id, vuln):
+        return f"host:{host_id}_name:{vuln['name']}_desc:{vuln['desc']}_severity:{vuln['severity']}"
 
     def save_cache(self, obj):
         obj_uuid = uuid.uuid1()
@@ -269,9 +321,9 @@ class PluginBase:
             status = 'open'
         service = {"name": name, "protocol": protocol, "port": ports, "status": status,
                    "version": version, "description": description, "credentials": [], "vulnerabilities": []}
-        host = self.get_from_cache(host_id)
-        host["services"].append(service)
-        service_id = self.save_cache(service)
+
+        service_id = self.save_service_cache(host_id, service)
+
         return service_id
 
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
@@ -279,14 +331,12 @@ class PluginBase:
                                external_id=None, run_date=None):
         if ref is None:
             ref = []
-        vulnerability = {"name": name, " desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
+        vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution,
-                         "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data,
-                         "run_date": self.get_utctimestamp(run_date)}
-        host = self.get_from_cache(host_id)
-
-        host["vulnerabilities"].append(vulnerability)
-        vulnerability_id = len(host["vulnerabilities"]) - 1
+                         "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data}
+        if run_date:
+            vulnerability["run_date"] = self.get_utctimestamp(run_date)
+        vulnerability_id = self.save_host_vuln_cache(host_id, vulnerability)
         return vulnerability_id
 
     # @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
@@ -305,10 +355,10 @@ class PluginBase:
             ref = []
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "risk": risk,
-                         "data": data, "run_date": self.get_utctimestamp(run_date)}
-        service = self.get_from_cache(service_id)
-        service["vulnerabilities"].append(vulnerability)
-        vulnerability_id = self.save_cache(vulnerability)
+                         "data": data}
+        if run_date:
+            vulnerability["run_date"] = self.get_utctimestamp(run_date)
+        vulnerability_id = self.save_service_vuln_cache(service_id, vulnerability)
         return vulnerability_id
 
     def createAndAddVulnWebToService(self, host_id, service_id, name, desc="",
@@ -341,11 +391,11 @@ class PluginBase:
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
                          "data": data, "website": website, "path": path, "request": request, "response": response,
-                         "method": method, "pname": pname, "params": params, "query": query, "category": category,
-                         "run_date": self.get_utctimestamp(run_date)}
-        service = self.get_from_cache(service_id)
-        service["vulnerabilities"].append(vulnerability)
-        vulnerability_id = self.save_cache(vulnerability)
+                         "method": method, "pname": pname, "params": params, "query": query, "category": category
+                         }
+        if run_date:
+            vulnerability["run_date"] = self.get_utctimestamp(run_date)
+        vulnerability_id = self.save_service_vuln_cache(service_id, vulnerability)
         return vulnerability_id
 
     def createAndAddNoteToHost(self, host_id, name, text):
