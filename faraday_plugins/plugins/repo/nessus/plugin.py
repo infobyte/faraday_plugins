@@ -91,89 +91,77 @@ class NessusPlugin(PluginXMLFormat):
         NOTE: if 'debug' is true then it is being run from a test case and the
         output being sent is valid.
         """
-        p = dotnessus_v2.Report()
+        dotnessus_report = dotnessus_v2.Report()
         try:
-            p.parse(output, from_string=True)
+            dotnessus_report.parse(output, from_string=True)
         except Exception as e:
             self.logger.error("Exception - %s", e)
 
-        for t in p.targets:
+        for target in dotnessus_report.targets:
             mac = ""
             host = ""
             ip = ""
 
-            if t.get('mac-address'):
-                mac = t.get('mac-address')
-            if t.get('host-fqdn'):
-                host = t.get('host-fqdn')
-            if t.get('host-ip'):
-                ip = t.get('host-ip')
+            if target.get('mac-address'):
+                mac = target.get('mac-address')
+            if target.get('host-fqdn'):
+                host = target.get('host-fqdn')
+            if target.get('host-ip'):
+                ip = target.get('host-ip')
 
             if not ip:
-                if not t.get_ips():
+                if not target.get_ips():
                     continue
-                ip = t.get_ips().pop()
+                ip = target.get_ips().pop()
 
-            h_id = self.createAndAddHost(ip, t.get('operating-system'), hostnames=[host])
+            host_id = self.createAndAddHost(ip, target.get('operating-system'), hostnames=[host])
 
             if self._isIPV4(ip):
-                i_id = self.createAndAddInterface(
-                    h_id, ip, mac, ipv4_address=ip, hostname_resolution=[host])
+                i_id = self.createAndAddInterface(host_id, ip, mac, ipv4_address=ip, hostname_resolution=[host])
             else:
-                i_id = self.createAndAddInterface(
-                    h_id, ip, mac, ipv6_address=ip, hostname_resolution=[host])
+                i_id = self.createAndAddInterface(host_id, ip, mac, ipv6_address=ip, hostname_resolution=[host])
 
             srv = {}
             web = False
-            for v in t.vulns:
-                external_id = ""
-
-                external_id = v.get('plugin_id')
-
-                desc = ""
-                desc += v.get('description') if v.get('description') else ""
-                resolution = ""
-                resolution = v.get('solution') if v.get('solution') else ""
-
-                data = "\nOutput: " + v.get('plugin_output') if v.get('plugin_output') else ""
-
+            for vuln_data in target.vulns:
+                external_id = vuln_data.get('plugin_id')
+                desc = vuln_data.get('description') if vuln_data.get('description') else ""
+                resolution = vuln_data.get('solution') if vuln_data.get('solution') else ""
+                data = "\nOutput: " + vuln_data.get('plugin_output') if vuln_data.get('plugin_output') else ""
                 ref = []
-                if v.get('cve'):
-                    cves = v.get('cve')
+                if vuln_data.get('cve'):
+                    cves = vuln_data.get('cve')
                     for cve in cves:
-                        #logger.debug('Appending %s', cve.encode("utf-8"))
                         ref.append(cve.encode("utf-8").strip())
-                if v.get('bid'):
-                    bids = v.get('bid')
+                if vuln_data.get('bid'):
+                    bids = vuln_data.get('bid')
                     for bid in bids:
-                        #logger.debug('Appending %s', bid.encode("utf-8"))
                         ref.append("BID-%s" % bid.encode("utf-8").strip() )
-                if v.get('cvss_base_score'):
-                    ref.append("CVSS: " + ", ".join(v.get('cvss_base_score')))
-                if v.get('xref'):
-                    ref.append(", ".join(v.get('xref')))
-                if v.get('svc_name') == "general":
-                    v_id = self.createAndAddVulnToHost(h_id, v.get('plugin_name'),
-                                                       desc=desc, ref=ref, data=data, severity=v.get('severity'), resolution=resolution, external_id=external_id)
+                if vuln_data.get('cvss_base_score'):
+                    ref.append("CVSS: " + ", ".join(vuln_data.get('cvss_base_score')))
+                if vuln_data.get('xref'):
+                    ref.append(", ".join(vuln_data.get('xref')))
+                if vuln_data.get('svc_name') == "general":
+                    vuln_id = self.createAndAddVulnToHost(host_id, vuln_data.get('plugin_name'), desc=desc, ref=ref,
+                                                          data=data, severity=vuln_data.get('severity'),
+                                                          resolution=resolution, external_id=external_id)
                 else:
 
-                    s_id = self.createAndAddServiceToInterface(h_id, i_id, v.get('svc_name'),
-                                                               v.get(
-                                                                   'protocol'),
-                                                               ports=[
-                                                                   str(v.get('port'))],
+                    service_id = self.createAndAddServiceToInterface(host_id, i_id, vuln_data.get('svc_name'),
+                                                               vuln_data.get('protocol'),
+                                                               ports=[str(vuln_data.get('port'))],
                                                                status="open")
 
-                    web = re.search(r'^(www|http)', v.get('svc_name'))
-                    if v.get('svc_name') in srv:
-                        srv[v.get('svc_name')] = 1
+                    web = re.search(r'^(www|http)', vuln_data.get('svc_name'))
+                    if vuln_data.get('svc_name') in srv:
+                        srv[vuln_data.get('svc_name')] = 1
                     if web:
-                        v_id = self.createAndAddVulnWebToService(h_id, s_id, v.get('plugin_name'),
-                                                                 desc=desc, data=data, website=host, severity=v.get('severity'),
+                        vuln_id = self.createAndAddVulnWebToService(host_id, service_id, vuln_data.get('plugin_name'),
+                                                                 desc=desc, data=data, website=host, severity=vuln_data.get('severity'),
                                                                  resolution=resolution, ref=ref, external_id=external_id)
                     else:
-                        v_id = self.createAndAddVulnToService(h_id, s_id, v.get('plugin_name'),
-                                                              desc=desc, data=data, severity=v.get('severity'), resolution=resolution,
+                        vuln_id = self.createAndAddVulnToService(host_id, service_id, vuln_data.get('plugin_name'),
+                                                              desc=desc, data=data, severity=vuln_data.get('severity'), resolution=resolution,
                                                               ref=ref, external_id=external_id)
 
     def _isIPV4(self, ip):
