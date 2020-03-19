@@ -34,7 +34,6 @@ class SourceclearJsonParser:
         elif protocol == 'http':
             if not port:
                 port = 80
-
         return {'protocol': protocol, 'hostname': hostname, 'port': port}
 
 
@@ -65,7 +64,7 @@ class SourceclearPlugin(PluginJsonFormat):
             v_data = vuln['libraries']
             v_website = vuln['_links']['html']
             url_data = parser.parse_url(v_website)
-            s_id = self.createAndAddServiceToHost(h_id, "Sourceclear", protocol= url_data['protocol'],
+            s_id = self.createAndAddServiceToHost(h_id, "Sourceclear", protocol=url_data['protocol'],
                                                   ports=url_data['port'], status='open')
             self.createAndAddVulnWebToService(h_id, s_id, name=v_name, desc=v_desc, ref=[v_ref], data=v_data,
                                               website=v_website)
