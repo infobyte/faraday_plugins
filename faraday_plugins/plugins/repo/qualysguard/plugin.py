@@ -136,6 +136,7 @@ class ItemAssetReport():
         self.os = self.get_text_from_subnode('OPERATING_SYSTEM')
         self.vulns = self.getResults(tree)
 
+
     def getResults(self, tree):
 
         glossary = tree.find('GLOSSARY/VULN_DETAILS_LIST')
@@ -180,8 +181,7 @@ class ResultsAssetReport():
 
         # GLOSSARY TAG
         self.glossary = glossary
-        self.severity = self.severity_dict.get(
-            self.get_text_from_glossary('SEVERITY'), 'info')
+        self.severity = self.severity_dict.get(self.get_text_from_glossary('SEVERITY'), 'info')
         self.title = self.get_text_from_glossary('TITLE')
         self.cvss = self.get_text_from_glossary('CVSS_SCORE/CVSS_BASE')
         self.pci = self.get_text_from_glossary('PCI_FLAG')
@@ -207,10 +207,10 @@ class ResultsAssetReport():
             self.ref.append(cve_id)
 
         if self.cvss:
-            self.ref.append('CVSS SCORE: ' + self.cvss)
+            self.ref.append('CVSS SCORE: {}'.format(self.cvss))
 
         if self.pci:
-            self.ref.append('PCI: ' + self.pci)
+            self.ref.append('PCI: {}'.format(self.pci))
 
     def get_text_from_glossary(self, tag):
         """
@@ -221,10 +221,8 @@ class ResultsAssetReport():
         """
 
         for vuln_detail in self.glossary:
-
             id_act = vuln_detail.get('id').strip('qid_')
-            if id_act == self.name:
-
+            if id_act == self.name.decode("utf-8"):
                 text = vuln_detail.find(tag)
                 if text is not None:
                     return cleaner_unicode(text.text)
@@ -353,7 +351,7 @@ class ResultsScanReport():
         """
         sub_node = self.node.find(subnode_xpath_expr)
         if sub_node is not None:
-            return cleaner_results(cleaner_unicode(sub_node.text))
+            return cleaner_results(sub_node.text)
 
         return None
 
@@ -380,6 +378,7 @@ class QualysguardPlugin(PluginXMLFormat):
     def parseOutputString(self, output, debug=False):
 
         parser = QualysguardXmlParser(output)
+
 
         for item in parser.items:
             h_id = self.createAndAddHost(
