@@ -279,12 +279,13 @@ class PluginBase:
                                external_id=None, run_date=None):
         if ref is None:
             ref = []
-        vulnerability = {"name": name, " desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
+        vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution,
-                         "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data,
-                         "run_date": self.get_utctimestamp(run_date)}
+                         "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data
+                         }
+        if run_date:
+            vulnerability["run_date"] = self.get_utctimestamp(run_date)
         host = self.get_from_cache(host_id)
-
         host["vulnerabilities"].append(vulnerability)
         vulnerability_id = len(host["vulnerabilities"]) - 1
         return vulnerability_id
@@ -305,7 +306,10 @@ class PluginBase:
             ref = []
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "risk": risk,
-                         "data": data, "run_date": self.get_utctimestamp(run_date)}
+                         "data": data
+                         }
+        if run_date:
+            vulnerability["run_date"] = self.get_utctimestamp(run_date)
         service = self.get_from_cache(service_id)
         service["vulnerabilities"].append(vulnerability)
         vulnerability_id = self.save_cache(vulnerability)
@@ -341,8 +345,10 @@ class PluginBase:
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
                          "data": data, "website": website, "path": path, "request": request, "response": response,
-                         "method": method, "pname": pname, "params": params, "query": query, "category": category,
-                         "run_date": self.get_utctimestamp(run_date)}
+                         "method": method, "pname": pname, "params": params, "query": query, "category": category
+                         }
+        if run_date:
+            vulnerability["run_date"] = self.get_utctimestamp(run_date)
         service = self.get_from_cache(service_id)
         service["vulnerabilities"].append(vulnerability)
         vulnerability_id = self.save_cache(vulnerability)
