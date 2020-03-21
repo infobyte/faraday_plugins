@@ -80,16 +80,26 @@ class OpenvasXmlParser:
         """
         try:
             report = tree.find('report')
-            results = report.findall('results')
-            if results:
-                nodes = report.findall('results')[0]
+            if report:
+                results = report.findall('results')
+                if results:
+                    nodes = report.findall('results')[0]
+                else:
+                    nodes = tree.findall('result')
+                for node in nodes:
+                    try:
+                        yield Item(node, hosts)
+                    except Exception as e:
+                        self.logger.error("Error generating Item from %s [%s]", node.attrib, e)
             else:
                 nodes = tree.findall('result')
-            for node in nodes:
-                try:
-                    yield Item(node, hosts)
-                except Exception as e:
-                    self.logger.error("Error generating Item from %s [%s]", node.attrib, e)
+                for node in nodes:
+                    try:
+                        yield Item(node, hosts)
+                    except Exception as e:
+                        self.logger.error("Error generating Iteem from %s [%s]", node.attrib, e)
+
+
         except Exception as e:
             self.logger.error("Tag not found: %s", e)
 
@@ -186,8 +196,11 @@ class Item:
         if not self.port:
             self.service = info[0]
         else:
-            host_details = hosts[self.host].get('details')
-            self.service = self.get_service(port_string, self.port, host_details)
+            if hosts:
+                host_details = hosts[self.host].get('details')
+                self.service = self.get_service(port_string, self.port, host_details)
+            else:
+                self.service = "Not Service"
         self.nvt = self.node.findall('nvt')[0]
         self.node = self.nvt
         self.id = self.node.get('oid')
@@ -358,8 +371,8 @@ class OpenvasPlugin(PluginXMLFormat):
                 hostnames=values['hostnames']
             )
             ids[ip] = h_id
-
         for item in parser.items:
+
             if item.name is not None:
                 ref = []
                 if item.cve:
