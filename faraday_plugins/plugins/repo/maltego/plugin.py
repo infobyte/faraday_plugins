@@ -35,7 +35,6 @@ def openMtgx(mtgx_file):
     try:
         file = zipfile.ZipFile(mtgx_file, "r")
         xml = ET.parse(file.open('Graphs/Graph1.graphml'))
-
     except:
         print("Bad report format")
         return None
@@ -61,18 +60,27 @@ class MaltegoMtgxParser():
 
     def __init__(self, xml_file):
 
-        self.xml = openMtgx(xml_file)
+        #self.xml = openMtgx(xml_file)
+        self.xml = self.parse_xml(xml_file)
 
         self.nodes = self.xml.findall(
             "{http://graphml.graphdrawing.org/xmlns}graph/"
             "{http://graphml.graphdrawing.org/xmlns}node")
-
         self.edges = self.xml.findall(
             "{http://graphml.graphdrawing.org/xmlns}graph/"
             "{http://graphml.graphdrawing.org/xmlns}edge")
 
         self.list_hosts = []
         self.relations = {}
+
+    def parse_xml(self, xml_output):
+        try:
+            tree = ET.parse(xml_output)
+        except SyntaxError as err:
+            print("SyntaxError: %s. %s", err, xml_output)
+            return None
+        return tree
+
 
     def getRelations(self):
         """
@@ -100,15 +108,14 @@ class MaltegoMtgxParser():
             self.relations.update({target: values})
 
     def getIpAndId(self, node):
-
         # Find node ID and maltego entity
-        node_id = node.get("id")
+        node_id = node.attrib["id"]
+
         entity = node.find(
             "{http://graphml.graphdrawing.org/xmlns}data/"
             "{http://maltego.paterva.com/xml/mtgx}MaltegoEntity")
-
         # Check if is IPv4Address
-        if entity.get("type") != "maltego.IPv4Address":
+        if entity.attrib["type"] != "maltego.IPv4Address":
             return None
 
         # Get IP value
@@ -116,7 +123,6 @@ class MaltegoMtgxParser():
             "{http://maltego.paterva.com/xml/mtgx}Properties/"
             "{http://maltego.paterva.com/xml/mtgx}Property/"
             "{http://maltego.paterva.com/xml/mtgx}Value")
-
         return {"node_id": node_id, "ip": value.text}
 
     def getNode(self, node_id):
@@ -274,7 +280,6 @@ class MaltegoMtgxParser():
             node_relations = self.relations[host.node_id]
 
             for node_id in node_relations:
-
                 # Get target node and type of node.
                 target_node = self.getNode(node_id)
                 target_type = self.getType(target_node)
@@ -294,7 +299,6 @@ class MaltegoMtgxParser():
                     host.ns_record = self.getValue(target_node)
 
             self.list_hosts.append(host)
-
         return self.list_hosts
 
 
@@ -320,116 +324,109 @@ class MaltegoPlugin(PluginXMLFormat):
     def parseOutputString(self, filename, debug=False):
 
         maltego_parser = MaltegoMtgxParser(filename)
-        for host in maltego_parser.parse():
-            # Create host
-            try:
-                old_hostname = host.dns_name["value"]
-            except:
-                old_hostname = "unknown"
+        list_host = maltego_parser.parse()
+        if list_host:
+            print("lista vaia")
+            for host in list_host:
+                host_id = self.createAndAddHost(name=host.ip)
+                network_segment = host.netblock["ipv4_range"]
+                hostname_resolution = [host.dns_name["value"]]
+                interface_id = self.createAndAddInterface(host_id=host_id, name=host.ip, ipv4_address=host.ip,
+                                                          network_segment=network_segment,
+                                                          hostname_resolution=hostname_resolution)
+                if host.netblock:
+                    try:
+                        text = (
+                                "Network owner:\n" +
+                                host.netblock["network_owner"] or "unknown" +
+                                "Country:\n" + host.netblock["country"] or "unknown")
+                    except:
+                        text = "unknown"
 
-            host_id = self.createAndAddHost(
-                name=host.ip)
+                    self.createAndAddNoteToHost(
+                        host_id=host_id,
+                        name="Netblock Information",
+                        text=text.encode('ascii', 'ignore')
+                    )
 
-        # Create interface
-        try:
-            network_segment = host.netblock["ipv4_range"]
-            hostname_resolution = [host.dns_name["value"]]
-        except:
+                # Create note with host location
+                if host.location:
+                    try:
+                        text = (
+                                "Location:\n" +
+                                host.location["name"] +
+                                "\nArea:\n" +
+                                host.location["area"] +
+                                "\nArea 2:\n" +
+                                host.location["area_2"] +
+                                "\nCountry_code:\n" +
+                                host.location["country_code"] +
+                                "\nLatitude:\n" +
+                                host.location["latitude"] +
+                                "\nLongitude:\n" +
+                                host.location["longitude"])
+                    except:
+                        text = "unknown"
+
+                    self.createAndAddNoteToHost(
+                        host_id=host_id,
+                        name="Location Information",
+                        text=text.encode('ascii', 'ignore'))
+
+                # Create service web server
+                if host.website:
+                    try:
+                        description = "SSL Enabled: " + host.website["ssl_enabled"]
+                    except:
+                        description = "unknown"
+
+                    service_id = self.createAndAddServiceToInterface(
+                        host_id=host_id,
+                        interface_id=interface_id,
+                        name=host.website["name"],
+                        protocol="TCP:HTTP",
+                        ports=[80],
+                        description=description)
+
+                    try:
+                        text = "Urls:\n" + host.website["urls"]
+
+                        self.createAndAddNoteToService(
+                            host_id=host_id,
+                            service_id=service_id,
+                            name="URLs",
+                            text=text.encode('ascii', 'ignore'))
+                    except:
+                        pass
+
+                if host.mx_record:
+                    self.createAndAddServiceToInterface(
+                        host_id=host_id,
+                        interface_id=interface_id,
+                        name=host.mx_record["value"],
+                        protocol="SMTP",
+                        ports=[25],
+                        description="E-mail Server")
+
+                if host.ns_record:
+                    self.createAndAddServiceToInterface(
+                        host_id=host_id,
+                        interface_id=interface_id,
+                        name=host.ns_record["value"],
+                        protocol="DNS",
+                        ports=[53],
+                        description="DNS Server")
+
+        else:
+            host_ip = "unknown"
+            host_id = self.createAndAddHost(name="unknow")
             network_segment = "unknown"
             hostname_resolution = "unknown"
-
-        interface_id = self.createAndAddInterface(
-            host_id=host_id,
-            name=host.ip,
-            ipv4_address=host.ip,
-            network_segment=network_segment,
-            hostname_resolution=hostname_resolution)
-
-        # Create note with NetBlock information
-        if host.netblock:
-            try:
-                text = (
-                    "Network owner:\n" +
-                    host.netblock["network_owner"] or "unknown" +
-                    "Country:\n" + host.netblock["country"] or "unknown")
-            except:
-                text = "unknown"
-
-            self.createAndAddNoteToHost(
-                host_id=host_id,
-                name="Netblock Information",
-                text=text.encode('ascii', 'ignore')
-            )
-
-        # Create note with host location
-        if host.location:
-            try:
-                text = (
-                    "Location:\n" +
-                    host.location["name"] +
-                    "\nArea:\n" +
-                    host.location["area"] +
-                    "\nArea 2:\n" +
-                    host.location["area_2"] +
-                    "\nCountry_code:\n" +
-                    host.location["country_code"] +
-                    "\nLatitude:\n" +
-                    host.location["latitude"] +
-                    "\nLongitude:\n" +
-                    host.location["longitude"])
-            except:
-                text = "unknown"
-
-            self.createAndAddNoteToHost(
-                host_id=host_id,
-                name="Location Information",
-                text=text.encode('ascii', 'ignore'))
-
-        # Create service web server
-        if host.website:
-            try:
-                description = "SSL Enabled: " + host.website["ssl_enabled"]
-            except:
-                description = "unknown"
-
-            service_id = self.createAndAddServiceToInterface(
-                host_id=host_id,
-                interface_id=interface_id,
-                name=host.website["name"],
-                protocol="TCP:HTTP",
-                ports=[80],
-                description=description)
-
-            try:
-                text = "Urls:\n" + host.website["urls"]
-
-                self.createAndAddNoteToService(
-                    host_id=host_id,
-                    service_id=service_id,
-                    name="URLs",
-                    text=text.encode('ascii', 'ignore'))
-            except:
-                pass
-
-        if host.mx_record:
-
-            self.createAndAddServiceToInterface(
-                host_id=host_id,
-                interface_id=interface_id,
-                name=host.mx_record["value"],
-                protocol="SMTP",
-                ports=[25],
-                description="E-mail Server")
-
-        if host.ns_record:
-
-            self.createAndAddServiceToInterface(
-                host_id=host_id,
-                interface_id=interface_id,
-                name=host.ns_record["value"],
-                protocol="DNS",
-                ports=[53],
-                description="DNS Server")
+            interface_id = self.createAndAddInterface(host_id=host_id, name=host_ip, ipv4_address=host_ip,
+                                                      network_segment=network_segment,
+                                                      hostname_resolution=hostname_resolution)
+            self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id, name="unknown",
+                                                protocol="unknown", ports=[53], description="unknown")
 
     def processReport(self, filepath):
         self.parseOutputString(filepath)
