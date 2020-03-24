@@ -12,7 +12,6 @@ import re
 from urllib.parse import urlparse
 import os
 
-
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
