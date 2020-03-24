@@ -217,7 +217,7 @@ class NexposeFullXmlParser:
                 host['name'] = node.get('address')
                 host['mac'] = node.get('hardware-address')
                 host['hostnames'] = list()
-                host['os'] = list()
+                host['os'] = ""
                 host['services'] = list()
                 host['fingerprints'] = list()
                 host['fingerprints_software'] = list()
@@ -233,16 +233,9 @@ class NexposeFullXmlParser:
 
                 for fingerprints in node.iter('fingerprints'):
                     for os_data in fingerprints.iter('os'):
-                        data = {
-                            'certainty': os_data.get('certainty'),
-                            'vendor': os_data.get('vendor'),
-                            'family': os_data.get('family'),
-                            'product': os_data.get('product'),
-                            'version': os_data.get('version'),
-                            'arch': os_data.get('arch'),
-                            'device-class': os_data.get('device-class'),
-                        }
-                        host['os'].append(data)
+                        os_name = os_data.get('product')
+                        if os_name:
+                            host['os'] = os_name
 
                     for fingerprints_tag in fingerprints.iter('fingerprint'):
                         data_fingerprints_tag = {

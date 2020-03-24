@@ -65,7 +65,7 @@ class ReportAnalyzer:
         file_name_base, file_extension = os.path.splitext(file_name)
         file_extension = file_extension.lower()
         main_tag = None
-        file_json_keys = {}
+        file_json_keys = set()
         logger.debug("Analyze report File")
         # Try to parse as xml
         try:
