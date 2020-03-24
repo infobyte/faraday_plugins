@@ -12,6 +12,7 @@ import re
 from urllib.parse import urlparse
 import os
 
+
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -84,7 +85,7 @@ class Querys():
 class CheckmarxPlugin(PluginXMLFormat):
     def __init__(self):
         super().__init__()
-        self.identifier_tag = ["report", "CxXMLResults"]
+        self.identifier_tag = ["report", "CxXMLResults", "Query", "Result"]
         self.id = 'Checkmarx'
         self.name = 'Checkmarx XML Output Plugin'
         self.plugin_version = '1.0.0'
@@ -141,7 +142,7 @@ class CheckmarxPlugin(PluginXMLFormat):
                                               severity=self.vuln_severity, resolution=self.resolution,
                                               website=self.website, path=self.pathfile)
 
-        
+
 def createPlugin():
     return CheckmarxPlugin()
 
