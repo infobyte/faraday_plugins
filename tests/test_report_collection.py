@@ -10,13 +10,15 @@ BLACK_LIST = [
     'README.md',
     '.gitignore',
     '.gitkeep',
+    'faraday_plugins_tests',
+
 ]
 
 def list_report_files():
     report_filenames = os.walk('./report-collection')
 
     for root, directory, filenames in report_filenames:
-        if '.git' in directory:
+        if '.git' in directory or 'faraday_plugins_tests' in directory:
             continue
         for filename in filenames:
             if filename in BLACK_LIST:
