@@ -102,9 +102,6 @@ def test_autodetected_on_all_report_collection(report_filename):
 def test_schema_on_all_reports(report_filename):
     plugin, plugin_json = get_report_json_from_cache(report_filename)
     if plugin_json:
-        assert "hosts" in plugin_json
-        assert "command" in plugin_json
-        assert len(plugin_json) == 2
         serializer = BulkCreateSchema()
         res = serializer.loads(json.dumps(plugin_json))
         assert not res.errors
