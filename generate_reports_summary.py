@@ -5,7 +5,7 @@ import json
 import click
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 from faraday_plugins.plugins.plugin import PluginBase
-from collections import defaultdict
+from faraday_plugins.plugins.utils import generate_report_summary
 
 BLACK_LIST = [
     'LICENSE',
@@ -31,38 +31,15 @@ def list_report_files():
             yield os.path.join(root, filename)
 
 
-def generate_summary(plugin, report_file_path):
-    click.echo("Generate Summary for: %s" % report_file_path)
-    summary = {
-        'hosts': 0,
-        'services': 0,
-        'hosts_vulns': 0,
-        'services_vulns': 0,
-        'severity_vulns': defaultdict(int)
-    }
-    summary_file = f"{os.path.splitext(report_file_path)[0]}_summary.json"
-    try:
-        plugin.processReport(report_file_path)
-        plugin_json = json.loads(plugin.get_json())
-        summary['hosts'] = len(plugin_json['hosts'])
-        summary['hosts_vulns'] = sum(list(map(lambda x: len(x['vulnerabilities']), plugin_json['hosts'])))
-        hosts_with_services = filter(lambda x: len(x['services']) > 1, plugin_json['hosts'])
-        host_services = list(map(lambda x: x['services'], hosts_with_services))
-        summary['services'] = sum(map(lambda x: len(x), host_services))
-        services_vulns = 0
-        for services in host_services:
-            for service in services:
-                services_vulns += len(service['vulnerabilities'])
-        summary['services_vulns'] = services_vulns
-        with open(summary_file) as f:
-            json.dump(summary, f)
-    except Exception as e:
-        click.echo("Error generating summary for file: %s [%s]" % (report_file_path, e))
+
+
 
 
 @click.command()
 @click.option('--force', is_flag=True)
 def generate_reports_tests(force):
+    generated_summaries = 0
+    analysed_reports = 0
     click.echo("Generate Faraday Plugins Tests Summary")
     plugins_manager = PluginsManager()
     analyzer = ReportAnalyzer(plugins_manager)
@@ -71,6 +48,7 @@ def generate_reports_tests(force):
         if not plugin:
             continue
         else:
+            analysed_reports += 1
             report_file_name = os.path.basename(report_file_path)
             plugin_name = plugin.id
             plugin_path = os.path.join(REPORT_COLLECTION_DIR, FARADAY_PLUGINS_TESTS_DIR, plugin_name)
@@ -78,14 +56,24 @@ def generate_reports_tests(force):
                 os.mkdir(plugin_path)
             dst_report_file_path = os.path.join(plugin_path, report_file_name)
             summary_needed = False
-            if not os.path.isfile(dst_report_file_path):
+            summary_file = f"{os.path.splitext(dst_report_file_path)[0]}_summary.json"
+            if not os.path.isfile(dst_report_file_path) or force:
                 summary_needed = True
                 shutil.copyfile(report_file_path, dst_report_file_path)
-            else:
-                if force:
-                    summary_needed = True
+            if not os.path.isfile(summary_file) or force:
+                summary_needed = True
             if summary_needed:
-                generate_summary(plugin, dst_report_file_path)
+                try:
+                    plugin.processReport(report_file_path)
+                    plugin_json = json.loads(plugin.get_json())
+                    click.echo(f"Generate Summary for: {dst_report_file_path} [{plugin}]")
+                    summary = generate_report_summary(plugin_json)
+                    with open(summary_file, "w") as f:
+                        json.dump(summary, f)
+                    generated_summaries += 1
+                except Exception as e:
+                    click.echo(f"Error generating summary for file: {report_file_path} [{e}]")
+    click.echo(f"Generated {generated_summaries} summaries of {analysed_reports} reports")
 
 
 if __name__ == "__main__":
