@@ -148,7 +148,7 @@ class PluginsManager:
                                             self.plugin_modules[plugin_id] = plugin_module
                                     else:
                                         logger.debug("Plugin with same name already loaded [%s]", name)
-                                logger.debug('Loading plugin {0}'.format(name))
+                                logger.debug("Load Plugin [%s]", name)
                             except Exception as e:
                                 logger.debug("An error ocurred while loading plugin %s.\n%s", module_filename,
                                              traceback.format_exc())
