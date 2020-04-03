@@ -204,6 +204,8 @@ class PluginBase:
 
         if not hostnames:
             hostnames = []
+        # Some plugins sends a list with None, we filter empty and None values.
+        hostnames = [hostname for hostname in hostnames if hostname]
         if os is None:
             os = "unknown"
         host = {"ip": name, "os": os, "hostnames": hostnames, "description": "",  "mac": mac,
