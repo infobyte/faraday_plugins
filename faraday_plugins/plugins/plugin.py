@@ -282,8 +282,8 @@ class PluginBase:
 
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
                                severity="", resolution="", vulnerable_since="", scan_id="", pci="", data="",
-                               external_id=None, run_date=None, confirmed=False, status="", easeofresolution=None, impact=None,
-                               policyviolations=None, custom_fields=None):
+                               external_id=None, confirmed=False, status="", easeofresolution=None, impact=None,
+                               policyviolations=None, custom_fields=None, run_date=None):
         if ref is None:
             ref = []
         if status == "":
@@ -294,6 +294,7 @@ class PluginBase:
             policyviolations = []
         if custom_fields is None:
             custom_fields = {}
+
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution,
                          "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data,
@@ -318,11 +319,9 @@ class PluginBase:
         return self.createAndAddVulnToHost(host_id, name, desc=desc, ref=ref, severity=severity, resolution=resolution,
                                            data=data)
 
-    def createAndAddVulnToService(self, host_id, service_id, name, desc="",
-                                  ref=None, severity="", resolution="", risk="", data="", external_id=None,
-                                  run_date=None, confirmed=False, status="", easeofresolution=None, impact=None,
-                                  policyviolations=None, custom_fields=None):
-
+    def createAndAddVulnToService(self, host_id, service_id, name, desc="", ref=None, severity="", resolution="",
+                                  risk="", data="", external_id=None, run_date=None, confirmed=False, status="",
+                                  easeofresolution=None, impact=None, policyviolations=None, custom_fields=None):
         if ref is None:
             ref = []
         if status == "":
@@ -334,9 +333,9 @@ class PluginBase:
         if custom_fields is None:
             custom_fields = {}
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
-                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "riskB": risk,
-                         "data": data, "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution, "impact": impact,
-                         "policyviolations": policyviolations, "custom_fields": custom_fields}
+                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "risk": risk,
+                         "data": data, "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
+                         "impact": impact, "policyviolations": policyviolations, "custom_fields": custom_fields}
 
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
@@ -350,9 +349,8 @@ class PluginBase:
                                      website="", path="", request="",
                                      response="", method="", pname="",
                                      params="", query="", category="", data="", external_id=None,
-                                     run_date=None, confirmed=False, status="", easeofresolution=None,
-                                     impact=None, policyviolations=None, status_code=None,
-                                     custom_fields=None):
+                                     confirmed=False, status="", easeofresolution=None, impact=None,
+                                     policyviolations=None, status_code=None, custom_fields=None, run_date=None):
         if params is None:
             params = ""
         if response is None:
@@ -390,7 +388,6 @@ class PluginBase:
                          "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
                          "impact": impact, "policyviolations": policyviolations,
                          "status_code": status_code, "custom_fields": custom_fields}
-
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
         service = self.get_from_cache(service_id)
