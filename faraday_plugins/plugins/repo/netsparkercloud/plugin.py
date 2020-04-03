@@ -232,7 +232,7 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
 
                 first = False
             v_id = self.createAndAddVulnWebToService(h_id, s_id, i.name, ref=i.ref, website=i.hostname,
-                                                     severity=i.severity, desc=i.desc, path=str(i.url), method=i.method,
+                                                     severity=i.severity, desc=i.desc, path=i.url.path, method=i.method,
                                                      request=i.request, response=i.response, resolution=i.resolution,
                                                      pname=i.param)
         del parser

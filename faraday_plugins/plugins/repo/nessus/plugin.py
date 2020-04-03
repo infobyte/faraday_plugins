@@ -124,15 +124,12 @@ class NessusPlugin(PluginXMLFormat):
                     h_id, ip, mac, ipv6_address=ip, hostname_resolution=[host])
 
             srv = {}
-            web = False
             for v in t.vulns:
-                external_id = ""
-
                 external_id = v.get('plugin_id')
+
 
                 desc = ""
                 desc += v.get('description') if v.get('description') else ""
-                resolution = ""
                 resolution = v.get('solution') if v.get('solution') else ""
 
                 data = "\nOutput: " + v.get('plugin_output') if v.get('plugin_output') else ""
@@ -153,7 +150,9 @@ class NessusPlugin(PluginXMLFormat):
                 if v.get('xref'):
                     ref.append(", ".join(v.get('xref')))
                 if v.get('svc_name') == "general":
-                    v_id = self.createAndAddVulnToHost(h_id, v.get('plugin_name'),
+                    if external_id == '0':
+                        continue
+                    self.createAndAddVulnToHost(h_id, v.get('plugin_name'),
                                                        desc=desc, ref=ref, data=data, severity=v.get('severity'), resolution=resolution, external_id=external_id)
                 else:
 
@@ -167,13 +166,14 @@ class NessusPlugin(PluginXMLFormat):
                     web = re.search(r'^(www|http)', v.get('svc_name'))
                     if v.get('svc_name') in srv:
                         srv[v.get('svc_name')] = 1
-
+                    if external_id == '0':
+                        continue
                     if web:
-                        v_id = self.createAndAddVulnWebToService(h_id, s_id, v.get('plugin_name'),
+                        self.createAndAddVulnWebToService(h_id, s_id, v.get('plugin_name'),
                                                                  desc=desc, data=data, website=host, severity=v.get('severity'),
                                                                  resolution=resolution, ref=ref, external_id=external_id)
                     else:
-                        v_id = self.createAndAddVulnToService(h_id, s_id, v.get('plugin_name'),
+                        self.createAndAddVulnToService(h_id, s_id, v.get('plugin_name'),
                                                               desc=desc, data=data, severity=v.get('severity'), resolution=resolution,
                                                               ref=ref, external_id=external_id)
 

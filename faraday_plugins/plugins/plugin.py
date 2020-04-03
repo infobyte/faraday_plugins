@@ -5,6 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import os
+import pytz
 import re
 import uuid
 import logging
@@ -51,6 +52,18 @@ class PluginBase:
 
     def __str__(self):
         return f"Plugin: {self.id}"
+
+    @staticmethod
+    def get_utctimestamp(date):
+        if date is not None:
+            try:
+                utc_date = date.astimezone(pytz.UTC)
+                return utc_date.timestamp()
+            except Exception as e:
+                logger.error("Error generating timestamp: %s", e)
+                return None
+        else:
+            return date
 
     @staticmethod
     def normalize_severity(severity):
@@ -191,6 +204,8 @@ class PluginBase:
 
         if not hostnames:
             hostnames = []
+        # Some plugins sends a list with None, we filter empty and None values.
+        hostnames = [hostname for hostname in hostnames if hostname]
         if os is None:
             os = "unknown"
         host = {"ip": name, "os": os, "hostnames": hostnames, "description": "",  "mac": mac,
@@ -263,14 +278,16 @@ class PluginBase:
 
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
                                severity="", resolution="", vulnerable_since="", scan_id="", pci="", data="",
-                               external_id=None):
+                               external_id=None, run_date=None):
         if ref is None:
             ref = []
-        vulnerability = {"name": name, " desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
+        vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution,
-                         "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data}
+                         "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data
+                         }
+        if run_date:
+            vulnerability["run_date"] = self.get_utctimestamp(run_date)
         host = self.get_from_cache(host_id)
-
         host["vulnerabilities"].append(vulnerability)
         vulnerability_id = len(host["vulnerabilities"]) - 1
         return vulnerability_id
@@ -286,12 +303,15 @@ class PluginBase:
                                            data=data)
 
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
-                                  ref=None, severity="", resolution="", risk="", data="", external_id=None):
+                                  ref=None, severity="", resolution="", risk="", data="", external_id=None, run_date=None):
         if ref is None:
             ref = []
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
-                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "riskB": risk,
-                         "data": data}
+                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "risk": risk,
+                         "data": data
+                         }
+        if run_date:
+            vulnerability["run_date"] = self.get_utctimestamp(run_date)
         service = self.get_from_cache(service_id)
         service["vulnerabilities"].append(vulnerability)
         vulnerability_id = self.save_cache(vulnerability)
@@ -301,7 +321,7 @@ class PluginBase:
                                      ref=None, severity="", resolution="",
                                      website="", path="", request="",
                                      response="", method="", pname="",
-                                     params="", query="", category="", data="", external_id=None):
+                                     params="", query="", category="", data="", external_id=None, run_date=None):
         if params is None:
             params = ""
         if response is None:
@@ -327,12 +347,14 @@ class PluginBase:
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
                          "data": data, "website": website, "path": path, "request": request, "response": response,
-                         "method": method, "pname": pname, "params": params, "query": query, "category": category}
+                         "method": method, "pname": pname, "params": params, "query": query, "category": category
+                         }
+        if run_date:
+            vulnerability["run_date"] = self.get_utctimestamp(run_date)
         service = self.get_from_cache(service_id)
         service["vulnerabilities"].append(vulnerability)
         vulnerability_id = self.save_cache(vulnerability)
         return vulnerability_id
-
 
     def createAndAddNoteToHost(self, host_id, name, text):
         return None
@@ -439,7 +461,7 @@ class PluginJsonFormat(PluginByExtension):
         match = False
         if super().report_belongs_to(**kwargs):
             if file_json_keys is None:
-                file_json_keys = {}
+                file_json_keys = set()
             match = self.json_keys.issubset(file_json_keys)
             self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", file_json_keys, self.json_keys, match)
         return match
