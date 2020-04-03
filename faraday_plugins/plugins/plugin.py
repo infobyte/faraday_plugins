@@ -465,4 +465,5 @@ class PluginJsonFormat(PluginByExtension):
             match = self.json_keys.issubset(file_json_keys)
             self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", file_json_keys, self.json_keys, match)
         return match
+
 # I'm Py3
