@@ -4,7 +4,7 @@ import json
 import pytest
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.utils import generate_report_summary
+from faraday_plugins.plugins.plugins_utils import generate_report_summary
 from faraday.server.api.modules.bulk_create import BulkCreateSchema
 
 BLACK_LIST = [

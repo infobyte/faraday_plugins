@@ -5,7 +5,7 @@ import json
 import click
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.utils import generate_report_summary
+from faraday_plugins.plugins.plugins_utils import generate_report_summary
 
 BLACK_LIST = [
     'LICENSE',
@@ -18,6 +18,7 @@ BLACK_LIST = [
 REPORT_COLLECTION_DIR = './report-collection'
 FARADAY_PLUGINS_TESTS_DIR = 'faraday_plugins_tests'
 
+
 def list_report_files():
     report_filenames = os.walk(REPORT_COLLECTION_DIR)
     for root, directory, filenames in report_filenames:
@@ -29,10 +30,6 @@ def list_report_files():
             if '.git' in root:
                 continue
             yield os.path.join(root, filename)
-
-
-
-
 
 
 @click.command()
