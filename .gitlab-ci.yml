@@ -34,7 +34,7 @@ tests:
       - cd run_from && git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
     script:
       #- cd -
-      - source faraday_venv/bin/activate
+      - source ../faraday_venv/bin/activate
       - python3 setup.py install
       - pytest tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings
 
