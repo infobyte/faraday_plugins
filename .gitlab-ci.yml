@@ -35,7 +35,7 @@ tests:
       - cd -
       - source faraday_venv/bin/activate
       - python3 setup.py install
-      - cd run_from && pytest ../tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings
+      - pytest tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings
 
 publish_pipy:
     image: python:3
