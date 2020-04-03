@@ -98,7 +98,7 @@ def get_all_protocols():
         yield item
 
 
-def generate_report_summary(plugin_json):
+def get_report_summary(plugin_json):
     summary = {'hosts': len(plugin_json['hosts']), 'services': 0,
                'hosts_vulns': sum(list(map(lambda x: len(x['vulnerabilities']), plugin_json['hosts']))),
                'services_vulns': 0, 'severity_vulns': defaultdict(int)}

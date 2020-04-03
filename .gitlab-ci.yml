@@ -28,7 +28,7 @@ tests:
       - pip3 install virtualenv
       - virtualenv -p python3 faraday_venv
       - source faraday_venv/bin/activate
-      - pip3 install pytest pytest-xdist pytest-cov faradaysec
+      - pip3 install pytest pytest-xdist pytest-cov
       - mkdir run_from
       - cd run_from && git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
     script:
