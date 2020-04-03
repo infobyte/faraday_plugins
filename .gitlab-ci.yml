@@ -29,7 +29,7 @@ tests:
       - virtualenv -p python3 faraday_venv
       - source faraday_venv/bin/activate
       - pip3 install pytest pytest-xdist pytest-cov faradaysec
-      - pip uninstall faraday-plugins -y # we need to install fardaysec for marshmallow schemas, we remove plugins frsom pipy
+      - pip uninstall faraday-plugins -y # we need to install fardaysec for marshmallow schemas, we remove plugins from pipy
       - mkdir run_from
       - cd run_from && git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
     script:
