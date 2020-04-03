@@ -150,7 +150,7 @@ class PluginsManager:
                                         plugin_instance = plugin_module.createPlugin()
                                         plugin_id = plugin_instance.id.lower()
                                         if not plugin_instance.auto_load:
-                                            logger.debug("Skip load plugin [%s]", plugin_id)
+                                            logger.info("Skip load plugin [%s]", plugin_id)
                                             continue
                                         if plugin_id not in self.plugin_modules:
                                             self.plugin_modules[plugin_id] = plugin_module
