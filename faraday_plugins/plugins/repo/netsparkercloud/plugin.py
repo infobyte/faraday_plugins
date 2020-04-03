@@ -8,6 +8,7 @@ from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
 import socket
+from urllib.parse import urlparse
 
 try:
     import xml.etree.cElementTree as ET
@@ -37,17 +38,21 @@ def cleaner_unicode(string):
     else:
         return string
 
-def cleaner_results(string):
 
+def cleaner_results(string):
     try:
         q = re.compile(r'<.*?>', re.IGNORECASE)
         return re.sub(q, '', string)
-
     except:
         return ''
 
+
 def get_urls(string):
-    urls = re.findall(r'href=[\'"]?([^\'" >]+)', string)
+    if isinstance(string, bytes):
+        string_decode = string.decode("utf-8")
+        urls = re.findall('(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+', string_decode)
+    else:
+        urls = re.findall('(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+', string)
     return urls
 
 
@@ -64,7 +69,6 @@ class NetsparkerCloudXmlParser:
 
     def __init__(self, xml_output):
         self.filepath = xml_output
-
         tree = self.parse_xml(xml_output)
         if tree:
             self.items = [data for data in self.get_items(tree)]
@@ -85,7 +89,6 @@ class NetsparkerCloudXmlParser:
         except SyntaxError as err:
             self.devlog("SyntaxError: %s. %s" % (err, xml_output))
             return None
-
         return tree
 
     def get_items(self, tree):
@@ -108,33 +111,21 @@ class Item:
             return "high"
         return severity
 
-    def __init__(self, item_node):
+    def __init__(self, item_node, encoding="ascii"):
         self.node = item_node
-        self.url = self.get_text_from_subnode("url")
-
-        host = re.search(
-            "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))[\:]*([0-9]+)*([/]*($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+)).*?$", self.url)
-
-        self.protocol = host.group(1)
-        self.hostname = host.group(4)
-        self.port = 80
-
-        if self.protocol == 'https':
-            self.port = 443
-        if host.group(11) is not None:
-            self.port = host.group(11)
-
+        self.url = urlparse(self.get_text_from_subnode("url"))
+        self.protocol = self.url.scheme
+        self.hostname = self.url.netloc
+        self.port = self.url.port
+        if self.port is None:
+            self.port = '80'
         self.type = self.get_text_from_subnode("type")
         self.name = self.get_text_from_subnode("name")
         self.severity = self.re_map_severity(self.get_text_from_subnode("severity"))
         self.certainty = self.get_text_from_subnode("certainty")
-
-
         self.node = item_node.find("http-request")
         self.method = self.get_text_from_subnode("method")
         self.request = self.get_text_from_subnode("content")
-
-        #print self.node
         self.param = ""
         self.paramval = ""
         for p in self.node.findall("parameters/parameter"):
@@ -143,7 +134,6 @@ class Item:
 
         self.node = item_node.find("http-response")
         self.response = self.get_text_from_subnode("content")
-
         self.extra = []
         for v in item_node.findall("extra-information/info"):
             self.extra.append(v.get('name') + ":" + v.get('value') )
@@ -159,9 +149,9 @@ class Item:
 
         self.ref = []
         if self.cwe:
-            self.ref.append("CWE-" + self.cwe)
+            self.ref.append("CWE-{}".format(self.cwe))
         if self.owasp:
-            self.ref.append("OWASP-" + self.owasp)
+            self.ref.append("OWASP-{}".format(self.owasp))
 
         self.node = item_node
         self.remedyreferences = self.get_text_from_subnode("remedy-references")
@@ -173,26 +163,24 @@ class Item:
             for u in get_urls(self.externalreferences):
                 self.ref.append(u)
 
-        self.impact = cleaner_results(self.get_text_from_subnode("impact"))
-        self.remedialprocedure = cleaner_results(self.get_text_from_subnode("remedial-procedure"))
-        self.remedialactions = cleaner_results(self.get_text_from_subnode("remedial-actions"))
-        self.exploitationskills = cleaner_results(self.get_text_from_subnode("exploitation-skills"))
-        self.proofofconcept = cleaner_results(self.get_text_from_subnode("proof-of-concept"))
+        self.impact = self.get_text_from_subnode("impact")
+        self.remedialprocedure = self.get_text_from_subnode("remedial-procedure")
+        self.remedialactions = self.get_text_from_subnode("remedial-actions")
+        self.exploitationskills = self.get_text_from_subnode("exploitation-skills")
+        self.proofofconcept = self.get_text_from_subnode("proof-of-concept")
 
-        self.resolution = self.remedialprocedure
-        self.resolution +=  "\nRemedial Actions: " + self.remedialactions if self.remedialactions is not None else ""
-        
+        self.resolution = "Remerdial Procedure: {} \nRemedial Actions: {}".format(self.remedialprocedure,
+                                                                                  self.remedialactions)
 
-        self.desc = cleaner_results(self.get_text_from_subnode("description"))
-        self.desc += "\nImpact: " + self.impact if self.impact else ""
-        self.desc += "\nExploitation Skills: " + self.exploitationskills if self.exploitationskills else ""
-        self.desc += "\nProof of concept: " + self.proofofconcept if self.proofofconcept else ""
-        self.desc += "\nWASC: " + self.wasc if self.wasc else ""
-        self.desc += "\nPCI31: " + self.pci if self.pci else ""
-        self.desc += "\nPCI32: " + self.pci2 if self.pci2 else ""
-        self.desc += "\nCAPEC: " + self.capec if self.capec else ""
-        self.desc += "\nHIPA: " + self.hipaa if self.hipaa else ""
-        self.desc += "\nExtra: " + "\n".join(self.extra) if self.extra else ""
+        self.desc = self.get_text_from_subnode("description")
+        self.desc = "\nImpact: {} \nExploitation Skills: {} \nProof of concept: {} \nWASC: {}  \nPCI31: {} \nPCI32: {}" \
+                    " \nCAPEC: {} \nHIPA: {} \nExtra: {}".format(self.impact, self.exploitationskills,
+                                                                 self.proofofconcept, self.wasc, self.pci, self.pci2,
+                                                                 self.capec, self.hipaa, self.extra)
+        if self.response:
+            self.response = self.response.encode(encoding, errors="backslashreplace").decode(encoding)
+        if self.request:
+            self.request = self.request.encode(encoding, errors="backslashreplace").decode(encoding)
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
@@ -203,10 +191,8 @@ class Item:
         if self.node:
             sub_node = self.node.find(subnode_xpath_expr)
             if sub_node is not None:
-                if sub_node.text is not None:
-                    return cleaner_unicode(sub_node.text)
-
-        return ""
+                return sub_node.text
+        return None
 
 
 class NetsparkerCloudPlugin(PluginXMLFormat):
@@ -227,7 +213,6 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
         self._command_regex = re.compile(
             r'^(sudo netsparkercloud|\.\/netsparkercloud).*?')
 
-
     def resolve(self, host):
         try:
             return socket.gethostbyname(host)
@@ -236,28 +221,20 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
         return host
 
     def parseOutputString(self, output, debug=False):
-
         parser = NetsparkerCloudXmlParser(output)
         first = True
         for i in parser.items:
             if first:
                 ip = self.resolve(i.hostname)
                 h_id = self.createAndAddHost(ip)
-                i_id = self.createAndAddInterface(
-                    h_id, ip, ipv4_address=ip, hostname_resolution=[i.hostname])
-
-                s_id = self.createAndAddServiceToInterface(h_id, i_id, str(i.port),
-                                                           str(i.protocol),
-                                                           ports=[str(i.port)],
-                                                           status="open")
+                i_id = self.createAndAddInterface(h_id, ip, ipv4_address=ip, hostname_resolution=[i.hostname])
+                s_id = self.createAndAddServiceToInterface(h_id, i_id, i.protocol, ports=[i.port], status="open")
 
                 first = False
-
             v_id = self.createAndAddVulnWebToService(h_id, s_id, i.name, ref=i.ref, website=i.hostname,
-                                                     severity=i.severity, desc=i.desc, path=i.url, method=i.method,
+                                                     severity=i.severity, desc=i.desc, path=i.url.path, method=i.method,
                                                      request=i.request, response=i.response, resolution=i.resolution,
                                                      pname=i.param)
-
         del parser
 
     def processCommandString(self, username, current_path, command_string):
@@ -269,4 +246,3 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
 
 def createPlugin():
     return NetsparkerCloudPlugin()
-

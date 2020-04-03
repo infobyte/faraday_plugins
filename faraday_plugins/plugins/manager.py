@@ -40,7 +40,7 @@ class ReportAnalyzer:
                 if not plugin:
                     logger.debug("Plugin by file not found")
         if not plugin:
-            logger.debug("Plugin for file (%s) not found", report_path)
+            logger.warning("Plugin for file (%s) not found", report_path)
         return plugin
 
     def _get_plugin_by_name(self, file_name_base):
@@ -116,12 +116,12 @@ class ReportAnalyzer:
 
 class PluginsManager:
 
-    def __init__(self):
+    def __init__(self, custom_plugins_folder=None):
         self.plugins = {}
         self.plugin_modules = {}
-        self._load_plugins()
+        self._load_plugins(custom_plugins_folder)
 
-    def _load_plugins(self):
+    def _load_plugins(self, custom_plugins_folder):
         logger.info("Loading Native Plugins...")
         if not self.plugins:
             for _, name, _ in filter(lambda x: x[2], pkgutil.iter_modules(repo.__path__)):
@@ -139,18 +139,16 @@ class PluginsManager:
                         logger.error("Invalid Plugin [%s]", name)
                 except Exception as e:
                     logger.error("Cant load plugin module: %s [%s]", name, e)
-            try:
-                import faraday.server.config
-                if os.path.isdir(faraday.server.config.faraday_server.custom_plugins_folder):
+            if custom_plugins_folder:
+                if os.path.isdir(custom_plugins_folder):
                     logger.info("Loading Custom Plugins...")
                     dir_name_regexp = re.compile(r"^[\d\w\-\_]+$")
-                    for name in os.listdir(faraday.server.config.faraday_server.custom_plugins_folder):
+                    for name in os.listdir(custom_plugins_folder):
                         if dir_name_regexp.match(name) and name != "__pycache__":
-                            try:
-                                module_path = os.path.join(faraday.server.config.faraday_server.custom_plugins_folder,
-                                                           name)
-                                sys.path.append(module_path)
-                                module_filename = os.path.join(module_path, "plugin.py")
+                            module_path = os.path.join(custom_plugins_folder, name)
+                            module_filename = os.path.join(module_path, "plugin.py")
+                            try:         
+                                sys.path.append(module_path)            
                                 file_ext = os.path.splitext(module_filename)[1]
                                 if file_ext.lower() == '.py':
                                     if name not in self.plugin_modules:
@@ -162,13 +160,13 @@ class PluginsManager:
                                             self.plugin_modules[plugin_id] = plugin_module
                                     else:
                                         logger.debug("Plugin with same name already loaded [%s]", name)
-                                logger.debug('Loading plugin {0}'.format(name))
+                                logger.debug("Load Plugin [%s]", name)
                             except Exception as e:
                                 logger.debug("An error ocurred while loading plugin %s.\n%s", module_filename,
                                              traceback.format_exc())
                                 logger.warning(e)
-            except Exception as e:
-                logger.info("Can't import faraday server, no custom plugins will be loaded")
+                else:
+                    logger.warning("Invalid custom plugins folder [%s]", custom_plugins_folder)
             logger.info("%s plugins loaded", len(self.plugin_modules))
 
     def get_plugin(self, plugin_id):

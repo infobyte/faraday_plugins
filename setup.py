@@ -12,6 +12,7 @@ install_requires = [
     'lxml',
     'html2text',
     'beautifulsoup4',
+    'pytz'
 ]
 
 
@@ -22,8 +23,8 @@ setup(
     url='',
     license='',
     author='Faradaysec',
-    author_email='',
-    description='',
+    author_email='devel@faradaysec.com',
+    description='Faraday plugins package',
     include_package_data=True,
     install_requires=install_requires,
 )
