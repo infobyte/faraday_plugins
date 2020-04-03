@@ -5,7 +5,7 @@ import json
 import click
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import generate_report_summary
+from faraday_plugins.plugins.plugins_utils import get_report_summary
 
 BLACK_LIST = [
     'LICENSE',
@@ -64,7 +64,7 @@ def generate_reports_tests(force):
                     plugin.processReport(report_file_path)
                     plugin_json = json.loads(plugin.get_json())
                     click.echo(f"Generate Summary for: {dst_report_file_path} [{plugin}]")
-                    summary = generate_report_summary(plugin_json)
+                    summary = get_report_summary(plugin_json)
                     with open(summary_file, "w") as f:
                         json.dump(summary, f)
                     generated_summaries += 1
