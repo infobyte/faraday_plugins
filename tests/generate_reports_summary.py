@@ -15,7 +15,7 @@ BLACK_LIST = [
     'faraday_plugins_tests',
 ]
 
-REPORT_COLLECTION_DIR = '../report-collection'
+REPORT_COLLECTION_DIR = 'report-collection'
 FARADAY_PLUGINS_TESTS_DIR = 'faraday_plugins_tests'
 
 
