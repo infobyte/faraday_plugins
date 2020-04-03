@@ -22,8 +22,9 @@ def cli():
 
 
 @cli.command()
-def list():
-    plugins_manager = PluginsManager()
+@click.option('-cpf', '--custom-plugins-folder', type=str)
+def list(custom_plugins_folder):
+    plugins_manager = PluginsManager(custom_plugins_folder)
     click.echo("Available Plugins:")
     loaded_plugins = 0
     for plugin_id, plugin in plugins_manager.get_plugins():
@@ -32,14 +33,16 @@ def list():
     click.echo(f"Loaded Plugins: {loaded_plugins}")
 
 
+
 @cli.command()
 @click.argument('plugin_id')
 @click.argument('report_file')
-def process(plugin_id, report_file):
+@click.option('-cpf', '--custom-plugins-folder', type=str)
+def process(plugin_id, report_file, custom_plugins_folder):
     if not os.path.isfile(report_file):
         click.echo(f"File {report_file} Don't Exists")
     else:
-        plugins_manager = PluginsManager()
+        plugins_manager = PluginsManager(custom_plugins_folder)
         plugin = plugins_manager.get_plugin(plugin_id)
         if plugin:
             plugin.processReport(report_file)
@@ -50,11 +53,12 @@ def process(plugin_id, report_file):
 
 @cli.command()
 @click.argument('report_file')
-def detect(report_file):
+@click.option('-cpf', '--custom-plugins-folder', type=str)
+def detect(report_file, custom_plugins_folder):
     if not os.path.isfile(report_file):
         click.echo(f"File {report_file} Don't Exists")
     else:
-        plugins_manager = PluginsManager()
+        plugins_manager = PluginsManager(custom_plugins_folder)
         analyzer = ReportAnalyzer(plugins_manager)
         plugin = analyzer.get_plugin(report_file)
         if plugin:

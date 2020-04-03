@@ -45,3 +45,5 @@ python -m faraday_plugins process appscan /path/to/report.xml
 ...
 ```
 
+
+> More documentation here https://github.com/infobyte/faraday/wiki/Basic-plugin-development
