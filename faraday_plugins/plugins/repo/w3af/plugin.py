@@ -9,8 +9,6 @@ from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
 import socket
-import pprint
-import sys
 
 try:
     import xml.etree.cElementTree as ET
@@ -152,6 +150,8 @@ class Item:
         self.url = self.url if self.url != 'None' else "/"
         self.plugin = self.node.get('plugin')
         self.detail = self.get_text_from_subnode('description')
+        if not self.detail:
+            self.detail = self.node.text.strip('\n').strip()
         self.resolution = self.get_text_from_subnode('fix-guidance')
         self.fix_effort = self.get_text_from_subnode('fix-effort')
         self.longdetail = self.get_text_from_subnode('description')

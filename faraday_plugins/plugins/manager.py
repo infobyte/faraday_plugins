@@ -38,7 +38,7 @@ class ReportAnalyzer:
                 if not plugin:
                     logger.debug("Plugin by file not found")
         if not plugin:
-            logger.debug("Plugin for file (%s) not found", report_path)
+            logger.warning("Plugin for file (%s) not found", report_path)
         return plugin
 
     def _get_plugin_by_name(self, file_name_base):
@@ -65,7 +65,7 @@ class ReportAnalyzer:
         file_name_base, file_extension = os.path.splitext(file_name)
         file_extension = file_extension.lower()
         main_tag = None
-        file_json_keys = {}
+        file_json_keys = set()
         logger.debug("Analyze report File")
         # Try to parse as xml
         try:
