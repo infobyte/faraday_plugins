@@ -47,7 +47,7 @@ class WPScanJsonParser:
         try:
             return socket.gethostbyname(hostname)
         except socket.error as msg:
-            return None
+            return '0.0.0.0'
 
 
 class WPScanPlugin(PluginJsonFormat):
