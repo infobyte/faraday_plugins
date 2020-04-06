@@ -140,20 +140,34 @@ class PluginBase:
         return obj_uuid
 
     @staticmethod
-    def get_host_cache_id(host):
-        return f"ip:{host['ip']}_os:{host['os']}"
+    def _get_dict_hash(d, keys):
+        return hash(frozenset(map(lambda x: (x, d.get(x, "")), keys)))
 
-    @staticmethod
-    def get_host_service_cache_id(host_id, service):
-        return f"host:{host_id}_protocol:{service['protocol']}_port:{service['port']}"
+    @classmethod
+    def get_host_cache_id(cls, host):
+        cache_id = cls._get_dict_hash(host, ['ip'])
+        return cache_id
 
-    @staticmethod
-    def get_service_vuln_cache_id(service_id, vuln):
-        return f"service:{service_id}_name:{vuln['name']}_desc:{vuln['desc']}_severity:{vuln['severity']}"
+    @classmethod
+    def get_host_service_cache_id(cls, host_id, service):
+        service_copy = service.copy()
+        service_copy.update({"host_cache_id": host_id})
+        cache_id = cls._get_dict_hash(service_copy, ['host_cache_id', 'protocol', 'port'])
+        return cache_id
 
-    @staticmethod
-    def get_host_vuln_cache_id(host_id, vuln):
-        return f"host:{host_id}_name:{vuln['name']}_desc:{vuln['desc']}_severity:{vuln['severity']}"
+    @classmethod
+    def get_service_vuln_cache_id(cls, service_id, vuln):
+        vuln_copy = vuln.copy()
+        vuln_copy.update({"service_cache_id": service_id})
+        cache_id = cls._get_dict_hash(vuln, ['service_cache_id', 'name', 'desc', 'website', 'path'])
+        return cache_id
+
+    @classmethod
+    def get_host_vuln_cache_id(cls, host_id, vuln):
+        vuln_copy = vuln.copy()
+        vuln_copy.update({"host_cache_id": host_id})
+        cache_id = cls._get_dict_hash(vuln, ['host_cache_id', 'name', 'desc', 'website', 'path'])
+        return cache_id
 
     def save_cache(self, obj):
         obj_uuid = uuid.uuid1()
