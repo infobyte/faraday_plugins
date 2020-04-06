@@ -141,7 +141,7 @@ class PluginBase:
 
     @staticmethod
     def _get_dict_hash(d, keys):
-        return hash(frozenset(map(lambda x: (x, d.get(x, "")), keys)))
+        return hash(frozenset(map(lambda x: (x, d.get(x, None)), keys)))
 
     @classmethod
     def get_host_cache_id(cls, host):
@@ -159,14 +159,14 @@ class PluginBase:
     def get_service_vuln_cache_id(cls, service_id, vuln):
         vuln_copy = vuln.copy()
         vuln_copy.update({"service_cache_id": service_id})
-        cache_id = cls._get_dict_hash(vuln, ['service_cache_id', 'name', 'desc', 'website', 'path'])
+        cache_id = cls._get_dict_hash(vuln, ['service_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
         return cache_id
 
     @classmethod
     def get_host_vuln_cache_id(cls, host_id, vuln):
         vuln_copy = vuln.copy()
         vuln_copy.update({"host_cache_id": host_id})
-        cache_id = cls._get_dict_hash(vuln, ['host_cache_id', 'name', 'desc', 'website', 'path'])
+        cache_id = cls._get_dict_hash(vuln, ['host_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
         return cache_id
 
     def save_cache(self, obj):
