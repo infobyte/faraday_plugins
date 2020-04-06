@@ -24,6 +24,8 @@ REPORTS_JSON_CACHE = {}
 
 SKIP_IP_PLUGINS = ['Fortify']
 
+REPORTS_SUMMARY_DIR = './report-collection/faraday_plugins_tests'
+
 
 def get_plugin_from_cache(report_file):
     plugin = PLUGINS_CACHE.get(report_file)
@@ -53,7 +55,7 @@ def get_report_json_from_cache(report_file):
 
 
 def list_report_files():
-    report_filenames = os.walk('./report-collection/faraday_plugins_tests')
+    report_filenames = os.walk(REPORTS_SUMMARY_DIR)
     for root, directory, filenames in report_filenames:
         if '.git' in directory or 'faraday_plugins_tests' in directory:
             continue
@@ -91,6 +93,8 @@ def is_valid_ipv6_address(address):
 def is_valid_ip_address(address):
     return (is_valid_ipv4_address(address) or is_valid_ipv6_address(address))
 
+def test_reports_collection_exists():
+    assert os.path.isdir(REPORTS_SUMMARY_DIR) is True
 
 @pytest.mark.parametrize("report_filename", list_report_files())
 def test_autodetected_on_all_report_collection(report_filename):

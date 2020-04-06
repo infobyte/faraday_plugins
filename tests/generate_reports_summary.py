@@ -20,7 +20,7 @@ FARADAY_PLUGINS_TESTS_DIR = 'faraday_plugins_tests'
 
 
 def list_report_files():
-    report_filenames = os.walk(REPORT_COLLECTION_DIR)
+    report_filenames = os.walk(os.path.join(REPORT_COLLECTION_DIR))
     for root, directory, filenames in report_filenames:
         if '.git' in directory or FARADAY_PLUGINS_TESTS_DIR in root:
             continue
