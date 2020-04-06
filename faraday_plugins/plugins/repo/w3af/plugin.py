@@ -9,6 +9,8 @@ from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
 import socket
+from urllib.parse import urlparse
+
 
 try:
     import xml.etree.cElementTree as ET
@@ -84,15 +86,16 @@ class W3afXmlParser:
             scaninfo = tree.findall('scan-info')[0]
 
         self.target = scaninfo.get('target')
-        host = re.search(
-            "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))[\:]*([0-9]+)*([/]*($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+)).*?$", self.target)
+        url_parse = urlparse(self.target)
 
-        self.protocol = host.group(1)
-        self.host = host.group(4)
-        if self.protocol == 'https':
-            self.port = 443
-        if host.group(11) is not None:
-            self.port = host.group(11)
+        self.protocol = url_parse.scheme
+        self.host = url_parse.netloc
+        self.port = url_parse.port
+        if self.port is None:
+            if self.protocol == 'https':
+                self.port = 443
+            elif self.protocol == 'http':
+                self.port = 80
 
         for node in tree.findall('vulnerability'):
             yield Item(node)

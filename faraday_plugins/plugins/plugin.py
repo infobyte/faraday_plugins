@@ -25,6 +25,7 @@ class PluginBase:
         # an existant plugin with the same id.
         # TODO: Make script that list current ids.
         self.id = None
+        self.auto_load = True
         self._rid = id(self)
         self.version = None
         self.name = None
@@ -465,4 +466,5 @@ class PluginJsonFormat(PluginByExtension):
             match = self.json_keys.issubset(file_json_keys)
             self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", file_json_keys, self.json_keys, match)
         return match
+
 # I'm Py3
