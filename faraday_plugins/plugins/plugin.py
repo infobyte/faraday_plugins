@@ -117,8 +117,8 @@ class PluginBase:
             obj_uuid = self._service_cache[cache_id]
         return obj_uuid
 
-    def save_service_vuln_cache(self, service_id, vuln):
-        cache_id = self.get_service_vuln_cache_id(service_id, vuln)
+    def save_service_vuln_cache(self, host_id, service_id, vuln):
+        cache_id = self.get_service_vuln_cache_id(host_id, service_id, vuln)
         if cache_id not in self._vulns_cache:
             obj_uuid = self.save_cache(vuln)
             service = self.get_from_cache(service_id)
@@ -156,17 +156,17 @@ class PluginBase:
         return cache_id
 
     @classmethod
-    def get_service_vuln_cache_id(cls, service_id, vuln):
+    def get_service_vuln_cache_id(cls, host_id, service_id, vuln):
         vuln_copy = vuln.copy()
-        vuln_copy.update({"service_cache_id": service_id})
-        cache_id = cls._get_dict_hash(vuln, ['service_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
+        vuln_copy.update({"host_cache_id": host_id, "service_cache_id": service_id})
+        cache_id = cls._get_dict_hash(vuln_copy, ['host_cache_id', 'service_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
         return cache_id
 
     @classmethod
     def get_host_vuln_cache_id(cls, host_id, vuln):
         vuln_copy = vuln.copy()
         vuln_copy.update({"host_cache_id": host_id})
-        cache_id = cls._get_dict_hash(vuln, ['host_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
+        cache_id = cls._get_dict_hash(vuln_copy, ['host_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
         return cache_id
 
     def save_cache(self, obj):
@@ -375,7 +375,7 @@ class PluginBase:
                          "data": data}
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
-        vulnerability_id = self.save_service_vuln_cache(service_id, vulnerability)
+        vulnerability_id = self.save_service_vuln_cache(host_id, service_id, vulnerability)
         return vulnerability_id
 
     def createAndAddVulnWebToService(self, host_id, service_id, name, desc="",
@@ -412,7 +412,7 @@ class PluginBase:
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
-        vulnerability_id = self.save_service_vuln_cache(service_id, vulnerability)
+        vulnerability_id = self.save_service_vuln_cache(host_id, service_id, vulnerability)
         return vulnerability_id
 
     def createAndAddNoteToHost(self, host_id, name, text):
