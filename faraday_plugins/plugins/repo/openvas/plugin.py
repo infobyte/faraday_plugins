@@ -86,19 +86,14 @@ class OpenvasXmlParser:
                     nodes = report.findall('results')[0]
                 else:
                     nodes = tree.findall('result')
-                for node in nodes:
-                    try:
-                        yield Item(node, hosts)
-                    except Exception as e:
-                        self.logger.error("Error generating Item from %s [%s]", node.attrib, e)
             else:
                 nodes = tree.findall('result')
-                for node in nodes:
-                    try:
-                        yield Item(node, hosts)
-                    except Exception as e:
-                        self.logger.error("Error generating Iteem from %s [%s]", node.attrib, e)
 
+            for node in nodes:
+                try:
+                    yield Item(node, hosts)
+                except Exception as e:
+                    self.logger.error("Error generating Iteem from %s [%s]", node.attrib, e)
 
         except Exception as e:
             self.logger.error("Tag not found: %s", e)
@@ -330,7 +325,7 @@ class OpenvasPlugin(PluginXMLFormat):
 
     def __init__(self):
         super().__init__()
-        self.identifier_tag = "report"
+        self.identifier_tag = ["get_results_response", "report"]
         self.id = "Openvas"
         self.name = "Openvas XML Output Plugin"
         self.plugin_version = "0.3"
@@ -341,15 +336,6 @@ class OpenvasPlugin(PluginXMLFormat):
         self.target = None
         self._command_regex = re.compile(
             r'^(openvas|sudo openvas|\.\/openvas).*?')
-
-
-    def report_belongs_to(self, **kwargs):
-        if super().report_belongs_to(**kwargs):
-            report_path = kwargs.get("report_path", "")
-            with open(report_path) as f:
-                output = f.read()
-            return re.search("OpenVAS", output) is not None or re.search('<omp>', output) is not None
-        return False
 
     def parseOutputString(self, output, debug=False):
         """
