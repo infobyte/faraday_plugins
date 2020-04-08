@@ -82,7 +82,7 @@ def get_summary(plugin_id, report_file, custom_plugins_folder):
             plugin.processReport(report_file)
             report_json = json.loads(plugin.get_json())
             click.echo(f"Report Summary for file [{plugin.id}]: {report_file}")
-            click.echo(json.dumps(get_report_summary(report_json), indent=2))
+            click.echo(json.dumps(get_report_summary(report_json), indent=4))
         else:
             click.echo(f"Unknown Plugin: {plugin_id}")
 
