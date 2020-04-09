@@ -325,7 +325,7 @@ class OpenvasPlugin(PluginXMLFormat):
 
     def __init__(self):
         super().__init__()
-        self.identifier_tag = ["get_results_response", "report"]
+        self.identifier_tag = ["report", "get_results_response"]
         self.id = "Openvas"
         self.name = "Openvas XML Output Plugin"
         self.plugin_version = "0.3"
@@ -336,6 +336,14 @@ class OpenvasPlugin(PluginXMLFormat):
         self.target = None
         self._command_regex = re.compile(
             r'^(openvas|sudo openvas|\.\/openvas).*?')
+
+    def report_belongs_to(self, **kwargs):
+        if super().report_belongs_to(**kwargs):
+            report_path = kwargs.get("report_path", "")
+            with open(report_path) as f:
+                output = f.read()
+            return re.search("OpenVAS", output) is not None or re.search('<omp>', output) is not None
+        return False
 
     def parseOutputString(self, output, debug=False):
         """
