@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 import socket
 import re
 import os
+from lxml import etree
 
 try:
     import xml.etree.cElementTree as ET
@@ -47,7 +48,7 @@ class AcunetixXmlParser:
 
     def __init__(self, xml_output):
         tree = self.parse_xml(xml_output)
-        if tree:
+        if len(tree):
             self.sites = list(self.get_items(tree))
         else:
             self.sites = []
@@ -62,7 +63,8 @@ class AcunetixXmlParser:
         @return xml_tree An xml tree instance. None if error.
         """
         try:
-            tree = ET.fromstring(xml_output)
+            parser = etree.XMLParser(recover=True)
+            tree = etree.fromstring(xml_output, parser=parser)
         except SyntaxError as err:
             print("SyntaxError: %s. %s", err, xml_output)
             return None
@@ -145,9 +147,8 @@ class Site:
     def resolve(self, host):
         try:
             return socket.gethostbyname(host)
-        except:
-            print('[ERROR] Acunetix XML Plugin: Ip of host unknown ' + host)
-            return None
+        except TypeError:
+            return '0.0.0.0'
         return host
 
     def get_url(self, node):
@@ -186,8 +187,6 @@ class Item:
 
         if self.get_text_from_subnode('reference'):
             self.desc += "\nDetails: " + self.get_text_from_subnode('Details')
-        else:
-            self.desc += ""
 
         # Add path and params to the description to create different IDs if at
         # least one of this fields is different
