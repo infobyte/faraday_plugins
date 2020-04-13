@@ -318,13 +318,13 @@ class PluginBase:
     #                         details="Interface object removed. Use host or service instead. Service will be attached
     # to Host!")
     def createAndAddServiceToInterface(self, host_id, interface_id, name,
-                                       protocol="tcp?", ports=None,
+                                       protocol="tcp", ports=None,
                                        status="open", version="unknown",
                                        description=""):
         return self.createAndAddServiceToHost(host_id, name, protocol, ports, status, version, description)
 
     def createAndAddServiceToHost(self, host_id, name,
-                                       protocol="tcp?", ports=None,
+                                       protocol="tcp", ports=None,
                                        status="open", version="unknown",
                                        description=""):
         if ports:
