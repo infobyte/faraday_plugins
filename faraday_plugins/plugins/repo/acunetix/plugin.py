@@ -261,19 +261,35 @@ class AcunetixPlugin(PluginXMLFormat):
                 version=site.banner,
                 status='open')
             for item in site.items:
-                self.createAndAddVulnWebToService(
-                    h_id,
-                    s_id,
-                    item.name,
-                    item.desc,
-                    website=site.host,
-                    severity=item.severity,
-                    resolution=item.resolution,
-                    path=item.uri,
-                    params=item.parameter,
-                    request=item.request,
-                    response=item.response,
-                    ref=item.ref)
+
+                if item.desc is None:
+                    self.createAndAddVulnWebToService(
+                        h_id,
+                        s_id,
+                        item.name,
+                        desc="",
+                        website=site.host,
+                        severity=item.severity,
+                        resolution=item.resolution,
+                        path=item.uri,
+                        params=item.parameter,
+                        request=item.request,
+                        response=item.response,
+                        ref=item.ref)
+                else:
+                    self.createAndAddVulnWebToService(
+                        h_id,
+                        s_id,
+                        item.name,
+                        item.desc,
+                        website=site.host,
+                        severity=item.severity,
+                        resolution=item.resolution,
+                        path=item.uri,
+                        params=item.parameter,
+                        request=item.request,
+                        response=item.response,
+                        ref=item.ref)
         del parser
 
     def setHost(self):
