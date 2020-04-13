@@ -3,11 +3,10 @@ Faraday Penetration Test IDE
 Copyright (C) 2015  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-
-import zipfile
+from faraday_plugins.plugins.plugin import PluginZipFormat
 import re
 import os
+import zipfile
 
 try:
     import xml.etree.cElementTree as ET
@@ -28,16 +27,6 @@ __license__ = ""
 __version__ = "1.0.1"
 __maintainer__ = "Ezequiel Tavella"
 __status__ = "Development"
-
-
-def openMtgx(mtgx_file):
-    try:
-        file = zipfile.ZipFile(mtgx_file, "r")
-        xml = ET.parse(file.open('Graphs/Graph1.graphml'))
-    except zipfile.BadZipFile:
-        return None
-    file.close()
-    return xml
 
 
 def openMtgl(mtgl_file):
@@ -128,9 +117,11 @@ class Host():
 class MaltegoMtgxParser():
 
     def __init__(self, xml_file):
-        nombre, extension = os.path.splitext(xml_file)
+
+        _, extension = os.path.splitext(xml_file)
 
         if extension == '.mtgx':
+            print(xml_file)
             self.xml = openMtgx(xml_file)
             self.nodes = self.xml.findall(
                 "{http://graphml.graphdrawing.org/xmlns}graph/"
@@ -365,16 +356,25 @@ class MaltegoMtgxParser():
         return mtgl_data
 
 
-class MaltegoPlugin(PluginXMLFormat):
+class MaltegoPlugin(PluginZipFormat):
 
     def __init__(self):
         super().__init__()
         self.identifier_tag = "maltego"
         self.id = "Maltego"
-        self.name = "Maltego MTGX Output Plugin"
+        self.name = "Maltego MTGX & MTGL Output Plugin"
         self.plugin_version = "1.0.1"
         self.version = "Maltego 3.6"
         self.framework_version = "1.0.0"
+        self.extension = [".mtgl", ".mtgx"]
+        self.files_list = {"Graphs/Graph1.graphml", "Entities/maltego.Company.entity",
+                           "Entities/maltego.DNSName.entity", "Entities/maltego.Domain.entity",
+                           "Entities/maltego.EmailAddress.entity", "Entities/maltego.IPv4Address.entity",
+                           "Entities/maltego.Location.entity", "Entities/maltego.MXRecord.entity",
+                           "Entities/maltego.Organization.entity", "Entities/maltego.NSRecord.entity",
+                           "Entities/maltego.Person.entity", "Entities/maltego.PhoneNumber.entity",
+                           "Entities/maltego.Website.entity", "Entities/maltego.Hash.entity",
+                           "Entities/maltego.hashtag.entity", "Entities/maltego.TwitterUserList.entity"}
         self.current_path = None
         self.options = None
         self._current_output = None
@@ -383,9 +383,11 @@ class MaltegoPlugin(PluginXMLFormat):
 
         global current_path
 
+
     def parseOutputString(self, filename, debug=False):
 
-        nombre, extension = os.path.splitext(filename)
+
+        _, extension = os.path.splitext(filename)
 
         if extension == '.mtgx':
             maltego_parser = MaltegoMtgxParser(filename)

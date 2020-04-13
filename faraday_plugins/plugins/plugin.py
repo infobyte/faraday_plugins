@@ -11,6 +11,7 @@ import uuid
 import logging
 import simplejson as json
 from datetime import datetime
+import zipfile
 
 
 logger = logging.getLogger("faraday").getChild(__name__)
@@ -467,4 +468,29 @@ class PluginJsonFormat(PluginByExtension):
             self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", file_json_keys, self.json_keys, match)
         return match
 
+
+class PluginZipFormat(PluginByExtension):
+
+    def __init__(self):
+        super().__init__()
+        self.extension = ".zip"
+        self.files_list = set()
+
+    def _parse_filename(self, filename):
+        try:
+            self.logger.debug(filename)
+            file = zipfile.ZipFile(filename, "r")
+            self.parseOutputString(file)
+        except Exception:
+            self.logger.debug("Can't open file")
+        file.close()
+
+    def report_belongs_to(self, files_in_zip=None, **kwargs):
+        match = False
+        if super().report_belongs_to(**kwargs):
+            if files_in_zip is None:
+                files_in_zip = set()
+            match = bool(self.files_list & files_in_zip)
+            self.logger.debug("Files List Match: [%s =/in %s] -> %s", files_in_zip, self.files_list, match)
+        return match
 # I'm Py3

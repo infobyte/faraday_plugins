@@ -5,6 +5,7 @@ import os
 import sys
 import json
 import pkgutil
+import zipfile
 from importlib import import_module
 from importlib.machinery import SourceFileLoader
 
@@ -66,6 +67,7 @@ class ReportAnalyzer:
         file_extension = file_extension.lower()
         main_tag = None
         file_json_keys = set()
+        files_in_zip = set()
         logger.debug("Analyze report File")
         # Try to parse as xml
         try:
@@ -87,13 +89,20 @@ class ReportAnalyzer:
                     logger.debug("Found JSON content on file: %s - Keys: %s", report_path, file_json_keys)
                 except Exception as e:
                     logger.debug("Non JSON content [%s] - %s", report_path, e)
+                    try:
+                        file_zip = zipfile.ZipFile(report_path, "r")
+                        files_in_zip = set(file_zip.namelist())
+                        logger.debug("List of files found in ZIP %s", file_zip)
+                    except Exception as e:
+                        logger.debug("Non ZIP content [%s] - %s", report_path, e)
             finally:
                 report_file.close()
                 for _plugin_id, _plugin in self.plugin_manager.get_plugins():
                     logger.debug("Try plugin: %s", _plugin_id)
                     try:
                         if _plugin.report_belongs_to(main_tag=main_tag, report_path=report_path,
-                                                     extension=file_extension, file_json_keys=file_json_keys):
+                                                     extension=file_extension, file_json_keys=file_json_keys,
+                                                     files_in_zip=files_in_zip):
                             plugin = _plugin
                             logger.debug("Plugin by File Found: %s", plugin.id)
                             break
@@ -138,8 +147,8 @@ class PluginsManager:
                         if dir_name_regexp.match(name) and name != "__pycache__":
                             module_path = os.path.join(custom_plugins_folder, name)
                             module_filename = os.path.join(module_path, "plugin.py")
-                            try:         
-                                sys.path.append(module_path)            
+                            try:
+                                sys.path.append(module_path)
                                 file_ext = os.path.splitext(module_filename)[1]
                                 if file_ext.lower() == '.py':
                                     if name not in self.plugin_modules:
