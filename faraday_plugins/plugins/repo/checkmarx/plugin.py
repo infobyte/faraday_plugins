@@ -5,12 +5,11 @@ Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-import socket
-import random
 import re
 from urllib.parse import urlparse
-import os
+
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+
 
 try:
     import xml.etree.cElementTree as ET
@@ -92,10 +91,6 @@ class CheckmarxPlugin(PluginXMLFormat):
         self.framework_version = '1.0.0'
         self.options = None
         self._command_regex = re.compile(r'^(checkmarx |\.\/checkmarx).*?')
-        self.protocol = None
-        self.hostname = None
-        self.port = '80'
-        self.address = None
 
     def parseOutputString(self, output):
         parser = CheckmarxXmlParser(output)
@@ -104,45 +99,57 @@ class CheckmarxPlugin(PluginXMLFormat):
             return
 
         url = urlparse(parser.cx_xml_results_attribs['DeepLink'])
+        port = url.port
+        if not port:
+            if url.scheme == 'https':
+                port = 443
+            elif url.scheme == 'http':
+                port = 80
+            else:
+                port = 0
         project_name = 'ProjectName' in parser.cx_xml_results_attribs
         if project_name:
-            host_id = self.createAndAddHost(self.address, hostnames=[url.netloc],
+            host_id = self.createAndAddHost(url.hostname, hostnames=[url.hostname],
                                             scan_template=parser.cx_xml_results_attribs['ProjectName'])
-            interface_id = self.createAndAddInterface(host_id, self.address, ipv4_address=self.address,
+            interface_id = self.createAndAddInterface(host_id, url.hostname, ipv4_address=url.hostname,
                                                       hostname_resolution=[url.netloc])
             service_to_interface = self.createAndAddServiceToInterface(host_id, interface_id, name=url.scheme,
-                                                                       ports=url.port)
+                                                                       ports=port)
         else:
-            host_id = self.createAndAddHost(self.address, hostnames=[url.netloc])
-            interface_id = self.createAndAddInterface(host_id, self.address, ipv4_address=self.address,
+            host_id = self.createAndAddHost(url.hostname, hostnames=[url.hostname])
+            interface_id = self.createAndAddInterface(host_id, url.hostname, ipv4_address=url.hostname,
                                                       hostname_resolution=[url.netloc])
             service_to_interface = self.createAndAddServiceToInterface(host_id, interface_id, name=url.scheme,
-                                                                       ports=url.port)
+                                                                       ports=port)
         for vulns in parser.query:
+            refs = []
             categories = 'categories' in vulns.query_attrib
+            vuln_desc = ''
             if categories:
-                self.vuln_desc = vulns.query_attrib['categories']
-            else:
-                self.vuln_desc = None
-            self.vuln_name = vulns.query_attrib['name']
-            self.vuln_severity = vulns.query_attrib['Severity']
-            self.vuln_scan_id = vulns.query_attrib['cweId']
-            self.resolution = vulns.path_node
-            self.website = []
-            self.pathfile = []
+                vuln_desc = vulns.query_attrib['categories']
+            vuln_name = vulns.query_attrib['name']
+            vuln_severity = vulns.query_attrib['Severity']
+            vuln_external_id = vulns.query_attrib['id']
+            refs.append(f'CWE-{vulns.query_attrib["cweId"]}')
+            data = ''
+            for files_data in vulns.path_node:
+                for file_data in files_data:
+                    data += 60 * '-' + '\n'
+                    for row_data in file_data:
+                        data += ' '.join([data for data in row_data if data]) + '\n'
+
             for v_result in vulns.result:
-                self.website.append(v_result['DeepLink'])
-                self.pathfile.append(v_result['FileName'])
+                refs.append(v_result['DeepLink'])
+                refs.append(v_result['FileName'])
 
-            self.createAndAddVulnToHost(host_id, self.vuln_name, severity=self.vuln_severity,
-                                        resolution=self.resolution, vulnerable_since="", scan_id=self.vuln_scan_id)
+            self.createAndAddVulnToHost(host_id, vuln_name, severity=vuln_severity,
+                                        resolution=data, vulnerable_since="", external_id=vuln_external_id)
 
-            self.createAndAddVulnWebToService(host_id, service_to_interface,  self.vuln_name,
-                                              severity=self.vuln_severity, resolution=self.resolution,
-                                              website=self.website, path=self.pathfile)
+            self.createAndAddVulnWebToService(host_id, service_to_interface, vuln_name,
+                                              desc=vuln_desc, severity=vuln_severity,
+                                              resolution=data, ref=refs)
 
 
 def createPlugin():
     return CheckmarxPlugin()
 
-# I'm Py3
