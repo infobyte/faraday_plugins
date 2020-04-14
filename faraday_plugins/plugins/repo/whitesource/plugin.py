@@ -21,29 +21,6 @@ __email__ = "bmoyano@infobytesec.com"
 __status__ = "Development"
 
 
-class WhitesourceJsonParser:
-    def __init__(self, json_output):
-        self.json_data = json.loads(json_output)
-
-    def parse_url(self, url):
-        url_parse = urlparse(url)
-        protocol = url_parse.scheme
-        hostname = url_parse.netloc
-        port = url_parse.port
-        address = self.get_address(hostname)
-
-        if port is None:
-            return {'protocol': protocol, 'hostname': hostname, 'port': None, 'address': address}
-
-        return {'protocol': protocol, 'hostname': hostname, 'port': [port], 'address': address}
-
-    def get_address(self, hostname):
-        try:
-            return socket.gethostbyname(hostname)
-        except socket.error as msg:
-            return '0.0.0.0'
-
-
 class WhitesourcePlugin(PluginJsonFormat):
     def __init__(self):
         super().__init__()
@@ -54,29 +31,67 @@ class WhitesourcePlugin(PluginJsonFormat):
         self.json_keys = {"vulnerabilities"}
 
     def parseOutputString(self, output, debug=False):
-        parser = WhitesourceJsonParser(output)
-        if parser.json_data['vulnerabilities']:
-            for whitesource in parser.json_data['vulnerabilities']:
-                url_data = parser.parse_url(whitesource['url'])
-                host_id = self.createAndAddHost(url_data['address'], hostnames=[url_data['hostname']],
-                                                scan_template=whitesource['name'])
-                service_id = self.createAndAddServiceToHost(host_id, "Apache", url_data['protocol'],
-                                                            ports=url_data['port'], status='open', version='')
+        parser = json.loads(output)
+        if parser['vulnerabilities']:
+            for vulnerability in parser['vulnerabilities']:
 
-                if 'topFix' in whitesource:
-                    self.createAndAddVulnWebToService(host_id, service_id, name=whitesource['name'],
-                                                      desc=whitesource['description'],
-                                                      resolution=whitesource['topFix']['fixResolution'],
-                                                      ref=f"CVSS: {whitesource['score']} "
-                                                          f"URL: { whitesource['topFix']['url']}",
-                                                      category=whitesource['topFix']['type'],
-                                                      data=whitesource['topFix']['message'],
-                                                      severity=whitesource['severity'])
-                else:
-                    self.createAndAddVulnWebToService(host_id, service_id, name=whitesource['name'],
-                                                      desc=whitesource['description'],
-                                                      ref=f"CVSS: {whitesource['score']}",
-                                                      severity=whitesource['severity'])
+                if 'project' in vulnerability:
+                    application_name = vulnerability.get('project')
+                    host_id = self.createAndAddHost(application_name)
+                    data = ''
+                    for key, value in vulnerability['library'].items():
+                        data += f'{key}: {value} \n'
+                    refs = [
+                        f"CVSS: {vulnerability['score']}",
+                    ]
+                    if 'cvss3_score' in vulnerability:
+                        refs.append(f"CVSS3: {vulnerability['cvss3_score']}")
+                    if 'topFix' in vulnerability:
+                        refs.append(f"URL: {vulnerability['topFix']['url']}")
+                        self.createAndAddVulnToHost(host_id,
+                                                    name=vulnerability['name'],
+                                                    desc=vulnerability['description'],
+                                                    data=data,
+                                                    resolution=vulnerability['topFix']['fixResolution'],
+                                                    ref=refs,
+                                                    severity=vulnerability['severity'])
+                    else:
+                        self.createAndAddVulnToHost(host_id,
+                                                    name=vulnerability['name'],
+                                                    desc=vulnerability['description'],
+                                                    data=data,
+                                                    ref=refs,
+                                                    severity=vulnerability['severity'])
+                elif 'namespace' in vulnerability:
+                    host_id = self.createAndAddHost(vulnerability['namespace'])
+                    service_id = self.createAndAddServiceToHost(
+                        host_id,
+                        vulnerability['featurename'],
+                        ports=0
+                    )
+                    self.createAndAddVulnToService(
+                        host_id,
+                        service_id,
+                        name=vulnerability['vulnerability'],
+                        desc=vulnerability['description'],
+                        ref=[vulnerability['link']],
+                        severity=vulnerability['severity']
+                    )
+                elif 'package' in vulnerability:
+                    host_id = self.createAndAddHost(vulnerability['feed_group'])
+                    service_id = self.createAndAddServiceToHost(
+                        host_id,
+                        vulnerability['package'],
+                        ports=0
+                    )
+                    self.createAndAddVulnToService(
+                        host_id,
+                        service_id,
+                        name=f'{vulnerability["vuln"]} {vulnerability["package_name"]}',
+                        ref=[vulnerability['url']],
+                        severity=vulnerability['severity']
+                    )
+
 
 
 
