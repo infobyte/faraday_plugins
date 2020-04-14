@@ -27,7 +27,7 @@ class AppscanParser():
     def __init__(self, output, logger):
         self.issue_list = []
         self.logger = logger
-        self.obj_xml = objectify.fromstring(output.encode('utf-8'))
+        self.obj_xml = objectify.fromstring(output)
 
     def parse_issues(self):
         issue_type = self.parse_issue_type()
