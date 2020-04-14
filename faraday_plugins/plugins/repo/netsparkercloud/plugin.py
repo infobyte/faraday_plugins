@@ -32,20 +32,6 @@ __email__ = "famato@infobytesec.com"
 __status__ = "Development"
 
 
-def cleaner_unicode(string):
-    if string is not None:
-        return string.encode('ascii', errors='backslashreplace')
-    else:
-        return string
-
-
-def cleaner_results(string):
-    try:
-        q = re.compile(r'<.*?>', re.IGNORECASE)
-        return re.sub(q, '', string)
-    except:
-        return ''
-
 
 def get_urls(string):
     if isinstance(string, bytes):
