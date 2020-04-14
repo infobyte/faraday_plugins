@@ -135,3 +135,18 @@ def test_summary_reports(report_filename):
         assert summary['hosts_vulns'] == saved_summary['hosts_vulns']
         assert summary['services_vulns'] == saved_summary['services_vulns']
         assert summary['severity_vulns'] == saved_summary['severity_vulns']
+
+
+@pytest.mark.performance
+@pytest.mark.parametrize("report_filename", list_report_files())
+def test_detected_tools_on_all_report_collection(report_filename, benchmark):
+    plugins_manager = PluginsManager()
+    analyzer = ReportAnalyzer(plugins_manager)
+    plugin: PluginBase = analyzer.get_plugin(report_filename)
+    if not plugin:
+        return
+    assert plugin, report_filename
+    benchmark(plugin.processReport, report_filename)
+    plugin_json = json.loads(plugin.get_json())
+    assert "hosts" in plugin_json
+    assert "command" in plugin_json
