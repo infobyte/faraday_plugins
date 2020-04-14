@@ -55,8 +55,6 @@ test_performance:
       - pytest tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings --performance
     only:
       - develop
-    tags:
-      - fast
 
 publish_pipy:
     image: python:3
