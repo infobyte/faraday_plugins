@@ -21,13 +21,6 @@ __maintainer__ = "Ezequiel Tavella"
 __status__ = "Development"
 
 
-def cleaner_unicode(string):
-    return string
-    # if string is not None:
-    #     return string.encode('ascii', errors='backslashreplace')
-    # else:
-    #     return string
-
 
 class AppscanParser():
 
@@ -144,7 +137,7 @@ class AppscanPlugin(PluginXMLFormat):
         self.options = None
         self.open_options = {"mode": "r", "encoding": "utf-8"}
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         try:
             parser = AppscanParser(output, self.logger)
             issues = parser.parse_issues()
@@ -157,14 +150,11 @@ class AppscanPlugin(PluginXMLFormat):
                     host['scheme'],
                     ports=[host['port']],
                     protocol="tcp?HTTP")
-                if host['port']:
-                    key_url = f"{host['scheme']}://{host['hostname']}:{host['port']}"
-                else:
-                    key_url = f"{host['scheme']}://{host['hostname']}"
+                key_url = f"{host['scheme']}://{host['hostname']}"
                 hosts_dict[key_url] = {'host_id': host_id, 'service_id': service_id}
             for issue in issues:
-                url_parsed = urlparse(str(issue['url']))
-                url_string = '://'.join([url_parsed.scheme, url_parsed.netloc])
+                url_parsed = urlparse(issue['url'])
+                url_string = f'{url_parsed.scheme}://{url_parsed.netloc}'
                 for key in hosts_dict:
                     if url_string == key:
                         h_id = hosts_dict[key]['host_id']
@@ -181,15 +171,15 @@ class AppscanPlugin(PluginXMLFormat):
                         self.createAndAddVulnWebToService(
                             h_id,
                             s_id,
-                            cleaner_unicode(issue["name"]),
-                            desc=cleaner_unicode(issue["issue_description"]) if "issue_description" in issue else "",
+                            issue["name"],
+                            desc=issue["issue_description"] if "issue_description" in issue else "",
                             ref=refs,
                             severity=issue["severity"],
-                            resolution=cleaner_unicode(issue["recomendation"]),
+                            resolution=issue["recomendation"],
                             website=url_parsed.netloc,
                             path=url_parsed.path,
-                            request=cleaner_unicode(issue["request"]) if "request" in issue else "",
-                            response=cleaner_unicode(issue["response"]) if issue["response"] else "",
+                            request=issue["request"] if "request" in issue else "",
+                            response=issue["response"] if issue["response"] else "",
                             method=issue["method"] if issue["method"] else "")
         except Exception as e:
             self.logger.error("Parsing Output Error: %s", e)
