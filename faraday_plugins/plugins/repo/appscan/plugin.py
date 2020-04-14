@@ -150,7 +150,13 @@ class AppscanPlugin(PluginXMLFormat):
                     host['scheme'],
                     ports=[host['port']],
                     protocol="tcp?HTTP")
-                key_url = f"{host['scheme']}://{host['hostname']}"
+                if host['port']:
+                    if host['port'] not in ('443', '80'):
+                        key_url = f"{host['scheme']}://{host['hostname']}:{host['port']}"
+                    else:
+                        key_url = f"{host['scheme']}://{host['hostname']}"
+                else:
+                    key_url = f"{host['scheme']}://{host['hostname']}"
                 hosts_dict[key_url] = {'host_id': host_id, 'service_id': service_id}
             for issue in issues:
                 url_parsed = urlparse(issue['url'])
