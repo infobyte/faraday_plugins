@@ -138,13 +138,11 @@ class NessusPlugin(PluginXMLFormat):
                 if v.get('cve'):
                     cves = v.get('cve')
                     for cve in cves:
-                        #logger.debug('Appending %s', cve.encode("utf-8"))
-                        ref.append(cve.encode("utf-8").strip())
+                        ref.append(cve.strip())
                 if v.get('bid'):
                     bids = v.get('bid')
                     for bid in bids:
-                        #logger.debug('Appending %s', bid.encode("utf-8"))
-                        ref.append("BID-%s" % bid.encode("utf-8").strip() )
+                        ref.append("BID-%s" % bid.strip())
                 if v.get('cvss_base_score'):
                     ref.append("CVSS: " + ", ".join(v.get('cvss_base_score')))
                 if v.get('xref'):
