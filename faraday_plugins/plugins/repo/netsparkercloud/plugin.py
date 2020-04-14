@@ -32,20 +32,6 @@ __email__ = "famato@infobytesec.com"
 __status__ = "Development"
 
 
-def cleaner_unicode(string):
-    if string is not None:
-        return string.encode('ascii', errors='backslashreplace')
-    else:
-        return string
-
-
-def cleaner_results(string):
-    try:
-        q = re.compile(r'<.*?>', re.IGNORECASE)
-        return re.sub(q, '', string)
-    except:
-        return ''
-
 
 def get_urls(string):
     if isinstance(string, bytes):
@@ -177,10 +163,6 @@ class Item:
                     " \nCAPEC: {} \nHIPA: {} \nExtra: {}".format(self.impact, self.exploitationskills,
                                                                  self.proofofconcept, self.wasc, self.pci, self.pci2,
                                                                  self.capec, self.hipaa, self.extra)
-        if self.response:
-            self.response = self.response.encode(encoding, errors="backslashreplace").decode(encoding)
-        if self.request:
-            self.request = self.request.encode(encoding, errors="backslashreplace").decode(encoding)
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """

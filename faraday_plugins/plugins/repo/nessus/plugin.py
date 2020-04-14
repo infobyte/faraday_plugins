@@ -131,11 +131,11 @@ class NessusPlugin(PluginXMLFormat):
                 if vuln_data.get('cve'):
                     cves = vuln_data.get('cve')
                     for cve in cves:
-                        ref.append(cve.encode("utf-8").strip())
+                        ref.append(cve.strip())
                 if vuln_data.get('bid'):
                     bids = vuln_data.get('bid')
                     for bid in bids:
-                        ref.append("BID-%s" % bid.encode("utf-8").strip() )
+                        ref.append("BID-%s" % bid.strip())
                 if vuln_data.get('cvss_base_score'):
                     ref.append("CVSS: " + ", ".join(vuln_data.get('cvss_base_score')))
                 if vuln_data.get('xref'):
