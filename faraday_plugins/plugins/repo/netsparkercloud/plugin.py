@@ -163,10 +163,6 @@ class Item:
                     " \nCAPEC: {} \nHIPA: {} \nExtra: {}".format(self.impact, self.exploitationskills,
                                                                  self.proofofconcept, self.wasc, self.pci, self.pci2,
                                                                  self.capec, self.hipaa, self.extra)
-        if self.response:
-            self.response = self.response.encode(encoding, errors="backslashreplace").decode(encoding)
-        if self.request:
-            self.request = self.request.encode(encoding, errors="backslashreplace").decode(encoding)
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
