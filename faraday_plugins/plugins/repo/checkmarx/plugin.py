@@ -109,8 +109,7 @@ class CheckmarxPlugin(PluginXMLFormat):
                 port = 0
         project_name = 'ProjectName' in parser.cx_xml_results_attribs
         if project_name:
-            host_id = self.createAndAddHost(url.hostname, hostnames=[url.hostname],
-                                            scan_template=parser.cx_xml_results_attribs['ProjectName'])
+            host_id = self.createAndAddHost(url.hostname, hostnames=[url.hostname])
             interface_id = self.createAndAddInterface(host_id, url.hostname, ipv4_address=url.hostname,
                                                       hostname_resolution=[url.netloc])
             service_to_interface = self.createAndAddServiceToInterface(host_id, interface_id, name=url.scheme,
@@ -143,7 +142,7 @@ class CheckmarxPlugin(PluginXMLFormat):
                 refs.append(v_result['FileName'])
 
             self.createAndAddVulnToHost(host_id, vuln_name, severity=vuln_severity,
-                                        resolution=data, vulnerable_since="", external_id=vuln_external_id)
+                                        resolution=data, external_id=vuln_external_id)
 
             self.createAndAddVulnWebToService(host_id, service_to_interface, vuln_name,
                                               desc=vuln_desc, severity=vuln_severity,
