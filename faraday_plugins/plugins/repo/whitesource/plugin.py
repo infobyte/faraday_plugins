@@ -32,7 +32,7 @@ class WhitesourcePlugin(PluginJsonFormat):
 
     def parseOutputString(self, output, debug=False):
         parser = json.loads(output)
-        if parser['vulnerabilities']:
+        if parser.get('vulnerabilities'):
             for vulnerability in parser['vulnerabilities']:
 
                 if 'project' in vulnerability:
@@ -98,5 +98,3 @@ class WhitesourcePlugin(PluginJsonFormat):
 
 def createPlugin():
     return WhitesourcePlugin()
-
-# I'm Py3
