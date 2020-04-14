@@ -87,7 +87,7 @@ class Issue():
         description = self.node.find(tag)
 
         if description is not None and description.text is not None:
-            return description.text.encode('ascii', 'ignore')
+            return description.text
         else:
             return 'None'
 
@@ -102,7 +102,7 @@ class Issue():
         result = main_entity.find(child_tag)
 
         if result is not None and result.text is not None:
-            return result.text.encode('ascii', 'ignore')
+            return result.text
         else:
             return 'None'
 
@@ -145,7 +145,7 @@ class Issue():
         try:
 
             raw_data = self.node.find('page').find('request').find('raw')
-            data = raw_data.text.encode('ascii', 'ignore')
+            data = raw_data.text
             return data
 
         except:
@@ -158,7 +158,7 @@ class Issue():
 
             raw_data = self.node.find('page').find(
                 'response').find('raw_headers')
-            data = raw_data.text.encode('ascii', 'ignore')
+            data = raw_data.text
             return data
 
         except:
