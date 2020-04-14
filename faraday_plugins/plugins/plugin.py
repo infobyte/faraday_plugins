@@ -477,13 +477,14 @@ class PluginZipFormat(PluginByExtension):
         self.files_list = set()
 
     def _parse_filename(self, filename):
-        try:
-            self.logger.debug(filename)
-            file = zipfile.ZipFile(filename, "r")
-            self.parseOutputString(file)
-        except Exception:
-            self.logger.debug("Can't open file")
+        if zipfile.is_zipfile(filename):
+            self.parseOutputString(filename)
+
+        file = zipfile.ZipFile(filename, "r")
+        output = file.read('Graphs/Graph1.graphml')
         file.close()
+        self.parseOutputString(output)
+
 
     def report_belongs_to(self, files_in_zip=None, **kwargs):
         match = False

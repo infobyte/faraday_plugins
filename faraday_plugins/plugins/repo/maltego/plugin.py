@@ -121,7 +121,7 @@ class MaltegoMtgxParser():
         _, extension = os.path.splitext(xml_file)
 
         if extension == '.mtgx':
-            print(xml_file)
+
             self.xml = openMtgx(xml_file)
             self.nodes = self.xml.findall(
                 "{http://graphml.graphdrawing.org/xmlns}graph/"
@@ -385,8 +385,7 @@ class MaltegoPlugin(PluginZipFormat):
 
 
     def parseOutputString(self, filename, debug=False):
-
-
+        print(self._parse_filename(filename))
         _, extension = os.path.splitext(filename)
 
         if extension == '.mtgx':
