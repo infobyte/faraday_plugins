@@ -200,8 +200,7 @@ class PluginBase:
         """
         raise NotImplementedError('This method must be implemented.')
 
-    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None, scan_template="", site_name="",
-                         site_importance="", risk_score="", fingerprints="", fingerprints_software=""):
+    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None):
 
         if not hostnames:
             hostnames = []
@@ -210,10 +209,7 @@ class PluginBase:
         if os is None:
             os = "unknown"
         host = {"ip": name, "os": os, "hostnames": hostnames, "description": "",  "mac": mac,
-                "credentials": [], "services": [], "vulnerabilities": [], "scan_template": scan_template,
-                "site_name": site_name, "site_importance": site_importance, "risk_score": risk_score,
-                "fingerprints": fingerprints, "fingerprints_software": fingerprints_software
-                }
+                "credentials": [], "services": [], "vulnerabilities": []}
         host_id = self.save_host_cache(host)
         return host_id
 
@@ -278,13 +274,11 @@ class PluginBase:
         return service_id
 
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
-                               severity="", resolution="", vulnerable_since="", scan_id="", pci="", data="",
-                               external_id=None, run_date=None):
+                               severity="", resolution="", data="",external_id=None, run_date=None):
         if ref is None:
             ref = []
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
-                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution,
-                         "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data
+                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
@@ -304,12 +298,11 @@ class PluginBase:
                                            data=data)
 
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
-                                  ref=None, severity="", resolution="", risk="", data="", external_id=None, run_date=None):
+                                  ref=None, severity="", resolution="", data="", external_id=None, run_date=None):
         if ref is None:
             ref = []
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
-                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "risk": risk,
-                         "data": data
+                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
