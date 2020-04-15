@@ -7,6 +7,7 @@ See the file 'doc/LICENSE' for the license information
 import json
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 from urllib.parse import urlparse
+import os
 
 
 __author__ = "Blas Moyano"
@@ -57,7 +58,7 @@ class SourceclearPlugin(PluginJsonFormat):
 
         for records in parser.json_data['records']:
             vulns = records['vulnerabilities']
-            h_id = self.createAndAddHost(name='0.0.0.0', scan_template=records['metadata']['recordType'])
+            libraries = records['libraries']
 
             for vuln in vulns:
                 v_name = vuln['title']
@@ -66,6 +67,15 @@ class SourceclearPlugin(PluginJsonFormat):
                 v_data = vuln['libraries']
                 v_website = vuln['_links']['html']
                 url_data = parser.parse_url(v_website)
+                for refs in vuln['libraries']:
+                    ref = refs['_links']['ref']
+                    num_versions = ref.find("/versions")
+                    _, num_libraries = os.path.split(ref[:num_versions])
+                    name_librarie = libraries[int(num_libraries)]['name']
+                    version_librarie = libraries[int(num_libraries)]['versions'][0]['version']
+                    host_name = f'{name_librarie}{version_librarie}'
+
+                h_id = self.createAndAddHost(name=host_name, scan_template=records['metadata']['recordType'])
                 s_id = self.createAndAddServiceToHost(h_id, "Sourceclear", protocol=url_data['protocol'],
                                                       ports=url_data['port'], status='open')
                 self.createAndAddVulnWebToService(h_id, s_id, name=v_name, desc=v_desc, ref=[v_ref], data=v_data,
