@@ -372,15 +372,15 @@ class OpenvasPlugin(PluginXMLFormat):
                 if item.cve:
                     cves = item.cve.split(',')
                     for cve in cves:
-                        ref.append(cve.encode("utf-8").strip())
+                        ref.append(cve.strip())
                 if item.bid:
                     bids = item.bid.split(',')
                     for bid in bids:
-                        ref.append("BID-%s" % bid.encode("utf-8").strip() )
+                        ref.append("BID-%s" % bid.strip())
                 if item.xref:
-                    ref.append(item.xref.encode("utf-8"))
+                    ref.append(item.xref)
                 if item.tags and item.cvss_vector:
-                    ref.append(item.cvss_vector.encode("utf-8"))
+                    ref.append(item.cvss_vector)
 
                 if item.subnet in ids:
                     h_id = ids[item.host]
