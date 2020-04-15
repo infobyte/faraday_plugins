@@ -120,8 +120,10 @@ class Site:
         url_data = self.get_url(self.node)
 
         self.protocol = url_data.scheme
-        self.host = url_data.hostname
-
+        if url_data.hostname:
+            self.host = url_data.hostname
+        else:
+            self.host = None
         # Use the port in the URL if it is defined, or 80 or 443 by default
         self.port = url_data.port or (443 if url_data.scheme == "https" else 80)
 
@@ -149,7 +151,6 @@ class Site:
             return socket.gethostbyname(host)
         except TypeError:
             return '0.0.0.0'
-        return host
 
     def get_url(self, node):
         url = self.get_text_from_subnode('StartURL')
@@ -178,7 +179,11 @@ class Item:
         self.response = self.get_text_from_subnode('TechnicalDetails/Response')
         self.parameter = self.get_text_from_subnode('Parameter')
         self.uri = self.get_text_from_subnode('Affects')
-        self.desc = self.get_text_from_subnode('Description')
+
+        if self.get_text_from_subnode('Description'):
+            self.desc = self.get_text_from_subnode('Description')
+        else:
+            self.desc = ""
 
         if self.get_text_from_subnode('Recommendation'):
             self.resolution = self.get_text_from_subnode('Recommendation')
@@ -243,15 +248,16 @@ class AcunetixPlugin(PluginXMLFormat):
         for site in parser.sites:
             if site.ip is None:
                 continue
-            host = []
+
             if site.host != site.ip:
-                host = [site.host]
+                host = site.host
             h_id = self.createAndAddHost(site.ip, site.os)
-            i_id = self.createAndAddInterface(
-                h_id,
-                site.ip,
-                ipv4_address=site.ip,
-                hostname_resolution=host)
+            if site.host is None:
+                i_id = self.createAndAddInterface(h_id, site.ip, ipv4_address=site.ip)
+            else:
+                i_id = self.createAndAddInterface(h_id, site.ip,
+                                                  ipv4_address=site.ip,
+                                                  hostname_resolution=[host])
             s_id = self.createAndAddServiceToInterface(
                 h_id,
                 i_id,
