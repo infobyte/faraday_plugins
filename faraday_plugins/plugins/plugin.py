@@ -269,7 +269,7 @@ class PluginBase:
         """
         raise NotImplementedError('This method must be implemented.')
 
-    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None):
+    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None, description=""):
 
         if not hostnames:
             hostnames = []
@@ -277,7 +277,7 @@ class PluginBase:
         hostnames = [hostname for hostname in hostnames if hostname]
         if os is None:
             os = "unknown"
-        host = {"ip": name, "os": os, "hostnames": hostnames, "description": "",  "mac": mac,
+        host = {"ip": name, "os": os, "hostnames": hostnames, "description": description,  "mac": mac,
                 "credentials": [], "services": [], "vulnerabilities": []}
         host_id = self.save_host_cache(host)
         return host_id
