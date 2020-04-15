@@ -344,7 +344,8 @@ class PluginBase:
 
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
                                severity="", resolution="", data="", external_id=None, run_date=None,
-                               impact=None, custom_fields=None, status="", policyviolations=None):
+                               impact=None, custom_fields=None, status="", policyviolations=None,
+                               easeofresolution=None, confirmed=False):
         if ref is None:
             ref = []
         if status == "":
@@ -359,6 +360,7 @@ class PluginBase:
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact, "policyviolations": policyviolations,
+                         "confirmed": confirmed, "easeofresolution": easeofresolution
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
@@ -377,7 +379,8 @@ class PluginBase:
 
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
-                                  custom_fields=None, policyviolations=None, impact=None, status=""):
+                                  custom_fields=None, policyviolations=None, impact=None, status="", 
+                                  confirmed=False, easeofresolution=None):
         if ref is None:
             ref = []
         if status == "":
@@ -390,7 +393,8 @@ class PluginBase:
             custom_fields = {}
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
-                         "custom_fields": custom_fields, "status": status, "impact": impact, "policyviolations": policyviolations
+                         "custom_fields": custom_fields, "status": status, "impact": impact, "policyviolations": policyviolations,
+                         "easeofresolution": easeofresolution, "confirmed": confirmed,
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)

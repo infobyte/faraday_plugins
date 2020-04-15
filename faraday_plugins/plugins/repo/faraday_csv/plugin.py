@@ -260,6 +260,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                 mac=item['mac'],
                 description=item['host_description'] or ""
             )
+            s_id = None
             if item['row_with_service']:
                 s_id = self.createAndAddServiceToHost(
                     h_id,
@@ -271,7 +272,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                     description=item['service_description']
                 )
             if item['row_with_vuln']:
-                if not item['web_vulnerability']:
+                if not item['web_vulnerability'] and not s_id:
                     self.createAndAddVulnToHost(
                         h_id,
                         name=item['vuln_name'],
@@ -288,7 +289,25 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         policyviolations=item['policyviolations'],
                         custom_fields=item['custom_fields']
                     )
-                else:
+                if not item['web_vulnerability'] and s_id:
+                    self.createAndAddVulnToService(
+                        h_id,
+                        s_id,
+                        name=item['vuln_name'],
+                        desc=item['vuln_desc'],
+                        ref=item['refs'],
+                        severity=item['severity'],
+                        resolution=item['resolution'],
+                        data=item['data'],
+                        external_id=item['external_id'],
+                        confirmed=item['confirmed'],
+                        status=item['vuln_status'],
+                        easeofresolution=item['easeofresolution'] or None,
+                        impact=item['impact'],
+                        policyviolations=item['policyviolations'],
+                        custom_fields=item['custom_fields']
+                    )
+                elif item['web_vulnerability']:
                     self.createAndAddVulnWebToService(
                         h_id,
                         s_id,
@@ -315,24 +334,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         status_code=item['status_code'] or None,
                         custom_fields=item['custom_fields']
                     )
-                """else:
-                    self.createAndAddVulnToService(
-                        h_id,
-                        s_id,
-                        name=item['vuln_name'],
-                        desc=item['vuln_desc'],
-                        ref=item['refs'],
-                        severity=item['severity'],
-                        resolution=item['resolution'],
-                        data=item['data'],
-                        external_id=item['external_id'],
-                        confirmed=item['confirmed'],
-                        status=item['vuln_status'],
-                        easeofresolution=item['easeofresolution'] or None,
-                        impact=item['impact'],
-                        policyviolations=item['policyviolations'],
-                        custom_fields=item['custom_fields']
-                    )"""
+
 
 def createPlugin():
     return FaradayCSVPlugin()
