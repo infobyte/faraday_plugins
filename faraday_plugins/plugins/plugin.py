@@ -518,6 +518,6 @@ class PluginCSVFormat(PluginByExtension):
         if super().report_belongs_to(**kwargs):
             if file_csv_headers is None:
                 file_csv_headers = set()
-            match = self.csv_headers.issubset(file_csv_headers)
+            match = bool(self.csv_headers & file_csv_headers)
             self.logger.debug("CSV Headers Match: [%s =/in %s] -> %s", file_csv_headers, self.csv_headers, match)
         return match
