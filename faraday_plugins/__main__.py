@@ -1,9 +1,11 @@
 import logging
 import os
 import sys
+import json
 import click
 
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
+from faraday_plugins.plugins.plugins_utils import get_report_summary
 
 root_logger = logging.getLogger("faraday")
 if not root_logger.handlers:
@@ -65,6 +67,24 @@ def detect(report_file, custom_plugins_folder):
             click.echo(plugin)
         else:
             click.echo(f"Failed to detect")
+
+@cli.command()
+@click.argument('plugin_id')
+@click.argument('report_file')
+@click.option('-cpf', '--custom-plugins-folder', type=str)
+def get_summary(plugin_id, report_file, custom_plugins_folder):
+    if not os.path.isfile(report_file):
+        click.echo(f"File {report_file} Don't Exists")
+    else:
+        plugins_manager = PluginsManager(custom_plugins_folder)
+        plugin = plugins_manager.get_plugin(plugin_id)
+        if plugin:
+            plugin.processReport(report_file)
+            report_json = json.loads(plugin.get_json())
+            click.echo(f"Report Summary for file [{plugin.id}]: {report_file}")
+            click.echo(json.dumps(get_report_summary(report_json), indent=4))
+        else:
+            click.echo(f"Unknown Plugin: {plugin_id}")
 
 
 if __name__ == "__main__":

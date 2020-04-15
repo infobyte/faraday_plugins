@@ -30,14 +30,6 @@ __email__ = "famato@infobytesec.com"
 __status__ = "Development"
 
 
-class ParserEtToAscii(ET.TreeBuilder):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        print(self._data)
-
-    def data(self, data):
-        self._data.append(data.encode("ascii", errors="backslashreplace"))
-
 
 class ZapXmlParser:
     """
