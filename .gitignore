@@ -127,3 +127,6 @@ dmypy.json
 
 .idea
 /report-collection/
+
+#project settings
+*.project
