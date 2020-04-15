@@ -249,6 +249,10 @@ class FaradayCSVPlugin(PluginCSVFormat):
             "ip", "port", "protocol", "vuln_name", "vuln_desc", "severity", "target"
         }
 
+    def _parse_filename(self, filename):
+        with open(filename, **self.open_options) as output:
+            self.parseOutputString(output.read())
+
     def parseOutputString(self, output, debug=False):
         parser = CSVParser(output, self.logger)
 

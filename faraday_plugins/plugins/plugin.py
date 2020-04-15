@@ -246,10 +246,7 @@ class PluginBase:
 
     def _parse_filename(self, filename):
         with open(filename, **self.open_options) as output:
-            if self.id == "faraday_csv":
-                self.parseOutputString(output)
-            else:
-                self.parseOutputString(output.read())
+            self.parseOutputString(output)
 
     def processReport(self, filepath, user="faraday"):
         if os.path.isfile(filepath):
