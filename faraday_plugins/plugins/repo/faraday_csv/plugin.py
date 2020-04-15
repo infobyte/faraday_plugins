@@ -65,7 +65,7 @@ class CSVParser:
         if 'ip' in reader.fieldnames and 'target' not in reader.fieldnames:
             index = reader.fieldnames.index('ip')
             reader.fieldnames[index] = "target"
-
+        custom_fields_names = self.get_custom_fields_names(reader.fieldnames)
         for row in reader:
             self.data = {}
             self.data['row_with_service'] = False
@@ -80,7 +80,7 @@ class CSVParser:
             if "vuln" in obj_to_import:
                 if row['vuln_name'] and row['vuln_desc']:
                     self.data['row_with_vuln'] = True
-                    self.build_vulnerability(row)
+                    self.build_vulnerability(row, custom_fields_names)
                 else:
                     self.data['row_with_service'] = False
 
@@ -141,6 +141,15 @@ class CSVParser:
 
         return obj_to_import
 
+    def get_custom_fields_names(self, headers):
+        custom_fields_names = []
+        for header in headers:
+            match = re.match(r"cf_(\w+)", header)
+            if match:
+                custom_fields_names.append(match.group(1))
+
+        return custom_fields_names
+
     def build_host(self, row):
         self.data['target'] = row['target']
         for item in self.host_data:
@@ -167,7 +176,7 @@ class CSVParser:
             else:
                 self.data[item] = None
 
-    def build_vulnerability(self, row):
+    def build_vulnerability(self, row, custom_fields_names):
         self.data['vuln_name'] = row['vuln_name']
         self.data['vuln_desc'] = row['vuln_desc']
         impact_dict = {
@@ -195,6 +204,7 @@ class CSVParser:
                 self.data[item] = None
 
         self.data['impact'] = impact_dict
+        self.data['custom_fields'] = self.parse_custom_fields(row, custom_fields_names)
 
     def build_hostnames_list(self, row):
         hostnames = []
@@ -216,26 +226,15 @@ class CSVParser:
             if item in impact:
                 return item
 
-    def parse_custom_fields(self, vuln):
+    def parse_custom_fields(self, row, custom_fields_names):
         custom_fields = {}
-        vuln_headers = [
-            "confirmed", "vuln_id", "date", "update_date", "vuln_name", "severity", "service",
-            "target", "vuln_desc", "vuln_status", "hostnames", "comments",
-            "vuln_owner", "os", "resolution", "refs", "easeofresolution",
-            "web_vulnerability", "data", "website", "path", "status_code",
-            "request", "response", "method", "params", "pname", "query",
-            "policyviolations", "external_id", "impact_confidentiality",
-            "impact_integrity", "impact_availability", "impact_accountability",
-            "vuln_creator", "obj_type", "parent_id", "parent_type"
-        ]
-        # The additional fields between vuln_headers and vuln.keys() are the Custom Fields
-        custom_fields_names = set(vuln.keys()).difference(vuln_headers)
-        for name in custom_fields_names:
-            cf_value = vuln[name]
+        for cf_name in custom_fields_names:
+            cf_value = row["cf_" + cf_name]
             try:
-                custom_fields[name] = literal_eval(cf_value)
+                custom_fields[cf_name] = literal_eval(cf_value)
             except (ValueError, SyntaxError):
-                custom_fields[name] = cf_value
+                custom_fields[cf_name] = cf_value
+
         return custom_fields
 
 
