@@ -3,6 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
+import re
 import csv
 from ast import literal_eval
 
@@ -10,90 +11,210 @@ from faraday_plugins.plugins.plugin import PluginCSVFormat
 
 
 class CSVParser:
-    def __init__(self, csv_output):
+    def __init__(self, csv_output, logger):
+        self.logger = logger
+        self.host_data = [
+            "host_description",
+            "os",
+            "mac",
+            "hostnames"
+        ]
+        self.service_data = [
+            "service_name",
+            "service_description",
+            "version",
+            "service_status"
+        ]
+        self.vuln_data = [
+            "vuln_name",
+            "vuln_desc",
+            "refs",
+            "severity",
+            "resolution",
+            "data",
+            "external_id",
+            "confirmed",
+            "vuln_status",
+            "easeofresolution",
+            "impact_confidentiality",
+            "impact_integrity",
+            "impact_availability",
+            "impact_accountability",
+            "policyviolations",
+            "custom_fields",
+            "website",
+            "path",
+            "request",
+            "response",
+            "method",
+            "pname",
+            "params",
+            "query",
+            "status_code",
+        ]
+
         self.items = self.parse_csv(csv_output)
 
     def parse_csv(self, output):
-        items_dict = {}
-        change_headers = False
-        services_id = {} # dict with a service id as key and its parent id as value 
+        items = []
         reader = csv.DictReader(output, delimiter=',')
+        obj_to_import = self.check_objects_to_import(reader.fieldnames)
+        if not obj_to_import:
+            return items
+
+        if 'ip' in reader.fieldnames and 'target' not in reader.fieldnames:
+            index = reader.fieldnames.index('ip')
+            reader.fieldnames[index] = "target"
 
         for row in reader:
-            if change_headers:
-                reader.fieldnames = self.set_new_headers(row)
-                change_headers = False
+            self.data = {}
+            self.data['row_with_service'] = False
+            self.data['row_with_vuln'] = False
+            self.build_host(row)
+            if "service" in obj_to_import:
+                if row['port'] and row['protocol']:
+                    self.data['row_with_service'] = True
+                    self.build_service(row)
+                else:
+                    self.data['row_with_service'] = False
+            if "vuln" in obj_to_import:
+                if row['vuln_name'] and row['vuln_desc']:
+                    self.data['row_with_vuln'] = True
+                    self.build_vulnerability(row)
+                else:
+                    self.data['row_with_service'] = False
 
-            if not row['obj_type']:
-                change_headers = True
+            items.append(self.data)
+        return items
 
-            elif row['obj_type'] == 'host':
-                # Convert string to list
-                row['hostnames'] = literal_eval(row['hostnames'])
-                host_id = row.pop('host_id')
-                items_dict[host_id] = {
-                    'host': row,
-                    'services': {},
-                    'vulns': [],
-                }
+    def check_objects_to_import(self, headers):
+        obj_to_import = []
 
-            elif row['obj_type'] == 'service':
-                parent_id = row['parent_id']
-                service_id = row['service_id']
-                items_dict[parent_id]['services'][service_id] = row
-                services_id[service_id] = parent_id
+        # From valid_headers, Faraday will define which objects to import
+        valid_headers = [
+            "ip",
+            "port", "protocol",
+            "vuln_name", "vuln_desc", "target"
+        ]
 
-            elif row['obj_type'] == 'vulnerability':
-                # Convert string to list
-                row['hostnames'] = literal_eval(row['hostnames'])
-                row['comments'] = literal_eval(row['comments'])
-                row['refs'] = literal_eval(row['refs'])
-                row['policyviolations'] = literal_eval(row['policyviolations'])
-                row['custom_fields'] = self.parse_custom_fields(row)
-                row['impact'] = self.parse_vuln_impact(row)
-                if row['parent_type'] == 'Host':
-                    parent_id = row['parent_id']
-                    items_dict[parent_id]['vulns'].append(
-                        {
-                            'parent_id': row['parent_id'],
-                            'parent_type': row['parent_type'],
-                            'data': row
-                        }
-                    )
+        matching_headers = set(valid_headers) & set(headers)
 
-                elif row['parent_type'] == 'Service':
-                    host_id = services_id[row['parent_id']] # To use the correct key in items_dict
-                    items_dict[host_id]['vulns'].append(
-                        {
-                            'parent_id': row['parent_id'],
-                            'parent_type': row['parent_type'],
-                            'data': row
-                        }
-                    )
+        if "ip" not in matching_headers and "target" not in matching_headers:
+            self.logger.error("No host specified. Please, specify at least one host.")
+            return None
 
-        return items_dict
+        if "ip" in matching_headers:
+            # Remove ip field to leave only target field
+            matching_headers.remove("ip")
+            if "target" not in matching_headers:
+                matching_headers.add("target")
 
-    def set_new_headers(self, row):
-        new_headers = []
-        for key, value in row.items():
-            if key:
-                new_headers.append(value)
+        obj_to_import.append('host')
+
+        if "port" in matching_headers or "protocol" in matching_headers:
+            port = True if "port" in matching_headers else False
+            protocol = True if "protocol" in matching_headers else False
+
+            if (port and not protocol) or (protocol and not port):
+                self.logger.error(
+                    "Missing columns in CSV file.\
+                    In order to import services, you need to add a port\
+                    column and a protocol column."
+                )
+                return None
             else:
-                # If one header is longer that the other, the Key is None and the
-                #  value is a list containing the remaining values of the longest header
-                for item in value:
-                    new_headers.append(item)
+                obj_to_import.append('service')
 
-        return new_headers
+        if "vuln_name" in matching_headers or "vuln_desc" in matching_headers:
+            vuln_name = True if "vuln_name" in matching_headers else False
+            vuln_desc = True if "vuln_desc" in matching_headers else False
 
-    def parse_vuln_impact(self, vuln_data):
-        impact = {
-            "accountability":True if vuln_data['impact_accountability'] == "True" else False,
-            "confidentiality":True if vuln_data['impact_confidentiality'] == "True" else False,
-            "availability":True if vuln_data['impact_availability'] == "True" else False,
-            "integrity":True if vuln_data['impact_integrity'] == "True" else False,
+            if (vuln_name and not vuln_desc) or (vuln_desc and not vuln_name):
+                self.logger.error(
+                    "Missing columns in CSV file.\
+                    In order to import vulnerabilities, you need to add a vuln_name\
+                    column and a vuln_desc column."
+                )
+                return None
+            else:
+                obj_to_import.append('vuln')
+
+        return obj_to_import
+
+    def build_host(self, row):
+        self.data['target'] = row['target']
+        for item in self.host_data:
+            if item == "hostnames":
+                self.data[item] = self.build_hostnames_list(row)
+                continue
+
+            if item in row:
+                self.data[item] = row[item]
+            else:
+                self.data[item] = None
+
+    def build_service(self, row):
+        self.data['port'] = row['port']
+        self.data['protocol'] = row['protocol']
+        for item in self.service_data:
+            if item in row:
+                if item == 'service_status':
+                    if row[item] == '':
+                        # If status is not specified, set it as 'open'
+                        self.data[item] = "open"
+                        continue
+                self.data[item] = row[item]
+            else:
+                self.data[item] = None
+
+    def build_vulnerability(self, row):
+        self.data['vuln_name'] = row['vuln_name']
+        self.data['vuln_desc'] = row['vuln_desc']
+        impact_dict = {
+            "accountability": False,
+            "confidentiality": False,
+            "availability": False,
+            "integrity": False,
         }
-        return impact
+
+        if "web_vulnerability" in row:
+            self.data['web_vulnerability'] = True if row['web_vulnerability'] == "True" else False
+        else:
+            self.data['web_vulnerability'] = False
+
+        for item in self.vuln_data:
+            if item in row:
+                if "impact_" in item:
+                    impact = re.match(r"impact_(\w+)", item).group(1)
+                    impact_dict[impact] = True if row[item] == "True" else False
+                elif item == "refs" or item == "policyviolations":
+                    self.data[item] = literal_eval(row[item])
+                else:
+                    self.data[item] = row[item]
+            else:
+                self.data[item] = None
+
+        self.data['impact'] = impact_dict
+
+    def build_hostnames_list(self, row):
+        hostnames = []
+        if "hostnames" in row:
+            try:
+                hostnames = literal_eval(row['hostnames'])
+            except (ValueError, SyntaxError):
+                self.logger.error("Hostname not valid. Faraday will set it as empty.")
+        return hostnames
+
+    def parse_vuln_impact(self, impact):
+        impacts = [
+            "accountability",
+            "confidentiality",
+            "availability",
+            "integrity"
+        ]
+        for item in impacts:
+            if item in impact:
+                return item
 
     def parse_custom_fields(self, vuln):
         custom_fields = {}
@@ -117,6 +238,7 @@ class CSVParser:
                 custom_fields[name] = cf_value
         return custom_fields
 
+
 class FaradayCSVPlugin(PluginCSVFormat):
     def __init__(self):
         super().__init__()
@@ -124,101 +246,94 @@ class FaradayCSVPlugin(PluginCSVFormat):
         self.name = "Faraday CSV Plugin"
         self.plugin_version = "1.0"
         self.options = None
-        self.csv_headers = {
-            "host_id", "ip", "hostnames", "host_description", "os", "mac",
-            "host_owned", "host_creator_id", "date", "update_date", "obj_type"
+        self.csv_headers =  {
+            "ip", "port", "protocol", "vuln_name", "vuln_desc", "severity", "target"
         }
 
     def parseOutputString(self, output, debug=False):
-        parser = CSVParser(output)
-        services_ids = {}
-        for key, value in parser.items.items():
-            host = value['host']
-            h_id = self.createAndAddHost(
-                name=host['ip'],
-                os=host['os'],
-                hostnames=host['hostnames'],
-                mac=host['mac'],
-                description=host['host_description']
-            )
+        parser = CSVParser(output, self.logger)
 
-            for _id, service_data in value['services'].items():
+        for item in parser.items:
+            h_id = self.createAndAddHost(
+                name=item['target'],
+                os=item['os'],
+                hostnames=item['hostnames'],
+                mac=item['mac'],
+                description=item['host_description'] or ""
+            )
+            if item['row_with_service']:
                 s_id = self.createAndAddServiceToHost(
                     h_id,
-                    name=service_data['service_name'],
-                    protocol=service_data['protocol'],
-                    ports=service_data['port'],
-                    status=service_data['service_status'],
-                    version=service_data['version'],
-                    description=service_data['service_description']
+                    name=item['service_name'],
+                    protocol=item['protocol'],
+                    ports=item['port'],
+                    status=item['service_status'] or None,
+                    version=item['version'],
+                    description=item['service_description']
                 )
-                services_ids[service_data['service_id']] = s_id
-            
-            for vuln in value['vulns']:
-                if vuln['parent_type'] == 'Host':
+            if item['row_with_vuln']:
+                if not item['web_vulnerability']:
                     self.createAndAddVulnToHost(
                         h_id,
-                        name=vuln['data']['vuln_name'],
-                        desc=vuln['data']['vuln_desc'],
-                        ref=vuln['data']['refs'],
-                        severity=vuln['data']['severity'],
-                        resolution=vuln['data']['resolution'],
-                        data=vuln['data']['data'],
-                        external_id=vuln['data']['external_id'],
-                        confirmed=vuln['data']['confirmed'],
-                        status=vuln['data']['vuln_status'],
-                        easeofresolution=vuln['data']['easeofresolution'] or None,
-                        impact=vuln['data']['impact'],
-                        policyviolations=vuln['data']['policyviolations'],
-                        custom_fields=vuln['data']['custom_fields']
+                        name=item['vuln_name'],
+                        desc=item['vuln_desc'],
+                        ref=item['refs'],
+                        severity=item['severity'],
+                        resolution=item['resolution'],
+                        data=item['data'],
+                        external_id=item['external_id'],
+                        confirmed=item['confirmed'],
+                        status=item['vuln_status'],
+                        easeofresolution=item['easeofresolution'] or None,
+                        impact=item['impact'],
+                        policyviolations=item['policyviolations'],
+                        custom_fields=item['custom_fields']
                     )
-                elif vuln['parent_type'] == 'Service':
-                    service_id = services_ids[vuln['parent_id']]
-                    if vuln['data']['web_vulnerability']:
-                        self.createAndAddVulnWebToService(
-                            h_id,
-                            service_id,
-                            name=vuln['data']['vuln_name'],
-                            desc=vuln['data']['vuln_desc'],
-                            ref=vuln['data']['refs'],
-                            severity=vuln['data']['severity'],
-                            resolution=vuln['data']['resolution'],
-                            website=vuln['data']['website'],
-                            path=vuln['data']['path'],
-                            request=vuln['data']['request'],
-                            response=vuln['data']['response'],
-                            method=vuln['data']['method'],
-                            pname=vuln['data']['pname'],
-                            params=vuln['data']['params'],
-                            query=vuln['data']['query'],
-                            data=vuln['data']['data'],
-                            external_id=vuln['data']['external_id'],
-                            confirmed=vuln['data']['confirmed'],
-                            status=vuln['data']['vuln_status'],
-                            easeofresolution=vuln['data']['easeofresolution'] or None,
-                            impact=vuln['data']['impact'],
-                            policyviolations=vuln['data']['policyviolations'],
-                            status_code=vuln['data']['status_code'] or None,
-                            custom_fields=vuln['data']['custom_fields']
-                        )
-                    else:
-                        self.createAndAddVulnToService(
-                            h_id,
-                            service_id,
-                            name=vuln['data']['name'],
-                            desc=vuln['data']['vuln_desc'],
-                            ref=vuln['data']['refs'],
-                            severity=vuln['data']['severity'],
-                            resolution=vuln['data']['resolution'],
-                            data=vuln['data']['data'],
-                            external_id=vuln['data']['external_id'],
-                            confirmed=vuln['data']['confirmed'],
-                            status=vuln['data']['vuln_status'],
-                            easeofresolution=vuln['data']['easeofresolution'] or None,
-                            impact=vuln['data']['impact'],
-                            policyviolations=vuln['data']['policyviolations'],
-                            custom_fields=vuln['data']['custom_fields']
-                        )
+                else:
+                    self.createAndAddVulnWebToService(
+                        h_id,
+                        s_id,
+                        name=item['vuln_name'],
+                        desc=item['vuln_desc'],
+                        ref=item['refs'],
+                        severity=item['severity'],
+                        resolution=item['resolution'],
+                        website=item['website'],
+                        path=item['path'],
+                        request=item['request'],
+                        response=item['response'],
+                        method=item['method'],
+                        pname=item['pname'],
+                        params=item['params'],
+                        query=item['query'],
+                        data=item['data'],
+                        external_id=item['external_id'],
+                        confirmed=item['confirmed'],
+                        status=item['vuln_status'],
+                        easeofresolution=item['easeofresolution'] or None,
+                        impact=item['impact'],
+                        policyviolations=item['policyviolations'],
+                        status_code=item['status_code'] or None,
+                        custom_fields=item['custom_fields']
+                    )
+                """else:
+                    self.createAndAddVulnToService(
+                        h_id,
+                        s_id,
+                        name=item['vuln_name'],
+                        desc=item['vuln_desc'],
+                        ref=item['refs'],
+                        severity=item['severity'],
+                        resolution=item['resolution'],
+                        data=item['data'],
+                        external_id=item['external_id'],
+                        confirmed=item['confirmed'],
+                        status=item['vuln_status'],
+                        easeofresolution=item['easeofresolution'] or None,
+                        impact=item['impact'],
+                        policyviolations=item['policyviolations'],
+                        custom_fields=item['custom_fields']
+                    )"""
 
 def createPlugin():
     return FaradayCSVPlugin()
