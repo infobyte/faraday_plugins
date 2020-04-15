@@ -246,7 +246,7 @@ class PluginBase:
 
     def _parse_filename(self, filename):
         with open(filename, **self.open_options) as output:
-            self.parseOutputString(output)
+            self.parseOutputString(output.read())
 
     def processReport(self, filepath, user="faraday"):
         if os.path.isfile(filepath):
