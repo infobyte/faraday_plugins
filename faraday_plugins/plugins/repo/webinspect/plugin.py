@@ -43,7 +43,7 @@ class WebInspectParser():
 
     def return_text(self, tag,element):
         try:
-            text = element.find(tag).text.encode("ascii", errors="backslashreplace")
+            text = element.find(tag).text
             return text
         except:
             return ""
@@ -95,8 +95,8 @@ class WebInspectParser():
             for section in issue.findall("ReportSection"):
 
                 try:
-                    field = section.find("Name").text.encode("ascii", errors="backslashreplace")
-                    value = section.find("SectionText").text.encode("ascii", errors="backslashreplace")
+                    field = section.find("Name").text
+                    value = section.find("SectionText").text
 
                     faraday_obj_name = map_objects_fields.get(field)[0]
                     faraday_field = map_objects_fields.get(field)[1]

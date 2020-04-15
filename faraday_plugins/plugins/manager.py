@@ -131,6 +131,9 @@ class PluginsManager:
                     if hasattr(plugin_module, "createPlugin"):
                         plugin_instance = plugin_module.createPlugin()
                         plugin_id = plugin_instance.id.lower()
+                        if not plugin_instance.auto_load:
+                            logger.debug("Skip load plugin [%s]", plugin_id)
+                            continue
                         if plugin_id not in self.plugin_modules:
                             self.plugin_modules[plugin_id] = plugin_module
                             logger.debug("Load Plugin [%s]", name)
@@ -157,6 +160,9 @@ class PluginsManager:
                                         plugin_module = loader.load_module()
                                         plugin_instance = plugin_module.createPlugin()
                                         plugin_id = plugin_instance.id.lower()
+                                        if not plugin_instance.auto_load:
+                                            logger.info("Skip load plugin [%s]", plugin_id)
+                                            continue
                                         if plugin_id not in self.plugin_modules:
                                             self.plugin_modules[plugin_id] = plugin_module
                                     else:

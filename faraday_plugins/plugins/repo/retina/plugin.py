@@ -219,15 +219,12 @@ class RetinaPlugin(PluginXMLFormat):
                             web = False
 
                         if web:
-                            v_id = self.createAndAddVulnWebToService(h_id, s_id, v.name.encode(
-                                "utf-8"), ref=v.ref, website=hostname, severity=v.severity, resolution=v.solution.encode("utf-8"), desc=v.desc.encode("utf-8"))
+                            v_id = self.createAndAddVulnWebToService(h_id, s_id, v.name, ref=v.ref, website=hostname, severity=v.severity, resolution=v.solution, desc=v.desc)
                         else:
-                            v_id = self.createAndAddVulnToService(h_id, s_id, v.name.encode(
-                                "utf-8"), ref=v.ref, severity=v.severity, resolution=v.solution.encode("utf-8"), desc=v.desc.encode("utf-8"))
+                            v_id = self.createAndAddVulnToService(h_id, s_id, v.name, ref=v.ref, severity=v.severity, resolution=v.solution, desc=v.desc)
                 else:
                     for v in vulns:
-                        v_id = self.createAndAddVulnToHost(h_id, v.name.encode(
-                            "utf-8"), ref=v.ref, severity=v.severity, resolution=v.solution.encode("utf-8"), desc=v.desc.encode("utf-8"))
+                        v_id = self.createAndAddVulnToHost(h_id, v.name, ref=v.ref, severity=v.severity, resolution=v.solution, desc=v.desc)
         del parser
 
     def processCommandString(self, username, current_path, command_string):

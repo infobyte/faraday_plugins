@@ -12,7 +12,8 @@ install_requires = [
     'lxml',
     'html2text',
     'beautifulsoup4',
-    'pytz'
+    'pytz',
+    'python-dateutil'
 ]
 
 
