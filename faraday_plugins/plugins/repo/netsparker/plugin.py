@@ -122,14 +122,6 @@ class Item:
         self.resolution = self.get_text_from_subnode("actionsToTake")
         self.request = self.get_text_from_subnode("rawrequest")
         self.response = self.get_text_from_subnode("rawresponse")
-        if self.response:
-            self.response = self.response.encode(encoding,errors="backslashreplace").decode(encoding)
-        if self.request:
-            self.request = self.request.encode(encoding,errors="backslashreplace").decode(encoding)
-        if self.reference:
-            self.reference = self.reference.encode(encoding,errors="backslashreplace").decode(encoding)
-
-
         self.kvulns = []
         for v in self.node.findall("knownvulnerabilities/knownvulnerability"):
             self.node = v
