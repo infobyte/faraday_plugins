@@ -29,9 +29,15 @@ __maintainer__ = "Ezequiel Tavella"
 __status__ = "Development"
 
 
-def openMtgl(mtgl_file):
+def readMtgx(mtgl_file):
+    maltego_file_graph = "Graphs/Graph1.graphml"
+    xml_graph = ET.parse(mtgl_file.open(maltego_file_graph))
+    mtgl_file.close()
+    return xml_graph
+
+
+def readMtgl(mtgl_file):
     try:
-        file = zipfile.ZipFile(mtgl_file, "r")
         maltego_file_company = "Entities/maltego.Company.entity"
         maltego_file_dns = "Entities/maltego.DNSName.entity"
         maltego_file_domain = "Entities/maltego.Domain.entity"
@@ -46,58 +52,58 @@ def openMtgl(mtgl_file):
         maltego_file_website = "Entities/maltego.Website.entity"
         check_files = {}
 
-        if maltego_file_company in file.namelist():
-            xml_company = ET.parse(file.open(maltego_file_company))
+        if maltego_file_company in mtgl_file.namelist():
+            xml_company = ET.parse(mtgl_file.open(maltego_file_company))
             check_files.update({"company": xml_company})
 
-        if maltego_file_dns in file.namelist():
-            xml_dns = ET.parse(file.open(maltego_file_dns))
+        if maltego_file_dns in mtgl_file.namelist():
+            xml_dns = ET.parse(mtgl_file.open(maltego_file_dns))
             check_files.update({"DNS": xml_dns})
 
-        if maltego_file_domain in file.namelist():
-            xml_domain = ET.parse(file.open(maltego_file_domain))
+        if maltego_file_domain in mtgl_file.namelist():
+            xml_domain = ET.parse(mtgl_file.open(maltego_file_domain))
             check_files.update({"domain": xml_domain})
 
-        if maltego_file_email in file.namelist():
-            xml_email = ET.parse(file.open(maltego_file_email))
+        if maltego_file_email in mtgl_file.namelist():
+            xml_email = ET.parse(mtgl_file.open(maltego_file_email))
             check_files.update({"email": xml_email})
 
-        if maltego_file_ipv4 in file.namelist():
-            xml_ipv4 = ET.parse(file.open(maltego_file_ipv4))
+        if maltego_file_ipv4 in mtgl_file.namelist():
+            xml_ipv4 = ET.parse(mtgl_file.open(maltego_file_ipv4))
             check_files.update({"ipv4": xml_ipv4})
 
-        if maltego_file_location in file.namelist():
-            xml_location = ET.parse(file.open(maltego_file_location))
+        if maltego_file_location in mtgl_file.namelist():
+            xml_location = ET.parse(mtgl_file.open(maltego_file_location))
             check_files.update({"location": xml_location})
 
-        if maltego_file_mxrecord in file.namelist():
-            xml_mxrecord = ET.parse(file.open(maltego_file_mxrecord))
+        if maltego_file_mxrecord in mtgl_file.namelist():
+            xml_mxrecord = ET.parse(mtgl_file.open(maltego_file_mxrecord))
             check_files.update({"mxrecord": xml_mxrecord})
 
-        if maltego_file_nsrecord in file.namelist():
-            xml_nsrecord = ET.parse(file.open(maltego_file_nsrecord))
+        if maltego_file_nsrecord in mtgl_file.namelist():
+            xml_nsrecord = ET.parse(mtgl_file.open(maltego_file_nsrecord))
             check_files.update({"nsrecord": xml_nsrecord})
 
-        if maltego_file_organization in file.namelist():
-            xml_organization = ET.parse(file.open(maltego_file_organization))
+        if maltego_file_organization in mtgl_file.namelist():
+            xml_organization = ET.parse(mtgl_file.open(maltego_file_organization))
             check_files.update({"organization": xml_organization})
 
-        if maltego_file_person in file.namelist():
-            xml_person = ET.parse(file.open(maltego_file_person))
+        if maltego_file_person in mtgl_file.namelist():
+            xml_person = ET.parse(mtgl_file.open(maltego_file_person))
             check_files.update({"person": xml_person})
 
-        if maltego_file_number in file.namelist():
-            xml_number = ET.parse(file.open(maltego_file_number))
+        if maltego_file_number in mtgl_file.namelist():
+            xml_number = ET.parse(mtgl_file.open(maltego_file_number))
             check_files.update({"number": xml_number})
 
-        if maltego_file_website in file.namelist():
-            xml_web = ET.parse(file.open(maltego_file_website))
+        if maltego_file_website in mtgl_file.namelist():
+            xml_web = ET.parse(mtgl_file.open(maltego_file_website))
             check_files.update({"web": xml_web})
 
     except zipfile.BadZipFile:
         return None
 
-    file.close()
+    mtgl_file.close()
     return check_files
 
 
@@ -116,13 +122,10 @@ class Host():
 
 class MaltegoMtgxParser():
 
-    def __init__(self, xml_file):
-
-        _, extension = os.path.splitext(xml_file)
+    def __init__(self, xml_file, extension):
 
         if extension == '.mtgx':
-
-            self.xml = openMtgx(xml_file)
+            self.xml = readMtgx(xml_file)
             self.nodes = self.xml.findall(
                 "{http://graphml.graphdrawing.org/xmlns}graph/"
                 "{http://graphml.graphdrawing.org/xmlns}node")
@@ -133,7 +136,7 @@ class MaltegoMtgxParser():
             self.list_hosts = []
             self.relations = {}
         elif extension == '.mtgl':
-            self.xml = openMtgl(xml_file)
+            self.xml = readMtgl(xml_file)
 
     def getRelations(self):
         """
@@ -383,83 +386,88 @@ class MaltegoPlugin(PluginZipFormat):
 
         global current_path
 
+    def parseOutputString(self, output, debug=False):
 
-    def parseOutputString(self, filename, debug=False):
-        print(self._parse_filename(filename))
-        _, extension = os.path.splitext(filename)
+        if 'Graphs/Graph1.graphml' in output.namelist():
+            maltego_parser = MaltegoMtgxParser(output, self.extension[1])
+            if not maltego_parser.parse():
+                host_id = self.createAndAddHost(name=self.name)
+            else:
+                for host in maltego_parser.parse():
 
-        if extension == '.mtgx':
-            maltego_parser = MaltegoMtgxParser(filename)
-            for host in maltego_parser.parse():
-                host_id = self.createAndAddHost(name=host.ip)
 
-            # Create interface
-            try:
-                network_segment = host.netblock["ipv4_range"]
-                hostname_resolution = [host.dns_name["value"]]
-            except TypeError:
-                network_segment = "unknown"
-                hostname_resolution = "unknown"
-
-            interface_id = self.createAndAddInterface(host_id=host_id, name=host.ip, ipv4_address=host.ip,
-                                                      network_segment=network_segment,
-                                                      hostname_resolution=[hostname_resolution])
-
-            # Create note with NetBlock information
-            if host.netblock:
+                    host_id = self.createAndAddHost(name=host.ip)
+                # Create interface
                 try:
-                    text = f'Network owner:\n {host.netblock["network_owner"]} Country:\n {host.netblock["country"]}'
-                except TypeError:
-                    text = "unknown"
-
-                self.createAndAddNoteToHost(host_id=host_id, name="Netblock Information",
-                                            text=text.encode('ascii', 'ignore'))
-
-            # Create note with host location
-            if host.location:
-                try:
-                    text = f'Location:\n {host.location["name"]} \nArea:\n {host.location["area"]} ' \
-                           f'\nArea 2:\n {host.location["area_2"]} \nCountry_code:\n { host.location["country_code"]} ' \
-                           f'\nLatitude:\n {host.location["latitude"]} \nLongitude:\n {host.location["longitude"]}'
-                except TypeError:
-                    text = "unknown"
-
-                self.createAndAddNoteToHost(host_id=host_id, name="Location Information",
-                                            text=text.encode('ascii', 'ignore'))
-
-            # Create service web server
-            if host.website:
-                try:
-                    description = f'SSL Enabled: {host.website["ssl_enabled"]}'
-                except TypeError:
-                    description = "unknown"
-
-                service_id = self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id,
-                                                                 name=host.website["name"], protocol="TCP:HTTP",
-                                                                 ports=[80], description=description)
-
-                try:
-                    text = f'Urls: \n {host.website["urls"]}'
-                    self.createAndAddNoteToService(host_id=host_id, service_id=service_id, name="URLs",
-                                                   text=text.encode('ascii', 'ignore'))
+                    network_segment = host.netblock["ipv4_range"]
+                    hostname_resolution = [host.dns_name["value"]]
                 except TypeError:
                     pass
+                    network_segment = "unknown"
+                    hostname_resolution = "unknown"
+                interface_id = self.createAndAddInterface(host_id=host_id, name=host.ip, ipv4_address=host.ip,
+                                                          network_segment=network_segment,
+                                                          hostname_resolution=[hostname_resolution])
 
-            if host.mx_record:
-                self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id,
-                                                    name=host.mx_record["value"], protocol="SMTP", ports=[25],
-                                                    description="E-mail Server")
+                # Create note with NetBlock information
+                if host.netblock:
+                    try:
+                        text = f'Network owner:\n {host.netblock["network_owner"]} ' \
+                               f'Country:\n {host.netblock["country"]}'
+                    except TypeError:
+                        text = "unknown"
 
-            if host.ns_record:
-                self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id,
-                                                    name=host.ns_record["value"], protocol="DNS", ports=[53],
-                                                    description="DNS Server")
+                    self.createAndAddNoteToHost(host_id=host_id, name="Netblock Information",
+                                                text=text.encode('ascii', 'ignore'))
 
-        elif extension == '.mtgl':
-            maltego_parser = MaltegoMtgxParser(filename)
+                # Create note with host location
+                if host.location:
+                    try:
+                        text = f'Location:\n {host.location["name"]} \nArea:\n {host.location["area"]} ' \
+                               f'\nArea 2:\n {host.location["area_2"]} ' \
+                               f'\nCountry_code:\n { host.location["country_code"]} ' \
+                               f'\nLatitude:\n {host.location["latitude"]} \nLongitude:\n {host.location["longitude"]}'
+                    except TypeError:
+                        text = "unknown"
+
+                    self.createAndAddNoteToHost(host_id=host_id, name="Location Information",
+                                                text=text.encode('ascii', 'ignore'))
+
+                # Create service web server
+                if host.website:
+                    try:
+                        description = f'SSL Enabled: {host.website["ssl_enabled"]}'
+                    except TypeError:
+                        description = "unknown"
+
+                    service_id = self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id,
+                                                                     name=host.website["name"], protocol="TCP:HTTP",
+                                                                     ports=[80], description=description)
+
+                    try:
+                        text = f'Urls: \n {host.website["urls"]}'
+                        self.createAndAddNoteToService(host_id=host_id, service_id=service_id, name="URLs",
+                                                       text=text.encode('ascii', 'ignore'))
+                    except TypeError:
+                        pass
+
+                if host.mx_record:
+                    self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id,
+                                                        name=host.mx_record["value"], protocol="SMTP", ports=[25],
+                                                        description="E-mail Server")
+
+                if host.ns_record:
+                    self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id,
+                                                        name=host.ns_record["value"], protocol="DNS", ports=[53],
+                                                        description="DNS Server")
+        else:
+            maltego_parser = MaltegoMtgxParser(output, self.extension[0])
             if maltego_parser.xml.get('ipv4'):
                 host_ip = maltego_parser.getInfoMtgl(maltego_parser.xml['ipv4'], 'ipv4-address')
                 host_id = self.createAndAddHost(name=host_ip)
+            else:
+                host_id = self.createAndAddHost(name=self.name)
+                host_ip = '0.0.0.0'
 
             if maltego_parser.xml.get('DNS'):
                 hostname_resolution = maltego_parser.getInfoMtgl(maltego_parser.xml['DNS'], 'fqdn')
@@ -511,14 +519,9 @@ class MaltegoPlugin(PluginZipFormat):
                 self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id, name=ns_name,
                                                     protocol="DNS", ports=[53], description="DNS Server")
 
-    def processReport(self, filepath):
-        self.parseOutputString(filepath)
-
     def processCommandString(self, username, current_path, command_string):
         pass
 
 
 def createPlugin():
     return MaltegoPlugin()
-
-# I'm Py3

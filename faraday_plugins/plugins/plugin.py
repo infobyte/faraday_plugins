@@ -477,14 +477,8 @@ class PluginZipFormat(PluginByExtension):
         self.files_list = set()
 
     def _parse_filename(self, filename):
-        if zipfile.is_zipfile(filename):
-            self.parseOutputString(filename)
-
         file = zipfile.ZipFile(filename, "r")
-        output = file.read('Graphs/Graph1.graphml')
-        file.close()
-        self.parseOutputString(output)
-
+        self.parseOutputString(file)
 
     def report_belongs_to(self, files_in_zip=None, **kwargs):
         match = False
@@ -494,4 +488,3 @@ class PluginZipFormat(PluginByExtension):
             match = bool(self.files_list & files_in_zip)
             self.logger.debug("Files List Match: [%s =/in %s] -> %s", files_in_zip, self.files_list, match)
         return match
-# I'm Py3
