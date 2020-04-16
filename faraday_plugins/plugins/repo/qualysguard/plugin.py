@@ -5,21 +5,13 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import os
-import logging
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
-
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
+import xml.etree.ElementTree as ET
+ETREE_VERSION = ET.VERSION
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split('.')]
 
-logger = logging.getLogger(__name__)
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -33,22 +25,13 @@ __email__ = 'famato@infobytesec.com'
 __status__ = 'Development'
 
 
-def cleaner_unicode(string):
-    if string is not None:
-        return string.encode('ascii', errors='backslashreplace')
-    else:
-        return string
-
-
 def cleaner_results(string):
-
     try:
         result = string.replace('<P>', '').replace('<UL>', ''). \
             replace('<LI>', '').replace('<BR>', ''). \
             replace('<A HREF="', '').replace('</A>', ' '). \
             replace('" TARGET="_blank">', ' ').replace('&quot;', '"')
         return result
-
     except:
         return ''
 
@@ -102,7 +85,6 @@ class QualysguardXmlParser():
                 type_report = None
 
         except SyntaxError as err:
-            logger.error('SyntaxError: %s.' % (err))
             return None, None
 
         return tree, type_report
@@ -137,9 +119,7 @@ class ItemAssetReport():
         self.vulns = self.getResults(tree)
 
     def getResults(self, tree):
-
         glossary = tree.find('GLOSSARY/VULN_DETAILS_LIST')
-
         for self.issue in self.node.find('VULN_INFO_LIST'):
             yield ResultsAssetReport(self.issue, glossary)
 
@@ -180,8 +160,7 @@ class ResultsAssetReport():
 
         # GLOSSARY TAG
         self.glossary = glossary
-        self.severity = self.severity_dict.get(
-            self.get_text_from_glossary('SEVERITY'), 'info')
+        self.severity = self.severity_dict.get(self.get_text_from_glossary('SEVERITY'), 'info')
         self.title = self.get_text_from_glossary('TITLE')
         self.cvss = self.get_text_from_glossary('CVSS_SCORE/CVSS_BASE')
         self.pci = self.get_text_from_glossary('PCI_FLAG')
@@ -207,10 +186,10 @@ class ResultsAssetReport():
             self.ref.append(cve_id)
 
         if self.cvss:
-            self.ref.append('CVSS SCORE: ' + self.cvss)
+            self.ref.append('CVSS SCORE: {}'.format(self.cvss))
 
         if self.pci:
-            self.ref.append('PCI: ' + self.pci)
+            self.ref.append('PCI: {}'.format(self.pci))
 
     def get_text_from_glossary(self, tag):
         """
@@ -221,13 +200,11 @@ class ResultsAssetReport():
         """
 
         for vuln_detail in self.glossary:
-
             id_act = vuln_detail.get('id').strip('qid_')
             if id_act == self.name:
-
                 text = vuln_detail.find(tag)
                 if text is not None:
-                    return cleaner_unicode(text.text)
+                    return text.text
                 else:
                     return None
 
@@ -239,8 +216,7 @@ class ResultsAssetReport():
         """
         sub_node = node.find(subnode_xpath_expr)
         if sub_node is not None:
-            return cleaner_unicode(sub_node.text)
-
+            return sub_node.text
         return None
 
 
@@ -353,8 +329,7 @@ class ResultsScanReport():
         """
         sub_node = self.node.find(subnode_xpath_expr)
         if sub_node is not None:
-            return cleaner_results(cleaner_unicode(sub_node.text))
-
+            return sub_node.text
         return None
 
 
@@ -381,6 +356,7 @@ class QualysguardPlugin(PluginXMLFormat):
 
         parser = QualysguardXmlParser(output)
 
+
         for item in parser.items:
             h_id = self.createAndAddHost(
                 item.ip,
@@ -402,8 +378,8 @@ class QualysguardPlugin(PluginXMLFormat):
                     web = False
 
                     try:
-                        port = v.port.decode("utf-8")
-                        name = v.name.decode("utf-8")
+                        port = v.port
+                        name = v.name
                     except (UnicodeDecodeError, AttributeError):
                         port = v.port
                         name = v.name
@@ -455,17 +431,3 @@ def createPlugin():
     return QualysguardPlugin()
 
 
-if __name__ == "__main__":
-    import sys
-    import os
-    if len(sys.argv) == 2:
-        report_file = sys.argv[1]
-        if os.path.isfile(report_file):
-            plugin = createPlugin()
-            plugin.processReport(report_file)
-            print(plugin.get_json())
-        else:
-            print(f"Report not found: {report_file}")
-    else:
-        print(f"USAGE {sys.argv[0]} REPORT_FILE")
-# I'm Py3
