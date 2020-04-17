@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 import socket
 import re
 import os
+from lxml import etree
 
 try:
     import xml.etree.cElementTree as ET
@@ -47,7 +48,7 @@ class AcunetixXmlParser:
 
     def __init__(self, xml_output):
         tree = self.parse_xml(xml_output)
-        if tree:
+        if len(tree):
             self.sites = list(self.get_items(tree))
         else:
             self.sites = []
@@ -62,7 +63,8 @@ class AcunetixXmlParser:
         @return xml_tree An xml tree instance. None if error.
         """
         try:
-            tree = ET.fromstring(xml_output)
+            parser = etree.XMLParser(recover=True)
+            tree = etree.fromstring(xml_output, parser=parser)
         except SyntaxError as err:
             print("SyntaxError: %s. %s", err, xml_output)
             return None
@@ -118,8 +120,10 @@ class Site:
         url_data = self.get_url(self.node)
 
         self.protocol = url_data.scheme
-        self.host = url_data.hostname
-
+        if url_data.hostname:
+            self.host = url_data.hostname
+        else:
+            self.host = None
         # Use the port in the URL if it is defined, or 80 or 443 by default
         self.port = url_data.port or (443 if url_data.scheme == "https" else 80)
 
@@ -145,10 +149,8 @@ class Site:
     def resolve(self, host):
         try:
             return socket.gethostbyname(host)
-        except:
-            print('[ERROR] Acunetix XML Plugin: Ip of host unknown ' + host)
-            return None
-        return host
+        except TypeError:
+            return '0.0.0.0'
 
     def get_url(self, node):
         url = self.get_text_from_subnode('StartURL')
@@ -177,7 +179,11 @@ class Item:
         self.response = self.get_text_from_subnode('TechnicalDetails/Response')
         self.parameter = self.get_text_from_subnode('Parameter')
         self.uri = self.get_text_from_subnode('Affects')
-        self.desc = self.get_text_from_subnode('Description')
+
+        if self.get_text_from_subnode('Description'):
+            self.desc = self.get_text_from_subnode('Description')
+        else:
+            self.desc = ""
 
         if self.get_text_from_subnode('Recommendation'):
             self.resolution = self.get_text_from_subnode('Recommendation')
@@ -186,8 +192,6 @@ class Item:
 
         if self.get_text_from_subnode('reference'):
             self.desc += "\nDetails: " + self.get_text_from_subnode('Details')
-        else:
-            self.desc += ""
 
         # Add path and params to the description to create different IDs if at
         # least one of this fields is different
@@ -244,15 +248,16 @@ class AcunetixPlugin(PluginXMLFormat):
         for site in parser.sites:
             if site.ip is None:
                 continue
-            host = []
+
             if site.host != site.ip:
-                host = [site.host]
+                host = site.host
             h_id = self.createAndAddHost(site.ip, site.os)
-            i_id = self.createAndAddInterface(
-                h_id,
-                site.ip,
-                ipv4_address=site.ip,
-                hostname_resolution=host)
+            if site.host is None:
+                i_id = self.createAndAddInterface(h_id, site.ip, ipv4_address=site.ip)
+            else:
+                i_id = self.createAndAddInterface(h_id, site.ip,
+                                                  ipv4_address=site.ip,
+                                                  hostname_resolution=[host])
             s_id = self.createAndAddServiceToInterface(
                 h_id,
                 i_id,
@@ -262,19 +267,35 @@ class AcunetixPlugin(PluginXMLFormat):
                 version=site.banner,
                 status='open')
             for item in site.items:
-                self.createAndAddVulnWebToService(
-                    h_id,
-                    s_id,
-                    item.name,
-                    item.desc,
-                    website=site.host,
-                    severity=item.severity,
-                    resolution=item.resolution,
-                    path=item.uri,
-                    params=item.parameter,
-                    request=item.request,
-                    response=item.response,
-                    ref=item.ref)
+
+                if item.desc is None:
+                    self.createAndAddVulnWebToService(
+                        h_id,
+                        s_id,
+                        item.name,
+                        desc="",
+                        website=site.host,
+                        severity=item.severity,
+                        resolution=item.resolution,
+                        path=item.uri,
+                        params=item.parameter,
+                        request=item.request,
+                        response=item.response,
+                        ref=item.ref)
+                else:
+                    self.createAndAddVulnWebToService(
+                        h_id,
+                        s_id,
+                        item.name,
+                        item.desc,
+                        website=site.host,
+                        severity=item.severity,
+                        resolution=item.resolution,
+                        path=item.uri,
+                        params=item.parameter,
+                        request=item.request,
+                        response=item.response,
+                        ref=item.ref)
         del parser
 
     def setHost(self):
