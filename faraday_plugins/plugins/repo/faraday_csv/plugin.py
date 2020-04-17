@@ -117,9 +117,9 @@ class CSVParser:
 
             if (port and not protocol) or (protocol and not port):
                 self.logger.error(
-                    "Missing columns in CSV file.\
-                    In order to import services, you need to add a port\
-                    column and a protocol column."
+                    ("Missing columns in CSV file. "
+                    "In order to import services, you need to add a column called port "
+                    " and a column called protocol.")
                 )
                 return None
             else:
@@ -131,9 +131,9 @@ class CSVParser:
 
             if (vuln_name and not vuln_desc) or (vuln_desc and not vuln_name):
                 self.logger.error(
-                    "Missing columns in CSV file.\
-                    In order to import vulnerabilities, you need to add a \
-                    column called name and a column called desc."
+                    ("Missing columns in CSV file. "
+                    "In order to import vulnerabilities, you need to add a "
+                    "column called name and a column called desc.")
                 )
                 return None
             else:
