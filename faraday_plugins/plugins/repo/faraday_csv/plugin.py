@@ -244,24 +244,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
         self.id = "faraday_csv"
         self.name = "Faraday CSV Plugin"
         self.plugin_version = "1.0"
-        self.options = None
-        self.csv_headers = {
-            "ip", "port", "protocol", "name", "desc", "severity", "target"
-        }
-
-    def report_belongs_to(self, file_csv_headers=None, **kwargs):
-        if file_csv_headers is None:
-            file_csv_headers = set()
-        match = bool(self.csv_headers & file_csv_headers)
-
-        if match:
-            #  ip or target is required.
-            if not ({'ip', 'target'} & set(file_csv_headers)):
-                match = False
-            else:
-                match = True
-
-        return match
+        self.csv_headers = [{'ip'}, {'target'}]
 
     def _parse_filename(self, filename):
         with open(filename, **self.open_options) as output:
