@@ -8,6 +8,8 @@ import pkgutil
 import zipfile
 from importlib import import_module
 from importlib.machinery import SourceFileLoader
+import csv
+from io import StringIO
 
 from . import repo
 
@@ -66,6 +68,8 @@ class ReportAnalyzer:
         file_name_base, file_extension = os.path.splitext(file_name)
         file_extension = file_extension.lower()
         main_tag = None
+        file_json_keys = {}
+        file_csv_headers = set()
         file_json_keys = set()
         files_in_zip = set()
         logger.debug("Analyze report File")
@@ -90,11 +94,18 @@ class ReportAnalyzer:
                 except Exception as e:
                     logger.debug("Non JSON content [%s] - %s", report_path, e)
                     try:
-                        file_zip = zipfile.ZipFile(report_path, "r")
-                        files_in_zip = set(file_zip.namelist())
-                        logger.debug("List of files found in ZIP %s", file_zip)
+                        report_file.seek(0)
+                        json_data = json.load(report_file)
+                        file_json_keys = set(json_data.keys())
+                        logger.debug("Found CSV content on file: %s - Keys: %s", report_path, file_json_keys)
                     except Exception as e:
-                        logger.debug("Non ZIP content [%s] - %s", report_path, e)
+                        logger.debug("Non CSV content [%s] - %s", report_path, e)
+                        try:
+                            file_zip = zipfile.ZipFile(report_path, "r")
+                            files_in_zip = set(file_zip.namelist())
+                            logger.debug("List of files found in ZIP %s", file_zip)
+                        except Exception as e:
+                            logger.debug("Non ZIP content [%s] - %s", report_path, e)
             finally:
                 report_file.close()
                 for _plugin_id, _plugin in self.plugin_manager.get_plugins():
@@ -102,7 +113,7 @@ class ReportAnalyzer:
                     try:
                         if _plugin.report_belongs_to(main_tag=main_tag, report_path=report_path,
                                                      extension=file_extension, file_json_keys=file_json_keys,
-                                                     files_in_zip=files_in_zip):
+                                                     file_csv_headers=file_csv_headers, files_in_zip=files_in_zip):
                             plugin = _plugin
                             logger.debug("Plugin by File Found: %s", plugin.id)
                             break

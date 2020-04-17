@@ -267,7 +267,7 @@ class PluginBase:
         """
         raise NotImplementedError('This method must be implemented.')
 
-    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None):
+    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None, description=""):
 
         if not hostnames:
             hostnames = []
@@ -275,7 +275,7 @@ class PluginBase:
         hostnames = [hostname for hostname in hostnames if hostname]
         if os is None:
             os = "unknown"
-        host = {"ip": name, "os": os, "hostnames": hostnames, "description": "",  "mac": mac,
+        host = {"ip": name, "os": os, "hostnames": hostnames, "description": description,  "mac": mac,
                 "credentials": [], "services": [], "vulnerabilities": []}
         host_id = self.save_host_cache(host)
         return host_id
@@ -341,11 +341,24 @@ class PluginBase:
         return service_id
 
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
-                               severity="", resolution="", data="",external_id=None, run_date=None):
+                               severity="", resolution="", data="", external_id=None, run_date=None,
+                               impact=None, custom_fields=None, status="", policyviolations=None,
+                               easeofresolution=None, confirmed=False):
         if ref is None:
             ref = []
+        if status == "":
+            status = "opened"
+        if impact is None:
+            impact = {}
+        if policyviolations is None:
+            policyviolations = []
+        if custom_fields is None:
+            custom_fields = {}
+
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
-                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data
+                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
+                         "custom_fields": custom_fields, "status": status, "impact": impact, "policyviolations": policyviolations,
+                         "confirmed": confirmed, "easeofresolution": easeofresolution
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
@@ -363,11 +376,23 @@ class PluginBase:
                                            data=data)
 
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
-                                  ref=None, severity="", resolution="", data="", external_id=None, run_date=None):
+                                  ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
+                                  custom_fields=None, policyviolations=None, impact=None, status="", 
+                                  confirmed=False, easeofresolution=None):
         if ref is None:
             ref = []
+        if status == "":
+            status = "opened"
+        if impact is None:
+            impact = {}
+        if policyviolations is None:
+            policyviolations = []
+        if custom_fields is None:
+            custom_fields = {}
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
-                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data
+                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
+                         "custom_fields": custom_fields, "status": status, "impact": impact, "policyviolations": policyviolations,
+                         "easeofresolution": easeofresolution, "confirmed": confirmed,
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
@@ -378,7 +403,9 @@ class PluginBase:
                                      ref=None, severity="", resolution="",
                                      website="", path="", request="",
                                      response="", method="", pname="",
-                                     params="", query="", category="", data="", external_id=None, run_date=None):
+                                     params="", query="", category="", data="", external_id=None,
+                                     confirmed=False, status="", easeofresolution=None, impact=None,
+                                     policyviolations=None, status_code=None, custom_fields=None, run_date=None):
         if params is None:
             params = ""
         if response is None:
@@ -401,11 +428,21 @@ class PluginBase:
             response = ""
         if ref is None:
             ref = []
+        if status == "":
+            status = "opened"
+        if impact is None:
+            impact = {}
+        if policyviolations is None:
+            policyviolations = []
+        if custom_fields is None:
+            custom_fields = {}
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
                          "data": data, "website": website, "path": path, "request": request, "response": response,
-                         "method": method, "pname": pname, "params": params, "query": query, "category": category
-                         }
+                         "method": method, "pname": pname, "params": params, "query": query, "category": category,
+                         "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
+                         "impact": impact, "policyviolations": policyviolations,
+                         "status_code": status_code, "custom_fields": custom_fields}
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
         vulnerability_id = self.save_service_vuln_cache(host_id, service_id, vulnerability)
@@ -540,4 +577,21 @@ class PluginZipFormat(PluginByExtension):
                 files_in_zip = set()
             match = bool(self.files_list & files_in_zip)
             self.logger.debug("Files List Match: [%s =/in %s] -> %s", files_in_zip, self.files_list, match)
+        return match
+
+
+class PluginCSVFormat(PluginByExtension):
+
+    def __init__(self):
+        super().__init__()
+        self.extension = ".csv"
+        self.csv_headers = set()
+
+    def report_belongs_to(self, file_csv_headers=None, **kwargs):
+        match = False
+        if super().report_belongs_to(**kwargs):
+            if file_csv_headers is None:
+                file_csv_headers = set()
+            match = bool(self.csv_headers & file_csv_headers)
+            self.logger.debug("CSV Headers Match: [%s =/in %s] -> %s", file_csv_headers, self.csv_headers, match)
         return match
