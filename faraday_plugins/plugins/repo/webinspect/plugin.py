@@ -5,11 +5,11 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import get_vulnweb_url_fields
 
 try:
-    import xml.etree.ElementTree as ET
+    import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
 
@@ -112,7 +112,7 @@ class WebInspectParser():
         return result
 
 
-class WebInspectPlugin(PluginBase):
+class WebInspectPlugin(PluginXMLFormat):
     """
     This plugin handles WebInspect reports.
     """
@@ -123,8 +123,9 @@ class WebInspectPlugin(PluginBase):
         self.name = "Webinspect"
         self.plugin_version = "0.0.1"
         self.version = "1.0.0"
+        self.identifier_tag = ["Scan"]
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         
         parser = WebInspectParser(output)
         vulns = parser.parse()
