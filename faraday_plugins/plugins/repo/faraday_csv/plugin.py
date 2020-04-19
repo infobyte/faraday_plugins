@@ -26,15 +26,15 @@ class CSVParser:
             "service_status"
         ]
         self.vuln_data = [
-            "vuln_name",
-            "vuln_desc",
+            "name",
+            "desc",
             "refs",
             "severity",
             "resolution",
             "data",
             "external_id",
             "confirmed",
-            "vuln_status",
+            "status",
             "easeofresolution",
             "impact_confidentiality",
             "impact_integrity",
@@ -78,7 +78,7 @@ class CSVParser:
                 else:
                     self.data['row_with_service'] = False
             if "vuln" in obj_to_import:
-                if row['vuln_name'] and row['vuln_desc']:
+                if row['name'] and row['desc']:
                     self.data['row_with_vuln'] = True
                     self.build_vulnerability(row, custom_fields_names)
                 else:
@@ -94,7 +94,7 @@ class CSVParser:
         valid_headers = [
             "ip",
             "port", "protocol",
-            "vuln_name", "vuln_desc", "target"
+            "name", "desc", "target"
         ]
 
         matching_headers = set(valid_headers) & set(headers)
@@ -117,23 +117,23 @@ class CSVParser:
 
             if (port and not protocol) or (protocol and not port):
                 self.logger.error(
-                    "Missing columns in CSV file.\
-                    In order to import services, you need to add a port\
-                    column and a protocol column."
+                    ("Missing columns in CSV file. "
+                    "In order to import services, you need to add a column called port "
+                    " and a column called protocol.")
                 )
                 return None
             else:
                 obj_to_import.append('service')
 
-        if "vuln_name" in matching_headers or "vuln_desc" in matching_headers:
-            vuln_name = True if "vuln_name" in matching_headers else False
-            vuln_desc = True if "vuln_desc" in matching_headers else False
+        if "name" in matching_headers or "desc" in matching_headers:
+            vuln_name = True if "name" in matching_headers else False
+            vuln_desc = True if "desc" in matching_headers else False
 
             if (vuln_name and not vuln_desc) or (vuln_desc and not vuln_name):
                 self.logger.error(
-                    "Missing columns in CSV file.\
-                    In order to import vulnerabilities, you need to add a vuln_name\
-                    column and a vuln_desc column."
+                    ("Missing columns in CSV file. "
+                    "In order to import vulnerabilities, you need to add a "
+                    "column called name and a column called desc.")
                 )
                 return None
             else:
@@ -177,8 +177,8 @@ class CSVParser:
                 self.data[item] = None
 
     def build_vulnerability(self, row, custom_fields_names):
-        self.data['vuln_name'] = row['vuln_name']
-        self.data['vuln_desc'] = row['vuln_desc']
+        self.data['vuln_name'] = row['name']
+        self.data['vuln_desc'] = row['desc']
         impact_dict = {
             "accountability": False,
             "confidentiality": False,
@@ -244,10 +244,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
         self.id = "faraday_csv"
         self.name = "Faraday CSV Plugin"
         self.plugin_version = "1.0"
-        self.options = None
-        self.csv_headers =  {
-            "ip", "port", "protocol", "vuln_name", "vuln_desc", "severity", "target"
-        }
+        self.csv_headers = [{'ip'}, {'target'}]
 
     def _parse_filename(self, filename):
         with open(filename, **self.open_options) as output:
@@ -286,8 +283,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         resolution=item['resolution'],
                         data=item['data'],
                         external_id=item['external_id'],
-                        confirmed=item['confirmed'],
-                        status=item['vuln_status'],
+                        confirmed=item['confirmed'] or False,
+                        status=item['status'] or "",
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
@@ -304,8 +301,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         resolution=item['resolution'],
                         data=item['data'],
                         external_id=item['external_id'],
-                        confirmed=item['confirmed'],
-                        status=item['vuln_status'],
+                        confirmed=item['confirmed'] or False,
+                        status=item['status'] or "",
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
@@ -330,8 +327,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         query=item['query'],
                         data=item['data'],
                         external_id=item['external_id'],
-                        confirmed=item['confirmed'],
-                        status=item['vuln_status'],
+                        confirmed=item['confirmed'] or False,
+                        status=item['status'] or "",
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
