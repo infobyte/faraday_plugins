@@ -4,25 +4,22 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+import dateutil
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-import socket
-
-import faraday_plugins.plugins.repo.nessus.dotnessus_v2 as dotnessus_v2
-
-
+import xml.etree.ElementTree as ET
 
 current_path = os.path.abspath(os.getcwd())
 
-__author__ = "Francisco Amato"
-__copyright__ = "Copyright (c) 2013, Infobyte LLC"
-__credits__ = ["Francisco Amato"]
+__author__ = "Blas"
+__copyright__ = "Copyright (c) 2019, Infobyte LLC"
+__credits__ = ["Blas"]
 __license__ = ""
 __version__ = "1.0.0"
-__maintainer__ = "Francisco Amato"
-__email__ = "famato@infobytesec.com"
+__maintainer__ = "Blas"
+__email__ = "bmoyano@infobytesec.com"
 __status__ = "Development"
 
 
@@ -38,18 +35,141 @@ class NessusParser:
     """
 
     def __init__(self, output):
-        lists = output.split("\r\n")
-        i = 0
-        self.items = []
-        if re.search("Could not reach", output) is not None:
-            self.fail = True
-            return
+        self.tree = ET.fromstring(output)
+        self.tag_control = []
+        for x in self.tree:
+            self.tag_control.append(x)
+        if self.tree:
+            self.policy = self.getPolicy(self.tree)
+            self.report = self.getReport(self.tree)
+        else:
+            self.policy = None
+            self.report = None
 
-        for line in lists:
-            if i > 8:
-                item = {'link': line}
-                self.items.append(item)
-            i = i + 1
+    def getPolicy(self, tree):
+        policy_tree = tree.find('Policy')
+        return Policy(policy_tree)
+
+    def getReport(self, tree):
+        report_tree = tree.find('Report')
+        return Report(report_tree)
+
+
+class Policy():
+    def __init__(self, policy_node):
+        self.node = policy_node
+        self.policy_name = self.node.find('policyName').text
+        self.preferences = self.getPreferences(self.node.find('Preferences'))
+        self.family_selection = self.getFamilySelection(self.node.find('FamilySelection'))
+        self.individual_plugin_selection = self.getIndividualPluginSelection(
+            self.node.find('IndividualPluginSelection'))
+
+    def getPreferences(self, preferences):
+        server_preferences = preferences.find('ServerPreferences')
+        plugins_preferences = preferences.find('PluginsPreferences')
+        server_preferences_all = []
+        plugins_preferences_json = {}
+        plugins_preferences_all = []
+        for sp in server_preferences:
+            sp_value = sp.find('value').text
+            sp_name = sp.find('name').text
+            server_preferences_all.append("Server Preferences name: {}, Server Preferences value: {}".format(sp_name,
+                                                                                                             sp_value))
+        for pp in plugins_preferences:
+            for pp_detail in pp:
+                plugins_preferences_json.setdefault(pp_detail.tag, pp_detail.text)
+            plugins_preferences_all.append(plugins_preferences_json)
+        return server_preferences_all, plugins_preferences_all
+
+    def getFamilySelection(self, family):
+        family_all = []
+        for f in family:
+            family_name = f.find('FamilyName').text
+            family_value = f.find('Status').text
+            family_all.append("Family Name: {}, Family Value: {}".format(family_name, family_value))
+        return family_all
+
+    def getIndividualPluginSelection(self, individual):
+        item_plugin = []
+        for i in individual:
+            plugin_id = i.find('PluginId').text
+            plugin_name = i.find('PluginName').text
+            plugin_family = i.find('Family').text
+            plugin_status = i.find('Status').text
+            item_plugin.append("Plugin ID: {}, Plugin Name: {}, Family: {}, Status: {}".format(plugin_id, plugin_name,
+                                                                                               plugin_family,
+                                                                                               plugin_status))
+        return item_plugin
+
+
+class Report():
+    def __init__(self, report_node):
+        self.node = report_node
+        self.report_name = self.node.attrib.get('name')
+        self.report_host = self.node.find('ReportHost')
+        self.report_desc = []
+        self.report_ip = []
+        self.report_serv = []
+        self.report_json = {}
+        if self.report_host is not None:
+            for x in self.node:
+                self.report_host_ip = x.attrib.get('name')
+                self.host_properties = self.gethosttag(x.find('HostProperties'))
+                self.report_item = self.getreportitems(x.findall('ReportItem'))
+                self.report_ip.append(self.report_host_ip)
+                self.report_desc.append(self.host_properties)
+                self.report_serv.append(self.report_item)
+                self.report_json['ip'] = self.report_ip
+                self.report_json['desc'] = self.report_desc
+                self.report_json['serv'] = self.report_serv
+                self.report_json['host_end'] = self.host_properties.get('HOST_END')
+
+        else:
+            self.report_host_ip = None
+            self.host_properties = None
+            self.report_item = None
+            self.report_json = None
+
+    def getreportitems(self, items):
+        result_item = []
+
+        for item in items:
+            self.port = item.attrib.get('port')
+            self.svc_name = item.attrib.get('svc_name')
+            self.protocol = item.attrib.get('protocol')
+            self.severity = item.attrib.get('severity')
+            self.plugin_id = item.attrib.get('pluginID')
+            self.plugin_name = item.attrib.get('pluginName')
+            self.plugin_family = item.attrib.get('pluginFamily')
+            if item.find('plugin_output') is not None:
+                self.plugin_output = item.find('plugin_output').text
+            else:
+                self.plugin_output = "Not Description"
+            if item.find('description') is not None:
+                self.description = item.find('description').text
+            else:
+                self.description = "Not Description"
+
+            self.info = self.getinfoitem(item)
+            result_item.append((self.port, self.svc_name, self.protocol, self.severity, self.plugin_id,
+                                self.plugin_name, self.plugin_family, self.description, self.plugin_output, self.info))
+        return result_item
+
+    def getinfoitem(self, item):
+        item_tags = {}
+        for i in item:
+            item_tags.setdefault(i.tag, i.text)
+        return item_tags
+
+    def gethosttag(self, tags):
+        host_tags = {}
+        for t in tags:
+            host_tags.setdefault(t.attrib.get('name'), t.text)
+        return host_tags
+
+    def getnote(self):
+        result = "El nombre es {}".format(self.report_name)
+        return result
 
 
 class NessusPlugin(PluginXMLFormat):
@@ -76,7 +196,6 @@ class NessusPlugin(PluginXMLFormat):
         self.protocol = None
         self.fail = None
 
-
     def canParseCommandString(self, current_input):
         if self._command_regex.match(current_input.strip()):
             return True
@@ -91,110 +210,190 @@ class NessusPlugin(PluginXMLFormat):
         NOTE: if 'debug' is true then it is being run from a test case and the
         output being sent is valid.
         """
-        p = dotnessus_v2.Report()
         try:
-            p.parse(output, from_string=True)
-        except Exception as e:
-            self.logger.error("Exception - %s", e)
-
-        for t in p.targets:
-            mac = ""
-            host = ""
-            ip = ""
-
-            if t.get('mac-address'):
-                mac = t.get('mac-address')
-            if t.get('host-fqdn'):
-                host = t.get('host-fqdn')
-            if t.get('host-ip'):
-                ip = t.get('host-ip')
-
-            if not ip:
-                if not t.get_ips():
-                    continue
-                ip = t.get_ips().pop()
-
-            h_id = self.createAndAddHost(ip, t.get('operating-system'), hostnames=[host])
-
-            if self._isIPV4(ip):
-                i_id = self.createAndAddInterface(
-                    h_id, ip, mac, ipv4_address=ip, hostname_resolution=[host])
-            else:
-                i_id = self.createAndAddInterface(
-                    h_id, ip, mac, ipv6_address=ip, hostname_resolution=[host])
-
-            srv = {}
-            for v in t.vulns:
-                external_id = v.get('plugin_id')
-
-
-                desc = ""
-                desc += v.get('description') if v.get('description') else ""
-                resolution = v.get('solution') if v.get('solution') else ""
-
-                data = "\nOutput: " + v.get('plugin_output') if v.get('plugin_output') else ""
-
-                ref = []
-                if v.get('cve'):
-                    cves = v.get('cve')
-                    for cve in cves:
-                        #logger.debug('Appending %s', cve.encode("utf-8"))
-                        ref.append(cve.encode("utf-8").strip())
-                if v.get('bid'):
-                    bids = v.get('bid')
-                    for bid in bids:
-                        #logger.debug('Appending %s', bid.encode("utf-8"))
-                        ref.append("BID-%s" % bid.encode("utf-8").strip() )
-                if v.get('cvss_base_score'):
-                    ref.append("CVSS: " + ", ".join(v.get('cvss_base_score')))
-                if v.get('xref'):
-                    ref.append(", ".join(v.get('xref')))
-                if v.get('svc_name') == "general":
-                    if external_id == '0':
-                        continue
-                    self.createAndAddVulnToHost(h_id, v.get('plugin_name'),
-                                                       desc=desc, ref=ref, data=data, severity=v.get('severity'), resolution=resolution, external_id=external_id)
-                else:
-
-                    s_id = self.createAndAddServiceToInterface(h_id, i_id, v.get('svc_name'),
-                                                               v.get(
-                                                                   'protocol'),
-                                                               ports=[
-                                                                   str(v.get('port'))],
-                                                               status="open")
-
-                    web = re.search(r'^(www|http)', v.get('svc_name'))
-                    if v.get('svc_name') in srv:
-                        srv[v.get('svc_name')] = 1
-                    if external_id == '0':
-                        continue
-                    if web:
-                        self.createAndAddVulnWebToService(h_id, s_id, v.get('plugin_name'),
-                                                                 desc=desc, data=data, website=host, severity=v.get('severity'),
-                                                                 resolution=resolution, ref=ref, external_id=external_id)
-                    else:
-                        self.createAndAddVulnToService(h_id, s_id, v.get('plugin_name'),
-                                                              desc=desc, data=data, severity=v.get('severity'), resolution=resolution,
-                                                              ref=ref, external_id=external_id)
-
-    def _isIPV4(self, ip):
-        if len(ip.split(".")) == 4:
-            return True
-        else:
-            return False
-
-    def processCommandString(self, username, current_path, command_string):
-        return None
-
-    def setHost(self):
-        pass
-
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
+            parser = NessusParser(output)
         except:
-            pass
-        return host
+            print("Error parser output")
+            return None
+
+        if parser.report.report_json is not None:
+            run_date = parser.report.report_json.get('host_end')
+            if run_date:
+                run_date = dateutil.parser.parse(run_date)
+            for set_info, ip in enumerate(parser.report.report_json['ip'], start=1):
+                if 'mac-address' in parser.report.report_json['desc'][set_info - 1]:
+                    mac = parser.report.report_json['desc'][set_info - 1]['mac-address']
+                else:
+                    mac = ''
+                if 'operating-system' in parser.report.report_json['desc'][set_info - 1]:
+                    os = parser.report.report_json['desc'][set_info - 1]['operating-system']
+                else:
+                    os = None
+
+                if 'host-ip' in parser.report.report_json['desc'][set_info - 1]:
+                    ip_host = parser.report.report_json['desc'][set_info - 1]['host-ip']
+                else:
+                    ip_host = "0.0.0.0"
+                if 'host-fqdn' in parser.report.report_json['desc'][set_info - 1]:
+                    website = parser.report.report_json['desc'][set_info - 1]['host-fqdn']
+                    host_name = []
+                    host_name.append(parser.report.report_json['desc'][set_info - 1]['host-fqdn'])
+                else:
+                    website = None
+                    host_name = None
+
+                host_id = self.createAndAddHost(ip_host, os=os, hostnames=host_name, mac=mac)
+
+                interface_id = self.createAndAddInterface(host_id, ip, ipv6_address=ip, mac=mac)
+                cve = []
+                for serv in parser.report.report_json['serv'][set_info -1]:
+                    serv_name = serv[1]
+                    serv_port = serv[0]
+                    serv_protocol = serv[2]
+                    serv_status = serv[3]
+                    external_id = serv[4]
+                    serv_description = serv[7]
+                    cve.append(serv[8])
+                    severity = serv[3]
+                    desc = serv[8]
+
+                    if serv_name == 'general':
+                        ref = []
+                        vulnerability_name = serv[5]
+                        data = serv[9]
+                        if not data:
+                            continue
+                        if 'description' in data:
+                            desc = data['description']
+                        else:
+                            desc = "No description"
+                        if 'solution' in data:
+                            resolution = data['solution']
+                        else:
+                            resolution = "No Solution"
+                        if 'plugin_output' in data:
+                            data_po = data['plugin_output']
+                        else:
+                            data_po = "Not data"
+
+                        risk_factor = "unclassified"
+                        if 'risk_factor' in data:
+                            risk_factor = data['risk_factor']
+                        if risk_factor == 'None':
+                            risk_factor = "info" # I checked several external id and most of them were info
+
+                        if 'cvss_base_score' in data:
+                            cvss_base_score = "CVSS :{}".format(data['cvss_base_score'])
+                            ref.append(cvss_base_score)
+                        else:
+                            ref = []
+
+                        policyviolations = []
+                        if serv[6] == 'Policy Compliance':
+                            # This condition was added to support CIS Benchmark in policy violation field.
+                            risk_factor = 'info'
+                            bis_benchmark_data = serv[7].split('\n')
+                            policy_item = bis_benchmark_data[0]
+
+                            for policy_check_data in bis_benchmark_data:
+                                if 'ref.' in policy_check_data:
+                                    ref.append(policy_check_data)
+
+                            if 'FAILED' in policy_item:
+                                risk_factor = 'high'
+                                policyviolations.append(policy_item)
+
+                            vulnerability_name = f'{serv[6]} {vulnerability_name} {policy_item}'
+
+                        self.createAndAddVulnToHost(host_id,
+                                                    vulnerability_name,
+                                                    desc=desc,
+                                                    severity=risk_factor,
+                                                    resolution=resolution,
+                                                    data=data_po,
+                                                    ref=ref,
+                                                    policyviolations=policyviolations,
+                                                    external_id=external_id,
+                                                    run_date=run_date)
+                    else:
+                        data = serv[9]
+                        if not data:
+                            continue
+                        ref = []
+                        vulnerability_name = serv[5]
+                        if 'description' in data:
+                            desc = data['description']
+                        else:
+                            desc = "No description"
+                        if 'solution' in data:
+                            resolution = data['solution']
+                        else:
+                            resolution = "No Solution"
+                        if 'plugin_output' in data:
+                            data_po = data['plugin_output']
+                        else:
+                            data_po = "Not data"
+
+                        risk_factor = "info"
+                        if 'risk_factor' in data:
+                            risk_factor = data['risk_factor']
+
+                        if risk_factor == 'None':
+                            risk_factor = 'info'
+
+                        if 'cvss_base_score' in data:
+                            cvss_base_score = f"CVSS:{data['cvss_base_score']}"
+                            ref.append(cvss_base_score)
+                        if 'cvss_vector' in data:
+                            cvss_vector = f"CVSSVECTOR:{data['cvss_vector']}"
+                            ref.append(cvss_vector)
+                        if 'see_also' in data:
+                            ref.append(data['see_also'])
+                        if 'cpe' in data:
+                            ref.append(data['cpe'])
+                        if 'xref' in data:
+                            ref.append(data['xref'])
+
+                        service_id = self.createAndAddServiceToInterface(host_id,
+                                                                         interface_id,
+                                                                         name=serv_name,
+                                                                         protocol=serv_protocol,
+                                                                         ports=serv_port,
+                                                                         status=serv_status)
+
+                        if serv_name == 'www' or serv_name == 'http':
+                            self.createAndAddVulnWebToService(host_id,
+                                                              service_id,
+                                                              name=vulnerability_name,
+                                                              desc=desc,
+                                                              data=data_po,
+                                                              severity=risk_factor,
+                                                              resolution=resolution,
+                                                              ref=ref,
+                                                              external_id=external_id,
+                                                              website=website,
+                                                              run_date=run_date)
+                        else:
+                            self.createAndAddVulnToService(host_id,
+                                                           service_id,
+                                                           name=vulnerability_name,
+                                                           severity=risk_factor,
+                                                           desc=desc,
+                                                           ref=ref,
+                                                           data=data_po,
+                                                           external_id=external_id,
+                                                           resolution=resolution,
+                                                           run_date=run_date)
+        else:
+            ip = '0.0.0.0'
+            host_id = self.createAndAddHost(ip, hostnames="Not Information")
+            interface_id = self.createAndAddInterface(host_id, ip)
+
+            service_id = self.createAndAddServiceToInterface(host_id, interface_id, name="Not Information")
+            self.createAndAddVulnToService(host_id,
+                                           service_id,
+                                           name=parser.policy.policy_name,
+                                           desc="No Description")
 
 
 def createPlugin():

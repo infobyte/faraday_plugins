@@ -172,16 +172,12 @@ class NexposeFullXmlParser:
                     if item.tag == 'exploits':
                         for exploit in list(item):
                             if exploit.get('title') and exploit.get('link') and exploit.get('type') \
-                                    and exploit.get('sklLevel'):
-                                title = exploit.get('title').encode(
-                                    "ascii", errors="backslashreplace").strip()
-                                link = exploit.get('link').encode(
-                                    "ascii", errors="backslashreplace").strip()
-                                type = exploit.get('type').encode(
-                                    "ascii", errors="backslashreplace").strip()
-                                skillLevel = exploit.get('sklLevel').encode(
-                                    "ascii", errors="backslashreplace").strip()
-                                vuln['refs'].append(title + b' ' + link +  b' ' + type +  b' ' + skillLevel)
+                                    and exploit.get('skillLevel'):
+                                title = exploit.get('title').strip()
+                                link = exploit.get('link').strip()
+                                type = exploit.get('type').strip()
+                                skillLevel = exploit.get('skillLevel').strip()
+                                vuln['refs'].append(" ".join([title, link, type, skillLevel]))
                     if item.tag == 'malware':
                         for names in item.findall("name"):
                             nameMalware = names.text
@@ -189,8 +185,7 @@ class NexposeFullXmlParser:
                     if item.tag == 'references':
                         for ref in list(item):
                             if ref.text:
-                                rf = ref.text.encode(
-                                    "ascii", errors="backslashreplace").strip()
+                                rf = ref.text.strip()
                                 vuln['refs'].append(rf)
                     if item.tag == 'solution':
                         for htmlType in list(item):
