@@ -4,6 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+import dateutil
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
@@ -121,6 +122,7 @@ class Report():
                 self.report_json['ip'] = self.report_ip
                 self.report_json['desc'] = self.report_desc
                 self.report_json['serv'] = self.report_serv
+                self.report_json['host_end'] = self.host_properties.get('HOST_END')
 
         else:
             self.report_host_ip = None
@@ -215,6 +217,9 @@ class NessusPlugin(PluginXMLFormat):
             return None
 
         if parser.report.report_json is not None:
+            run_date = parser.report.report_json.get('host_end')
+            if run_date:
+                run_date = dateutil.parser.parse(run_date)
             for set_info, ip in enumerate(parser.report.report_json['ip'], start=1):
                 if 'mac-address' in parser.report.report_json['desc'][set_info - 1]:
                     mac = parser.report.report_json['desc'][set_info - 1]['mac-address']
@@ -308,7 +313,8 @@ class NessusPlugin(PluginXMLFormat):
                                                     data=data_po,
                                                     ref=ref,
                                                     policyviolations=policyviolations,
-                                                    external_id=external_id)
+                                                    external_id=external_id,
+                                                    run_date=run_date)
                     else:
                         data = serv[9]
                         if not data:
@@ -365,7 +371,8 @@ class NessusPlugin(PluginXMLFormat):
                                                               resolution=resolution,
                                                               ref=ref,
                                                               external_id=external_id,
-                                                              website=website)
+                                                              website=website,
+                                                              run_date=run_date)
                         else:
                             self.createAndAddVulnToService(host_id,
                                                            service_id,
@@ -375,7 +382,8 @@ class NessusPlugin(PluginXMLFormat):
                                                            ref=ref,
                                                            data=data_po,
                                                            external_id=external_id,
-                                                           resolution=resolution)
+                                                           resolution=resolution,
+                                                           run_date=run_date)
         else:
             ip = '0.0.0.0'
             host_id = self.createAndAddHost(ip, hostnames="Not Information")
