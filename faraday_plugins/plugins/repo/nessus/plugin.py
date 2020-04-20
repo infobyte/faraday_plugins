@@ -358,8 +358,7 @@ class NessusPlugin(PluginXMLFormat):
                                                                          interface_id,
                                                                          name=serv_name,
                                                                          protocol=serv_protocol,
-                                                                         ports=serv_port,
-                                                                         status=serv_status)
+                                                                         ports=serv_port)
 
                         if serv_name == 'www' or serv_name == 'http':
                             self.createAndAddVulnWebToService(host_id,
