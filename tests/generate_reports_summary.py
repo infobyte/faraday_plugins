@@ -62,9 +62,8 @@ def generate_reports_tests(force):
             if summary_needed:
                 try:
                     plugin.processReport(report_file_path)
-                    plugin_json = json.loads(plugin.get_json())
                     click.echo(f"Generate Summary for: {dst_report_file_path} [{plugin}]")
-                    summary = get_report_summary(plugin_json)
+                    summary = plugin.get_summary()
                     with open(summary_file, "w") as f:
                         json.dump(summary, f)
                     generated_summaries += 1

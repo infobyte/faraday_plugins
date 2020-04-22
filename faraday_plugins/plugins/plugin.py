@@ -5,16 +5,19 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import os
+from collections import defaultdict
+
 import pytz
 import re
-import uuid
 import logging
 import simplejson as json
 from datetime import datetime
+import hashlib
 
 
 logger = logging.getLogger("faraday").getChild(__name__)
 
+VALID_SERVICE_STATUS = ("open", "closed", "filtered")
 
 class PluginBase:
     # TODO: Add class generic identifier
@@ -99,49 +102,51 @@ class PluginBase:
     def save_host_cache(self, host):
         cache_id = self.get_host_cache_id(host)
         if cache_id not in self._hosts_cache:
-            obj_uuid = self.save_cache(host)
+            obj_hash = self.save_cache(host)
             self.vulns_data["hosts"].append(host)
-            self._hosts_cache[cache_id] = obj_uuid
+            self._hosts_cache[cache_id] = obj_hash
         else:
-            obj_uuid = self._hosts_cache[cache_id]
-        return obj_uuid
+            obj_hash = self._hosts_cache[cache_id]
+        return obj_hash
 
     def save_service_cache(self, host_id, service):
         cache_id = self.get_host_service_cache_id(host_id, service)
         if cache_id not in self._service_cache:
-            obj_uuid = self.save_cache(service)
+            obj_hash = self.save_cache(service)
             host = self.get_from_cache(host_id)
             host["services"].append(service)
-            self._service_cache[cache_id] = obj_uuid
+            self._service_cache[cache_id] = obj_hash
         else:
-            obj_uuid = self._service_cache[cache_id]
-        return obj_uuid
+            obj_hash = self._service_cache[cache_id]
+        return obj_hash
 
     def save_service_vuln_cache(self, host_id, service_id, vuln):
         cache_id = self.get_service_vuln_cache_id(host_id, service_id, vuln)
         if cache_id not in self._vulns_cache:
-            obj_uuid = self.save_cache(vuln)
+            obj_hash = self.save_cache(vuln)
             service = self.get_from_cache(service_id)
             service["vulnerabilities"].append(vuln)
-            self._vulns_cache[cache_id] = obj_uuid
+            self._vulns_cache[cache_id] = obj_hash
         else:
-            obj_uuid = self._vulns_cache[cache_id]
-        return obj_uuid
+            obj_hash = self._vulns_cache[cache_id]
+        return obj_hash
 
     def save_host_vuln_cache(self, host_id, vuln):
         cache_id = self.get_host_vuln_cache_id(host_id, vuln)
         if cache_id not in self._vulns_cache:
-            obj_uuid = self.save_cache(vuln)
+            obj_hash = self.save_cache(vuln)
             host = self.get_from_cache(host_id)
             host["vulnerabilities"].append(vuln)
-            self._vulns_cache[cache_id] = obj_uuid
+            self._vulns_cache[cache_id] = obj_hash
         else:
-            obj_uuid = self._vulns_cache[cache_id]
-        return obj_uuid
+            obj_hash = self._vulns_cache[cache_id]
+        return obj_hash
 
     @staticmethod
     def _get_dict_hash(d, keys):
-        return hash(frozenset(map(lambda x: (x, d.get(x, None)), keys)))
+        json_str = json.dumps({key: value for (key, value) in map(lambda x: (x, d.get(x, None)), keys)})
+        o_hash = hashlib.sha1(json_str.encode()).hexdigest()
+        return o_hash
 
     @classmethod
     def get_host_cache_id(cls, host):
@@ -170,9 +175,9 @@ class PluginBase:
         return cache_id
 
     def save_cache(self, obj):
-        obj_uuid = uuid.uuid1()
-        self.cache[obj_uuid] = obj
-        return obj_uuid
+        obj_hash = hashlib.sha1(json.dumps(obj).encode()).hexdigest()
+        self.cache[obj_hash] = obj
+        return obj_hash
 
     def report_belongs_to(self, **kwargs):
         return False
@@ -253,6 +258,9 @@ class PluginBase:
             self._parse_filename(filepath)
             self.vulns_data["command"]["params"] = filepath
             self.vulns_data["command"]["user"] = user
+            self.vulns_data["command"]["tool"] = self.id
+            self.vulns_data["command"]["command"] = self.id
+            self.vulns_data["command"]["duration"] = (datetime.now() - self.start_date).microseconds
         else:
             raise FileNotFoundError(filepath)
 
@@ -329,8 +337,7 @@ class PluginBase:
             elif isinstance(ports, str):
                 ports = int(ports)
 
-        if status not in ("open", "closed", "filtered"):
-            self.logger.warning('Unknown service status %s. Using "open" instead', status)
+        if status not in VALID_SERVICE_STATUS:
             status = 'open'
         service = {"name": name, "protocol": protocol, "port": ports, "status": status,
                    "version": version, "description": description, "credentials": [], "vulnerabilities": []}
@@ -475,14 +482,37 @@ class PluginBase:
         #self.__addPendingAction(Modelactions.DEVLOG, msg)
 
     def get_data(self):
-        self.vulns_data["command"]["tool"] = self.id
-        self.vulns_data["command"]["command"] = self.id
-        self.vulns_data["command"]["duration"] = (datetime.now() - self.start_date).microseconds
         return self.vulns_data
 
     def get_json(self):
         self.logger.debug("Generate Json")
         return json.dumps(self.get_data())
+
+    def get_summary(self):
+        plugin_json = self.get_data()
+        summary = {'hosts': len(plugin_json['hosts']), 'services': 0,
+                   'hosts_vulns': sum(list(map(lambda x: len(x['vulnerabilities']), plugin_json['hosts']))),
+                   'services_vulns': 0, 'severity_vulns': defaultdict(int),
+                   'host_hashes': [], 'service_hashes': [], 'vuln_hashes': []
+                   }
+
+        hosts_with_services = filter(lambda x: len(x['services']) > 0, plugin_json['hosts'])
+        host_services = list(map(lambda x: x['services'], hosts_with_services))
+        summary['services'] = sum(map(lambda x: len(x), host_services))
+        services_vulns = 0
+        for host in plugin_json['hosts']:
+            for vuln in host['vulnerabilities']:
+                summary['severity_vulns'][vuln['severity']] += 1
+        for services in host_services:
+            for service in services:
+                services_vulns += len(service['vulnerabilities'])
+                for vuln in service['vulnerabilities']:
+                    summary['severity_vulns'][vuln['severity']] += 1
+        summary['services_vulns'] = services_vulns
+        summary['host_hashes'] = list(self._hosts_cache.keys())
+        summary['service_hashes'] = list(self._service_cache.keys())
+        summary['vuln_hashes'] = list(self._vulns_cache.keys())
+        return summary
 
 # TODO Borrar
 class PluginTerminalOutput(PluginBase):

@@ -129,12 +129,13 @@ def test_summary_reports(report_filename):
         assert os.path.isfile(summary_file) is True
         with open(summary_file) as f:
             saved_summary = json.load(f)
-        summary = get_report_summary(plugin_json)
+        summary = plugin.get_summary()
         assert summary['hosts'] == saved_summary['hosts']
         assert summary['services'] == saved_summary['services']
         assert summary['hosts_vulns'] == saved_summary['hosts_vulns']
-        assert summary['services_vulns'] == saved_summary['services_vulns']
-        assert summary['severity_vulns'] == saved_summary['severity_vulns']
+        assert set(summary['host_hashes']) == set(saved_summary.get('host_hashes', []))
+        assert set(summary['service_hashes']) == set(saved_summary.get('service_hashes', []))
+        assert set(summary['vuln_hashes']) == set(saved_summary.get('vuln_hashes', []))
 
 
 @pytest.mark.performance

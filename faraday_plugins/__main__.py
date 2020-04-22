@@ -5,7 +5,6 @@ import json
 import click
 
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
-from faraday_plugins.plugins.plugins_utils import get_report_summary
 
 root_logger = logging.getLogger("faraday")
 if not root_logger.handlers:
@@ -80,9 +79,8 @@ def get_summary(plugin_id, report_file, custom_plugins_folder):
         plugin = plugins_manager.get_plugin(plugin_id)
         if plugin:
             plugin.processReport(report_file)
-            report_json = json.loads(plugin.get_json())
             click.echo(f"Report Summary for file [{plugin.id}]: {report_file}")
-            click.echo(json.dumps(get_report_summary(report_json), indent=4))
+            click.echo(json.dumps(plugin.get_summary(), indent=4))
         else:
             click.echo(f"Unknown Plugin: {plugin_id}")
 
