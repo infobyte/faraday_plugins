@@ -39,7 +39,7 @@ def list_report_files():
 def generate_reports_tests(force):
     generated_summaries = 0
     analysed_reports = 0
-    click.echo("Generate Faraday Plugins Tests Summary")
+    click.echo(f"{colorama.Fore.GREEN}Generate Faraday Plugins Tests Summary")
     plugins_manager = PluginsManager()
     analyzer = ReportAnalyzer(plugins_manager)
     for report_file_path in list_report_files():
@@ -64,7 +64,7 @@ def generate_reports_tests(force):
             if summary_needed:
                 try:
                     plugin.processReport(report_file_path)
-                    click.echo(f"Generate Summary for: {dst_report_file_path} [{plugin}]")
+                    click.echo(f"{colorama.Fore.GREEN}Generate Summary for: {dst_report_file_path} [{plugin}]")
                     summary = plugin.get_summary()
                     with open(summary_file, "w") as f:
                         json.dump(summary, f)

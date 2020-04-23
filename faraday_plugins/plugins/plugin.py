@@ -40,7 +40,7 @@ class PluginBase:
         self._new_elems = []
         self._settings = {}
         self.command_id = None
-        self.cache = {}
+        self._cache = {}
         self._hosts_cache = {}
         self._service_cache = {}
         self._vulns_cache = {}
@@ -97,7 +97,7 @@ class PluginBase:
 
     # Caches
     def get_from_cache(self, cache_id):
-        return self.cache.get(cache_id, None)
+        return self._cache.get(cache_id, None)
 
     def save_host_cache(self, host):
         cache_id = self.get_host_cache_id(host)
@@ -146,6 +146,7 @@ class PluginBase:
     def _get_dict_hash(d, keys):
         return hash(frozenset(map(lambda x: (x, d.get(x, None)), keys)))
 
+
     @classmethod
     def get_host_cache_id(cls, host):
         cache_id = cls._get_dict_hash(host, ['ip'])
@@ -172,9 +173,10 @@ class PluginBase:
         cache_id = cls._get_dict_hash(vuln_copy, ['host_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
         return cache_id
 
+
     def save_cache(self, obj):
         obj_uuid = uuid.uuid1()
-        self.cache[obj_uuid] = obj
+        self._cache[obj_uuid] = obj
         return obj_uuid
 
     def report_belongs_to(self, **kwargs):
@@ -507,7 +509,10 @@ class PluginBase:
                 for vuln in service['vulnerabilities']:
                     summary['severity_vulns'][vuln['severity']] += 1
         summary['services_vulns'] = services_vulns
-        #summary['vuln_hashes'] = list(self._vulns_cache.keys())
+        for uuid in self._vulns_cache.values():
+            vuln = self.get_from_cache(uuid)
+            dict_hash = hashlib.sha1(json.dumps(vuln).encode()).hexdigest()
+            summary['vuln_hashes'].append(dict_hash)
         return summary
 
 # TODO Borrar
