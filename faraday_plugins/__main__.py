@@ -51,7 +51,7 @@ def process(plugin_id, report_file, custom_plugins_folder):
         plugin = plugins_manager.get_plugin(plugin_id)
         if plugin:
             plugin.processReport(report_file)
-            click.echo(plugin.get_json())
+            click.echo(json.dumps(plugin.get_data(), indent=4))
         else:
             click.echo(f"{colorama.Fore.YELLOW}Unknown Plugin: {plugin_id}")
 

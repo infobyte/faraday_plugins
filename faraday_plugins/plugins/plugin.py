@@ -9,6 +9,7 @@ from collections import defaultdict
 
 import pytz
 import re
+import uuid
 import logging
 import simplejson as json
 from datetime import datetime
@@ -17,7 +18,6 @@ import hashlib
 
 logger = logging.getLogger("faraday").getChild(__name__)
 
-VALID_SERVICE_STATUS = ("open", "closed", "filtered")
 
 class PluginBase:
     # TODO: Add class generic identifier
@@ -40,7 +40,7 @@ class PluginBase:
         self._new_elems = []
         self._settings = {}
         self.command_id = None
-        self.cache = {}
+        self._cache = {}
         self._hosts_cache = {}
         self._service_cache = {}
         self._vulns_cache = {}
@@ -97,56 +97,55 @@ class PluginBase:
 
     # Caches
     def get_from_cache(self, cache_id):
-        return self.cache.get(cache_id, None)
+        return self._cache.get(cache_id, None)
 
     def save_host_cache(self, host):
         cache_id = self.get_host_cache_id(host)
         if cache_id not in self._hosts_cache:
-            obj_hash = self.save_cache(host)
+            obj_uuid = self.save_cache(host)
             self.vulns_data["hosts"].append(host)
-            self._hosts_cache[cache_id] = obj_hash
+            self._hosts_cache[cache_id] = obj_uuid
         else:
-            obj_hash = self._hosts_cache[cache_id]
-        return obj_hash
+            obj_uuid = self._hosts_cache[cache_id]
+        return obj_uuid
 
     def save_service_cache(self, host_id, service):
         cache_id = self.get_host_service_cache_id(host_id, service)
         if cache_id not in self._service_cache:
-            obj_hash = self.save_cache(service)
+            obj_uuid = self.save_cache(service)
             host = self.get_from_cache(host_id)
             host["services"].append(service)
-            self._service_cache[cache_id] = obj_hash
+            self._service_cache[cache_id] = obj_uuid
         else:
-            obj_hash = self._service_cache[cache_id]
-        return obj_hash
+            obj_uuid = self._service_cache[cache_id]
+        return obj_uuid
 
     def save_service_vuln_cache(self, host_id, service_id, vuln):
         cache_id = self.get_service_vuln_cache_id(host_id, service_id, vuln)
         if cache_id not in self._vulns_cache:
-            obj_hash = self.save_cache(vuln)
+            obj_uuid = self.save_cache(vuln)
             service = self.get_from_cache(service_id)
             service["vulnerabilities"].append(vuln)
-            self._vulns_cache[cache_id] = obj_hash
+            self._vulns_cache[cache_id] = obj_uuid
         else:
-            obj_hash = self._vulns_cache[cache_id]
-        return obj_hash
+            obj_uuid = self._vulns_cache[cache_id]
+        return obj_uuid
 
     def save_host_vuln_cache(self, host_id, vuln):
         cache_id = self.get_host_vuln_cache_id(host_id, vuln)
         if cache_id not in self._vulns_cache:
-            obj_hash = self.save_cache(vuln)
+            obj_uuid = self.save_cache(vuln)
             host = self.get_from_cache(host_id)
             host["vulnerabilities"].append(vuln)
-            self._vulns_cache[cache_id] = obj_hash
+            self._vulns_cache[cache_id] = obj_uuid
         else:
-            obj_hash = self._vulns_cache[cache_id]
-        return obj_hash
+            obj_uuid = self._vulns_cache[cache_id]
+        return obj_uuid
 
     @staticmethod
     def _get_dict_hash(d, keys):
-        json_str = json.dumps({key: value for (key, value) in map(lambda x: (x, d.get(x, None)), keys)})
-        o_hash = hashlib.sha1(json_str.encode()).hexdigest()
-        return o_hash
+        return hash(frozenset(map(lambda x: (x, d.get(x, None)), keys)))
+
 
     @classmethod
     def get_host_cache_id(cls, host):
@@ -174,10 +173,11 @@ class PluginBase:
         cache_id = cls._get_dict_hash(vuln_copy, ['host_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
         return cache_id
 
+
     def save_cache(self, obj):
-        obj_hash = hashlib.sha1(json.dumps(obj).encode()).hexdigest()
-        self.cache[obj_hash] = obj
-        return obj_hash
+        obj_uuid = uuid.uuid1()
+        self._cache[obj_uuid] = obj
+        return obj_uuid
 
     def report_belongs_to(self, **kwargs):
         return False
@@ -337,7 +337,7 @@ class PluginBase:
             elif isinstance(ports, str):
                 ports = int(ports)
 
-        if status not in VALID_SERVICE_STATUS:
+        if status not in ("open", "closed", "filtered"):
             status = 'open'
         service = {"name": name, "protocol": protocol, "port": ports, "status": status,
                    "version": version, "description": description, "credentials": [], "vulnerabilities": []}
@@ -495,7 +495,6 @@ class PluginBase:
                    'services_vulns': 0, 'severity_vulns': defaultdict(int),
                    'vuln_hashes': []
                    }
-
         hosts_with_services = filter(lambda x: len(x['services']) > 0, plugin_json['hosts'])
         host_services = list(map(lambda x: x['services'], hosts_with_services))
         summary['services'] = sum(map(lambda x: len(x), host_services))
@@ -509,7 +508,10 @@ class PluginBase:
                 for vuln in service['vulnerabilities']:
                     summary['severity_vulns'][vuln['severity']] += 1
         summary['services_vulns'] = services_vulns
-        summary['vuln_hashes'] = list(self._vulns_cache.keys())
+        for uuid in self._vulns_cache.values():
+            vuln = self.get_from_cache(uuid)
+            dict_hash = hashlib.sha1(json.dumps(vuln).encode()).hexdigest()
+            summary['vuln_hashes'].append(dict_hash)
         return summary
 
 # TODO Borrar

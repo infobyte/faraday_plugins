@@ -39,6 +39,8 @@ class ReportAnalyzer:
                 plugin = self._get_plugin_by_file_type(report_path)
                 if not plugin:
                     logger.debug("Plugin by file not found")
+        if not plugin:
+            logger.debug("Plugin for file (%s) not found", report_path)
         return plugin
 
     def _get_plugin_by_name(self, file_name_base):

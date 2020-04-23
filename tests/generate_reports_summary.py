@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import hashlib
 import os
 import shutil
 import json
@@ -19,7 +20,7 @@ BLACK_LIST = [
 
 REPORT_COLLECTION_DIR = '../report-collection'
 FARADAY_PLUGINS_TESTS_DIR = 'faraday_plugins_tests'
-
+REPORTS_CHECKSUM = []
 
 def list_report_files():
     report_filenames = os.walk(os.path.join(REPORT_COLLECTION_DIR))
@@ -39,7 +40,7 @@ def list_report_files():
 def generate_reports_tests(force):
     generated_summaries = 0
     analysed_reports = 0
-    click.echo("Generate Faraday Plugins Tests Summary")
+    click.echo(f"{colorama.Fore.GREEN}Generate Faraday Plugins Tests Summary")
     plugins_manager = PluginsManager()
     analyzer = ReportAnalyzer(plugins_manager)
     for report_file_path in list_report_files():
@@ -47,6 +48,14 @@ def generate_reports_tests(force):
         if not plugin:
             click.echo(f"{colorama.Fore.YELLOW}Plugin for file: ({report_file_path}) not found")
         else:
+            with open(report_file_path, 'rb') as f:
+                m = hashlib.md5(f.read())
+            file_checksum = m.hexdigest()
+            if file_checksum not in REPORTS_CHECKSUM:
+                REPORTS_CHECKSUM.append(file_checksum)
+            else:
+                click.echo(f"{colorama.Fore.YELLOW}Ignore duplicated file: ({report_file_path})")
+                continue
             analysed_reports += 1
             report_file_name = os.path.basename(report_file_path)
             plugin_name = plugin.id
@@ -64,7 +73,7 @@ def generate_reports_tests(force):
             if summary_needed:
                 try:
                     plugin.processReport(report_file_path)
-                    click.echo(f"Generate Summary for: {dst_report_file_path} [{plugin}]")
+                    click.echo(f"{colorama.Fore.GREEN}Generate Summary for: {dst_report_file_path} [{plugin}]")
                     summary = plugin.get_summary()
                     with open(summary_file, "w") as f:
                         json.dump(summary, f)

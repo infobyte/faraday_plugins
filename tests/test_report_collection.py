@@ -132,6 +132,11 @@ def test_summary_reports(report_filename):
         assert summary['hosts'] == saved_summary['hosts']
         assert summary['services'] == saved_summary['services']
         assert summary['hosts_vulns'] == saved_summary['hosts_vulns']
+        assert summary['services_vulns'] == saved_summary['services_vulns']
+        assert summary['severity_vulns'] == saved_summary['severity_vulns']
+        if set(summary['vuln_hashes']) != set(saved_summary.get('vuln_hashes', [])):
+            print(summary['vuln_hashes'])
+            print(saved_summary['vuln_hashes'])
         assert set(summary['vuln_hashes']) == set(saved_summary.get('vuln_hashes', []))
 
 
