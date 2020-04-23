@@ -3,9 +3,11 @@ import os
 import shutil
 import json
 import click
+import colorama
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import get_report_summary
+
+colorama.init(autoreset=True)
 
 BLACK_LIST = [
     'LICENSE',
@@ -43,7 +45,7 @@ def generate_reports_tests(force):
     for report_file_path in list_report_files():
         plugin: PluginBase = analyzer.get_plugin(report_file_path)
         if not plugin:
-            continue
+            click.echo(f"{colorama.Fore.YELLOW}Plugin for file: ({report_file_path}) not found")
         else:
             analysed_reports += 1
             report_file_name = os.path.basename(report_file_path)
@@ -68,7 +70,7 @@ def generate_reports_tests(force):
                         json.dump(summary, f)
                     generated_summaries += 1
                 except Exception as e:
-                    click.echo(f"Error generating summary for file: {report_file_path} [{e}]")
+                    click.echo(f"{colorama.Fore.RED}Error generating summary for file: {report_file_path} [{plugin}]: [{e}]")
     click.echo(f"Generated {generated_summaries} summaries of {analysed_reports} reports")
 
 

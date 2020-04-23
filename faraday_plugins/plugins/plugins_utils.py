@@ -121,6 +121,8 @@ def get_report_summary(plugin_json):
 
 def resolve_hostname(hostname):
     try:
-        return socket.gethostbyname(hostname)
-    except TypeError:
+        ip_address = socket.gethostbyname(hostname)
+    except Exception as e:
         return hostname
+    else:
+        return ip_address

@@ -493,7 +493,7 @@ class PluginBase:
         summary = {'hosts': len(plugin_json['hosts']), 'services': 0,
                    'hosts_vulns': sum(list(map(lambda x: len(x['vulnerabilities']), plugin_json['hosts']))),
                    'services_vulns': 0, 'severity_vulns': defaultdict(int),
-                   'host_hashes': [], 'service_hashes': [], 'vuln_hashes': []
+                   'vuln_hashes': []
                    }
 
         hosts_with_services = filter(lambda x: len(x['services']) > 0, plugin_json['hosts'])
@@ -509,8 +509,6 @@ class PluginBase:
                 for vuln in service['vulnerabilities']:
                     summary['severity_vulns'][vuln['severity']] += 1
         summary['services_vulns'] = services_vulns
-        summary['host_hashes'] = list(self._hosts_cache.keys())
-        summary['service_hashes'] = list(self._service_cache.keys())
         summary['vuln_hashes'] = list(self._vulns_cache.keys())
         return summary
 

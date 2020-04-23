@@ -4,7 +4,6 @@ import json
 import pytest
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import get_report_summary
 from faraday.server.api.modules.bulk_create import BulkCreateSchema
 
 BLACK_LIST = [
@@ -133,8 +132,6 @@ def test_summary_reports(report_filename):
         assert summary['hosts'] == saved_summary['hosts']
         assert summary['services'] == saved_summary['services']
         assert summary['hosts_vulns'] == saved_summary['hosts_vulns']
-        assert set(summary['host_hashes']) == set(saved_summary.get('host_hashes', []))
-        assert set(summary['service_hashes']) == set(saved_summary.get('service_hashes', []))
         assert set(summary['vuln_hashes']) == set(saved_summary.get('vuln_hashes', []))
 
 

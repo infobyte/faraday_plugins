@@ -3,10 +3,14 @@ import os
 import sys
 import json
 import click
+import colorama
 
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 
+colorama.init(autoreset=True)
+
 root_logger = logging.getLogger("faraday")
+
 if not root_logger.handlers:
     PLUGIN_DEBUG = os.environ.get("PLUGIN_DEBUG", "0")
     if PLUGIN_DEBUG == "1":
@@ -41,7 +45,7 @@ def list(custom_plugins_folder):
 @click.option('-cpf', '--custom-plugins-folder', type=str)
 def process(plugin_id, report_file, custom_plugins_folder):
     if not os.path.isfile(report_file):
-        click.echo(f"File {report_file} Don't Exists")
+        click.echo(f"{colorama.Fore.RED}File {report_file} Don't Exists")
     else:
         plugins_manager = PluginsManager(custom_plugins_folder)
         plugin = plugins_manager.get_plugin(plugin_id)
@@ -49,7 +53,7 @@ def process(plugin_id, report_file, custom_plugins_folder):
             plugin.processReport(report_file)
             click.echo(plugin.get_json())
         else:
-            click.echo(f"Unknown Plugin: {plugin_id}")
+            click.echo(f"{colorama.Fore.YELLOW}Unknown Plugin: {plugin_id}")
 
 
 @cli.command()
@@ -57,7 +61,7 @@ def process(plugin_id, report_file, custom_plugins_folder):
 @click.option('-cpf', '--custom-plugins-folder', type=str)
 def detect(report_file, custom_plugins_folder):
     if not os.path.isfile(report_file):
-        click.echo(f"File {report_file} Don't Exists")
+        click.echo(f"{colorama.Fore.RED}File {report_file} Don't Exists")
     else:
         plugins_manager = PluginsManager(custom_plugins_folder)
         analyzer = ReportAnalyzer(plugins_manager)
@@ -65,7 +69,7 @@ def detect(report_file, custom_plugins_folder):
         if plugin:
             click.echo(plugin)
         else:
-            click.echo(f"Failed to detect")
+            click.echo(f"{colorama.Fore.RED}Failed to detect")
 
 @cli.command()
 @click.argument('plugin_id')
@@ -73,7 +77,7 @@ def detect(report_file, custom_plugins_folder):
 @click.option('-cpf', '--custom-plugins-folder', type=str)
 def get_summary(plugin_id, report_file, custom_plugins_folder):
     if not os.path.isfile(report_file):
-        click.echo(f"File {report_file} Don't Exists")
+        click.echo(f"{colorama.Fore.RED}File {report_file} Don't Exists")
     else:
         plugins_manager = PluginsManager(custom_plugins_folder)
         plugin = plugins_manager.get_plugin(plugin_id)
@@ -82,7 +86,7 @@ def get_summary(plugin_id, report_file, custom_plugins_folder):
             click.echo(f"Report Summary for file [{plugin.id}]: {report_file}")
             click.echo(json.dumps(plugin.get_summary(), indent=4))
         else:
-            click.echo(f"Unknown Plugin: {plugin_id}")
+            click.echo(f"{colorama.Fore.YELLOW}Unknown Plugin: {plugin_id}")
 
 
 if __name__ == "__main__":
