@@ -338,7 +338,6 @@ class PluginBase:
                 ports = int(ports)
 
         if status not in ("open", "closed", "filtered"):
-            self.logger.warning('Unknown service status %s. Using "open" instead', status)
             status = 'open'
         service = {"name": name, "protocol": protocol, "port": ports, "status": status,
                    "version": version, "description": description, "credentials": [], "vulnerabilities": []}

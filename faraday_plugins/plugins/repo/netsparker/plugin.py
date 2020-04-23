@@ -151,7 +151,7 @@ class Item:
         if self.owasp:
             self.ref.append("OWASP-" + self.owasp)
         if self.reference:
-            self.ref.extend(list(set(re.findall('https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', self.reference))))
+            self.ref.extend(sorted(set(re.findall('https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', self.reference))))
         if self.cvss:
             self.ref.append(self.cvss)
     
