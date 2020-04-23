@@ -10,8 +10,8 @@ import re
 import uuid
 import logging
 import simplejson as json
-from datetime import datetime
 import zipfile
+from datetime import datetime
 
 
 logger = logging.getLogger("faraday").getChild(__name__)
@@ -377,7 +377,7 @@ class PluginBase:
 
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
-                                  custom_fields=None, policyviolations=None, impact=None, status="", 
+                                  custom_fields=None, policyviolations=None, impact=None, status="",
                                   confirmed=False, easeofresolution=None):
         if ref is None:
             ref = []
@@ -559,6 +559,26 @@ class PluginJsonFormat(PluginByExtension):
         return match
 
 
+class PluginCSVFormat(PluginByExtension):
+
+    def __init__(self):
+        super().__init__()
+        self.extension = ".csv"
+        self.csv_headers = set()
+
+    def report_belongs_to(self, file_csv_headers=None, **kwargs):
+        match = False
+        if file_csv_headers is None:
+            file_csv_headers = set()
+        if super().report_belongs_to(**kwargs):
+            if isinstance(self.csv_headers, list):
+                match = bool(list(filter(lambda x: x.issubset(file_csv_headers), self.csv_headers)))
+            else:
+                match = self.csv_headers.issubset(file_csv_headers)
+            self.logger.debug("CSV Headers Match: [%s =/in %s] -> %s", file_csv_headers, self.csv_headers, match)
+        return match
+
+
 class PluginZipFormat(PluginByExtension):
 
     def __init__(self):
@@ -580,21 +600,3 @@ class PluginZipFormat(PluginByExtension):
         return match
 
 
-class PluginCSVFormat(PluginByExtension):
-
-    def __init__(self):
-        super().__init__()
-        self.extension = ".csv"
-        self.csv_headers = set()
-
-    def report_belongs_to(self, file_csv_headers=None, **kwargs):
-        match = False
-        if file_csv_headers is None:
-            file_csv_headers = set()
-        if super().report_belongs_to(**kwargs):
-            if isinstance(self.csv_headers, list):
-                match = bool(list(filter(lambda x: x.issubset(file_csv_headers), self.csv_headers)))
-            else:
-                match = self.csv_headers.issubset(file_csv_headers)
-            self.logger.debug("CSV Headers Match: [%s =/in %s] -> %s", file_csv_headers, self.csv_headers, match)
-        return match
