@@ -4,10 +4,7 @@ Copyright (C) 2019  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-import re
-import socket
 import json
-from faraday_plugins.plugins.plugin import PluginJsonFormat
 from urllib.parse import urlparse
 
 
@@ -19,6 +16,9 @@ __version__ = "0.0.1"
 __maintainer__ = "Nicolas Rebagliati"
 __email__ = "nrebagliati@infobytesec.com"
 __status__ = "Development"
+
+from faraday_plugins.plugins.plugin import PluginJsonFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class WPScanJsonParser:
@@ -39,15 +39,9 @@ class WPScanJsonParser:
         elif protocol == 'http':
             if not port:
                 port = 80
-        address = self.get_address(hostname)
+        address = resolve_hostname(hostname)
         return {'protocol': protocol, 'hostname': hostname, 'port': port, 'address': address}
 
-    def get_address(self, hostname):
-        # Returns remote IP address from hostname.
-        try:
-            return socket.gethostbyname(hostname)
-        except socket.error as msg:
-            return '0.0.0.0'
 
 
 class WPScanPlugin(PluginJsonFormat):

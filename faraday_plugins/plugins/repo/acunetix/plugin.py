@@ -5,9 +5,9 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from urllib.parse import urlsplit
-import socket
 import re
 import os
+
 from lxml import etree
 
 try:
@@ -19,6 +19,7 @@ except ImportError:
     ETREE_VERSION = ET.VERSION
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
@@ -127,7 +128,7 @@ class Site:
         # Use the port in the URL if it is defined, or 80 or 443 by default
         self.port = url_data.port or (443 if url_data.scheme == "https" else 80)
 
-        self.ip = self.resolve(self.host)
+        self.ip = resolve_hostname(self.host)
         self.os = self.get_text_from_subnode('Os')
         self.banner = self.get_text_from_subnode('Banner')
         self.items = []
@@ -145,12 +146,6 @@ class Site:
             return sub_node.text
 
         return None
-
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except TypeError:
-            return '0.0.0.0'
 
     def get_url(self, node):
         url = self.get_text_from_subnode('StartURL')

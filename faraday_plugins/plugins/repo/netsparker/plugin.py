@@ -4,11 +4,11 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-import socket
 from bs4 import BeautifulSoup
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
@@ -200,12 +200,6 @@ class NetsparkerPlugin(PluginXMLFormat):
             r'^(sudo netsparker|\.\/netsparker).*?')
 
 
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
 
     def parseOutputString(self, output, debug=False):
 
@@ -213,7 +207,7 @@ class NetsparkerPlugin(PluginXMLFormat):
         first = True
         for i in parser.items:
             if first:
-                ip = self.resolve(i.hostname)
+                ip = resolve_hostname(i.hostname)
                 h_id = self.createAndAddHost(ip, hostnames=[ip])
                 
                 s_id = self.createAndAddServiceToHost(h_id, str(i.port),

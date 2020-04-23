@@ -6,9 +6,9 @@ See the file 'doc/LICENSE' for the license information
 """
 import os
 import logging
+import socket
 from collections import defaultdict
 
-import faraday_plugins
 from urllib.parse import urlsplit
 
 
@@ -117,3 +117,10 @@ def get_report_summary(plugin_json):
                 summary['severity_vulns'][vuln['severity']] += 1
     summary['services_vulns'] = services_vulns
     return summary
+
+
+def resolve_hostname(hostname):
+    try:
+        return socket.gethostbyname(hostname)
+    except TypeError:
+        return hostname

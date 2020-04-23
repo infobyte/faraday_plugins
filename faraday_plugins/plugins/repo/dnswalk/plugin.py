@@ -4,11 +4,11 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-
-from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
-import socket
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -56,19 +56,13 @@ class DnswalkParser:
                 line)
 
             if mregex is not None:
-                ip = self.getAddress(mregex.group(2))
+                ip = resolve_hostname(mregex.group(2))
                 item = {
                     'host': mregex.group(1),
                     'ip': ip,
                     'type': 'info'}
                 self.items.append(item)
 
-    def getAddress(self, hostname):
-        """Returns remote IP address from hostname."""
-        try:
-            return socket.gethostbyname(hostname)
-        except socket.error:
-            return hostname
 
 
 class DnswalkPlugin(PluginBase):
