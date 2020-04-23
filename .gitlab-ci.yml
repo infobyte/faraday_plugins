@@ -57,13 +57,14 @@ test_performance:
     only:
       - develop
 
-publish_pipy:
+publish_pypi:
     image: python:3
     stage: publish
     before_script:
       - pip3 install virtualenv
-      - virtualenv -p python3 faraday_venv twine
+      - virtualenv -p python3 faraday_venv
       - source faraday_venv/bin/activate
+      - pip install twine
     script:
       - python setup.py sdist bdist_wheel
       - twine upload dist/* -u $TWINE_USERNAME -p $TWINE_PASSWORD
