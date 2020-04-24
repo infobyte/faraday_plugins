@@ -510,8 +510,8 @@ class PluginBase:
                 for vuln in service['vulnerabilities']:
                     summary['severity_vulns'][vuln['severity']] += 1
         summary['services_vulns'] = services_vulns
-        for uuid in self._vulns_cache.values():
-            vuln = self.get_from_cache(uuid)
+        for obj_uuid in self._vulns_cache.values():
+            vuln = self.get_from_cache(obj_uuid)
             dict_hash = hashlib.sha1(json.dumps(vuln).encode()).hexdigest()
             summary['vuln_hashes'].append(dict_hash)
         return summary
