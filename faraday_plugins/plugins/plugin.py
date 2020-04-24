@@ -18,6 +18,8 @@ import hashlib
 
 logger = logging.getLogger("faraday").getChild(__name__)
 
+VALID_SERVICE_STATUS = ("open", "closed", "filtered")
+
 
 class PluginBase:
     # TODO: Add class generic identifier
@@ -337,7 +339,7 @@ class PluginBase:
             elif isinstance(ports, str):
                 ports = int(ports)
 
-        if status not in ("open", "closed", "filtered"):
+        if status not in VALID_SERVICE_STATUS:
             status = 'open'
         service = {"name": name, "protocol": protocol, "port": ports, "status": status,
                    "version": version, "description": description, "credentials": [], "vulnerabilities": []}
