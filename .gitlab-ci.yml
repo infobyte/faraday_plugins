@@ -33,6 +33,7 @@ tests:
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday.git
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
       - cd faraday
+      - pip install --upgrade -r requirements.txt
       - python3 setup.py install
       - pip uninstall faraday-plugins -y # we need to install fardaysec for marshmallow schemas, we remove plugins from pypi
       - cd ..
@@ -55,6 +56,7 @@ test_performance:
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday.git
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
       - cd faraday
+      - pip install --upgrade -r requirements.txt
       - python3 setup.py install
       - pip uninstall faraday-plugins -y # we need to install fardaysec for marshmallow schemas, we remove plugins from pypi
       - cd ..
