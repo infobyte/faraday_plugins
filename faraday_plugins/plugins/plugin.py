@@ -19,7 +19,7 @@ import hashlib
 logger = logging.getLogger("faraday").getChild(__name__)
 
 VALID_SERVICE_STATUS = ("open", "closed", "filtered")
-
+VULN_SKIP_FIELDS_TO_HASH = ['run_date']
 
 class PluginBase:
     # TODO: Add class generic identifier
@@ -512,7 +512,10 @@ class PluginBase:
         summary['services_vulns'] = services_vulns
         for obj_uuid in self._vulns_cache.values():
             vuln = self.get_from_cache(obj_uuid)
-            dict_hash = hashlib.sha1(json.dumps(vuln).encode()).hexdigest()
+            vuln_copy = vuln.copy()
+            for field in VULN_SKIP_FIELDS_TO_HASH:
+                vuln_copy.pop(field, None)
+            dict_hash = hashlib.sha1(json.dumps(vuln_copy).encode()).hexdigest()
             summary['vuln_hashes'].append(dict_hash)
         return summary
 
