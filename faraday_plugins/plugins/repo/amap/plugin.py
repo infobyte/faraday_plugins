@@ -3,6 +3,11 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
+import argparse
+import random
+import shlex
+import tempfile
+
 from faraday_plugins.plugins.plugin import PluginBase
 import socket
 import re
@@ -134,6 +139,48 @@ class AmapPlugin(PluginBase):
 
     def setHost(self):
         pass
+
+    def processCommandString(self, username, current_path, command_string):
+        """
+        Adds the -m parameter to get machine readable output.
+        """
+        arg_match = self.file_arg_re.match(command_string)
+
+        parser = argparse.ArgumentParser()
+
+        parser.add_argument('-6', action='store_true')
+        parser.add_argument('-o')
+        parser.add_argument('-m')
+        # TODO: no tenemos forma de cerrar, processCommandString retorna el command a ejecutar
+        # ver en pluginBase def processOutput(self, term_output):
+        self.temp_file = tempfile.NamedTemporaryFile()
+        self._output_file_path = self.temp_file.name
+
+        if arg_match is None:
+            final = re.sub(
+                r"(^.*?amap)",
+                r"\1 -o %s -m " % self._file_output_path,
+                command_string)
+        else:
+            final = re.sub(
+                arg_match.group(1),
+                r"-o %s -m " % self._file_output_path,
+                command_string)
+
+        cmd = shlex.split(re.sub(r'\-h|\-\-help', r'', final))
+        if "-6" in cmd:
+            cmd.remove("-6")
+            cmd.insert(1, "-6")
+
+        args = None
+        if len(cmd) > 4:
+            try:
+                args, unknown = parser.parse_known_args(cmd)
+            except SystemExit:
+                pass
+
+        self.args = args
+        return final
 
 
 def createPlugin():
