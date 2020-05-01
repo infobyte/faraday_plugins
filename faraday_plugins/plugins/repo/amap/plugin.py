@@ -27,7 +27,8 @@ class AmapPlugin(PluginBase):
         self.version = "5.4"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(amap|sudo amap).*?')
+        self._command_regex = re.compile(r'^(amap |sudo amap ).*?')
+        self._use_temp_file = True
         self._hosts = []
 
     def parseOutputString(self, output, debug=False):
@@ -144,27 +145,21 @@ class AmapPlugin(PluginBase):
         """
         Adds the -m parameter to get machine readable output.
         """
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.file_arg_re.match(command_string)
-
         parser = argparse.ArgumentParser()
-
         parser.add_argument('-6', action='store_true')
         parser.add_argument('-o')
         parser.add_argument('-m')
-        # TODO: no tenemos forma de cerrar, processCommandString retorna el command a ejecutar
-        # ver en pluginBase def processOutput(self, term_output):
-        self.temp_file = tempfile.NamedTemporaryFile()
-        self._output_file_path = self.temp_file.name
-
         if arg_match is None:
             final = re.sub(
                 r"(^.*?amap)",
-                r"\1 -o %s -m " % self._file_output_path,
+                r"\1 -o %s -m " % self._output_file_path,
                 command_string)
         else:
             final = re.sub(
                 arg_match.group(1),
-                r"-o %s -m " % self._file_output_path,
+                r"-o %s -m " % self._output_file_path,
                 command_string)
 
         cmd = shlex.split(re.sub(r'\-h|\-\-help', r'', final))

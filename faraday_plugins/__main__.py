@@ -3,8 +3,11 @@ import os
 import sys
 import json
 import click
+import subprocess
+import shlex
+import getpass
 
-from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
+from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer, CommandAnalyzer
 from faraday_plugins.plugins.plugins_utils import get_report_summary
 
 root_logger = logging.getLogger("faraday")
@@ -35,12 +38,11 @@ def list(custom_plugins_folder):
     click.echo(f"Loaded Plugins: {loaded_plugins}")
 
 
-
 @cli.command()
 @click.argument('plugin_id')
 @click.argument('report_file')
 @click.option('-cpf', '--custom-plugins-folder', type=str)
-def process(plugin_id, report_file, custom_plugins_folder):
+def process_report(plugin_id, report_file, custom_plugins_folder):
     if not os.path.isfile(report_file):
         click.echo(f"File {report_file} Don't Exists")
     else:
@@ -54,9 +56,41 @@ def process(plugin_id, report_file, custom_plugins_folder):
 
 
 @cli.command()
+@click.argument('plugin_id')
+@click.argument('command')
+@click.option('-cpf', '--custom-plugins-folder', type=str)
+@click.option('-t', '--timeout', type=int, default=60)
+@click.option('-d', '--delete_file', is_flag=True)
+@click.option('-dr', '--dont-run', is_flag=True)
+def process_command(plugin_id, command, custom_plugins_folder, timeout, delete_file, dont_run):
+    plugins_manager = PluginsManager(custom_plugins_folder)
+    plugin = plugins_manager.get_plugin(plugin_id)
+    if plugin:
+        modified_command = plugin.processCommandString(getpass.getuser(), "", command)
+        if modified_command:
+            command = modified_command
+        click.echo(f"Command: {command}")
+        if not dont_run:
+            try:
+                command_result = subprocess.run(shlex.split(command), capture_output=True, timeout=timeout)
+            except subprocess.TimeoutExpired as e:
+                click.echo(f"Command timeout {e}")
+            else:
+                if command_result.returncode == 0:
+                    plugin.processOutput(command_result.stdout.decode('utf-8'), delete_file)
+                    click.echo(plugin.get_json())
+                else:
+                    click.echo("Command execution error")
+        else:
+            click.echo("Dont run enabled")
+    else:
+        click.echo(f"Unknown Plugin: {plugin_id}")
+
+
+@cli.command()
 @click.argument('report_file')
 @click.option('-cpf', '--custom-plugins-folder', type=str)
-def detect(report_file, custom_plugins_folder):
+def detect_report(report_file, custom_plugins_folder):
     if not os.path.isfile(report_file):
         click.echo(f"File {report_file} Don't Exists")
     else:
@@ -67,6 +101,20 @@ def detect(report_file, custom_plugins_folder):
             click.echo(plugin)
         else:
             click.echo(f"Failed to detect")
+
+
+@cli.command()
+@click.argument('command')
+@click.option('-cpf', '--custom-plugins-folder', type=str)
+def detect_command(command, custom_plugins_folder):
+    plugins_manager = PluginsManager(custom_plugins_folder)
+    analyzer = CommandAnalyzer(plugins_manager)
+    plugin = analyzer.get_plugin(command)
+    if plugin:
+        click.echo(plugin)
+    else:
+        click.echo(f"Failed to detect")
+
 
 @cli.command()
 @click.argument('plugin_id')

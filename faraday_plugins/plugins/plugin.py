@@ -5,6 +5,8 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import os
+import tempfile
+
 import pytz
 import re
 import uuid
@@ -32,6 +34,8 @@ class PluginBase:
         self.description = ""
         self._command_regex = None
         self._output_file_path = None
+        self._use_temp_file = False
+        self._temp_file_extension = "tmp"
         self.framework_version = None
         self._completition = {}
         self._new_elems = []
@@ -53,8 +57,16 @@ class PluginBase:
                                                     "duration": 0,
                                                     "import_source": "report"}}
 
+
     def __str__(self):
         return f"Plugin: {self.id}"
+
+    @staticmethod
+    def _get_temp_file(extension="tmp"):
+        temp_dir = tempfile.gettempdir()
+        temp_filename = f"{next(tempfile._get_candidate_names())}.{extension}"
+        temp_file_path = os.path.join(temp_dir, temp_filename)
+        return temp_file_path
 
     @staticmethod
     def get_utctimestamp(date):
@@ -224,6 +236,21 @@ class PluginBase:
         return (self._command_regex is not None and
                 self._command_regex.match(current_input.strip()) is not None)
 
+    def processCommandString(self, username, current_path, command_string):
+        """
+        With this method a plugin can add aditional arguments to the
+        command that it's going to be executed.
+        """
+        if command_string.startswith("sudo"):
+            params = " ".join(command_string.split()[2:])
+        else:
+            params = " ".join(command_string.split()[1:])
+        self.vulns_data["command"]["params"] = params
+        self.vulns_data["command"]["user"] = username
+        if self._use_temp_file:
+            self._output_file_path = self._get_temp_file(extension=self._temp_file_extension)
+        return None
+
     def getCompletitionSuggestionsList(self, current_input):
         """
         This method can be overriden in the plugin implementation
@@ -237,20 +264,26 @@ class PluginBase:
                 options[k] = v
         return options
 
-    def processOutput(self, term_output):
+    def processOutput(self, term_output, delete_after=False):
         output = term_output
-        if self.has_custom_output() and os.path.isfile(self.get_custom_file_path()):
-            self._parse_filename(self.get_custom_file_path())
+        if self.has_custom_output():
+            self._parse_filename(self.get_custom_file_path(), delete_after)
         else:
             self.parseOutputString(output)
 
-    def _parse_filename(self, filename):
+    def _parse_filename(self, filename, delete_after=False):
         with open(filename, **self.open_options) as output:
             self.parseOutputString(output.read())
+        if delete_after:
+            try:
+                os.remove(filename)
+            except Exception as e:
+                self.logger.error("Error on delete file: (%s) [%s]", filename, e)
 
-    def processReport(self, filepath, user="faraday"):
+
+    def processReport(self, filepath, user="faraday", delete_after=False):
         if os.path.isfile(filepath):
-            self._parse_filename(filepath)
+            self._parse_filename(filepath, delete_after)
             self.vulns_data["command"]["params"] = filepath
             self.vulns_data["command"]["user"] = user
         else:

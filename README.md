@@ -15,14 +15,32 @@ python -m faraday_plugins list
 > Test autodetect plugin from report
 
 ```shell script
-python -m faraday_plugins detect /path/to/report.xml
+python -m faraday_plugins detect-report /path/to/report.xml
 ```
 
 
 > Test report with plugin
 
 ```shell script
-python -m faraday_plugins process appscan /path/to/report.xml
+python -m faraday_plugins process-report appscan /path/to/report.xml
+```
+
+> Test autodetect plugin from command
+
+```shell script
+python -m faraday_plugins detect-command "ping -c 4 www.google.com"
+```
+
+
+> Test command with plugin
+
+Optional params:
+
+- -t: Timeout to wait to command to finish
+- -d: If the command uses a temp file, delete it after
+- -dr: Dont run, just show the generated command
+```shell script
+python -m faraday_plugins process-command nmap "nmap 192.168.1.1" -t 60 -d
 ```
 
 > Plugin Logger
@@ -31,7 +49,7 @@ To use it you must call ```self.logger.debug("some message")```
 
 ```shell script
 export PLUGIN_DEBUG=1
-python -m faraday_plugins process appscan /path/to/report.xml
+python -m faraday_plugins proces-report appscan /path/to/report.xml
 2019-11-15 20:37:03,355 - faraday.faraday_plugins.plugins.manager - INFO [manager.py:113 - _load_plugins()]  Loading Native Plugins...
 2019-11-15 20:37:03,465 - faraday.faraday_plugins.plugins.manager - DEBUG [manager.py:123 - _load_plugins()]  Load Plugin [acunetix]
 2019-11-15 20:37:03,495 - faraday.faraday_plugins.plugins.manager - DEBUG [manager.py:123 - _load_plugins()]  Load Plugin [amap]

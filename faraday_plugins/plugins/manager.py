@@ -115,6 +115,24 @@ class ReportAnalyzer:
         return plugin
 
 
+class CommandAnalyzer:
+
+    def __init__(self, plugin_manager):
+        self.plugin_manager = plugin_manager
+
+    def get_plugin(self, command_string):
+        plugin = None
+        logger.debug("Look plugin for command: %s", command_string)
+        for _plugin_id, _plugin in self.plugin_manager.get_plugins():
+            logger.debug("Try plugin: %s", _plugin_id)
+            try:
+                if _plugin.canParseCommandString(command_string):
+                    plugin = _plugin
+            except Exception as e:
+                logger.error("Error in plugin analysis: (%s) %s", _plugin_id, e)
+        return plugin
+
+
 class PluginsManager:
 
     def __init__(self, custom_plugins_folder=None):
