@@ -261,7 +261,7 @@ class NiktoPlugin(PluginXMLFormat):
         self._current_output = None
         self.parent = None
         self._command_regex = re.compile(
-            r'^(sudo nikto|nikto|sudo nikto\.pl|nikto\.pl|perl nikto\.pl|\.\/nikto\.pl|\.\/nikto).*?')
+            r'^(sudo nikto |nikto |sudo nikto\.pl |nikto\.pl |perl nikto\.pl |\.\/nikto\.pl |\.\/nikto ).*?')
         self._completition = {
             "": "",
             "-ask+": "Whether to ask about submitting updates",

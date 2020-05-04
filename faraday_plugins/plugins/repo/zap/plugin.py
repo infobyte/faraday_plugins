@@ -248,7 +248,7 @@ class ZapPlugin(PluginXMLFormat):
         self.options = None
         self._current_output = None
         self.target = None
-        self._command_regex = re.compile(r'^(zap|sudo zap|\.\/zap).*?')
+        self._command_regex = re.compile(r'^(zap |sudo zap |\.\/zap ).*?')
 
     def parseOutputString(self, output, debug=False):
         """

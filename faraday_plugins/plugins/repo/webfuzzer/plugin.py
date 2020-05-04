@@ -83,8 +83,7 @@ class WebfuzzerPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self.host = None
-        self._command_regex = re.compile(
-            r'^(sudo webfuzzer|webfuzzer|\.\/webfuzzer).*?')
+        self._command_regex = re.compile(r'^(sudo webfuzzer |webfuzzer |\.\/webfuzzer ).*?')
         self._completition = {'': '__Usage: ./webfuzzer -G|-P URL [OPTIONS]',
                               '-G': '<url>	get this as starting url (with parameters)',
                               '-P': '<url>	post this as starting url (with parameters)',

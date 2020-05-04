@@ -86,7 +86,7 @@ class DnswalkPlugin(PluginBase):
         self._current_output = None
         self._current_path = None
         self._command_regex = re.compile(
-            r'^(sudo dnswalk|dnswalk|\.\/dnswalk).*?')
+            r'^(sudo dnswalk |dnswalk |\.\/dnswalk ).*?')
 
         global current_path
 

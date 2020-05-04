@@ -22,7 +22,7 @@ class NetdiscoverPlugin(PluginBase):
         self.name           = "netdiscover"
         self.plugin_version = "0.0.1"
         self.version        = "1.0.0"
-        self._command_regex = re.compile(r'^(sudo netdiscover|netdiscover).*?')
+        self._command_regex = re.compile(r'^(sudo netdiscover |netdiscover ).*?')
 
     def parseOutputString(self, output, debug=False):
         #regexp get ip, mac and hostname

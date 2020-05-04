@@ -34,7 +34,7 @@ class CmdPropeciaPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._command_regex = re.compile(
-            r'^(sudo propecia|\.\/propecia|propecia).*?')
+            r'^(sudo propecia |\.\/propecia |propecia ).*?')
         self._host_ip = None
         self._port = "23"
 

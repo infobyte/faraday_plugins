@@ -62,7 +62,7 @@ class DirsearchPlugin(PluginTerminalOutput):
         self.plugin_version = "0.0.1"
         self.version = "0.0.1"
         self._command_regex = re.compile(
-            r'^(sudo )?(python[0-9\.]? )?dirsearch(\.py)?')
+            r'^(sudo )?(python[0-9\.]? )?dirsearch(\.py )?')
         self.ignore_parsing = False
         self.json_report_file = None
         self.addSetting("Ignore 403", str, "1")

@@ -23,8 +23,8 @@ class brutexss (PluginBase):
         self.plugin_version = "0.0.2"
         self.version = "1.0.0"
         self.protocol ='tcp'
-        self._command_regex = re.compile(r'^(sudo brutexss|brutexss|sudo brutexss\.py|brutexss\.py|python brutexss\.py|'
-                                         r'\.\/brutexss\.py).*?')
+        self._command_regex = re.compile(r'^(sudo brutexss |brutexss |sudo brutexss\.py|brutexss\.py |python brutexss\.py |'
+                                         r'\.\/brutexss\.py ).*?')
 
     def parseOutputString(self, output, debug=False):
         lineas = output.split("\n")

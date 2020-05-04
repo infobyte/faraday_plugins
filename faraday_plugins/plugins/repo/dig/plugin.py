@@ -31,7 +31,7 @@ class DigPlugin(PluginBase):
         self.name = u"DiG"
         self.plugin_version = u"0.0.1"
         self.version = u"9.9.5-3"
-        self._command_regex = re.compile(r'^(dig).*?')
+        self._command_regex = re.compile(r'^(dig ).*?')
 
     def parseOutputString(self, output):
         # Ignore all lines that start with ";"

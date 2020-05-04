@@ -29,7 +29,7 @@ class pasteAnalyzerPlugin(PluginBase):
         self.command_string = ""
         self.current_path = ""
         self._command_regex = re.compile(
-            r'^(pasteAnalyzer|python pasteAnalyzer.py|\./pasteAnalyzer.py|sudo python pasteAnalyzer.py|sudo \./pasteAnalyzer.py).*?')
+            r'^(pasteAnalyzer |python pasteAnalyzer.py |\./pasteAnalyzer.py |sudo python pasteAnalyzer.py |sudo \./pasteAnalyzer.py ).*?')
 
     def parseOutputString(self, output, debug=False):
 

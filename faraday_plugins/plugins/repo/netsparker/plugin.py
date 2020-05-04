@@ -196,9 +196,7 @@ class NetsparkerPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(
-            r'^(sudo netsparker|\.\/netsparker).*?')
-
+        self._command_regex = re.compile(r'^(sudo netsparker |\.\/netsparker ).*?')
 
     def resolve(self, host):
         try:

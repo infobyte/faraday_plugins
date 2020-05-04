@@ -119,7 +119,7 @@ class SkipfishPlugin(PluginBase):
         self._current_output = None
         self.parent = None
         self._command_regex = re.compile(
-            r'^(sudo skipfish|skipfish|sudo skipfish\.pl|skipfish\.pl|perl skipfish\.pl|\.\/skipfish\.pl|\.\/skipfish).*?')
+            r'^(sudo skipfish |skipfish |sudo skipfish\.pl |skipfish\.pl |perl skipfish\.pl |\.\/skipfish\.pl |\.\/skipfish ).*?')
         global current_path
 
     def parseOutputString(self, output, debug=False):

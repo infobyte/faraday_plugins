@@ -27,7 +27,7 @@ class hping3(PluginBase):
                     '25': 'smtp', '161': 'snmp', '22': 'ssh', '3690': 'svn',
                     '23': 'telnet', '5900': 'vnc'}
 
-        self._command_regex = re.compile(r'^(sudo hping3|hping3)\s+.*$')
+        self._command_regex = re.compile(r'^(sudo hping3 |hping3 )\s+.*$')
 
     def parseOutputString(self, output, debug=False):
 

@@ -19,8 +19,7 @@ class WfuzzPlugin(PluginBase):
         self.port = None
         self.protocol = None
         self.fail = None
-        self._command_regex = re.compile(
-            r'^(wfuzz).*?')
+        self._command_regex = re.compile(r'^(wfuzz ).*?')
 
     def parseData(self, output):
 

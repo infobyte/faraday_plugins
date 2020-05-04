@@ -184,7 +184,7 @@ class RetinaPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(sudo retina|\.\/retina).*?')
+        self._command_regex = re.compile(r'^(sudo retina |\.\/retina ).*?')
 
 
     def parseOutputString(self, output, debug=False):

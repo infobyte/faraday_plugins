@@ -79,7 +79,7 @@ class MetagoofilPlugin(PluginBase):
         self._current_output = None
         self._current_path = None
         self._command_regex = re.compile(
-            r'^(sudo metagoofil|metagoofil|sudo metagoofil\.py|metagoofil\.py|python metagoofil\.py|\.\/metagoofil\.py).*?')
+            r'^(sudo metagoofil |metagoofil |sudo metagoofil\.py |metagoofil\.py |python metagoofil\.py |\.\/metagoofil\.py ).*?')
         self._completition = {
             "": "metagoofil.py -d microsoft.com -t doc,pdf -l 200 -n 50 -o microsoftfiles -f results.html",
             "-d": "domain to search",

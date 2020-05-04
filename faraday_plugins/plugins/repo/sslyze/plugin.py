@@ -97,7 +97,7 @@ class SslyzePlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(sudo sslyze|sslyze|\.\/sslyze).*?')
+        self._command_regex = re.compile(r'^(sudo sslyze |sslyze |\.\/sslyze ).*?')
         self.xml_arg_re = re.compile(r"^.*(--xml_output\s*[^\s]+).*$")
 
     def report_belongs_to(self, **kwargs):

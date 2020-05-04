@@ -189,8 +189,7 @@ class NessusPlugin(PluginXMLFormat):
         self.options = None
         self._current_output = None
         self._current_path = None
-        self._command_regex = re.compile(
-            r'^(nessus|sudo nessus|\.\/nessus).*?')
+        self._command_regex = re.compile(r'^(nessus |sudo nessus |\.\/nessus ).*?')
         self.host = None
         self.port = None
         self.protocol = None

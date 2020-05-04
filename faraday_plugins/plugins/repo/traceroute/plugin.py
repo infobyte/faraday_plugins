@@ -22,8 +22,7 @@ class traceroutePlugin(PluginBase):
         self.name = "Traceroute"
         self.plugin_version = "1.0.0"
         self.command_string = ""
-        self._command_regex = re.compile(
-            r'^(traceroute|traceroute6).*?')
+        self._command_regex = re.compile(r'^(traceroute |traceroute6 ).*?')
 
     def parseOutputString(self, output, debug=False):
 

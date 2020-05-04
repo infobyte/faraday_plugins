@@ -29,7 +29,7 @@ class SSHDefaultScanPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "1.0.0"
         self._command_regex = re.compile(
-            r'^(python sshdefaultscan.py|\./sshdefaultscan.py).*?')
+            r'^(python sshdefaultscan.py |\./sshdefaultscan.py ).*?')
         self._completition = {"--fast": "Fast scan mode"}
 
     def parseOutputString(self, output, debug=False):

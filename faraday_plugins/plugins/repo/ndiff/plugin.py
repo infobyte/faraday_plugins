@@ -115,7 +115,7 @@ class CmdNdiffPlugin(PluginBase):
         self.name = "ndiff"
         self.plugin_version = "0.0.1"
         self.version = "1.0.0"
-        self._command_regex = re.compile(r'^(sudo ndiff|ndiff).*?')
+        self._command_regex = re.compile(r'^(sudo ndiff |ndiff ).*?')
 
     def parseOutputString(self, output, debug=False):
 

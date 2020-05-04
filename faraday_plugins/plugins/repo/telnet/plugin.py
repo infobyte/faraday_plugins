@@ -36,7 +36,7 @@ class TelnetRouterPlugin(PluginBase):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^telnet.*?')
+        self._command_regex = re.compile(r'^telnet .*?')
         self._host_ip = None
         self._host = []
         self._port = "23"

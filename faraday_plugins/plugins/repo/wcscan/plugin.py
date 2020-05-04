@@ -90,8 +90,7 @@ class WcscanPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self.current_path = None
-        self._command_regex = re.compile(
-            r'^(sudo wcscan|wcscan|\.\/wcscan).*?')
+        self._command_regex = re.compile(r'^(sudo wcscan |wcscan |\.\/wcscan ).*?')
 
 
     def canParseCommandString(self, current_input):

@@ -104,7 +104,7 @@ class DnsmapPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self.current_path = None
-        self._command_regex = re.compile(r'^(sudo dnsmap|dnsmap|\.\/dnsmap).*?')
+        self._command_regex = re.compile(r'^(sudo dnsmap |dnsmap |\.\/dnsmap ).*?')
         self.xml_arg_re = re.compile(r"^.*(-r\s*[^\s]+).*$")
 
 

@@ -245,8 +245,7 @@ class LynisPlugin(PluginByExtension):
         self.version = "2.7.1"
         self.options = None
         self._current_output = None
-        rr = r'^(lynis|sudo lynis|\.\/lynis|sudo \.\/lynis).*?'
-        self._command_regex = re.compile(rr)
+        self._command_regex = re.compile(r'^(lynis |sudo lynis |\.\/lynis |sudo \.\/lynis ).*?')
         self._hosts = []
 
         global current_path

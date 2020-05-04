@@ -270,8 +270,6 @@ class BurpPlugin(PluginXMLFormat):
 
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def removeHtml(self, markup):
         soup = BeautifulSoup(markup, "html.parser")

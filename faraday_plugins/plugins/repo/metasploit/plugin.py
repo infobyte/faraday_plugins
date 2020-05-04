@@ -339,7 +339,7 @@ class MetasploitPlugin(PluginXMLFormat):
         self.options = None
         self._current_output = None
         self.target = None
-        self._command_regex = re.compile(r'^(metasploit|sudo metasploit|\.\/metasploit).*?')
+        self._command_regex = re.compile(r'^(metasploit |sudo metasploit |\.\/metasploit ).*?')
 
 
     def parseOutputString(self, output, debug=False):

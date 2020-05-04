@@ -111,7 +111,7 @@ class FiercePlugin(PluginBase):
         self._current_output = None
         self._current_path = None
         self._command_regex = re.compile(
-            r'^(sudo fierce|fierce|sudo fierce\.pl|fierce\.pl|perl fierce\.pl|\.\/fierce\.pl).*?')
+            r'^(sudo fierce |fierce |sudo fierce\.pl |fierce\.pl |perl fierce\.pl |\.\/fierce\.pl ).*?')
         global current_path
 
         self.xml_arg_re = re.compile(r"^.*(>\s*[^\s]+).*$")

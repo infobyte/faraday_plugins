@@ -335,7 +335,7 @@ class OpenvasPlugin(PluginXMLFormat):
         self._current_output = None
         self.target = None
         self._command_regex = re.compile(
-            r'^(openvas|sudo openvas|\.\/openvas).*?')
+            r'^(openvas |sudo openvas |\.\/openvas ).*?')
 
     def report_belongs_to(self, **kwargs):
         if super().report_belongs_to(**kwargs):

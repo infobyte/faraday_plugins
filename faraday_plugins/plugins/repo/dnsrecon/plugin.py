@@ -172,7 +172,7 @@ class DnsreconPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._command_regex = re.compile(
-            r'^(sudo dnsrecon|dnsrecon|sudo dnsrecon\.py|dnsrecon\.py|python dnsrecon\.py|\.\/dnsrecon\.py).*?')
+            r'^(sudo dnsrecon |dnsrecon |sudo dnsrecon\.py |dnsrecon\.py |python dnsrecon\.py |\.\/dnsrecon\.py ).*?')
 
     def validHosts(self, hosts):
         valid_records = ["NS", "CNAME", "A", "MX", "info"]

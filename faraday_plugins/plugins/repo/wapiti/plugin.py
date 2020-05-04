@@ -240,8 +240,8 @@ class WapitiPlugin(PluginXMLFormat):
         self.port = "80"
         self.xml_arg_re = re.compile(r"^.*(-oX\s*[^\s]+).*$")
         self._command_regex = re.compile(
-            r'^(python wapiti|wapiti|sudo wapiti|sudo wapiti\.py|wapiti\.py|python wapiti\.py|\.\/wapiti\.py|wapiti|\.'
-            r'\/wapiti|python wapiti|python \.\/wapiti).*?')
+            r'^(python wapiti |wapiti |sudo wapiti |sudo wapiti\.py |wapiti\.py |python wapiti\.py |\.\/wapiti\.py |wapiti |\.'
+            r'\.\/wapiti |python wapiti |python \.\/wapiti ).*?')
         self._completition = {
             "": "python wapiti.py http://server.com/base/url/ [options]",
             "-s": "&lt;url&gt; ",

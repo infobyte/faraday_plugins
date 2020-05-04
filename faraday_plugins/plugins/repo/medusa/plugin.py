@@ -89,9 +89,7 @@ class MedusaPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._current_path = None
-        self._command_regex = re.compile(
-            r'^(sudo medusa|sudo \.\/medusa|medusa|\.\/medusa).*?')
-
+        self._command_regex = re.compile(r'^(sudo medusa |sudo \.\/medusa |medusa |\.\/medusa ).*?')
         self.host = None
         self.port = ""
 

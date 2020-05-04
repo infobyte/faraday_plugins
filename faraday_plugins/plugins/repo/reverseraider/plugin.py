@@ -61,8 +61,7 @@ class ReverseraiderPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._current_path = None
-        self._command_regex = re.compile(
-            r'^(sudo \.\/reverseraider|\.\/reverseraider).*?')
+        self._command_regex = re.compile(r'^(sudo \.\/reverseraider |\.\/reverseraider ).*?')
         self._completition = {
             "": "reverseraider -d domain | -r range [options]",
             "-r": "range of ipv4 or ipv6 addresses, for reverse scanning",

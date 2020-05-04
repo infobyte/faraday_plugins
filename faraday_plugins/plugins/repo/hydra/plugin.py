@@ -62,8 +62,7 @@ class HydraPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._current_path = None
-        self._command_regex = re.compile(
-            r'^(sudo hydra|sudo \.\/hydra|hydra|\.\/hydra).*?')
+        self._command_regex = re.compile(r'^(sudo hydra |sudo \.\/hydra |hydra |\.\/hydra ).*?')
         self.host = None
 
 

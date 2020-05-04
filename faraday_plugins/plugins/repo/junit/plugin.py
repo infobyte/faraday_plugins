@@ -131,7 +131,6 @@ class JunitPlugin(PluginBase):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = None 
 
     def parseOutputString(self, output, debug=False):
 

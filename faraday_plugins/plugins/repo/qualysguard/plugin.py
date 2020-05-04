@@ -349,7 +349,7 @@ class QualysguardPlugin(PluginXMLFormat):
         self.options = None
         self._current_output = None
         self._command_regex = re.compile(
-            r'^(sudo qualysguard|\.\/qualysguard).*?')
+            r'^(sudo qualysguard |\.\/qualysguard ).*?')
         self.open_options = {"mode": "r", "encoding": "utf-8"}
 
     def parseOutputString(self, output, debug=False):

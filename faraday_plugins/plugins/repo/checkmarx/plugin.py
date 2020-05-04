@@ -90,7 +90,7 @@ class CheckmarxPlugin(PluginXMLFormat):
         self.version = '1.0.0'
         self.framework_version = '1.0.0'
         self.options = None
-        self._command_regex = re.compile(r'^(checkmarx |\.\/checkmarx).*?')
+        self._command_regex = re.compile(r'^(checkmarx |\.\/checkmarx ).*?')
 
     def parseOutputString(self, output):
         parser = CheckmarxXmlParser(output)

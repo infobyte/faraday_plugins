@@ -160,7 +160,7 @@ class DnsenumPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._command_regex = re.compile(
-            r'^(sudo dnsenum|dnsenum|sudo dnsenum\.pl|dnsenum\.pl|perl dnsenum\.pl|\.\/dnsenum\.pl).*?')
+            r'^(sudo dnsenum |dnsenum |sudo dnsenum\.pl |dnsenum\.pl |perl dnsenum\.pl |\.\/dnsenum\.pl ).*?')
 
 
     def parseOutputString(self, output, debug=False):

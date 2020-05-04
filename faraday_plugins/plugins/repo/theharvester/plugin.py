@@ -86,7 +86,7 @@ class TheharvesterPlugin(PluginBase):
         self._current_output = None
         self._current_path = None
         self._command_regex = re.compile(
-            r'^(theharvester|sudo theharvester|sudo theHarvester\.py|theHarvester\.py|python theHarvester\.py|\.\/theHarvester\.py).*?')
+            r'^(theharvester |sudo theharvester |sudo theHarvester\.py |theHarvester\.py |python theHarvester\.py |\.\/theHarvester\.py ).*?')
         self._completition = {
             "": "Examples:./theharvester.py -d microsoft.com -l 500 -b google",
             "-d": "Domain to search or company name",

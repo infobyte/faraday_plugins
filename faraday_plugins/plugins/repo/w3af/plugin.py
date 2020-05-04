@@ -224,7 +224,7 @@ class W3afPlugin(PluginXMLFormat):
         self.options = None
         self._current_output = None
         self.target = None
-        self._command_regex = re.compile(r'^(w3af|sudo w3af|\.\/w3af).*?')
+        self._command_regex = re.compile(r'^(w3af |sudo w3af |\.\/w3af ).*?')
         self._completition = {
             "": "",
             "-h": "Display this help message.",
