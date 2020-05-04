@@ -160,6 +160,7 @@ class CmdNdiffPlugin(PluginBase):
                 )
 
     def processCommandString(self, username, current_path, command_string):
+        super().processCommandString(username, current_path, command_string)
         if command_string.find('--xml') < 0:
             return command_string + '--xml'
 

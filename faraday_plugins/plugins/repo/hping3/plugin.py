@@ -70,9 +70,6 @@ class hping3(PluginBase):
                     s_id = self.createAndAddServiceToInterface(
                         host_id, i_id, service, protocol="tcp", ports=port, status="open")
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
-
 
 def createPlugin():
     return hping3()

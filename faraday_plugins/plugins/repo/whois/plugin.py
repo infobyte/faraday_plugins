@@ -86,10 +86,6 @@ class CmdWhoisPlugin(PluginBase):
                 h_id, ip, "00:00:00:00:00:00", ip, hostname_resolution=[m])
         return True
 
-    def processCommandString(self, username, current_path, command_string):
-        """
-        """
-        return None
 
 
 def createPlugin():

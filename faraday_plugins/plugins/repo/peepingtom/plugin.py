@@ -68,6 +68,7 @@ class PeepingTomPlugin(PluginBase):
         return True
 
     def processCommandString(self, username, current_path, command_string):
+        super().processCommandString(username, current_path, command_string)
         self._path = current_path
 
 

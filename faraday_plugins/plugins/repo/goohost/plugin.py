@@ -129,6 +129,7 @@ class GoohostPlugin(PluginBase):
         """
         Set output path for parser...
         """
+        super().processCommandString(username, current_path, command_string)
         self._current_path = current_path
         self._command_string = command_string
 

@@ -161,8 +161,6 @@ class WebInspectPlugin(PluginXMLFormat):
 
         return True
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
 
 def createPlugin():

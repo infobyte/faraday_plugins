@@ -61,13 +61,14 @@ class SSHDefaultScanPlugin(PluginBase):
         return True
 
     def processCommandString(self, username, current_path, command_string):
+        super().processCommandString(username, current_path, command_string)
         if "--batch" not in command_string:
             return "{command} --batch --batch-template {template}".format(
                 command=command_string,
                 template="{username}:{password}@{host}"
             )
-
-        return None
+        else:
+            return None
 
 
 def createPlugin():

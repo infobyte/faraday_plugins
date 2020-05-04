@@ -325,6 +325,7 @@ class WapitiPlugin(PluginXMLFormat):
         Adds the -oX parameter to get xml output to the command string that the
         user has set.
         """
+        super().processCommandString(username, current_path, command_string)
         host = re.search(
             "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]"
             "{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2"

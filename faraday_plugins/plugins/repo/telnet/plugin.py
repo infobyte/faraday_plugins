@@ -84,9 +84,8 @@ class TelnetRouterPlugin(PluginBase):
         return True
 
     def processCommandString(self, username, current_path, command_string):
-
+        super().processCommandString(username, current_path, command_string)
         count_args = command_string.split()
-
         c = count_args.__len__()
         self._port = "23"
         if re.search(r"[\d]+", count_args[c - 1]):

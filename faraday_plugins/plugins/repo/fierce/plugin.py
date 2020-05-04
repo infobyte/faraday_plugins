@@ -110,6 +110,8 @@ class FiercePlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._current_path = None
+        self._use_temp_file = True
+        self._temp_file_extension = "txt"
         self._command_regex = re.compile(
             r'^(sudo fierce |fierce |sudo fierce\.pl |fierce\.pl |perl fierce\.pl |\.\/fierce\.pl ).*?')
         global current_path
@@ -184,22 +186,14 @@ class FiercePlugin(PluginBase):
                         ref=["CVE-1999-0532"])
 
     def processCommandString(self, username, current_path, command_string):
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "%s_%s_output-%s.txt" % (
-                self.get_ws(),
-                self.id,
-                random.uniform(1, 10))
-        )
+        super().processCommandString(username, current_path, command_string)
 
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:
             return "%s > %s" % (command_string, self._output_file_path)
         else:
-            return re.sub(arg_match.group(1),
-                          r"> %s" % self._output_file_path,
-                          command_string)
+            return re.sub(arg_match.group(1), r"> %s" % self._output_file_path, command_string)
 
 
 def createPlugin():

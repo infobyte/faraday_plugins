@@ -54,9 +54,6 @@ class xsssniper(PluginBase):
                                               website=url[0], path='', method=metodo, pname='',
                                               params=''.join(parametro), request='', response='')
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
-
 
 def createPlugin():
     return xsssniper()

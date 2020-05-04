@@ -259,6 +259,13 @@ class LynisPlugin(PluginByExtension):
         return False
 
     def parseOutputString(self, output, debug=False):
+        """
+        Lynis does not have a means to specify the location for the
+        DAT file, which by default goes to /var/log/lynis-report.dat
+        or /tmp/lynis-report.dat, depending on privileges.
+        Because of that, we will extract the DAT location off
+        lynis' output via parseOutputString().
+        """
         datpath = self.getDatPath(output)
 
         if datpath:
@@ -334,15 +341,7 @@ class LynisPlugin(PluginByExtension):
                 desc=warns[warn]
             )
 
-    def processCommandString(self, username, current_path, command_string):
-        """
-        Lynis does not have a means to specify the location for the
-        DAT file, which by default goes to /var/log/lynis-report.dat
-        or /tmp/lynis-report.dat, depending on privileges.
-        Because of that, we will extract the DAT location off
-        lynis' output via parseOutputString().
-        """
-        return
+
 
     def getDatPath(self, output):
         m = re.search('(\/.+\.dat)$', output, re.MULTILINE)

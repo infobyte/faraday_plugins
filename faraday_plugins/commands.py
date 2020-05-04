@@ -34,7 +34,13 @@ def list(custom_plugins_folder):
     click.echo("Available Plugins:")
     loaded_plugins = 0
     for plugin_id, plugin in plugins_manager.get_plugins():
-        click.echo(f"{plugin.id} - {plugin.name} [Console: {plugin._command_regex is not None} - Report: {isinstance(plugin, PluginByExtension)}]")
+        console_enabled = plugin._command_regex is not None
+        console_enabled_color = "green" if console_enabled else "red"
+        console_enabled_text = click.style(f"{console_enabled}", fg=console_enabled_color)
+        report_enabled = isinstance(plugin, PluginByExtension)
+        report_enabled_color = "green" if report_enabled else "red"
+        report_enabled_text = click.style(f"{report_enabled}", fg=report_enabled_color)
+        click.echo(f"{plugin.id:15}  - [Console: {console_enabled_text:>15} - Report: {report_enabled_text:>15}] - {plugin.name} ")
 
         loaded_plugins += 1
     click.echo(f"Loaded Plugins: {loaded_plugins}")
@@ -52,7 +58,7 @@ def process_report(plugin_id, report_file, custom_plugins_folder):
         plugin = plugins_manager.get_plugin(plugin_id)
         if plugin:
             plugin.processReport(report_file)
-            click.echo(plugin.get_json())
+            click.echo(json.dumps(plugin.get_data(), indent=4))
         else:
             click.echo(f"Unknown Plugin: {plugin_id}")
 
@@ -80,11 +86,9 @@ def process_command(plugin_id, command, custom_plugins_folder, timeout, delete_f
             else:
                 if command_result.returncode == 0:
                     plugin.processOutput(command_result.stdout.decode('utf-8'), delete_file)
-                    click.echo(plugin.get_json())
+                    click.echo(json.dumps(plugin.get_data(), indent=4))
                 else:
                     click.echo("Command execution error")
-        else:
-            click.echo("Dont run enabled")
     else:
         click.echo(f"Unknown Plugin: {plugin_id}")
 

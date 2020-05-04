@@ -92,6 +92,8 @@ class MedusaPlugin(PluginBase):
         self._command_regex = re.compile(r'^(sudo medusa |sudo \.\/medusa |medusa |\.\/medusa ).*?')
         self.host = None
         self.port = ""
+        self._use_temp_file = True
+        self._temp_file_extension = "txt"
 
     def parseOutputString(self, output, debug=False):
         """
@@ -146,10 +148,8 @@ class MedusaPlugin(PluginBase):
     xml_arg_re = re.compile(r"^.*(-O\s*[^\s]+).*$")
 
     def processCommandString(self, username, current_path, command_string):
-
+        super().processCommandString(username, current_path, command_string)
         self.port = ""
-        self._output_file_path = os.path.join(
-            self.data_path, "medusa_output-%s.txt" % random.uniform(1, 10))
         arg_match = self.xml_arg_re.match(command_string)
 
         mreg = re.search(r"\-n( |)([\d]+)", command_string)

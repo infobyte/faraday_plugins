@@ -108,10 +108,6 @@ class MetagoofilPlugin(PluginBase):
         output being sent is valid.
         """
 
-    def processCommandString(self, username, current_path, command_string):
-        """
-        """
-        return None
 
 
 def createPlugin():

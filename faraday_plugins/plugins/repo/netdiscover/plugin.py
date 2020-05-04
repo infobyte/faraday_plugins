@@ -40,8 +40,6 @@ class NetdiscoverPlugin(PluginBase):
 
         return True
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
 
 def createPlugin():

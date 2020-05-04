@@ -51,10 +51,9 @@ class traceroutePlugin(PluginBase):
         print("[*]Parse finished, API faraday called...")
 
     def processCommandString(self, username, current_path, command_string):
-
-        print("[*]traceroute Plugin running...")
+        super().processCommandString(username, current_path, command_string)
         self.command_string = command_string
-        return command_string
+        return None
 
 
 def createPlugin():

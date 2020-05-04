@@ -32,7 +32,6 @@ class brutexss (PluginBase):
         found_vuln = False
         for linea in lineas:
             if linea.find("is available! Good!") > 0:
-                print(linea)
                 url = re.findall('(?:[-\w.]|(?:%[\da-fA-F]{2}))+', linea)[0]
                 port = 80
                 if urlparse(url).scheme == 'https':
@@ -53,7 +52,7 @@ class brutexss (PluginBase):
                                                                      ports=[port], status='Open', version="",
                                                                      description="")
         if found_vuln:
-            self.createAndAddVulnWebToService(host_id,service_id, name="xss", desc="XSS", ref='', severity='med',
+            self.createAndAddVulnWebToService(host_id, service_id, name="xss", desc="XSS", ref='', severity='med',
                                               website=url, path='', method='', pname='', params=''.join(parametro),
                                               request='', response='')
 

@@ -141,8 +141,8 @@ class WebfuzzerPlugin(PluginBase):
     def processCommandString(self, username, current_path, command_string):
         """
         """
+        super().processCommandString(username, current_path, command_string)
         host = re.search("\-([G|P]) ([\w\.\-]+)", command_string)
-
         if host is not None:
             self.host = host.group(2)
             self._output_path = current_path + "/" + self.host + ".txt"

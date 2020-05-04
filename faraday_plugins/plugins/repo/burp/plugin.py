@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
@@ -9,7 +6,6 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import os
-import sys
 import base64
 from bs4 import BeautifulSoup, Comment
 from faraday_plugins.plugins.plugin import PluginXMLFormat

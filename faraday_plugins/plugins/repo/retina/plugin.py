@@ -227,8 +227,6 @@ class RetinaPlugin(PluginXMLFormat):
                         v_id = self.createAndAddVulnToHost(h_id, v.name, ref=v.ref, severity=v.severity, resolution=v.solution, desc=v.desc)
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass

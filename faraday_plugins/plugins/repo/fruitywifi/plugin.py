@@ -131,11 +131,11 @@ class FruityWiFiPlugin(PluginBase):
     def processCommandString(self, username, current_path, command_string, debug=False):
         """
         """        
-        #params = command_string.replace("fruitywifi","")
+        super().processCommandString(username, current_path, command_string)
         params = "-t %s -s %s" % (self.getSetting("Token"), self.getSetting("Server"))
         
         return "python " + os.path.dirname(__file__) + "/fruitywifi.py " + params
-        #return None
+
 
 
 def createPlugin():

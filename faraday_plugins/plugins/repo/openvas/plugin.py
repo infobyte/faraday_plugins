@@ -451,8 +451,6 @@ class OpenvasPlugin(PluginXMLFormat):
         else:
             return False
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass

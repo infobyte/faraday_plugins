@@ -147,6 +147,7 @@ class DirsearchPlugin(PluginTerminalOutput):
             **get_vulnweb_url_fields(url.geturl()))
 
     def processCommandString(self, username, current_path, command_string):
+        super().processCommandString(username, current_path, command_string)
         parser = argparse.ArgumentParser(conflict_handler='resolve')
         parser.add_argument('-h', '--help', action='store_true')
         parser.add_argument('--json-report')

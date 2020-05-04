@@ -431,8 +431,7 @@ class MaltegoPlugin(PluginXMLFormat):
     def processReport(self, filepath):
         self.parseOutputString(filepath)
 
-    def processCommandString(self, username, current_path, command_string):
-        pass
+
 
 
 def createPlugin():

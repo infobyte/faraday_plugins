@@ -191,7 +191,7 @@ class DnsenumPlugin(PluginBase):
         Adds the -oX parameter to get xml output to the command string that the
         user has set.
         """
-
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:

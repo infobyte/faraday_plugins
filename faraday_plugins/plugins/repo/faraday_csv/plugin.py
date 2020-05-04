@@ -246,7 +246,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
         self.plugin_version = "1.0"
         self.csv_headers = [{'ip'}, {'target'}]
 
-    def _parse_filename(self, filename):
+    def _parse_filename(self, filename, delete_after):
         with open(filename, **self.open_options) as output:
             self.parseOutputString(output)
 

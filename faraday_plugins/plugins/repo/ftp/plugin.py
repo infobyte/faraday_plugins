@@ -86,8 +86,8 @@ class CmdFtpPlugin(PluginBase):
     def processCommandString(self, username, current_path, command_string):
         """
         """
+        super().processCommandString(username, current_path, command_string)
         count_args = command_string.split()
-
         c = count_args.__len__()
         self._port = "21"
         if re.search("[\d]+", count_args[c - 1]):

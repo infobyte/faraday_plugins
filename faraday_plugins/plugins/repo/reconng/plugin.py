@@ -169,8 +169,6 @@ class ReconngPlugin(PluginXMLFormat):
                 data=vuln['example']
             )
 
-    def processCommandString(self, username, current_path, command_string):
-        return
 
     def resolve_host(self, host):
         try:

@@ -1,5 +1,4 @@
-"""from __future__ import print_function
-
+"""
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
@@ -129,6 +128,7 @@ class DnsmapPlugin(PluginBase):
         Adds the parameter to get output to the command string that the
         user has set.
         """
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:

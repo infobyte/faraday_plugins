@@ -60,10 +60,10 @@ class HydraPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "7.5"
         self.options = None
-        self._current_output = None
-        self._current_path = None
         self._command_regex = re.compile(r'^(sudo hydra |sudo \.\/hydra |hydra |\.\/hydra ).*?')
         self.host = None
+        self._use_temp_file = True
+        self._temp_file_extension = "txt"
 
 
     def parseOutputString(self, output, debug=False):
@@ -136,20 +136,12 @@ class HydraPlugin(PluginBase):
     xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
 
     def processCommandString(self, username, current_path, command_string):
-
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "hydra_output-%s.txt" % random.uniform(1, 10))
-
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
-
         if arg_match is None:
             return re.sub(r"(^.*?hydra?)", r"\1 -o %s" % self._output_file_path, command_string)
         else:
-            return re.sub(
-                arg_match.group(1),
-                r"-o %s" % self._output_file_path,
-                command_string)
+            return re.sub(arg_match.group(1), r"-o %s" % self._output_file_path, command_string)
 
     def _isIPV4(self, ip):
         if len(ip.split(".")) == 4:

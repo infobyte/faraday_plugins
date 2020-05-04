@@ -63,8 +63,7 @@ class CmdPropeciaPlugin(PluginBase):
         return True
 
     def processCommandString(self, username, current_path, command_string):
-        """
-        """
+        super().processCommandString(username, current_path, command_string)
         count_args = command_string.split()
 
         if count_args.__len__() == 3:

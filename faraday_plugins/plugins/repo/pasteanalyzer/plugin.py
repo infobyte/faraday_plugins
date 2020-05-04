@@ -95,8 +95,7 @@ class pasteAnalyzerPlugin(PluginBase):
         print("[*]Parse finished, API faraday called...")
 
     def processCommandString(self, username, current_path, command_string):
-
-        print("[*]pasteAnalyzer Plugin running...")
+        super().processCommandString(username, current_path, command_string)
 
         if command_string.find("-j") < 0:
             command_string += " -j JSON_OUTPUT "

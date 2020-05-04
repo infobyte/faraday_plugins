@@ -252,9 +252,6 @@ class W3afPlugin(PluginXMLFormat):
             pass
         return host
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
-
     def setHost(self):
         pass
 
