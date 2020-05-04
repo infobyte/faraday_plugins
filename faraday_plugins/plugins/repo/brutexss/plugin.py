@@ -57,8 +57,6 @@ class brutexss (PluginBase):
                                               website=url, path='', method='', pname='', params=''.join(parametro),
                                               request='', response='')
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
 
 def createPlugin():

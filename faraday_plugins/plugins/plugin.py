@@ -238,7 +238,7 @@ class PluginBase:
 
     def processCommandString(self, username, current_path, command_string):
         """
-        With this method a plugin can add aditional arguments to the
+        With this method a plugin can add additional arguments to the
         command that it's going to be executed.
         """
         if command_string.startswith("sudo"):

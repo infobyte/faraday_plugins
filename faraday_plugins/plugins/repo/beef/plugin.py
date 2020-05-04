@@ -94,8 +94,6 @@ class BeefPlugin(PluginBase):
                         ref=["http://http://beefproject.com/"],
                         severity=3)
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass
