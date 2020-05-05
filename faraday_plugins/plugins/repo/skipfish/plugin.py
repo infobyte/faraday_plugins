@@ -9,6 +9,8 @@ import os
 import json
 import socket
 import random
+import tempfile
+
 from faraday_plugins.plugins.plugin import PluginBase
 
 current_path = os.path.abspath(os.getcwd())
@@ -131,10 +133,10 @@ class SkipfishPlugin(PluginBase):
         output being sent is valid.
         """
 
-        if not os.path.exists(self._output_path):
+        if not os.path.isdir(self._output_file_path):
             return False
 
-        p = SkipfishParser(self._output_path)
+        p = SkipfishParser(self._output_file_path)
 
         hostc = {}
         port = 80
@@ -213,22 +215,21 @@ class SkipfishPlugin(PluginBase):
         Adds the -o parameter to get report of the command string that the
         user has set.
         """
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
+        self._output_file_path = os.path.join(tempfile.gettempdir(), "faraday_plugin_skipfish_%d" % random.randint(1, 999999))
 
-        self._output_path = os.path.join(
-            self.data_path,
-            "skipfish_output-%s" % random.uniform(1, 10))
 
         if arg_match is None:
             return re.sub(
                 r"(^.*?skipfish)",
-                r"\1 -o %s" % self._output_path,
+                r"\1 -o %s" % self._output_file_path,
                 command_string,
                 1)
         else:
             return re.sub(
                 arg_match.group(1),
-                r"-o %s" % self._output_path,
+                r"-o %s" % self._output_file_path,
                 command_string,
                 1)
 

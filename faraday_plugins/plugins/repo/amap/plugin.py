@@ -31,14 +31,7 @@ class AmapPlugin(PluginBase):
         self._use_temp_file = True
         self._hosts = []
 
-    def parseOutputString(self, output, debug=False):
-        # if not os.path.exists(self._file_output_path):
-        #     return False
-        #
-        # if not debug:
-        #     with open(self._file_output_path) as f:
-        #         output = f.read()
-
+    def parseOutputString(self, output):
         services = {}
         for line in output.split('\n'):
             if line.startswith('#'):

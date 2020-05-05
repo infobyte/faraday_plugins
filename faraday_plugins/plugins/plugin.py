@@ -5,6 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import os
+import shutil
 import tempfile
 
 import pytz
@@ -35,6 +36,7 @@ class PluginBase:
         self._command_regex = None
         self._output_file_path = None
         self._use_temp_file = False
+        self._delete_temp_file = False
         self._temp_file_extension = "tmp"
         self.framework_version = None
         self._completition = {}
@@ -61,10 +63,10 @@ class PluginBase:
     def __str__(self):
         return f"Plugin: {self.id}"
 
-    @staticmethod
-    def _get_temp_file(extension="tmp"):
+
+    def _get_temp_file(self, extension="tmp"):
         temp_dir = tempfile.gettempdir()
-        temp_filename = f"{next(tempfile._get_candidate_names())}.{extension}"
+        temp_filename = f"{self.id}_{next(tempfile._get_candidate_names())}.{extension}"
         temp_file_path = os.path.join(temp_dir, temp_filename)
         return temp_file_path
 
@@ -248,6 +250,7 @@ class PluginBase:
         self.vulns_data["command"]["params"] = params
         self.vulns_data["command"]["user"] = username
         if self._use_temp_file:
+            self._delete_temp_file = True
             self._output_file_path = self._get_temp_file(extension=self._temp_file_extension)
         return None
 
@@ -264,26 +267,29 @@ class PluginBase:
                 options[k] = v
         return options
 
-    def processOutput(self, term_output, delete_after=False):
+    def processOutput(self, term_output):
         output = term_output
         if self.has_custom_output():
-            self._parse_filename(self.get_custom_file_path(), delete_after)
+            self._parse_filename(self.get_custom_file_path())
         else:
             self.parseOutputString(output)
 
-    def _parse_filename(self, filename, delete_after=False):
+    def _parse_filename(self, filename):
         with open(filename, **self.open_options) as output:
             self.parseOutputString(output.read())
-        if delete_after:
+        if self._delete_temp_file:
             try:
-                os.remove(filename)
+                if os.path.isfile(filename):
+                    os.remove(filename)
+                elif os.path.isdir(filename):
+                    shutil.rmtree(filename)
             except Exception as e:
                 self.logger.error("Error on delete file: (%s) [%s]", filename, e)
 
 
-    def processReport(self, filepath, user="faraday", delete_after=False):
+    def processReport(self, filepath, user="faraday"):
         if os.path.isfile(filepath):
-            self._parse_filename(filepath, delete_after)
+            self._parse_filename(filepath)
             self.vulns_data["command"]["params"] = filepath
             self.vulns_data["command"]["user"] = user
         else:

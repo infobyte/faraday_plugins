@@ -67,28 +67,25 @@ def process_report(plugin_id, report_file, custom_plugins_folder):
 @click.argument('plugin_id')
 @click.argument('command')
 @click.option('-cpf', '--custom-plugins-folder', type=str)
-@click.option('-t', '--timeout', type=int, default=60)
-@click.option('-d', '--delete_file', is_flag=True)
 @click.option('-dr', '--dont-run', is_flag=True)
-def process_command(plugin_id, command, custom_plugins_folder, timeout, delete_file, dont_run):
+def process_command(plugin_id, command, custom_plugins_folder, dont_run):
     plugins_manager = PluginsManager(custom_plugins_folder)
     plugin = plugins_manager.get_plugin(plugin_id)
     if plugin:
         modified_command = plugin.processCommandString(getpass.getuser(), "", command)
         if modified_command:
             command = modified_command
-        click.echo(f"Command: {command}")
         if not dont_run:
-            try:
-                command_result = subprocess.run(shlex.split(command), capture_output=True, timeout=timeout)
-            except subprocess.TimeoutExpired as e:
-                click.echo(f"Command timeout {e}")
+            click.echo(click.style(f"Running command: {command}", fg="green"))
+            command_result = subprocess.run(shlex.split(command), capture_output=True)
+            if command_result.returncode == 0:
+                plugin.processOutput(command_result.stdout.decode('utf-8'))
+                click.echo(json.dumps(plugin.get_data(), indent=4))
             else:
-                if command_result.returncode == 0:
-                    plugin.processOutput(command_result.stdout.decode('utf-8'), delete_file)
-                    click.echo(json.dumps(plugin.get_data(), indent=4))
-                else:
-                    click.echo("Command execution error")
+                click.echo(click.style("Command execution error:", fg="red"))
+                click.echo(command_result.stderr)
+        else:
+            click.echo(click.style(f"Command: {command}", fg="green"))
     else:
         click.echo(f"Unknown Plugin: {plugin_id}")
 

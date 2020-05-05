@@ -25,7 +25,7 @@ class dirbPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "2.22"
         self.regexpUrl = r'((http[s]?)\:\/\/([\w\.]+)[.\S]+)'
-        self._command_regex = re.compile(r'^(?:sudo dirb |dirb |\.\/dirb |sudo \.\/dirb )\s+(?:(http[s]?)'
+        self._command_regex = re.compile(r'^(?:sudo dirb|dirb|\.\/dirb|sudo \.\/dirb)\s+(?:(http[s]?)'
                                          r'\:\/\/([\w\.]+)[.\S]+)')
         self.text = []
 
@@ -73,7 +73,7 @@ class dirbPlugin(PluginBase):
 
         self.text = '\n'.join(self.text)
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         url = re.search(r"URL_BASE: " + self.regexpUrl, output)
         paths = self.pathsDirListing(output)

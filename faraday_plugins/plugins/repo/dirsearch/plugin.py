@@ -10,7 +10,7 @@ import socket
 import argparse
 import tempfile
 import urllib.parse as urlparse
-from faraday_plugins.plugins.plugin import PluginTerminalOutput
+from faraday_plugins.plugins.plugin import PluginBase
 from faraday_plugins.plugins.plugins_utils import get_vulnweb_url_fields
 import os
 
@@ -54,37 +54,20 @@ status_codes = {
 }
 
 
-class DirsearchPlugin(PluginTerminalOutput):
+class DirsearchPlugin(PluginBase):
     def __init__(self):
         super().__init__()
         self.id = "dirsearch"
         self.name = "dirsearch"
         self.plugin_version = "0.0.1"
         self.version = "0.0.1"
-        self._command_regex = re.compile(
-            r'^(sudo )?(python[0-9\.]? )?dirsearch(\.py )?')
-        self.ignore_parsing = False
-        self.json_report_file = None
+        self._command_regex = re.compile(r'^(sudo )?(python[0-9\.]? )?dirsearch(\.py)\s+?')
         self.addSetting("Ignore 403", str, "1")
+        self._use_temp_file = True
+        self._temp_file_extension = "json"
 
-    def parseOutputString(self, output, debug=False):
-        if self.ignore_parsing:
-            return
-        if self.json_report_file:
-            # We ran the plugin via command line
-            try:
-                fp = open(self.json_report_file)
-            except IOError:
-                self.log('Error opening JSON in the file {}'.format(
-                    self.json_report_file
-                ), 'ERROR')
-            else:
-                self.parse_json(fp.read())
-                if self.remove_report:
-                    os.unlink(self.json_report_file)
-        else:
-            # We are importing a report
-            self.parse_json(output)
+    def parseOutputString(self, output):
+        self.parse_json(output)
 
     def resolve(self, domain):
         return socket.gethostbyname(domain)
@@ -147,29 +130,19 @@ class DirsearchPlugin(PluginTerminalOutput):
             **get_vulnweb_url_fields(url.geturl()))
 
     def processCommandString(self, username, current_path, command_string):
-        super().processCommandString(username, current_path, command_string)
         parser = argparse.ArgumentParser(conflict_handler='resolve')
         parser.add_argument('-h', '--help', action='store_true')
         parser.add_argument('--json-report')
         args, unknown = parser.parse_known_args(shlex.split(command_string))
-
         if args.help:
-            self.devlog('help detected, ignoring parsing')
             return command_string
         if args.json_report:
             # The user already defined a path to the JSON report
-            self.json_report_file = args.json_report
-            self.remove_report = False
+            self._output_file_path = args.json_report
             return command_string
         else:
-            # Use temporal file to save the report data
-            self.json_report_file = tempfile.mktemp(
-                prefix="dirsearch_report_", suffix=".json")
-            self.devlog('Setting report file to {}'.format(
-                self.json_report_file))
-            self.remove_report = True
-            return '{} --json-report {}'.format(command_string,
-                                                self.json_report_file)
+            super().processCommandString(username, current_path, command_string)
+            return '{} --json-report {}'.format(command_string, self._output_file_path)
 
 
 def createPlugin():
