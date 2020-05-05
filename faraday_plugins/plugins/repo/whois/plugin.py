@@ -4,10 +4,12 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
-import socket
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
+
 current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Facundo de Guzmán, Esteban Guillardoy"
@@ -69,18 +71,12 @@ class CmdWhoisPlugin(PluginBase):
 
         global current_path
 
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
 
     def parseOutputString(self, output, debug=False):
         matches = re.findall("Name Server:\s*(.*)\s*", output)
         for m in matches:
             m = m.strip()
-            ip = self.resolve(m)
+            ip = resolve_hostname(m)
             h_id = self.createAndAddHost(ip, "os unknown")
             i_id = self.createAndAddInterface(
                 h_id, ip, "00:00:00:00:00:00", ip, hostname_resolution=[m])

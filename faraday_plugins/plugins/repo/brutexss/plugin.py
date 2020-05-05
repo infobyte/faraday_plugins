@@ -4,14 +4,15 @@ Copyright (C) 2018  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-import socket
 from urllib.parse import urlparse
-from faraday_plugins.plugins.plugin import PluginBase
 
 __author__ = "Roberto Focke"
 __copyright__ = "Copyright (c) 2017, Infobyte LLC"
 __license__ = ""
 __version__ = "1.0.0"
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class brutexss (PluginBase):
@@ -45,7 +46,7 @@ class brutexss (PluginBase):
                     parametro.append(vuln_list[1])
                     found_vuln=len(parametro) > 0
                     host_id = self.createAndAddHost(url)
-                    address=socket.gethostbyname(url)
+                    address = resolve_hostname(url)
                     interface_id = self.createAndAddInterface(host_id, address, ipv4_address=address,
                                                               hostname_resolution=[url])
                     service_id = self.createAndAddServiceToInterface(host_id, interface_id, self.protocol, 'tcp',

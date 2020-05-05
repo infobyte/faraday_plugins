@@ -4,10 +4,10 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
-import socket
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -59,19 +59,13 @@ class TelnetRouterPlugin(PluginBase):
 
         global current_path
 
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
 
     def parseOutputString(self, output, debug=False):
 
         host_info = re.search(r"Connected to (.+)\.", output)
 
         hostname = host_info.group(1)
-        ip_address = self.resolve(hostname)
+        ip_address = resolve_hostname(hostname)
 
         if host_info is not None:
             h_id = self.createAndAddHost(ip_address)

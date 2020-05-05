@@ -4,8 +4,8 @@ Copyright (C) 2017  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 
-import socket
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 from lxml import objectify
 from urllib.parse import urlparse
 
@@ -57,7 +57,7 @@ class AppscanParser():
         hosts_list = []
         for host in self.obj_xml['scan-configuration']['scanned-hosts']['item']:
             hosts_dict = {}
-            hosts_dict['ip'] = socket.gethostbyname(host['host'].text)
+            hosts_dict['ip'] = resolve_hostname(host['host'].text)
             hosts_dict['hostname'] = host['host'].text
             hosts_dict['os'] = host['operating-system'].text
             hosts_dict['port'] = host['port'].text

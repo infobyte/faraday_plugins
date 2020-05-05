@@ -278,8 +278,6 @@ class ImpactPlugin(PluginXMLFormat):
                         ref=v.ref)
                 else:
                     s_id = mapped_services.get(v.service_name) or mapped_ports.get(v.port)
-                    print(v.service_name)
-                    print(s_id)
                     self.createAndAddVulnToService(
                         h_id,
                         s_id,

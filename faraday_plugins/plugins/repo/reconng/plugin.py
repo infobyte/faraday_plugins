@@ -5,14 +5,15 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import json
-import socket
 import logging
+
 try:
     from lxml import etree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = 'Leonardo Lazzaro'
 __copyright__ = 'Copyright (c) 2017, Infobyte LLC'
@@ -151,7 +152,7 @@ class ReconngPlugin(PluginXMLFormat):
             self.host_mapper[host['host']] = h_id
         for vuln in parser.vulns:
             if vuln['host'] not in list(self.host_mapper.keys()):
-                ip = self.resolve_host(vuln['host'])
+                ip = resolve_hostname(vuln['host'])
                 h_id = self.createAndAddHost(
                     ip,
                     hostnames=[vuln['host']]
@@ -170,12 +171,6 @@ class ReconngPlugin(PluginXMLFormat):
             )
 
 
-    def resolve_host(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except Exception:
-            pass
-        return host
 
 
 def createPlugin():

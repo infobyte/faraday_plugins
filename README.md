@@ -43,6 +43,13 @@ Optional params:
 python -m faraday_plugins process-command nmap "nmap 192.168.1.1" -t 60 -d
 ```
 
+> Custom Plugins
+
+You can load custom plugins from a specific path with the ```-cpf or --custom-plugins-folder``` parameter
+```shell script
+python -m faraday_plugins process custom_plugin /path/to/report.xml -cpf /path/to/custom_plugins/
+```
+
 > Plugin Logger
 
 To use it you must call ```self.logger.debug("some message")```

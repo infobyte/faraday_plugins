@@ -4,12 +4,11 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
-import socket
 
-
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -53,15 +52,8 @@ class MetagoofilParser:
 
         for line in self.servers:
             line = line.strip()
-            item = {'host': line, 'ip': self.resolve(line)}
+            item = {'host': line, 'ip': resolve_hostname(line)}
             self.items.append(item)
-
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
 
 
 class MetagoofilPlugin(PluginBase):

@@ -4,10 +4,11 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
-import socket
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -44,12 +45,6 @@ class CmdFtpPlugin(PluginBase):
 
         global current_path
 
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
 
     def parseOutputString(self, output, debug=False):
 
@@ -57,7 +52,7 @@ class CmdFtpPlugin(PluginBase):
         banner = re.search("220?([\w\W]+)$", output)
         if re.search("Connection timed out", output) is None and host_info is not None:
             hostname = host_info.group(1)
-            ip_address = self.resolve(hostname)
+            ip_address = resolve_hostname(hostname)
             self._version = banner.groups(0) if banner else ""
             if debug:
                 print(ip_address)

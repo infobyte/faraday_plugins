@@ -3,10 +3,11 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginBase
-import socket
 import re
 import os
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -42,17 +43,10 @@ class GoohostParser:
                 self.add_host_info_to_items(item['ip'], item['host'])
             elif goohost_scantype == 'host':
                 data = line.strip()
-                item = {'host': data, 'ip': self.resolve(data)}
+                item = {'host': data, 'ip': resolve_hostname(data)}
                 self.add_host_info_to_items(item['ip'], item['host'])
             else:
                 item = {'data': line}
-
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
 
     def add_host_info_to_items(self, ip_address, hostname):
         data = {}

@@ -7,11 +7,11 @@ See the file 'doc/LICENSE' for the license information
 import re
 import os
 import json
-import socket
 import random
 import tempfile
 
 from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -155,7 +155,7 @@ class SkipfishPlugin(PluginBase):
                     else:
                         port = 443 if protocol == "https" else 80
 
-                    ip = self.resolve(host)
+                    ip = resolve_hostname(host)
 
                     h_id = self.createAndAddHost(ip)
                     i_id = self.createAndAddInterface(
@@ -201,12 +201,6 @@ class SkipfishPlugin(PluginBase):
                     path=sample["url"],
                     severity=issue["severity"])
 
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except Exception:
-            pass
-        return host
 
     xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
 

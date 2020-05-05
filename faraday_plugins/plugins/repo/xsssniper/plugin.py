@@ -4,13 +4,14 @@ Copyright (C) 2017  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-import socket
-from faraday_plugins.plugins.plugin import PluginBase
 
 __author__ = "Roberto Focke"
 __copyright__ = "Copyright (c) 2017, Infobyte LLC"
 __license__ = ""
 __version__ = "1.0.0"
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class xsssniper(PluginBase):
@@ -36,7 +37,7 @@ class xsssniper(PluginBase):
             if ((linea.find("target:")>0)):
                 url = re.findall('(?:[-\w.]|(?:%[\da-fA-F]{2}))+', linea)
                 host_id = self.createAndAddHost(url[3])
-                address=socket.gethostbyname(url[3])
+                address = resolve_hostname(url[3])
                 interface_id = self.createAndAddInterface(host_id,address,ipv4_address=address,hostname_resolution=url[3])
             if ((linea.find("method")>0)):
                 list_a = re.findall("\w+", linea)

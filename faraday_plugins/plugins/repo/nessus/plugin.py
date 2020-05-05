@@ -167,10 +167,6 @@ class Report():
             host_tags.setdefault(t.attrib.get('name'), t.text)
         return host_tags
 
-    def getnote(self):
-        result = "El nombre es {}".format(self.report_name)
-        return result
-
 
 class NessusPlugin(PluginXMLFormat):
     """
@@ -189,11 +185,9 @@ class NessusPlugin(PluginXMLFormat):
         self.options = None
         self._current_output = None
         self._current_path = None
-        self._command_regex = re.compile(r'^(nessus |sudo nessus |\.\/nessus ).*?')
-        self.host = None
-        self.port = None
-        self.protocol = None
-        self.fail = None
+        self._command_regex = re.compile(
+            r'^(nessus|sudo nessus|\.\/nessus).*?')
+
 
     def canParseCommandString(self, current_input):
         if self._command_regex.match(current_input.strip()):
@@ -201,7 +195,7 @@ class NessusPlugin(PluginXMLFormat):
         else:
             return False
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.
@@ -212,7 +206,6 @@ class NessusPlugin(PluginXMLFormat):
         try:
             parser = NessusParser(output)
         except:
-            print("Error parser output")
             return None
 
         if parser.report.report_json is not None:
@@ -396,5 +389,3 @@ class NessusPlugin(PluginXMLFormat):
 
 def createPlugin():
     return NessusPlugin()
-
-# I'm Py3

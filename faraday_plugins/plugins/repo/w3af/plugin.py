@@ -4,13 +4,11 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-import socket
 from urllib.parse import urlparse
-
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
@@ -233,7 +231,7 @@ class W3afPlugin(PluginXMLFormat):
     def parseOutputString(self, output, debug=False):
 
         parser = W3afXmlParser(output)
-        ip = self.resolve(parser.host)
+        ip = resolve_hostname(parser.host)
         h_id = self.createAndAddHost(ip)
         i_id = self.createAndAddInterface(h_id, ip, ipv4_address=ip, hostname_resolution=[parser.host])
         s_id = self.createAndAddServiceToInterface(h_id, i_id, "http", "tcp", ports=[parser.port], status="open")
@@ -245,12 +243,6 @@ class W3afPlugin(PluginXMLFormat):
                                                      resolution=item.resolution, ref=item.ref, response=item.resp)
         del parser
 
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
 
     def setHost(self):
         pass

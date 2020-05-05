@@ -5,9 +5,9 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import os
-import socket
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 from urllib.parse import urlparse
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
@@ -127,7 +127,7 @@ class Site:
         self.node = item_node
 
         self.host = self.node.get('host')
-        self.ip = self.resolve(self.host)
+        self.ip = resolve_hostname(self.host)
         self.port = self.node.get('port')
 
         self.items = []
@@ -145,14 +145,6 @@ class Site:
             return sub_node.text
         return None
 
-    def resolve(self, host):
-
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-
-        return host
 
 
 class Item:

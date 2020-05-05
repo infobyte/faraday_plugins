@@ -13,6 +13,8 @@ import socket
 import re
 import os
 
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
+
 current_path = os.path.abspath(os.getcwd())
 
 
@@ -72,7 +74,7 @@ class AmapPlugin(PluginBase):
                 self.ip = self.get_ip_6(self.args.m)
                 args['ipv6_address'] = address
             else:
-                self.ip = self.getAddress(self.args.m)
+                self.ip = resolve_hostname(self.args.m)
                 args['ipv4_address'] = address
 
             if address != self.args.m:
@@ -121,15 +123,6 @@ class AmapPlugin(PluginBase):
             alladdr))
 
         return ip6[0][4][0]
-
-    def getAddress(self, hostname):
-        """
-        Returns remote IP address from hostname.
-        """
-        try:
-            return socket.gethostbyname(hostname)
-        except socket.error as msg:
-            return hostname
 
     def setHost(self):
         pass

@@ -6,13 +6,10 @@ See the file 'doc/LICENSE' for the license information
 import re
 import json
 import shlex
-import socket
 import argparse
-import tempfile
 import urllib.parse as urlparse
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import get_vulnweb_url_fields
-import os
+from faraday_plugins.plugins.plugins_utils import get_vulnweb_url_fields, resolve_hostname
 
 
 __author__ = "Matías Lang"
@@ -69,8 +66,6 @@ class DirsearchPlugin(PluginBase):
     def parseOutputString(self, output):
         self.parse_json(output)
 
-    def resolve(self, domain):
-        return socket.gethostbyname(domain)
 
     @property
     def should_ignore_403(self):
@@ -88,7 +83,7 @@ class DirsearchPlugin(PluginBase):
             return
         for (base_url, items) in data.items():
             base_split = urlparse.urlsplit(base_url)
-            ip = self.resolve(base_split.hostname)
+            ip = resolve_hostname(base_split.hostname)
             h_id = self.createAndAddHost(ip)
 
             i_id = self.createAndAddInterface(
