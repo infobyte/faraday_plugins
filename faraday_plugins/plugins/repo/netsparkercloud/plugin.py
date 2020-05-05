@@ -4,11 +4,11 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-import socket
 from urllib.parse import urlparse
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
@@ -195,19 +195,13 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
         self._command_regex = re.compile(
             r'^(sudo netsparkercloud|\.\/netsparkercloud).*?')
 
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
 
     def parseOutputString(self, output, debug=False):
         parser = NetsparkerCloudXmlParser(output)
         first = True
         for i in parser.items:
             if first:
-                ip = self.resolve(i.hostname)
+                ip = resolve_hostname(i.hostname)
                 h_id = self.createAndAddHost(ip)
                 i_id = self.createAndAddInterface(h_id, ip, ipv4_address=ip, hostname_resolution=[i.hostname])
                 s_id = self.createAndAddServiceToInterface(h_id, i_id, i.protocol, ports=[i.port], status="open")
