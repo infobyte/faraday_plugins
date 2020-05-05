@@ -6,10 +6,12 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import os
-import socket
+
 
 from urllib.parse import urlparse
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
+
 try:
     import xml.etree.cElementTree as ET
     import xml.etree.ElementTree as ET_ORIG
@@ -120,7 +122,7 @@ class Item:
         self.node = item_node
         self.url = self.get_url(item_node)
         if self.url.hostname is not None:
-            self.ip = socket.gethostbyname(self.url.hostname)
+            self.ip = resolve_hostname(self.url.hostname)
         else:
             self.ip = '0.0.0.0'
         self.hostname = self.url.hostname

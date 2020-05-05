@@ -1,17 +1,15 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-import socket
 import random
 import re
 from urllib.parse import urlparse
 import os
+
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
@@ -356,7 +354,7 @@ class ArachniPlugin(PluginXMLFormat):
             return
 
         self.hostname = self.getHostname(parser.system.url)
-        self.address = self.getAddress(parser.plugins.ip)
+        self.address = resolve_hostname(parser.plugins.ip)
 
 
         # Create host and interface
@@ -460,14 +458,6 @@ class ArachniPlugin(PluginXMLFormat):
                 self.port = 80
 
         return self.hostname
-
-    def getAddress(self, hostname):
-
-        # Returns remote IP address from hostname.
-        try:
-            return socket.gethostbyname(hostname)
-        except socket.error as msg:
-            return self.hostname
 
 
 def createPlugin():

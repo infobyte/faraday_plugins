@@ -6,9 +6,8 @@ See the file 'doc/LICENSE' for the license information
 import re
 import os
 import random
-import socket
 from faraday_plugins.plugins.plugin import PluginBase
-
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -60,19 +59,10 @@ class MedusaParser:
                 }
 
                 print("ITEM" + str(item))
-                item['ip'] = self.getAddress(item['host'])
+                item['ip'] = resolve_hostname(item['host'])
                 item['port'] = self.srv[item['service']]
                 print("ITEM" + str(item))
                 self.items.append(item)
-
-    def getAddress(self, hostname):
-        """
-        Returns remote IP address from hostname.
-        """
-        try:
-            return socket.gethostbyname(hostname)
-        except socket.error as msg:
-            return hostname
 
 
 class MedusaPlugin(PluginBase):
