@@ -118,26 +118,14 @@ class WcscanPlugin(PluginBase):
                 h_id, i_id, "http", protocol="tcp", ports=port)
             for vuln in parser.result[file]:
                 if parser.scaninfo[file]['type'] == "phpini":
-                    v_id = self.createAndAddVulnToService(h_id, s_id,
-                                                          parser.scaninfo[file][
-                                                              'file'] + ":" + vuln,
-                                                          desc="{} : {}\n{}".format(vuln,
-                                                                                    str(parser.result[
-                                                                                            file][vuln][0]),
-                                                                                    str(parser.result[file][vuln][1])),
-                                                          severity=0)
+                    vuln_name = f"{parser.scaninfo[file]['file']}: {vuln}"
+                    vuln_description = f"{vuln}: {str(parser.result[file][vuln][0])}\n{str(parser.result[file][vuln][1])}"
+                    v_id = self.createAndAddVulnToService(h_id, s_id, vuln_name, desc=vuln_description, severity=0)
 
                 if parser.scaninfo[file]['type'] == "webconfig":
-                    v_id = self.createAndAddVulnToService(h_id, s_id,
-                                                          parser.scaninfo[file][
-                                                              'file'] + ":" + str(parser.result[file][vuln][3]),
-                                                          desc="{} : {} = {}\n{}".format(str(parser.result[file][vuln][3]),
-                                                                                         str(parser.result[
-                                                                                                 file][vuln][2]),
-                                                                                         str(parser.result[
-                                                                                                 file][vuln][0]),
-                                                                                         str(parser.result[file][vuln][1])),
-                                                          severity=0)
+                    vuln_name = f"{parser.scaninfo[file]['file']}: {str(parser.result[file][vuln][3])}"
+                    vuln_description = f"{str(parser.result[file][vuln][3])} : {str(parser.result[file][vuln][2])} = {str(parser.result[file][vuln][0])}\n{str(parser.result[file][vuln][1])}"
+                    v_id = self.createAndAddVulnToService(h_id, s_id, vuln_name, desc=vuln_description, severity=0)
 
 
 
