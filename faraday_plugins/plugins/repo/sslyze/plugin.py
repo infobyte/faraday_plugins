@@ -1,6 +1,4 @@
 import re
-import os
-import random
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 try:

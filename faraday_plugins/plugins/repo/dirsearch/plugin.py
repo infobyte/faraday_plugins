@@ -130,11 +130,11 @@ class DirsearchPlugin(PluginBase):
         parser.add_argument('--json-report')
         args, unknown = parser.parse_known_args(shlex.split(command_string))
         if args.help:
-            return command_string
+            return None
         if args.json_report:
             # The user already defined a path to the JSON report
             self._output_file_path = args.json_report
-            return command_string
+            return None
         else:
             super().processCommandString(username, current_path, command_string)
             return '{} --json-report {}'.format(command_string, self._output_file_path)

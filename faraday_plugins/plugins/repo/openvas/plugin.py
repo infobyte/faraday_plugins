@@ -5,9 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
-import os
 from collections import defaultdict
-
 from copy import copy
 
 try:
@@ -23,7 +21,6 @@ from faraday_plugins.plugins.plugins_utils import filter_services
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -332,10 +329,6 @@ class OpenvasPlugin(PluginXMLFormat):
         self.version = "9.0.3"
         self.framework_version = "1.0.0"
         self.options = None
-        self._current_output = None
-        self.target = None
-        self._command_regex = re.compile(
-            r'^(openvas |sudo openvas |\.\/openvas ).*?')
 
     def report_belongs_to(self, **kwargs):
         if super().report_belongs_to(**kwargs):

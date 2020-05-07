@@ -5,11 +5,8 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginBase
 import re
-import os
-import random
 from collections import defaultdict
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -102,9 +99,10 @@ class DnsmapPlugin(PluginBase):
         self.version = "0.30"
         self.options = None
         self._current_output = None
-        self.current_path = None
         self._command_regex = re.compile(r'^(sudo dnsmap |dnsmap |\.\/dnsmap ).*?')
         self.xml_arg_re = re.compile(r"^.*(-r\s*[^\s]+).*$")
+        self._use_temp_file = True
+        self._temp_file_extension = "txt"
 
 
     def canParseCommandString(self, current_input):

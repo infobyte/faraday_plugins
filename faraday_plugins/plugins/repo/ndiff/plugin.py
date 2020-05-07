@@ -115,24 +115,18 @@ class CmdNdiffPlugin(PluginBase):
         self.name = "ndiff"
         self.plugin_version = "0.0.1"
         self.version = "1.0.0"
-        self._command_regex = re.compile(r'^(sudo ndiff |ndiff ).*?')
+        self._command_regex = re.compile(r'^(sudo ndiff|ndiff)\s+.*?')
 
     def parseOutputString(self, output, debug=False):
-
         parser = NdiffXmlParser(output)
-
         for host in parser.hostDiff:
-
             if host.ip is None:
                 continue
-
             if host.isNewHost:
                 hostId = self.createAndAddHost(host.ip, '')
-
                 description = '%s is a NEW host active.\n' % host.ip
                 for port in host.ports:
                     description += 'Port: %s/%s\n' % (port[0], port[1])
-
                 self.createAndAddVulnToHost(
                     hostId,
                     'New host active',
@@ -141,12 +135,9 @@ class CmdNdiffPlugin(PluginBase):
                     'INFO'
                 )
             else:
-
                 if host.ports == []:
                     continue
-
                 hostId = self.createAndAddHost(host.ip, '')
-
                 description = 'New service/s found.\n'
                 for port in host.ports:
                     description += 'Port: %s/%s\n' % (port[0], port[1])
@@ -162,7 +153,7 @@ class CmdNdiffPlugin(PluginBase):
     def processCommandString(self, username, current_path, command_string):
         super().processCommandString(username, current_path, command_string)
         if command_string.find('--xml') < 0:
-            return command_string + '--xml'
+            return f"{command_string} --xml "
 
 
 def createPlugin():

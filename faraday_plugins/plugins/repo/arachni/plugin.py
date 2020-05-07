@@ -40,7 +40,6 @@ class ArachniXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print('SyntaxError In xml: %s. %s' % (err, xml_output))
             return None
         return tree
 
@@ -153,8 +152,7 @@ class Issue():
         # Get data about response.
         try:
 
-            raw_data = self.node.find('page').find(
-                'response').find('raw_headers')
+            raw_data = self.node.find('page').find('response').find('raw_headers')
             data = raw_data.text
             return data
 
@@ -341,7 +339,7 @@ class ArachniPlugin(PluginXMLFormat):
             return re.search("/Arachni/arachni/", output) is not None
         return False
 
-    def _parse_filename(self, filename, delete_after=False):
+    def _parse_filename(self, filename):
         """
         This plugin gets a dict of files, not just one file if it runs the command.
         We just need the xml.
@@ -350,18 +348,17 @@ class ArachniPlugin(PluginXMLFormat):
             filename = filename['xml']
         with open(filename, **self.open_options) as output:
             self.parseOutputString(output.read())
-        if delete_after:
-            if isinstance(filename, dict):
-                for _file in filename.values():
-                    try:
-                        os.remove(_file)
-                    except Exception as e:
-                        self.logger.error("Error on delete file: (%s) [%s]", _file, e)
-            else:
+        if isinstance(filename, dict):
+            for _file in filename.values():
                 try:
-                    os.remove(filename)
+                    os.remove(_file)
                 except Exception as e:
-                    self.logger.error("Error on delete file: (%s) [%s]", filename, e)
+                    self.logger.error("Error on delete file: (%s) [%s]", _file, e)
+        else:
+            try:
+                os.remove(filename)
+            except Exception as e:
+                self.logger.error("Error on delete file: (%s) [%s]", filename, e)
 
     def parseOutputString(self, output, debug=False):
         """
@@ -372,7 +369,6 @@ class ArachniPlugin(PluginXMLFormat):
 
         # Check xml parsed ok...
         if not parser.system:
-            print('Error in xml report... Exiting...')
             return
 
         self.hostname = self.getHostname(parser.system.url)
@@ -443,7 +439,6 @@ class ArachniPlugin(PluginXMLFormat):
         self._output_file_path = {}
         for ext in self._temp_file_extension:
             self._output_file_path[ext] = self._get_temp_file(extension=ext)
-
         afr_file_path = self._output_file_path['afr']
         xml_file_path = self._output_file_path['xml']
         report_arg_re = r"^.*(--report-save-path[=\s][^\s]+).*$"

@@ -4,12 +4,9 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-import os
-import random
 from faraday_plugins.plugins.plugin import PluginBase
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright 2013, Faraday Project"
@@ -43,12 +40,7 @@ class MedusaParser:
         
         for l in lines:
 
-            reg = re.search(
-                "ACCOUNT FOUND: \[([^$]+)\] Host: ([^$]+) User: ([^$]+) Password: ([^$]+) \[SUCCESS\]",
-                l)
-            
-            print("REG" + str(reg))
-
+            reg = re.search("ACCOUNT FOUND: \[([^$]+)\] Host: ([^$]+) User: ([^$]+) Password: ([^$]+) \[SUCCESS\]", l)
             if reg:
         
                 item = {
@@ -57,11 +49,8 @@ class MedusaParser:
                     'user': reg.group(3),
                     'pass': reg.group(4)
                 }
-
-                print("ITEM" + str(item))
                 item['ip'] = resolve_hostname(item['host'])
                 item['port'] = self.srv[item['service']]
-                print("ITEM" + str(item))
                 self.items.append(item)
 
 
@@ -77,15 +66,14 @@ class MedusaPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "2.1.1"
         self.options = None
-        self._current_output = None
-        self._current_path = None
-        self._command_regex = re.compile(r'^(sudo medusa |sudo \.\/medusa |medusa |\.\/medusa ).*?')
+        self._command_regex = re.compile(r'^(sudo medusa|sudo \.\/medusa|medusa|\.\/medusa)\s+.*?')
         self.host = None
         self.port = ""
         self._use_temp_file = True
         self._temp_file_extension = "txt"
+        self.xml_arg_re = re.compile(r"^.*(-O\s*[^\s]+).*$")
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.
@@ -103,13 +91,13 @@ class MedusaPlugin(PluginBase):
                     h_id,
                     item['ip'],
                     ipv4_address=item['ip'],
-                    hostname_resolution=item['host'])
+                    hostname_resolution=[item['host']])
             else:
                 i_id = self.createAndAddInterface(
                     h_id,
                     item['ip'],
                     ipv6_address=item['ip'],
-                    hostname_resolution=item['host'])
+                    hostname_resolution=[item['host']])
 
             port = self.port if self.port else item['port']
 
@@ -135,8 +123,6 @@ class MedusaPlugin(PluginBase):
 
         del parser
 
-    xml_arg_re = re.compile(r"^.*(-O\s*[^\s]+).*$")
-
     def processCommandString(self, username, current_path, command_string):
         super().processCommandString(username, current_path, command_string)
         self.port = ""
@@ -147,14 +133,9 @@ class MedusaPlugin(PluginBase):
             self.port = mreg.group(2)
 
         if arg_match is None:
-            return re.sub(
-                r"(^.*?medusa?)", r"\1 -O %s" % self._output_file_path,
-                command_string)
+            return re.sub(r"(^.*?medusa?)", r"\1 -O %s" % self._output_file_path, command_string)
         else:
-            return re.sub(
-                arg_match.group(1),
-                r"-O %s" % self._output_file_path,
-                command_string)
+            return re.sub(arg_match.group(1), r"-O %s" % self._output_file_path, command_string)
 
     def _isIPV4(self, ip):
         if len(ip.split(".")) == 4:

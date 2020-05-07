@@ -1,3 +1,4 @@
+import io
 import logging
 import os
 import sys
@@ -31,7 +32,7 @@ def cli():
 @click.option('-cpf', '--custom-plugins-folder', type=str)
 def list(custom_plugins_folder):
     plugins_manager = PluginsManager(custom_plugins_folder)
-    click.echo("Available Plugins:")
+    click.echo(click.style("Available Plugins:", fg="cyan"))
     loaded_plugins = 0
     for plugin_id, plugin in plugins_manager.get_plugins():
         console_enabled = plugin._command_regex is not None
@@ -43,7 +44,7 @@ def list(custom_plugins_folder):
         click.echo(f"{plugin.id:15}  - [Console: {console_enabled_text:>15} - Report: {report_enabled_text:>15}] - {plugin.name} ")
 
         loaded_plugins += 1
-    click.echo(f"Loaded Plugins: {loaded_plugins}")
+    click.echo(click.style(f"Loaded Plugins: {loaded_plugins}", fg="cyan"))
 
 
 @cli.command()
@@ -52,12 +53,13 @@ def list(custom_plugins_folder):
 @click.option('-cpf', '--custom-plugins-folder', type=str)
 def process_report(plugin_id, report_file, custom_plugins_folder):
     if not os.path.isfile(report_file):
-        click.echo(f"File {report_file} Don't Exists")
+        click.echo(click.style(f"File {report_file} Don't Exists", fg="red"))
     else:
         plugins_manager = PluginsManager(custom_plugins_folder)
         plugin = plugins_manager.get_plugin(plugin_id)
         if plugin:
-            plugin.processReport(report_file)
+            plugin.processReport(report_file, getpass.getuser())
+            click.echo(click.style(f"\nFaraday API json: ", fg="cyan"))
             click.echo(json.dumps(plugin.get_data(), indent=4))
         else:
             click.echo(f"Unknown Plugin: {plugin_id}")
@@ -72,20 +74,35 @@ def process_command(plugin_id, command, custom_plugins_folder, dont_run):
     plugins_manager = PluginsManager(custom_plugins_folder)
     plugin = plugins_manager.get_plugin(plugin_id)
     if plugin:
-        modified_command = plugin.processCommandString(getpass.getuser(), "", command)
+        current_path = os.path.abspath(os.getcwd())
+        modified_command = plugin.processCommandString(getpass.getuser(), current_path, command)
         if modified_command:
             command = modified_command
         if not dont_run:
-            click.echo(click.style(f"Running command: {command}", fg="green"))
-            command_result = subprocess.run(shlex.split(command), capture_output=True)
-            if command_result.returncode == 0:
-                plugin.processOutput(command_result.stdout.decode('utf-8'))
+            color_message = click.style(f"Running command: ", fg="green")
+            click.echo(f"{color_message} {command}\n")
+            p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output = io.StringIO()
+            while True:
+                retcode = p.poll()
+                line = p.stdout.readline().decode('utf-8')
+                sys.stdout.write(line)
+                output.write(line)
+                if retcode is not None:
+                    extra_lines = map(lambda x: x.decode('utf-8'), p.stdout.readlines())
+                    sys.stdout.writelines(line)
+                    output.writelines(extra_lines)
+                    break
+            output_value = output.getvalue()
+            if retcode == 0:
+                plugin.processOutput(output_value)
+                click.echo(click.style(f"\nFaraday API json: ", fg="cyan"))
                 click.echo(json.dumps(plugin.get_data(), indent=4))
             else:
-                click.echo(click.style("Command execution error:", fg="red"))
-                click.echo(command_result.stderr)
+                click.echo(click.style("Command execution error!!", fg="red"))
         else:
-            click.echo(click.style(f"Command: {command}", fg="green"))
+            color_message = click.style(f"Command: ", fg="green")
+            click.echo(f"{color_message} {command}")
     else:
         click.echo(f"Unknown Plugin: {plugin_id}")
 
@@ -95,15 +112,15 @@ def process_command(plugin_id, command, custom_plugins_folder, dont_run):
 @click.option('-cpf', '--custom-plugins-folder', type=str)
 def detect_report(report_file, custom_plugins_folder):
     if not os.path.isfile(report_file):
-        click.echo(f"File {report_file} Don't Exists")
+        click.echo(click.style(f"File {report_file} Don't Exists", fg="red"))
     else:
         plugins_manager = PluginsManager(custom_plugins_folder)
         analyzer = ReportAnalyzer(plugins_manager)
         plugin = analyzer.get_plugin(report_file)
         if plugin:
-            click.echo(plugin)
+            click.echo(click.style(f"Faraday Plugin: {plugin.id}", fg="cyan"))
         else:
-            click.echo(f"Failed to detect")
+            click.echo(click.style(f"Failed to detect report: {report_file}", fg="red"))
 
 
 @cli.command()
@@ -114,9 +131,9 @@ def detect_command(command, custom_plugins_folder):
     analyzer = CommandAnalyzer(plugins_manager)
     plugin = analyzer.get_plugin(command)
     if plugin:
-        click.echo(plugin)
+        click.echo(click.style(f"Faraday Plugin: {plugin.id}", fg="cyan"))
     else:
-        click.echo(f"Failed to detect")
+        click.echo(click.style(f"Failed to detect command: {command}", fg="red"))
 
 
 @cli.command()

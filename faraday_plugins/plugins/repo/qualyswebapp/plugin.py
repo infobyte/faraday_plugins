@@ -108,7 +108,6 @@ class QualysWebappPlugin(PluginXMLFormat):
         self.version = '1.0.0'
         self.framework_version = '1.0.0'
         self.options = None
-        self._command_regex = re.compile(r'^(qualyswebapp |\.\/qualyswebapp ).*?')
         self.protocol = None
         self.port = '80'
         self.address = None
@@ -119,7 +118,6 @@ class QualysWebappPlugin(PluginXMLFormat):
         parser = QualysWebappParser(output)
 
         if not parser.info_appendix:
-            print('Error in xml report... Exiting...')
             return
 
         self.scan_list_result = []

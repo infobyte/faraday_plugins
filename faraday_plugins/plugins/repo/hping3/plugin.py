@@ -37,7 +37,7 @@ class hping3(PluginBase):
             ip_address = regex_ipv4.group(0).rstrip("):") # Regex pls
         else:
             # Exit plugin, ip address not found. bad output
-            self.log("Abort plugin: Ip address not found", "INFO")
+            self.logger.warning("Abort plugin: Ip address not found", "INFO")
             return
 
         hostname = output.split(" ")[1]

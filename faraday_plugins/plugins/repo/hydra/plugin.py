@@ -5,10 +5,7 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginBase
 import re
-import os
-import random
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -64,6 +61,7 @@ class HydraPlugin(PluginBase):
         self.host = None
         self._use_temp_file = True
         self._temp_file_extension = "txt"
+        self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
 
 
     def parseOutputString(self, output, debug=False):
@@ -133,7 +131,7 @@ class HydraPlugin(PluginBase):
 
         del parser
 
-    xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
+
 
     def processCommandString(self, username, current_path, command_string):
         super().processCommandString(username, current_path, command_string)

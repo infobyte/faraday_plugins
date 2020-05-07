@@ -6,11 +6,8 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginBase
 import re
-import os
 
 
-
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -86,7 +83,7 @@ class TheharvesterPlugin(PluginBase):
         self._current_output = None
         self._current_path = None
         self._command_regex = re.compile(
-            r'^(theharvester |sudo theharvester |sudo theHarvester\.py |theHarvester\.py |python theHarvester\.py |\.\/theHarvester\.py ).*?')
+            r'^(sudo theHarvester\.py|theHarvester\.py|python theHarvester\.py|\.\/theHarvester\.py)\s+.*?')
         self._completition = {
             "": "Examples:./theharvester.py -d microsoft.com -l 500 -b google",
             "-d": "Domain to search or company name",
@@ -102,7 +99,6 @@ class TheharvesterPlugin(PluginBase):
             "-h": "use SHODAN database to query discovered hosts. google 100 to 100, and pgp doesn't use this option)",
         }
 
-        global current_path
 
     def parseOutputString(self, output, debug=False):
         """

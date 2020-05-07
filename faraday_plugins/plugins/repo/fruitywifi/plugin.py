@@ -79,7 +79,7 @@ class FruityWiFiPlugin(PluginBase):
     
     def parseOutputString(self, output, debug=False):
         
-        try:            
+        try:
             output = json.loads(output)
             
             if len(output) > 0:
@@ -128,7 +128,7 @@ class FruityWiFiPlugin(PluginBase):
         else:
             return False
 
-    def processCommandString(self, username, current_path, command_string, debug=False):
+    def processCommandString(self, username, current_path, command_string):
         """
         """        
         super().processCommandString(username, current_path, command_string)

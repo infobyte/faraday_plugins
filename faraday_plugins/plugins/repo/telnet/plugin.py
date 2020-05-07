@@ -5,11 +5,8 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
-import os
 from faraday_plugins.plugins.plugin import PluginBase
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Facundo de Guzmán, Esteban Guillardoy"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -57,7 +54,6 @@ class TelnetRouterPlugin(PluginBase):
             "-n": "-n &lt;tracefile&gt; Opens tracefile for recording trace information.  See the set tracefile command below.",
         }
 
-        global current_path
 
 
     def parseOutputString(self, output, debug=False):

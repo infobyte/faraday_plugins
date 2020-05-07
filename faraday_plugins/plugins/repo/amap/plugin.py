@@ -15,7 +15,6 @@ import os
 
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-current_path = os.path.abspath(os.getcwd())
 
 
 class AmapPlugin(PluginBase):
@@ -29,7 +28,7 @@ class AmapPlugin(PluginBase):
         self.version = "5.4"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(amap |sudo amap ).*?')
+        self._command_regex = re.compile(r'^(amap|sudo amap)\s+.*?')
         self._use_temp_file = True
         self._hosts = []
 

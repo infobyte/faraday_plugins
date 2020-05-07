@@ -10,7 +10,6 @@ import os
 from faraday_plugins.plugins.plugin import PluginBase
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -78,11 +77,9 @@ class DnswalkPlugin(PluginBase):
         self.version = "2.0.2"
         self.options = None
         self._current_output = None
-        self._current_path = None
         self._command_regex = re.compile(
             r'^(sudo dnswalk |dnswalk |\.\/dnswalk ).*?')
 
-        global current_path
 
     def canParseCommandString(self, current_input):
         if self._command_regex.match(current_input.strip()):

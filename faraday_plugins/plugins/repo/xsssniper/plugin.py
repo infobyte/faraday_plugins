@@ -22,7 +22,7 @@ class xsssniper(PluginBase):
         self.name = "xsssniper"
         self.plugin_version = "0.0.1"
         self.version = "1.0.0"
-        self.protocol="tcp"
+        self.protocol = "tcp"
         self._command_regex = re.compile(r'^(sudo xsssniper |xsssniper |sudo xsssniper\.py |xsssniper\.py |sudo python '
                                          r'xsssniper\.py |.\/xsssniper\.py |python xsssniper\.py )')
 
@@ -36,6 +36,7 @@ class xsssniper(PluginBase):
             linea = linea.lower()
             if ((linea.find("target:")>0)):
                 url = re.findall('(?:[-\w.]|(?:%[\da-fA-F]{2}))+', linea)
+                print(url)
                 host_id = self.createAndAddHost(url[3])
                 address = resolve_hostname(url[3])
                 interface_id = self.createAndAddInterface(host_id,address,ipv4_address=address,hostname_resolution=url[3])

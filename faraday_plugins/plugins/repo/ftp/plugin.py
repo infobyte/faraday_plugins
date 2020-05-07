@@ -10,7 +10,6 @@ import os
 from faraday_plugins.plugins.plugin import PluginBase
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Javier Victor Mariano Bruno"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -43,7 +42,6 @@ class CmdFtpPlugin(PluginBase):
         self._info = 0
         self._version = None
 
-        global current_path
 
 
     def parseOutputString(self, output, debug=False):

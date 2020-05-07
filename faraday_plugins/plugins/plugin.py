@@ -43,6 +43,7 @@ class PluginBase:
         self._use_temp_file = False
         self._delete_temp_file = False
         self._temp_file_extension = "tmp"
+        self._current_path = None
         self.framework_version = None
         self._completition = {}
         self._new_elems = []
@@ -64,10 +65,8 @@ class PluginBase:
                                                     "duration": 0,
                                                     "import_source": "report"}}
 
-
     def __str__(self):
         return f"Plugin: {self.id}"
-
 
     def _get_temp_file(self, extension="tmp"):
         temp_dir = tempfile.gettempdir()
@@ -189,7 +188,6 @@ class PluginBase:
         cache_id = cls._get_dict_hash(vuln_copy, ['host_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
         return cache_id
 
-
     def save_cache(self, obj):
         obj_uuid = uuid.uuid1()
         self._cache[obj_uuid] = obj
@@ -250,12 +248,14 @@ class PluginBase:
         With this method a plugin can add additional arguments to the
         command that it's going to be executed.
         """
+        self._current_path = current_path
         if command_string.startswith("sudo"):
             params = " ".join(command_string.split()[2:])
         else:
             params = " ".join(command_string.split()[1:])
         self.vulns_data["command"]["params"] = params
         self.vulns_data["command"]["user"] = username
+        self.vulns_data["command"]["import_source"] = "shell"
         if self._use_temp_file:
             self._delete_temp_file = True
             self._output_file_path = self._get_temp_file(extension=self._temp_file_extension)
@@ -274,12 +274,11 @@ class PluginBase:
                 options[k] = v
         return options
 
-    def processOutput(self, term_output):
-        output = term_output
+    def processOutput(self, command_output):
         if self.has_custom_output():
             self._parse_filename(self.get_custom_file_path())
         else:
-            self.parseOutputString(output)
+            self.parseOutputString(command_output)
 
     def _parse_filename(self, filename):
         with open(filename, **self.open_options) as output:
@@ -293,12 +292,12 @@ class PluginBase:
             except Exception as e:
                 self.logger.error("Error on delete file: (%s) [%s]", filename, e)
 
-
     def processReport(self, filepath, user="faraday"):
         if os.path.isfile(filepath):
-            self._parse_filename(filepath)
             self.vulns_data["command"]["params"] = filepath
             self.vulns_data["command"]["user"] = user
+            self.vulns_data["command"]["import_source"] = "report"
+            self._parse_filename(filepath)
         else:
             raise FileNotFoundError(filepath)
 

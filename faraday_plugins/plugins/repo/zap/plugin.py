@@ -4,7 +4,6 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-import os
 from urllib.parse import urlparse
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
@@ -18,7 +17,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -238,9 +236,7 @@ class ZapPlugin(PluginXMLFormat):
         self.version = "2.4.3"
         self.framework_version = "1.0.0"
         self.options = None
-        self._current_output = None
-        self.target = None
-        self._command_regex = re.compile(r'^(zap |sudo zap |\.\/zap ).*?')
+
 
     def parseOutputString(self, output, debug=False):
         """

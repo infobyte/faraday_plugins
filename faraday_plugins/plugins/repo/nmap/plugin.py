@@ -8,8 +8,6 @@ See the file 'doc/LICENSE' for the license information
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-import sys
-import random
 
 
 try:
@@ -431,7 +429,7 @@ class NmapPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(sudo nmap |nmap |\.\/nmap ).*?')
+        self._command_regex = re.compile(r'^(sudo nmap|nmap|\.\/nmap)\s+.*?')
         self._use_temp_file = True
         self._temp_file_extension = "xml"
         self.xml_arg_re = re.compile(r"^.*(-oX\s*[^\s]+).*$")
@@ -537,7 +535,6 @@ class NmapPlugin(PluginXMLFormat):
                             severity=severity,
                             external_id=v.name)
         del parser
-        return True
 
     def processCommandString(self, username, current_path, command_string):
         """

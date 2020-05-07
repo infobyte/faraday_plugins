@@ -159,7 +159,6 @@ class WebInspectPlugin(PluginXMLFormat):
                 severity=parser.parse_severity(vuln.get("Vuln").get("severity"))
             )
 
-        return True
 
 
 

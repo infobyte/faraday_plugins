@@ -88,12 +88,12 @@ class CheckmarxPlugin(PluginXMLFormat):
         self.version = '1.0.0'
         self.framework_version = '1.0.0'
         self.options = None
-        self._command_regex = re.compile(r'^(checkmarx |\.\/checkmarx ).*?')
+
 
     def parseOutputString(self, output):
         parser = CheckmarxXmlParser(output)
         if not parser.query:
-            print('Error in xml report... Exiting...')
+            self.logger.warning('Error in xml report... Exiting...')
             return
 
         url = urlparse(parser.cx_xml_results_attribs['DeepLink'])

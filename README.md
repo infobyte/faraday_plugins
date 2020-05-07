@@ -9,45 +9,82 @@ pip install faraday-plugins
 > List Plugins
 
 ```shell script
-python -m faraday_plugins list
+faraday-plugins list
+```
+
+> Test autodetect plugin from command
+
+```shell script
+faraday-plugins detect-command "ping -c 4 www.google.com"
+> Faraday Plugin: ping
+```
+
+> Test command with plugin
+
+Optional params:
+
+- -dr: Dont run, just show the generated command
+```shell script
+faraday-plugins process-command ping "ping -c4 www.google.com"
+Running command:  ping -c4 www.google.com
+
+PING www.google.com (216.58.222.36): 56 data bytes
+64 bytes from 216.58.222.36: icmp_seq=0 ttl=54 time=11.144 ms
+64 bytes from 216.58.222.36: icmp_seq=1 ttl=54 time=14.330 ms
+64 bytes from 216.58.222.36: icmp_seq=2 ttl=54 time=11.997 ms
+64 bytes from 216.58.222.36: icmp_seq=3 ttl=54 time=11.190 ms
+
+--- www.google.com ping statistics ---
+4 packets transmitted, 4 packets received, 0.0% packet loss
+round-trip min/avg/max/stddev = 11.144/12.165/14.330/1.295 ms
+
+Faraday API json:
+{
+    "hosts": [
+        {
+            "ip": "216.58.222.36",
+            "os": "unknown",
+            "hostnames": [
+                "www.google.com"
+            ],
+            "description": "",
+            "mac": "00:00:00:00:00:00",
+            "credentials": [],
+            "services": [],
+            "vulnerabilities": []
+        }
+    ],
+    "command": {
+        "tool": "ping",
+        "command": "ping",
+        "params": "-c4 www.google.com",
+        "user": "aenima",
+        "hostname": "",
+        "start_date": "2020-05-05T23:09:39.656132",
+        "duration": 56789,
+        "import_source": "report"
+    }
+}
 ```
 
 > Test autodetect plugin from report
 
 ```shell script
-python -m faraday_plugins detect-report /path/to/report.xml
+faraday-plugins detect-report /path/to/report.xml
 ```
 
 
 > Test report with plugin
 
 ```shell script
-python -m faraday_plugins process-report appscan /path/to/report.xml
-```
-
-> Test autodetect plugin from command
-
-```shell script
-python -m faraday_plugins detect-command "ping -c 4 www.google.com"
-```
-
-
-> Test command with plugin
-
-Optional params:
-
-- -t: Timeout to wait to command to finish
-- -d: If the command uses a temp file, delete it after
-- -dr: Dont run, just show the generated command
-```shell script
-python -m faraday_plugins process-command nmap "nmap 192.168.1.1" -t 60 -d
+faraday-plugins process-report appscan /path/to/report.xml
 ```
 
 > Custom Plugins
 
 You can load custom plugins from a specific path with the ```-cpf or --custom-plugins-folder``` parameter
 ```shell script
-python -m faraday_plugins process custom_plugin /path/to/report.xml -cpf /path/to/custom_plugins/
+faraday-plugins process-report custom_plugin /path/to/report.xml -cpf /path/to/custom_plugins/
 ```
 
 > Plugin Logger
@@ -56,7 +93,7 @@ To use it you must call ```self.logger.debug("some message")```
 
 ```shell script
 export PLUGIN_DEBUG=1
-python -m faraday_plugins proces-report appscan /path/to/report.xml
+faraday-plugins proces-report appscan /path/to/report.xml
 2019-11-15 20:37:03,355 - faraday.faraday_plugins.plugins.manager - INFO [manager.py:113 - _load_plugins()]  Loading Native Plugins...
 2019-11-15 20:37:03,465 - faraday.faraday_plugins.plugins.manager - DEBUG [manager.py:123 - _load_plugins()]  Load Plugin [acunetix]
 2019-11-15 20:37:03,495 - faraday.faraday_plugins.plugins.manager - DEBUG [manager.py:123 - _load_plugins()]  Load Plugin [amap]
