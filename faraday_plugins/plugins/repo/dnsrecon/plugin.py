@@ -169,7 +169,7 @@ class DnsreconPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._command_regex = re.compile(
-            r'^(sudo dnsrecon |dnsrecon |sudo dnsrecon\.py |dnsrecon\.py |python dnsrecon\.py |\.\/dnsrecon\.py ).*?')
+            r'^(sudo dnsrecon|dnsrecon|sudo dnsrecon\.py|dnsrecon\.py|python dnsrecon\.py|\.\/dnsrecon\.py)\s+.*?')
         self._use_temp_file = True
         self._temp_file_extension = "xml"
 

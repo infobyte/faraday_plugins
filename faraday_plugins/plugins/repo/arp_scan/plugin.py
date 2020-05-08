@@ -31,7 +31,7 @@ class CmdArpScanPlugin(PluginBase):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(sudo arp-scan |\.\/arp-scan |arp-scan ).*?')
+        self._command_regex = re.compile(r'^(sudo arp-scan|\.\/arp-scan|arp-scan)\s+.*?')
         self._host_ip = None
 
     def parseOutputString(self, output):

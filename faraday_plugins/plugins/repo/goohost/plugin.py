@@ -72,7 +72,7 @@ class GoohostPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "v.0.0.1"
         self.options = None
-        self._command_regex = re.compile(r'^(sudo goohost\.sh |goohost\.sh |sh goohost\.sh |\.\/goohost\.sh ).*?')
+        self._command_regex = re.compile(r'^(sudo goohost\.sh|goohost\.sh|sh goohost\.sh|\.\/goohost\.sh)\s+.*?')
         self.host = None
         self._command_string = None
 

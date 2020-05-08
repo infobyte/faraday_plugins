@@ -165,7 +165,7 @@ class X1Plugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(sudo x1 |\.\/x1 ).*?')
+        self._command_regex = re.compile(r'^(sudo x1|\.\/x1)\s+.*?')
 
 
 

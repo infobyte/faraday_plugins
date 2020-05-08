@@ -28,7 +28,7 @@ class pasteAnalyzerPlugin(PluginBase):
         self.plugin_version = "1.0.0"
         self.command_string = ""
         self._command_regex = re.compile(
-            r'^(pasteAnalyzer |python pasteAnalyzer.py |\./pasteAnalyzer.py |sudo python pasteAnalyzer.py |sudo \./pasteAnalyzer.py ).*?')
+            r'^(pasteAnalyzer|python pasteAnalyzer.py|\./pasteAnalyzer.py|sudo python pasteAnalyzer.py|sudo \./pasteAnalyzer.py)\s+.*?')
 
     def parseOutputString(self, output):
         # Generating file name with full path.

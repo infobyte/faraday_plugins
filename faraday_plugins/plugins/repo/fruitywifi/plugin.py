@@ -35,7 +35,7 @@ class FruityWiFiPlugin(PluginBase):
         self._current_output = None
         self.target = None
         
-        self._command_regex = re.compile(r'^(fruitywifi ).*?')
+        self._command_regex = re.compile(r'^(fruitywifi)\s+.*?')
         
         self.addSetting("Token", str, "e5dab9a69988dd65e578041416773149ea57a054")
         self.addSetting("Server", str, "http://127.0.0.1:8000")

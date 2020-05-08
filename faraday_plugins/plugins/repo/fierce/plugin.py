@@ -110,7 +110,7 @@ class FiercePlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._command_regex = re.compile(
-            r'^(sudo fierce |fierce |sudo fierce\.pl |fierce\.pl |perl fierce\.pl |\.\/fierce\.pl ).*?')
+            r'^(sudo fierce|fierce|sudo fierce\.pl|fierce\.pl|perl fierce\.pl|\.\/fierce\.pl)\s+.*?')
 
 
     def resolveCNAME(self, item, items):

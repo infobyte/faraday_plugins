@@ -33,7 +33,7 @@ class BeefPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self.target = None
-        self._command_regex = re.compile(r'^(beef |sudo beef |\.\/beef ).*?')
+        self._command_regex = re.compile(r'^(beef|sudo beef|\.\/beef)\s+.*?')
 
         self.addSetting("Host", str, "http://127.0.0.1:3000/")
         self.addSetting(

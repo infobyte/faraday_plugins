@@ -10,7 +10,6 @@ import os
 from faraday_plugins.plugins.plugin import PluginBase
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Facundo de Guzmán, Esteban Guillardoy"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -37,7 +36,7 @@ class CmdWhoisPlugin(PluginBase):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^whois .*?')
+        self._command_regex = re.compile(r'^whois\s+.*?')
         self._host_ip = None
         self._info = 0
         self._completition = {
@@ -69,7 +68,6 @@ class CmdWhoisPlugin(PluginBase):
             "--version": "output version information and exit",
         }
 
-        global current_path
 
 
     def parseOutputString(self, output, debug=False):

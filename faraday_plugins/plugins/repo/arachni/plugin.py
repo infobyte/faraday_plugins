@@ -323,7 +323,7 @@ class ArachniPlugin(PluginXMLFormat):
         self.version = '1.3.2'
         self.framework_version = '1.0.0'
         self.options = None
-        self._command_regex = re.compile(r'^(arachni |\.\/arachni ).*?')
+        self._command_regex = re.compile(r'^(arachni|\.\/arachni)\s+.*?')
         self.protocol = None
         self.hostname = None
         self.port = '80'

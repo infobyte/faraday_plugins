@@ -32,7 +32,7 @@ class PeepingTomPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "02.19.15"
         self._command_regex = re.compile(
-            r'^(python peepingtom.py |\./peepingtom.py ).*?')
+            r'^(python peepingtom.py|\./peepingtom.py)\s+.*?')
         self._path = None
 
     def parseOutputString(self, output):

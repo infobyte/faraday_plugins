@@ -57,7 +57,7 @@ class HydraPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "7.5"
         self.options = None
-        self._command_regex = re.compile(r'^(sudo hydra |sudo \.\/hydra |hydra |\.\/hydra ).*?')
+        self._command_regex = re.compile(r'^(sudo hydra|sudo \.\/hydra|hydra|\.\/hydra)\s+.*?')
         self.host = None
         self._use_temp_file = True
         self._temp_file_extension = "txt"

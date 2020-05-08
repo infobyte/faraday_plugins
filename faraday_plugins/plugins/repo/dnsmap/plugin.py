@@ -99,7 +99,7 @@ class DnsmapPlugin(PluginBase):
         self.version = "0.30"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(sudo dnsmap |dnsmap |\.\/dnsmap ).*?')
+        self._command_regex = re.compile(r'^(sudo dnsmap|dnsmap|\.\/dnsmap)\s+.*?')
         self.xml_arg_re = re.compile(r"^.*(-r\s*[^\s]+).*$")
         self._use_temp_file = True
         self._temp_file_extension = "txt"
