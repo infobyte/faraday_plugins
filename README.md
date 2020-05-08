@@ -9,7 +9,7 @@ pip install faraday-plugins
 > List Plugins
 
 ```shell script
-faraday-plugins list
+faraday-plugins show
 ```
 
 > Test autodetect plugin from command
@@ -24,8 +24,9 @@ faraday-plugins detect-command "ping -c 4 www.google.com"
 Optional params:
 
 - -dr: Dont run, just show the generated command
+
 ```shell script
-faraday-plugins process-command ping "ping -c4 www.google.com"
+faraday-plugins process-command "ping -c4 www.google.com"
 Running command:  ping -c4 www.google.com
 
 PING www.google.com (216.58.222.36): 56 data bytes
@@ -77,15 +78,18 @@ faraday-plugins detect-report /path/to/report.xml
 > Test report with plugin
 
 ```shell script
-faraday-plugins process-report appscan /path/to/report.xml
+faraday-plugins process-report /path/to/report.xml
 ```
 
-> Custom Plugins
+> Process options:
 
-You can load custom plugins from a specific path with the ```-cpf or --custom-plugins-folder``` parameter
-```shell script
-faraday-plugins process-report custom_plugin /path/to/report.xml -cpf /path/to/custom_plugins/
-```
+Both process-xxx command have this optional parameters
+
+- --plugin_id: If given will use that plugin instead of try to detect it
+- --summary: If given will generate a summary of the findings instead of the result
+- -cpf/--custom-plugins-folder: If given will also look for custom plugins if that path
+
+NOTE: you can also use -cpf in **show** command to test if your custom plugins load ok
 
 > Plugin Logger
 
@@ -93,7 +97,7 @@ To use it you must call ```self.logger.debug("some message")```
 
 ```shell script
 export PLUGIN_DEBUG=1
-faraday-plugins proces-report appscan /path/to/report.xml
+faraday-plugins proces-report /path/to/report.xml
 2019-11-15 20:37:03,355 - faraday.faraday_plugins.plugins.manager - INFO [manager.py:113 - _load_plugins()]  Loading Native Plugins...
 2019-11-15 20:37:03,465 - faraday.faraday_plugins.plugins.manager - DEBUG [manager.py:123 - _load_plugins()]  Load Plugin [acunetix]
 2019-11-15 20:37:03,495 - faraday.faraday_plugins.plugins.manager - DEBUG [manager.py:123 - _load_plugins()]  Load Plugin [amap]
