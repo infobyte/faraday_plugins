@@ -2,6 +2,7 @@
   "commands": [
     {"plugin_id": "ping", "command": "ping -c4 faradaysec.com"},
     {"plugin_id": "whois", "command": "whois fradaysec.com"},
-    {"plugin_id": "nmap", "command": "nmap fradaysec.com"}
+    {"plugin_id": "nmap", "command": "nmap fradaysec.com"},
+    {"plugin_id": "skipfish", "command": "skipfish http://fradaysec.com"}
   ]
 }
