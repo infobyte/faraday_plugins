@@ -391,11 +391,9 @@ class MaltegoPlugin(PluginZipFormat):
         if 'Graphs/Graph1.graphml' in output.namelist():
             maltego_parser = MaltegoMtgxParser(output, self.extension[1])
             if not maltego_parser.parse():
-                host_id = self.createAndAddHost(name=self.name)
+                pass
             else:
                 for host in maltego_parser.parse():
-
-
                     host_id = self.createAndAddHost(name=host.ip)
                 # Create interface
                 try:
@@ -408,7 +406,6 @@ class MaltegoPlugin(PluginZipFormat):
                 interface_id = self.createAndAddInterface(host_id=host_id, name=host.ip, ipv4_address=host.ip,
                                                           network_segment=network_segment,
                                                           hostname_resolution=[hostname_resolution])
-
                 # Create note with NetBlock information
                 if host.netblock:
                     try:
