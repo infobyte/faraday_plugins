@@ -30,7 +30,7 @@ def cli():
 
 @cli.command()
 @click.option('-cpf', '--custom-plugins-folder', type=str)
-def show(custom_plugins_folder):
+def list_plugins(custom_plugins_folder):
     plugins_manager = PluginsManager(custom_plugins_folder)
     click.echo(click.style("Available Plugins:", fg="cyan"))
     loaded_plugins = 0
@@ -41,7 +41,7 @@ def show(custom_plugins_folder):
         report_enabled = isinstance(plugin, PluginByExtension)
         report_enabled_color = "green" if report_enabled else "red"
         report_enabled_text = click.style(f"{report_enabled}", fg=report_enabled_color)
-        click.echo(f"{plugin.id:15}  - [Console: {console_enabled_text:>15} - Report: {report_enabled_text:>15}] - {plugin.name} ")
+        click.echo(f"{plugin.id:15}  - [Command: {console_enabled_text:>15} - Report: {report_enabled_text:>15}] - {plugin.name} ")
 
         loaded_plugins += 1
     click.echo(click.style(f"Loaded Plugins: {loaded_plugins}", fg="cyan"))
