@@ -4,11 +4,12 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
-import socket
 import re
 import os
 import random
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -128,7 +129,7 @@ class FiercePlugin(PluginBase):
                 item['ip'] = i['ip']
                 return item
         try:
-            item['ip'] = socket.gethostbyname(item['ip'])
+            item['ip'] = resolve_hostname(item['ip'])
         except:
             pass
         return item
@@ -136,7 +137,7 @@ class FiercePlugin(PluginBase):
     def resolveNS(self, item, items):
         try:
             item['hosts'][0] = item['ip']
-            item['ip'] = socket.gethostbyname(item['ip'])
+            item['ip'] = resolve_hostname(item['ip'])
         except:
             pass
         return item

@@ -25,6 +25,13 @@ python -m faraday_plugins detect /path/to/report.xml
 python -m faraday_plugins process appscan /path/to/report.xml
 ```
 
+> Custom Plugins
+
+You can load custom plugins from a specific path with the ```-cpf or --custom-plugins-folder``` parameter
+```shell script
+python -m faraday_plugins process custom_plugin /path/to/report.xml -cpf /path/to/custom_plugins/
+```
+
 > Plugin Logger
 
 To use it you must call ```self.logger.debug("some message")```

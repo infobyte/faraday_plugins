@@ -13,7 +13,8 @@ install_requires = [
     'html2text',
     'beautifulsoup4',
     'pytz',
-    'python-dateutil'
+    'python-dateutil',
+    'colorama'
 ]
 
 
