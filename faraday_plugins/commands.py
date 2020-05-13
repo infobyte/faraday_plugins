@@ -37,11 +37,11 @@ def list_plugins(custom_plugins_folder):
     for plugin_id, plugin in plugins_manager.get_plugins():
         console_enabled = plugin._command_regex is not None
         console_enabled_color = "green" if console_enabled else "red"
-        console_enabled_text = click.style(f"{console_enabled}", fg=console_enabled_color)
+        console_enabled_text = click.style(f"{'Yes' if console_enabled else 'No'}", fg=console_enabled_color)
         report_enabled = isinstance(plugin, PluginByExtension)
         report_enabled_color = "green" if report_enabled else "red"
-        report_enabled_text = click.style(f"{report_enabled}", fg=report_enabled_color)
-        click.echo(f"{plugin.id:15}  - [Command: {console_enabled_text:>15} - Report: {report_enabled_text:>15}] - {plugin.name} ")
+        report_enabled_text = click.style(f"{'Yes' if report_enabled else 'No'}", fg=report_enabled_color)
+        click.echo(f"{plugin.id:15}  - [Command: {console_enabled_text:>12} - Report: {report_enabled_text:>12}] - {plugin.name} ")
 
         loaded_plugins += 1
     click.echo(click.style(f"Loaded Plugins: {loaded_plugins}", fg="cyan"))
