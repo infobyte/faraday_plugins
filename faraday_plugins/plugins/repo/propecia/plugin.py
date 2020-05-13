@@ -34,7 +34,7 @@ class CmdPropeciaPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._command_regex = re.compile(
-            r'^(sudo propecia|\.\/propecia|propecia).*?')
+            r'^(sudo propecia|\.\/propecia|propecia)\s+.*?')
         self._host_ip = None
         self._port = "23"
 
@@ -63,8 +63,7 @@ class CmdPropeciaPlugin(PluginBase):
         return True
 
     def processCommandString(self, username, current_path, command_string):
-        """
-        """
+        super().processCommandString(username, current_path, command_string)
         count_args = command_string.split()
 
         if count_args.__len__() == 3:

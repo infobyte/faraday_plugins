@@ -8,10 +8,12 @@ import re
 import os
 import json
 import random
+import shutil
+import tempfile
+
 from faraday_plugins.plugins.plugin import PluginBase
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Nicolas Rodriguez"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -112,17 +114,26 @@ class SkipfishPlugin(PluginBase):
     def __init__(self):
         super().__init__()
         self.id = "Skipfish"
-        self.name = "Skipfish XML Output Plugin"
+        self.name = "Skipfish Output Plugin"
         self.plugin_version = "0.0.2"
         self.version = "2.1.5"
         self.options = None
-        self._current_output = None
         self.parent = None
         self._command_regex = re.compile(
-            r'^(sudo skipfish|skipfish|sudo skipfish\.pl|skipfish\.pl|perl skipfish\.pl|\.\/skipfish\.pl|\.\/skipfish).*?')
-        global current_path
+            r'^(sudo skipfish|skipfish|sudo skipfish\.pl|skipfish\.pl|perl skipfish\.pl|\.\/skipfish\.pl|\.\/skipfish)\s+.*?')
 
-    def parseOutputString(self, output, debug=False):
+    def _parse_filename(self, filename):
+        self.parseOutputString(filename)
+        if self._delete_temp_file:
+            try:
+                if os.path.isfile(filename):
+                    os.remove(filename)
+                elif os.path.isdir(filename):
+                    shutil.rmtree(filename)
+            except Exception as e:
+                self.logger.error("Error on delete file: (%s) [%s]", filename, e)
+
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.
@@ -131,10 +142,10 @@ class SkipfishPlugin(PluginBase):
         output being sent is valid.
         """
 
-        if not os.path.exists(self._output_path):
+        if not os.path.isdir(self._output_file_path):
             return False
 
-        p = SkipfishParser(self._output_path)
+        p = SkipfishParser(self._output_file_path)
 
         hostc = {}
         port = 80
@@ -207,24 +218,14 @@ class SkipfishPlugin(PluginBase):
         Adds the -o parameter to get report of the command string that the
         user has set.
         """
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
-
-        self._output_path = os.path.join(
-            self.data_path,
-            "skipfish_output-%s" % random.uniform(1, 10))
-
+        self._output_file_path = os.path.join(tempfile.gettempdir(), "faraday_plugin_skipfish_%d" % random.randint(1, 999999))
+        self._delete_temp_file = True
         if arg_match is None:
-            return re.sub(
-                r"(^.*?skipfish)",
-                r"\1 -o %s" % self._output_path,
-                command_string,
-                1)
+            return re.sub(r"(^.*?skipfish)", r"\1 -o %s" % self._output_file_path, command_string, 1)
         else:
-            return re.sub(
-                arg_match.group(1),
-                r"-o %s" % self._output_path,
-                command_string,
-                1)
+            return re.sub(arg_match.group(1), r"-o %s" % self._output_file_path, command_string, 1)
 
     def setHost(self):
         pass

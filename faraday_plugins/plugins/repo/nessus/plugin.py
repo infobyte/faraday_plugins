@@ -7,11 +7,8 @@ See the file 'doc/LICENSE' for the license information
 import dateutil
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-import re
-import os
 import xml.etree.ElementTree as ET
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Blas"
 __copyright__ = "Copyright (c) 2019, Infobyte LLC"
@@ -183,17 +180,6 @@ class NessusPlugin(PluginXMLFormat):
         self.version = "5.2.4"
         self.framework_version = "1.0.1"
         self.options = None
-        self._current_output = None
-        self._current_path = None
-        self._command_regex = re.compile(
-            r'^(nessus|sudo nessus|\.\/nessus).*?')
-
-
-    def canParseCommandString(self, current_input):
-        if self._command_regex.match(current_input.strip()):
-            return True
-        else:
-            return False
 
     def parseOutputString(self, output):
         """
@@ -379,7 +365,6 @@ class NessusPlugin(PluginXMLFormat):
             ip = '0.0.0.0'
             host_id = self.createAndAddHost(ip, hostnames="Not Information")
             interface_id = self.createAndAddInterface(host_id, ip)
-
             service_id = self.createAndAddServiceToInterface(host_id, interface_id, name="Not Information")
             self.createAndAddVulnToService(host_id,
                                            service_id,

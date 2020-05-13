@@ -383,7 +383,6 @@ class MaltegoPlugin(PluginZipFormat):
         self._current_output = None
         self._command_regex = re.compile(
             r'^(sudo maltego|maltego|\.\/maltego).*?')
-
         global current_path
 
     def parseOutputString(self, output, debug=False):
@@ -519,8 +518,7 @@ class MaltegoPlugin(PluginZipFormat):
                 self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id, name=ns_name,
                                                     protocol="DNS", ports=[53], description="DNS Server")
 
-    def processCommandString(self, username, current_path, command_string):
-        pass
+
 
 
 def createPlugin():

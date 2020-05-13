@@ -22,8 +22,7 @@ class traceroutePlugin(PluginBase):
         self.name = "Traceroute"
         self.plugin_version = "1.0.0"
         self.command_string = ""
-        self._command_regex = re.compile(
-            r'^(traceroute|traceroute6).*?')
+        self._command_regex = re.compile(r'^(traceroute|traceroute6)\s+.*?')
 
     def parseOutputString(self, output, debug=False):
 
@@ -52,10 +51,9 @@ class traceroutePlugin(PluginBase):
         print("[*]Parse finished, API faraday called...")
 
     def processCommandString(self, username, current_path, command_string):
-
-        print("[*]traceroute Plugin running...")
+        super().processCommandString(username, current_path, command_string)
         self.command_string = command_string
-        return command_string
+        return None
 
 
 def createPlugin():

@@ -18,13 +18,13 @@ class NetdiscoverPlugin(PluginBase):
 
     def __init__(self):
         super().__init__()
-        self.id             = "Netdiscover"
-        self.name           = "netdiscover"
+        self.id = "Netdiscover"
+        self.name = "netdiscover"
         self.plugin_version = "0.0.1"
-        self.version        = "1.0.0"
-        self._command_regex = re.compile(r'^(sudo netdiscover|netdiscover).*?')
+        self.version = "1.0.0"
+        self._command_regex = re.compile(r'^(sudo netdiscover|netdiscover)\s+.*?')
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         #regexp get ip, mac and hostname
         reg = re.findall(r"(([0-9]+\.?){4})\s+(([0-9a-f]+\:?){6})((\s+[0-9]+){2})(.*)", output)
         
@@ -40,8 +40,6 @@ class NetdiscoverPlugin(PluginBase):
 
         return True
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
 
 def createPlugin():

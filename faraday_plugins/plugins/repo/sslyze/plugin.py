@@ -1,6 +1,4 @@
 import re
-import os
-import random
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 try:
@@ -97,8 +95,10 @@ class SslyzePlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(sudo sslyze|sslyze|\.\/sslyze).*?')
+        self._command_regex = re.compile(r'^(sudo sslyze|sslyze|\.\/sslyze)\s+.*?')
         self.xml_arg_re = re.compile(r"^.*(--xml_output\s*[^\s]+).*$")
+        self._use_temp_file = True
+        self._temp_file_extension = "xml"
 
     def report_belongs_to(self, **kwargs):
         if super().report_belongs_to(**kwargs):
@@ -171,16 +171,8 @@ class SslyzePlugin(PluginXMLFormat):
                 severity="medium")
 
     def processCommandString(self, username, current_path, command_string):
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "%s_%s_output-%s.xml" % (
-                self.get_ws(),
-                self.id,
-                random.uniform(1, 10))
-        )
-
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
-
         if arg_match is None:
             return re.sub(r"(^.*?sslyze)",
                           r"\1 --xml_out %s" % self._output_file_path,

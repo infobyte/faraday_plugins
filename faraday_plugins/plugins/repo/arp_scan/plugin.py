@@ -31,11 +31,10 @@ class CmdArpScanPlugin(PluginBase):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(
-            r'^(sudo arp-scan|\.\/arp-scan|arp-scan).*?')
+        self._command_regex = re.compile(r'^(sudo arp-scan|\.\/arp-scan|arp-scan)\s+.*?')
         self._host_ip = None
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         host_info = re.search(
             r"(\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b)",
@@ -60,11 +59,8 @@ class CmdArpScanPlugin(PluginBase):
 
         return True
 
-    def processCommandString(self, username, current_path, command_string):
-        return
 
 
 def createPlugin():
     return CmdArpScanPlugin()
 
-# I'm Py3

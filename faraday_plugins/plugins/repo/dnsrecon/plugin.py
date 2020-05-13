@@ -8,8 +8,6 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginBase
 import re
-import os
-import sys
 
 try:
     import xml.etree.cElementTree as ET
@@ -21,7 +19,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -172,7 +169,9 @@ class DnsreconPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._command_regex = re.compile(
-            r'^(sudo dnsrecon|dnsrecon|sudo dnsrecon\.py|dnsrecon\.py|python dnsrecon\.py|\.\/dnsrecon\.py).*?')
+            r'^(sudo dnsrecon|dnsrecon|sudo dnsrecon\.py|dnsrecon\.py|python dnsrecon\.py|\.\/dnsrecon\.py)\s+.*?')
+        self._use_temp_file = True
+        self._temp_file_extension = "xml"
 
     def validHosts(self, hosts):
         valid_records = ["NS", "CNAME", "A", "MX", "info"]
@@ -247,6 +246,7 @@ class DnsreconPlugin(PluginBase):
         Adds the -oX parameter to get xml output to the command string that the
         user has set.
         """
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:

@@ -4,7 +4,6 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-import os
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 import xml.etree.ElementTree as ET
@@ -12,8 +11,6 @@ ETREE_VERSION = ET.VERSION
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split('.')]
 
-
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = 'Francisco Amato'
 __copyright__ = 'Copyright (c) 2013, Infobyte LLC'
@@ -347,9 +344,6 @@ class QualysguardPlugin(PluginXMLFormat):
         self.version = 'Qualysguard 8.17.1.0.2'
         self.framework_version = '1.0.0'
         self.options = None
-        self._current_output = None
-        self._command_regex = re.compile(
-            r'^(sudo qualysguard|\.\/qualysguard).*?')
         self.open_options = {"mode": "r", "encoding": "utf-8"}
 
     def parseOutputString(self, output, debug=False):
@@ -420,8 +414,6 @@ class QualysguardPlugin(PluginXMLFormat):
 
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass

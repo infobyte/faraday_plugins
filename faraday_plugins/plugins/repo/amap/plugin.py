@@ -3,6 +3,11 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
+import argparse
+import random
+import shlex
+import tempfile
+
 from faraday_plugins.plugins.plugin import PluginBase
 import socket
 import re
@@ -10,7 +15,6 @@ import os
 
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-current_path = os.path.abspath(os.getcwd())
 
 
 class AmapPlugin(PluginBase):
@@ -24,17 +28,11 @@ class AmapPlugin(PluginBase):
         self.version = "5.4"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(amap|sudo amap).*?')
+        self._command_regex = re.compile(r'^(amap|sudo amap)\s+.*?')
+        self._use_temp_file = True
         self._hosts = []
 
-    def parseOutputString(self, output, debug=False):
-        # if not os.path.exists(self._file_output_path):
-        #     return False
-        #
-        # if not debug:
-        #     with open(self._file_output_path) as f:
-        #         output = f.read()
-
+    def parseOutputString(self, output):
         services = {}
         for line in output.split('\n'):
             if line.startswith('#'):
@@ -127,6 +125,42 @@ class AmapPlugin(PluginBase):
 
     def setHost(self):
         pass
+
+    def processCommandString(self, username, current_path, command_string):
+        """
+        Adds the -m parameter to get machine readable output.
+        """
+        super().processCommandString(username, current_path, command_string)
+        arg_match = self.file_arg_re.match(command_string)
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-6', action='store_true')
+        parser.add_argument('-o')
+        parser.add_argument('-m')
+        if arg_match is None:
+            final = re.sub(
+                r"(^.*?amap)",
+                r"\1 -o %s -m " % self._output_file_path,
+                command_string)
+        else:
+            final = re.sub(
+                arg_match.group(1),
+                r"-o %s -m " % self._output_file_path,
+                command_string)
+
+        cmd = shlex.split(re.sub(r'\-h|\-\-help', r'', final))
+        if "-6" in cmd:
+            cmd.remove("-6")
+            cmd.insert(1, "-6")
+
+        args = None
+        if len(cmd) > 4:
+            try:
+                args, unknown = parser.parse_known_args(cmd)
+            except SystemExit:
+                pass
+
+        self.args = args
+        return final
 
 
 def createPlugin():

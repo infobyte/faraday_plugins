@@ -10,7 +10,6 @@ import os
 from faraday_plugins.plugins.plugin import PluginBase
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Javier Victor Mariano Bruno"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -37,13 +36,12 @@ class CmdFtpPlugin(PluginBase):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^ftp.*?')
+        self._command_regex = re.compile(r'^ftp\s+.*?')
         self._host_ip = None
         self._port = "21"
         self._info = 0
         self._version = None
 
-        global current_path
 
 
     def parseOutputString(self, output, debug=False):
@@ -81,8 +79,8 @@ class CmdFtpPlugin(PluginBase):
     def processCommandString(self, username, current_path, command_string):
         """
         """
+        super().processCommandString(username, current_path, command_string)
         count_args = command_string.split()
-
         c = count_args.__len__()
         self._port = "21"
         if re.search("[\d]+", count_args[c - 1]):

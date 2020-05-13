@@ -6,7 +6,6 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
-import os
 
 try:
     import xml.etree.cElementTree as ET
@@ -20,7 +19,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Micaela Ranea Sanchez"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -65,7 +63,6 @@ class NexposeFullXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print("SyntaxError: %s. %s" % (err, xml_output))
             return None
 
         return tree
@@ -261,8 +258,6 @@ class NexposeFullPlugin(PluginXMLFormat):
         self.version = "Nexpose Enterprise 5.7.19"
         self.framework_version = "1.0.0"
         self.options = None
-        self._current_output = None
-        self._command_regex = re.compile(r'^(sudo nexpose|\.\/nexpose).*?')
 
     def parseOutputString(self, output, debug=False):
 
@@ -341,8 +336,6 @@ class NexposeFullPlugin(PluginXMLFormat):
 
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass
