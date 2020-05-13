@@ -38,9 +38,9 @@ class MedusaParser:
         lines = xml_output.splitlines()
         self.items = []
         
-        for l in lines:
+        for line in lines:
 
-            reg = re.search("ACCOUNT FOUND: \[([^$]+)\] Host: ([^$]+) User: ([^$]+) Password: ([^$]+) \[SUCCESS\]", l)
+            reg = re.search("ACCOUNT FOUND: \[([^$]+)\] Host: ([^$]+) User: ([^$]+) Password: ([^$]+) \[SUCCESS\]", line)
             if reg:
         
                 item = {

@@ -70,11 +70,11 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary):
                 return
         plugin.processReport(report_file, getpass.getuser())
         if summary:
-            click.echo(click.style(f"\nPlugin Summary: ", fg="cyan"))
+            click.echo(click.style("\nPlugin Summary: ", fg="cyan"))
             report_json = json.loads(plugin.get_json())
             click.echo(json.dumps(get_report_summary(report_json), indent=4))
         else:
-            click.echo(click.style(f"\nFaraday API json: ", fg="cyan"))
+            click.echo(click.style("\nFaraday API json: ", fg="cyan"))
             click.echo(json.dumps(plugin.get_data(), indent=4))
 
 
@@ -102,7 +102,7 @@ def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary
     if modified_command:
         command = modified_command
     if not dont_run:
-        color_message = click.style(f"Running command: ", fg="green")
+        color_message = click.style("Running command: ", fg="green")
         click.echo(f"{color_message} {command}\n")
         p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = io.StringIO()
@@ -120,16 +120,16 @@ def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary
         if retcode == 0:
             plugin.processOutput(output_value)
             if summary:
-                click.echo(click.style(f"\nPlugin Summary: ", fg="cyan"))
+                click.echo(click.style("\nPlugin Summary: ", fg="cyan"))
                 report_json = json.loads(plugin.get_json())
                 click.echo(json.dumps(get_report_summary(report_json), indent=4))
             else:
-                click.echo(click.style(f"\nFaraday API json: ", fg="cyan"))
+                click.echo(click.style("\nFaraday API json: ", fg="cyan"))
                 click.echo(json.dumps(plugin.get_data(), indent=4))
         else:
             click.echo(click.style("Command execution error!!", fg="red"))
     else:
-        color_message = click.style(f"Command: ", fg="green")
+        color_message = click.style("Command: ", fg="green")
         click.echo(f"{color_message} {command}")
 
 
