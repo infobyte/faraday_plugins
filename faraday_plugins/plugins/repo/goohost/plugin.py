@@ -9,8 +9,6 @@ import os
 from faraday_plugins.plugins.plugin import PluginBase
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-current_path = os.path.abspath(os.getcwd())
-
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
 __credits__ = ["Francisco Amato"]
@@ -74,17 +72,11 @@ class GoohostPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "v.0.0.1"
         self.options = None
-        self._current_output = None
-        self._current_path = None
-        self._command_regex = re.compile(
-            r'^(sudo goohost\.sh|goohost\.sh|sh goohost\.sh|\.\/goohost\.sh).*?')
+        self._command_regex = re.compile(r'^(sudo goohost\.sh|goohost\.sh|sh goohost\.sh|\.\/goohost\.sh)\s+.*?')
         self.host = None
-
-        global current_path
-        self.output_path = None
         self._command_string = None
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will check if the import was made through the console or by importing a Goohost report.
 
@@ -95,70 +87,48 @@ class GoohostPlugin(PluginBase):
 
         self.scantype defines the method used to generate the Goohost report
 
-        NOTE: if 'debug' is true then it is being run from a test case and the
-        output being sent is valid.
         """
-
-        if self._command_string:
-            # Import from console
-            self.scantype = self.define_scantype_by_command(self._command_string)
-            report_output = output
-            output = self.read_output_file(report_output)
-        else:
-            # Import from report
-            self.scantype = self.define_scantype_by_output(output)
-
-        if debug:
-            parser = GoohostParser(output, self.scantype)
-        else:
-            parser = GoohostParser(output, self.scantype)
-            if self.scantype == 'host' or self.scantype == 'ip':
-                for item in parser.items:
-                    h_id = self.createAndAddHost(
-                        item['ip'],
-                        hostnames=item['hosts'])
-
+        scantype = self.define_scantype_by_output(output)
+        parser = GoohostParser(output, scantype)
+        if scantype == 'host' or scantype == 'ip':
+            for item in parser.items:
+                h_id = self.createAndAddHost(item['ip'], hostnames=item['hosts'])
         del parser
-
-    def processCommandString(self, username, current_path, command_string):
-        """
-        Set output path for parser...
-        """
-        self._current_path = current_path
-        self._command_string = command_string
 
     def define_scantype_by_command(self, command):
         method_regex = re.compile(r'-m (mail|host|ip)')
         method = method_regex.search(command)
         if method:
             return method.group(1)
-
         return 'host'
 
     def define_scantype_by_output(self, output):
         lines = output.split('\n')
         line = lines[0].split(' ')
-
         if len(line) == 1:
             return 'host'
         elif len(line) == 2:
             return 'ip'
 
-    def read_output_file(self, report_path):
-        mypath = re.search("Results saved in file (\S+)", report_path)
-        if not mypath:
+    def get_report_path_from_output(self, command_output):
+        report_name = re.search("Results saved in file (\S+)", command_output)
+        if not report_name:
             return False
         else:
-            self.output_path = self._current_path + "/" + mypath.group(1)
-            if not os.path.exists(self.output_path):
+            self._output_file_path = os.path.join(self._current_path, report_name.group(1))
+            if not os.path.exists(self._output_file_path):
                 return False
-            with open(self.output_path, 'r') as report:
-                output = report.read()
+            else:
+                self._delete_temp_file = True
 
-            return output
+    def processOutput(self, command_output):
+        self.get_report_path_from_output(command_output)
+        if self.has_custom_output():
+            self._parse_filename(self.get_custom_file_path())
+        else:
+            self.parseOutputString(command_output)
 
 
 def createPlugin():
     return GoohostPlugin()
 
-# I'm Py3

@@ -29,11 +29,11 @@ class SSHDefaultScanPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "1.0.0"
         self._command_regex = re.compile(
-            r'^(python sshdefaultscan.py|\./sshdefaultscan.py).*?')
+            r'^(python sshdefaultscan.py|\./sshdefaultscan.py)\s+.*?')
         self._completition = {"--fast": "Fast scan mode"}
 
-    def parseOutputString(self, output, debug=False):
-        for line in [l.strip() for l in output.split("\n")]:
+    def parseOutputString(self, output):
+        for line in [line.strip() for line in output.split("\n")]:
             output_rexeg_match = re.match(
                 r".*:.*@\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", line)
             if output_rexeg_match:
@@ -58,16 +58,16 @@ class SSHDefaultScanPlugin(PluginBase):
                     severity=3
                 )
 
-        return True
 
     def processCommandString(self, username, current_path, command_string):
+        super().processCommandString(username, current_path, command_string)
         if "--batch" not in command_string:
             return "{command} --batch --batch-template {template}".format(
                 command=command_string,
                 template="{username}:{password}@{host}"
             )
-
-        return None
+        else:
+            return None
 
 
 def createPlugin():

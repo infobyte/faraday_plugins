@@ -11,18 +11,10 @@ from faraday_plugins.plugins.plugin import PluginByExtension
 from faraday_plugins.plugins.plugins_utils import filter_services, get_all_protocols
 
 
-current_path = os.path.abspath(os.getcwd())
-
-
 class LynisLogDataExtracter():
-    def __init__(self, datfile=None, output=None):
+    def __init__(self, output):
         self.services = defaultdict(list)
-        if datfile and os.path.exists(datfile):
-            with open(datfile) as f:
-                self.rawcontents = f.read()
-
-        if output:
-            self.rawcontents = output
+        self.rawcontents = output
 
     def _svcHelper(self, ip, port, protocol, name):
         self.services[ip].append({'port': port, 'protocol': protocol, 'name': name})
@@ -33,7 +25,7 @@ class LynisLogDataExtracter():
         domain_match = re.search('^domainname=(.+)$', self.rawcontents, re.MULTILINE)
         if domain_match:
             domain = domain_match.group(1).strip()
-            return ".".join([hostname,domain])
+            return f"{hostname}.{domain}"
         else:
             return hostname
 
@@ -45,14 +37,12 @@ class LynisLogDataExtracter():
         return " ".join([name, version])
 
     def ipv4(self):
-        ipv4addrs = []
         ipv4s = re.findall('^network_ipv4_address\[\]=(.+)$',
                        self.rawcontents, re.MULTILINE)
         ipv4addrs = self.ipv4_filter(ipv4s)
         return(ipv4addrs)
 
     def ipv6(self):
-        ipv6addrs = []
         ipv6s = re.findall('^network_ipv6_address\[\]=(.+)$',
                        self.rawcontents, re.MULTILINE)
         ipv6addrs = self.ipv6_filter(ipv6s)
@@ -76,17 +66,12 @@ class LynisLogDataExtracter():
 
     def kernelVersion(self):
         versions_dict = {}
-
-        version = re.search('^os_kernel_version=(.+)$',
-                      self.rawcontents, re.MULTILINE)
+        version = re.search('^os_kernel_version=(.+)$', self.rawcontents, re.MULTILINE)
         if version:
             versions_dict['Kernel Version'] = version.group(1).strip()
-
-        version_full = re.search('^os_kernel_version_full=(.+)$',
-                      self.rawcontents, re.MULTILINE)
+        version_full = re.search('^os_kernel_version_full=(.+)$', self.rawcontents, re.MULTILINE)
         if version_full:
             versions_dict['Kernel Version Full'] = version_full.group(1).strip()
-
         return versions_dict
 
     def listeningservices(self):
@@ -238,18 +223,14 @@ class LynisPlugin(PluginByExtension):
 
     def __init__(self):
         super().__init__()
-        self.extension = [".dat", ".log"]
         self.id = "Lynis"
         self.name = "Lynis DAT Output Plugin"
         self.plugin_version = "0.4"
         self.version = "2.7.1"
         self.options = None
-        self._current_output = None
-        rr = r'^(lynis|sudo lynis|\.\/lynis|sudo \.\/lynis).*?'
-        self._command_regex = re.compile(rr)
+        self._command_regex = re.compile(r'^(lynis|\.\/lynis|)\s+.*?')
         self._hosts = []
-
-        global current_path
+        self.extension = [".dat", ".log"]
 
     def report_belongs_to(self, **kwargs):
         if super().report_belongs_to(**kwargs):
@@ -259,13 +240,15 @@ class LynisPlugin(PluginByExtension):
             return output.startswith("# Lynis Report")
         return False
 
-    def parseOutputString(self, output, debug=False):
-        datpath = self.getDatPath(output)
-
-        if datpath:
-            lde = LynisLogDataExtracter(datfile=datpath)
-        elif '# Lynis Report' in output:
-            lde = LynisLogDataExtracter(output=output)
+    def parseOutputString(self, output):
+        """
+        Lynis does not have a means to specify the location for the
+        DAT file, which by default goes to /var/log/lynis-report.dat
+        or /tmp/lynis-report.dat, depending on privileges.
+        Because of that, we will extract the DAT location off
+        lynis' output via parseOutputString().
+        """
+        lde = LynisLogDataExtracter(output)
         hostname = lde.hostname()
         ipv4s = lde.ipv4()
         ipv6s = lde.ipv6()
@@ -335,20 +318,10 @@ class LynisPlugin(PluginByExtension):
                 desc=warns[warn]
             )
 
-    def processCommandString(self, username, current_path, command_string):
-        """
-        Lynis does not have a means to specify the location for the
-        DAT file, which by default goes to /var/log/lynis-report.dat
-        or /tmp/lynis-report.dat, depending on privileges.
-        Because of that, we will extract the DAT location off
-        lynis' output via parseOutputString().
-        """
-        return
-
-    def getDatPath(self, output):
-        m = re.search('(\/.+\.dat)$', output, re.MULTILINE)
-        if m:
-            return(m.group(0).strip())
+    def processOutput(self, command_output):
+        m = re.search('(\/.+\.dat)$', command_output, re.MULTILINE)
+        file_path = m.group(0).strip()
+        self._parse_filename(file_path)
 
 
 def createPlugin():

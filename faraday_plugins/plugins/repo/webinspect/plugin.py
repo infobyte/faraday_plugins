@@ -159,10 +159,7 @@ class WebInspectPlugin(PluginXMLFormat):
                 severity=parser.parse_severity(vuln.get("Vuln").get("severity"))
             )
 
-        return True
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
 
 def createPlugin():

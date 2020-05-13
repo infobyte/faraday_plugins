@@ -5,6 +5,9 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import os
+import shutil
+import tempfile
+
 from collections import defaultdict
 
 import pytz
@@ -37,6 +40,10 @@ class PluginBase:
         self.description = ""
         self._command_regex = None
         self._output_file_path = None
+        self._use_temp_file = False
+        self._delete_temp_file = False
+        self._temp_file_extension = "tmp"
+        self._current_path = None
         self.framework_version = None
         self._completition = {}
         self._new_elems = []
@@ -60,6 +67,12 @@ class PluginBase:
 
     def __str__(self):
         return f"Plugin: {self.id}"
+
+    def _get_temp_file(self, extension="tmp"):
+        temp_dir = tempfile.gettempdir()
+        temp_filename = f"{self.id}_{next(tempfile._get_candidate_names())}.{extension}"
+        temp_file_path = os.path.join(temp_dir, temp_filename)
+        return temp_file_path
 
     @staticmethod
     def get_utctimestamp(date):
@@ -175,7 +188,6 @@ class PluginBase:
         cache_id = cls._get_dict_hash(vuln_copy, ['host_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
         return cache_id
 
-
     def save_cache(self, obj):
         obj_uuid = uuid.uuid1()
         self._cache[obj_uuid] = obj
@@ -231,6 +243,24 @@ class PluginBase:
         return (self._command_regex is not None and
                 self._command_regex.match(current_input.strip()) is not None)
 
+    def processCommandString(self, username, current_path, command_string):
+        """
+        With this method a plugin can add additional arguments to the
+        command that it's going to be executed.
+        """
+        self._current_path = current_path
+        if command_string.startswith("sudo"):
+            params = " ".join(command_string.split()[2:])
+        else:
+            params = " ".join(command_string.split()[1:])
+        self.vulns_data["command"]["params"] = params
+        self.vulns_data["command"]["user"] = username
+        self.vulns_data["command"]["import_source"] = "shell"
+        if self._use_temp_file:
+            self._delete_temp_file = True
+            self._output_file_path = self._get_temp_file(extension=self._temp_file_extension)
+        return None
+
     def getCompletitionSuggestionsList(self, current_input):
         """
         This method can be overriden in the plugin implementation
@@ -244,25 +274,30 @@ class PluginBase:
                 options[k] = v
         return options
 
-    def processOutput(self, term_output):
-        output = term_output
-        if self.has_custom_output() and os.path.isfile(self.get_custom_file_path()):
+    def processOutput(self, command_output):
+        if self.has_custom_output():
             self._parse_filename(self.get_custom_file_path())
         else:
-            self.parseOutputString(output)
+            self.parseOutputString(command_output)
 
     def _parse_filename(self, filename):
         with open(filename, **self.open_options) as output:
             self.parseOutputString(output.read())
+        if self._delete_temp_file:
+            try:
+                if os.path.isfile(filename):
+                    os.remove(filename)
+                elif os.path.isdir(filename):
+                    shutil.rmtree(filename)
+            except Exception as e:
+                self.logger.error("Error on delete file: (%s) [%s]", filename, e)
 
     def processReport(self, filepath, user="faraday"):
         if os.path.isfile(filepath):
-            self._parse_filename(filepath)
             self.vulns_data["command"]["params"] = filepath
             self.vulns_data["command"]["user"] = user
-            self.vulns_data["command"]["tool"] = self.id
-            self.vulns_data["command"]["command"] = self.id
-            self.vulns_data["command"]["duration"] = (datetime.now() - self.start_date).microseconds
+            self.vulns_data["command"]["import_source"] = "report"
+            self._parse_filename(filepath)
         else:
             raise FileNotFoundError(filepath)
 
@@ -484,6 +519,9 @@ class PluginBase:
         #self.__addPendingAction(Modelactions.DEVLOG, msg)
 
     def get_data(self):
+        self.vulns_data["command"]["tool"] = self.id
+        self.vulns_data["command"]["command"] = self.id
+        self.vulns_data["command"]["duration"] = (datetime.now() - self.start_date).microseconds
         return self.vulns_data
 
     def get_json(self):

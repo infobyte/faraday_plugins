@@ -311,10 +311,7 @@ class MaltegoPlugin(PluginXMLFormat):
         self.current_path = None
         self.options = None
         self._current_output = None
-
-        self._command_regex = re.compile(
-            r'^(sudo maltego|maltego|\.\/maltego).*?')
-
+        self._command_regex = re.compile('^(sudo maltego |maltego |\.\/maltego ).*?')
         global current_path
 
     def parseOutputString(self, filename, debug=False):
@@ -434,8 +431,7 @@ class MaltegoPlugin(PluginXMLFormat):
     def processReport(self, filepath):
         self.parseOutputString(filepath)
 
-    def processCommandString(self, username, current_path, command_string):
-        pass
+
 
 
 def createPlugin():
