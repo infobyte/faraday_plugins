@@ -33,7 +33,7 @@ class SSHDefaultScanPlugin(PluginBase):
         self._completition = {"--fast": "Fast scan mode"}
 
     def parseOutputString(self, output):
-        for line in [l.strip() for l in output.split("\n")]:
+        for line in [line.strip() for line in output.split("\n")]:
             output_rexeg_match = re.match(
                 r".*:.*@\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", line)
             if output_rexeg_match:
