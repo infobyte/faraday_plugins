@@ -8,8 +8,6 @@ See the file 'doc/LICENSE' for the license information
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-import sys
-import random
 
 
 try:
@@ -431,10 +429,9 @@ class NmapPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(sudo nmap|nmap|\.\/nmap).*?')
-
-
-
+        self._command_regex = re.compile(r'^(sudo nmap|nmap|\.\/nmap)\s+.*?')
+        self._use_temp_file = True
+        self._temp_file_extension = "xml"
         self.xml_arg_re = re.compile(r"^.*(-oX\s*[^\s]+).*$")
         self.addSetting("Scan Technique", str, "-sS")
 
@@ -538,24 +535,14 @@ class NmapPlugin(PluginXMLFormat):
                             severity=severity,
                             external_id=v.name)
         del parser
-        return True
 
     def processCommandString(self, username, current_path, command_string):
         """
         Adds the -oX parameter to get xml output to the command string that the
         user has set.
         """
-
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "%s_%s_output-%s.xml" % (
-                self.get_ws(),
-                self.id,
-                random.uniform(1, 10))
-        )
-
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
-
         if arg_match is None:
             return re.sub(r"(^.*?nmap)",
                           r"\1 -oX %s" % self._output_file_path,
@@ -564,10 +551,6 @@ class NmapPlugin(PluginXMLFormat):
             return re.sub(arg_match.group(1),
                           r"-oX %s" % self._output_file_path,
                           command_string)
-
-    def setHost(self):
-        pass
-
 
 def createPlugin():
     return NmapPlugin()

@@ -29,8 +29,7 @@ class CmdPingPlugin(PluginBase):
         self.name = "Ping"
         self.plugin_version = "0.0.1"
         self.version = "1.0.0"
-        self._command_regex = re.compile(
-            r'^(sudo ping|ping|sudo ping6|ping6).*?')
+        self._command_regex = re.compile(r'^(sudo ping|ping|sudo ping6|ping6)\s+.*?')
 
     def parseOutputString(self, output, debug=False):
 
@@ -56,10 +55,6 @@ class CmdPingPlugin(PluginBase):
         else:
             return False
 
-    def processCommandString(self, username, current_path, command_string):
-        """
-        """
-        return None
 
 
 def createPlugin():

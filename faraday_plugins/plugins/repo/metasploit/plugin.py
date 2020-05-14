@@ -5,8 +5,7 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
-import os
-import sys
+
 
 try:
     import xml.etree.cElementTree as ET
@@ -17,8 +16,6 @@ except ImportError:
     ETREE_VERSION = ET.VERSION
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -337,9 +334,7 @@ class MetasploitPlugin(PluginXMLFormat):
         self.version = "4.7.2"
         self.framework_version = "1.0.0"
         self.options = None
-        self._current_output = None
         self.target = None
-        self._command_regex = re.compile(r'^(metasploit|sudo metasploit|\.\/metasploit).*?')
 
 
     def parseOutputString(self, output, debug=False):
@@ -406,8 +401,6 @@ class MetasploitPlugin(PluginXMLFormat):
         else:
             return False
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass

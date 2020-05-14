@@ -74,7 +74,7 @@ class dirbPlugin(PluginBase):
 
         self.text = '\n'.join(self.text)
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         url = re.search(r"URL_BASE: " + self.regexpUrl, output)
         paths = self.pathsDirListing(output)
@@ -108,7 +108,7 @@ class dirbPlugin(PluginBase):
         Adds the -oX parameter to get xml output to the command string that the
         user has set.
         """
-
+        super().processCommandString(username, current_path, command_string)
         no_stop_on_warn_msg_re = r"\s+-w"
         arg_search = re.search(no_stop_on_warn_msg_re,command_string)
         extra_arg = ""

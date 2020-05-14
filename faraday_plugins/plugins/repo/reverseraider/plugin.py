@@ -6,11 +6,8 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginBase
 import re
-import os
 
 
-
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -59,10 +56,7 @@ class ReverseraiderPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "0.7.6"
         self.options = None
-        self._current_output = None
-        self._current_path = None
-        self._command_regex = re.compile(
-            r'^(sudo \.\/reverseraider|\.\/reverseraider).*?')
+        self._command_regex = re.compile(r'^(sudo \.\/reverseraider|\.\/reverseraider)\s+.*?')
         self._completition = {
             "": "reverseraider -d domain | -r range [options]",
             "-r": "range of ipv4 or ipv6 addresses, for reverse scanning",
@@ -75,40 +69,14 @@ class ReverseraiderPlugin(PluginBase):
             "-R": "don't set the recursion bit on queries",
         }
 
-        global current_path
 
-    def canParseCommandString(self, current_input):
-        if self._command_regex.match(current_input.strip()):
-            return True
-        else:
-            return False
-
-    def parseOutputString(self, output, debug=False):
-        """
-        This method will discard the output the shell sends, it will read it from
-        the xml where it expects it to be present.
-
-        NOTE: if 'debug' is true then it is being run from a test case and the
-        output being sent is valid.
-        """
-
-        if debug:
-            parser = ReverseraiderParser(output)
-        else:
-
-            parser = ReverseraiderParser(output)
-
-            for item in parser.items:
-                h_id = self.createAndAddHost(item['ip'])
-                i_id = self.createAndAddInterface(
-                    h_id, item['ip'], ipv4_address=item['ip'])
-
+    def parseOutputString(self, output):
+        parser = ReverseraiderParser(output)
+        for item in parser.items:
+            h_id = self.createAndAddHost(item['ip'])
+            i_id = self.createAndAddInterface(h_id, item['ip'], ipv4_address=item['ip'])
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        """
-        """
-        return None
 
 
 def createPlugin():

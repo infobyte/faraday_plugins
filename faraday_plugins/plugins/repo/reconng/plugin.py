@@ -137,10 +137,6 @@ class ReconngPlugin(PluginXMLFormat):
         self.version = ''
         self.framework_version = ''
         self.options = None
-        self._current_output = None
-        self._command_regex = re.compile(
-            r'records added to')
-
         self.host_mapper = {}
 
     def parseOutputString(self, output):
@@ -172,8 +168,6 @@ class ReconngPlugin(PluginXMLFormat):
                 data=vuln['example']
             )
 
-    def processCommandString(self, username, current_path, command_string):
-        return
 
 
 

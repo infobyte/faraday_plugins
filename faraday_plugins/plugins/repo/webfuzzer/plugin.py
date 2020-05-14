@@ -65,7 +65,6 @@ class WebfuzzerParser:
                     self.items.append(vuln)
 
             except SyntaxError as err:
-                print("SyntaxError: %s. %s" % (err, self.filepath))
                 return None
 
 
@@ -83,8 +82,7 @@ class WebfuzzerPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self.host = None
-        self._command_regex = re.compile(
-            r'^(sudo webfuzzer|webfuzzer|\.\/webfuzzer).*?')
+        self._command_regex = re.compile(r'^(sudo webfuzzer|webfuzzer|\.\/webfuzzer)\s+.*?')
         self._completition = {'': '__Usage: ./webfuzzer -G|-P URL [OPTIONS]',
                               '-G': '<url>	get this as starting url (with parameters)',
                               '-P': '<url>	post this as starting url (with parameters)',
@@ -142,8 +140,8 @@ class WebfuzzerPlugin(PluginBase):
     def processCommandString(self, username, current_path, command_string):
         """
         """
+        super().processCommandString(username, current_path, command_string)
         host = re.search("\-([G|P]) ([\w\.\-]+)", command_string)
-
         if host is not None:
             self.host = host.group(2)
             self._output_path = current_path + "/" + self.host + ".txt"

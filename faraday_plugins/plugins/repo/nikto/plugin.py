@@ -4,8 +4,6 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-import os
-import random
 from html.parser import HTMLParser
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins import plugins_utils
@@ -21,7 +19,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -258,10 +255,12 @@ class NiktoPlugin(PluginXMLFormat):
         self.plugin_version = "0.0.2"
         self.version = "2.1.5"
         self.options = None
-        self._current_output = None
         self.parent = None
+        self._use_temp_file = True
+        self._temp_file_extension = "xml"
+        self.xml_arg_re = re.compile(r"^.*(-output\s*[^\s]+).*$")
         self._command_regex = re.compile(
-            r'^(sudo nikto|nikto|sudo nikto\.pl|nikto\.pl|perl nikto\.pl|\.\/nikto\.pl|\.\/nikto).*?')
+            r'^(sudo nikto|nikto|sudo nikto\.pl|nikto\.pl|perl nikto\.pl|\.\/nikto\.pl|\.\/nikto)\s+.*?')
         self._completition = {
             "": "",
             "-ask+": "Whether to ask about submitting updates",
@@ -344,33 +343,22 @@ class NiktoPlugin(PluginXMLFormat):
 
         del parser
 
-    xml_arg_re = re.compile(r"^.*(-output\s*[^\s]+).*$")
+
 
     def processCommandString(self, username, current_path, command_string):
         """
         Adds the -oX parameter to get xml output to the command string that the
         user has set.
         """
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "%s_%s_output-%s.xml" % (
-                self.get_ws(),
-                self.id,
-                random.uniform(1, 10)
-            )
-        )
+        super().processCommandString(username, current_path, command_string)
 
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:
-            return re.sub(r"(^.*?nikto(\.pl)?)",
-                          r"\1 -output %s -Format XML" % self._output_file_path,
-                          command_string)
+            return re.sub(r"(^.*?nikto(\.pl)?)", r"\1 -output %s -Format XML" % self._output_file_path, command_string)
         else:
             data = re.sub(" \-Format XML", "", command_string)
-            return re.sub(arg_match.group(1),
-                          r"-output %s -Format XML" % self._output_file_path,
-                          data)
+            return re.sub(arg_match.group(1), r"-output %s -Format XML" % self._output_file_path, data)
 
     def setHost(self):
         pass

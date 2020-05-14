@@ -35,8 +35,7 @@ class FruityWiFiPlugin(PluginBase):
         self._current_output = None
         self.target = None
         
-        self._command_regex = re.compile(
-            r'^(fruitywifi).*?')
+        self._command_regex = re.compile(r'^(fruitywifi)\s+.*?')
         
         self.addSetting("Token", str, "e5dab9a69988dd65e578041416773149ea57a054")
         self.addSetting("Server", str, "http://127.0.0.1:8000")
@@ -80,7 +79,7 @@ class FruityWiFiPlugin(PluginBase):
     
     def parseOutputString(self, output, debug=False):
         
-        try:            
+        try:
             output = json.loads(output)
             
             if len(output) > 0:
@@ -129,14 +128,14 @@ class FruityWiFiPlugin(PluginBase):
         else:
             return False
 
-    def processCommandString(self, username, current_path, command_string, debug=False):
+    def processCommandString(self, username, current_path, command_string):
         """
         """        
-        #params = command_string.replace("fruitywifi","")
+        super().processCommandString(username, current_path, command_string)
         params = "-t %s -s %s" % (self.getSetting("Token"), self.getSetting("Server"))
         
         return "python " + os.path.dirname(__file__) + "/fruitywifi.py " + params
-        #return None
+
 
 
 def createPlugin():
