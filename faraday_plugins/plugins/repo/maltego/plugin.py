@@ -474,8 +474,7 @@ class MaltegoPlugin(PluginZipFormat):
                 interface_id = self.createAndAddInterface(host_id=host_id, name=host_ip, ipv4_address=host_ip,
                                                           hostname_resolution=[hostname_resolution])
             else:
-                interface_id = self.createAndAddInterface(host_id=host_id, name=host_ip, ipv4_address=host_ip,
-                                                          hostname_resolution="unknown")
+                interface_id = self.createAndAddInterface(host_id=host_id, name=host_ip, ipv4_address=host_ip)
 
             if maltego_parser.xml.get('location'):
                 location_name = maltego_parser.getInfoMtgl(maltego_parser.xml['location'], 'location.name')
