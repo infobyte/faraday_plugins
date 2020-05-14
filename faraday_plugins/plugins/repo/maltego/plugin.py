@@ -394,7 +394,11 @@ class MaltegoPlugin(PluginZipFormat):
                 pass
             else:
                 for host in maltego_parser.parse():
-                    host_id = self.createAndAddHost(name=host.ip)
+                    if host.ip is None:
+                        ip = '0.0.0.0'
+                    else:
+                        ip = host.ip
+                    host_id = self.createAndAddHost(name=ip)
                 # Create interface
                 try:
                     network_segment = host.netblock["ipv4_range"]
@@ -403,7 +407,7 @@ class MaltegoPlugin(PluginZipFormat):
                     pass
                     network_segment = "unknown"
                     hostname_resolution = "unknown"
-                interface_id = self.createAndAddInterface(host_id=host_id, name=host.ip, ipv4_address=host.ip,
+                interface_id = self.createAndAddInterface(host_id=host_id, name=ip, ipv4_address=ip,
                                                           network_segment=network_segment,
                                                           hostname_resolution=[hostname_resolution])
                 # Create note with NetBlock information
