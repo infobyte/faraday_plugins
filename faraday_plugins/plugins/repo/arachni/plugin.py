@@ -136,7 +136,6 @@ class Issue():
         except:
             parameters = ''
 
-
         return ' - '.join(result)
 
     def getRequest(self):
@@ -147,12 +146,10 @@ class Issue():
             raw_data = self.node.find('page').find('request').find('raw')
             data = raw_data.text
             return data
-
-        except:
+        except Exception:
             return 'None'
 
     def getResponse(self):
-
         # Get data about response.
         try:
 
@@ -160,8 +157,7 @@ class Issue():
                 'response').find('raw_headers')
             data = raw_data.text
             return data
-
-        except:
+        except Exception:
             return 'None'
 
 
@@ -175,13 +171,10 @@ class System():
         self.audited_elements = None
         self.modules = ''
         self.cookies = None
-
         self.getOptions()
-
         self.version = self.getDesc('version')
         self.start_time = self.getDesc('start_datetime')
         self.finish_time = self.getDesc('finish_datetime')
-
         self.note = self.getNote()
 
     def getOptions(self):
@@ -218,12 +211,12 @@ class System():
             return None
 
     def getNote(self):
-        result = ('Scan url:\n {} \nUser Agent:\n {} \nVersion Arachni:\n {} \nStart time:\n {} \nFinish time:\n {}'
-                     '\nAudited Elements:\n {} \nModules:\n {} \nCookies:\n {}').format(self.url, self.user_agent,
-                                                                                        self.version, self.start_time,
-                                                                                        self.finish_time,
-                                                                                        self.audited_elements,
-                                                                                        self.modules, self.cookies)
+        result = ('Scan url:\n {} \nUser Agent:\n {} \nVersion Arachni:\n {} \nStart time:\n {} \nFinish time:\n {} '
+                  '\nAudited Elements:\n {} \nModules:\n {} \nCookies:\n {}').format(self.url, self.user_agent,
+                                                                                     self.version, self.start_time,
+                                                                                     self.finish_time,
+                                                                                     self.audited_elements,
+                                                                                     self.modules, self.cookies)
 
         return result
 
@@ -241,7 +234,10 @@ class Plugins():
         self.plugins_node = plugins_node
         self.healthmap = self.getHealthmap()
         self.waf = self.getWaf()
-        self.ip = plugins_node.find('resolver').find('results').find('hostname').get('ipaddress')
+        try:
+            self.ip = plugins_node.find('resolver').find('results').find('hostname').get('ipaddress')
+        except Exception:
+            self.ip = '0.0.0.0'
 
     def getHealthmap(self):
 
@@ -285,7 +281,7 @@ class Plugins():
                       f"\nIssues percentage: {issue_percentage}\nResults Map:\n {urls}")
             return result
 
-        except:
+        except Exception:
             return 'None'
 
     def getWaf(self):
@@ -356,8 +352,11 @@ class ArachniPlugin(PluginXMLFormat):
             return
 
         self.hostname = self.getHostname(parser.system.url)
-        self.address = self.getAddress(parser.plugins.ip)
 
+        if parser.plugins.ip is None:
+            self.address = self.getAddress('0.0.0.0')
+        else:
+            self.address = self.getAddress(parser.plugins.ip)
 
         # Create host and interface
         host_id = self.createAndAddHost(self.address)
@@ -429,9 +428,7 @@ class ArachniPlugin(PluginXMLFormat):
                           r"\1 --report-save-path=%s" % afr_output_file_path,
                           command_string)
         else:
-            main_cmd = re.sub(arg_match.group(1),
-                          r"--report-save-path=%s" % afr_output_file_path,
-                          command_string)
+            main_cmd = re.sub(arg_match.group(1), r"--report-save-path=%s" % afr_output_file_path, command_string)
 
         # add reporter
         self._output_file_path = re.sub('.afr', '.xml', afr_output_file_path)
@@ -472,5 +469,3 @@ class ArachniPlugin(PluginXMLFormat):
 
 def createPlugin():
     return ArachniPlugin()
-
-# I'm Py3
