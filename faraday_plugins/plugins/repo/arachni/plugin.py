@@ -133,7 +133,7 @@ class Issue():
             for param in parameters.findall('input'):
                 name = param.get('name')
                 result.append(name)
-        except:
+        except Exception:
             parameters = ''
 
         return ' - '.join(result)
@@ -180,12 +180,6 @@ class System():
     def getOptions(self):
 
         # Get values of options scan
-        options = self.node.find('options')
-        if options:
-            options_string = options.text
-        else:
-            options_string = None
-
         self.user_agent = self.node.find('user_agent').text
         self.url = self.node.find('url').text
         tags_audited_elements = self.node.find('audited_elements')
@@ -211,18 +205,17 @@ class System():
             return None
 
     def getNote(self):
-        result = ('Scan url:\n {} \nUser Agent:\n {} \nVersion Arachni:\n {} \nStart time:\n {} \nFinish time:\n {} '
-                  '\nAudited Elements:\n {} \nModules:\n {} \nCookies:\n {}').format(self.url, self.user_agent,
-                                                                                     self.version, self.start_time,
-                                                                                     self.finish_time,
-                                                                                     self.audited_elements,
-                                                                                     self.modules, self.cookies)
+        result = f'Scan url:\n {self.url} \nUser Agent:\n {self.user_agent} ' \
+                 f'\nVersion Arachni:\n {self.version} \n' \
+                 f'Start time:\n {self.start_time} \nFinish time:\n ' \
+                 f'{self.finish_time} \nAudited Elements:\n ' \
+                 f'{self.audited_elements} \nModules:\n {self.modules} ' \
+                 f'\nCookies:\n {self.cookies}'
 
         return result
 
 
 class Plugins():
-
     """
     Support:
     WAF (Web Application Firewall) Detector (waf_detector)
@@ -235,7 +228,8 @@ class Plugins():
         self.healthmap = self.getHealthmap()
         self.waf = self.getWaf()
         try:
-            self.ip = plugins_node.find('resolver').find('results').find('hostname').get('ipaddress')
+            self.ip = plugins_node.find('resolver').find('results')\
+                .find('hostname').get('ipaddress')
         except Exception:
             self.ip = '0.0.0.0'
 
@@ -274,11 +268,12 @@ class Plugins():
             with_issues = get_value('with_issues', results)
             without_issues = get_value('without_issues', results)
             issue_percentage = get_value('issue_percentage', results)
-
             urls = '\n'.join(list_urls)
-            result = (f"Plugin Name: {plugin_name}\nDescription: {description}\nStatistics:\nTotal: {total}"
-                      f"\nWith Issues: {with_issues}\nWithout Issues: {without_issues}"
-                      f"\nIssues percentage: {issue_percentage}\nResults Map:\n {urls}")
+            result = (f"Plugin Name: {plugin_name}\nDescription: {description}"
+                      f"\nStatistics:\nTotal: {total}"
+                      f"\nWith Issues: {with_issues}\nWithout Issues: "
+                      f"{without_issues} \nIssues percentage: "
+                      f"{issue_percentage}\nResults Map:\n {urls}")
             return result
 
         except Exception:
@@ -304,10 +299,10 @@ class Plugins():
             results = waf_tree.find('results')
             message = get_value('message', results)
             status = get_value('status', results)
-            result = (f"Plugin Name: {plugin_name}\nDescription: {description}\nResults:"
-                      f"\nMessage: {message}\nStatus: {status}")
+            result = (f"Plugin Name: {plugin_name}\nDescription: {description}"
+                      f"\nResults: \nMessage: {message}\nStatus: {status}")
             return result
-        except:
+        except Exception:
             return 'None'
 
 
@@ -422,13 +417,13 @@ class ArachniPlugin(PluginXMLFormat):
         )
 
         report_arg_re = r"^.*(--report-save-path[=\s][^\s]+).*$"
-        arg_match = re.match(report_arg_re,command_string)
+        arg_match = re.match(report_arg_re, command_string)
         if arg_match is None:
-            main_cmd = re.sub(r"(^.*?arachni)",
-                          r"\1 --report-save-path=%s" % afr_output_file_path,
-                          command_string)
+            main_cmd = re.sub(r"(^.*?arachni)", r"\1 --report-save-path=%s"
+                              % afr_output_file_path, command_string)
         else:
-            main_cmd = re.sub(arg_match.group(1), r"--report-save-path=%s" % afr_output_file_path, command_string)
+            main_cmd = re.sub(arg_match.group(1), r"--report-save-path=%s"
+                              % afr_output_file_path, command_string)
 
         # add reporter
         self._output_file_path = re.sub('.afr', '.xml', afr_output_file_path)
@@ -439,9 +434,10 @@ class ArachniPlugin(PluginXMLFormat):
             "arachni_reporter",
             self._output_file_path,
             afr_output_file_path)
-        return "/usr/bin/env -- bash -c '%s  2>&1 && if [ -e \"%s\" ];then %s 2>&1;fi'" % (main_cmd,
-                                                                                           afr_output_file_path,
-                                                                                           reporter_cmd)
+        return "/usr/bin/env -- bash -c '%s  2>&1 && if [ -e \"%s\" ];then " \
+               "%s 2>&1;fi'" % (main_cmd,
+                                afr_output_file_path,
+                                reporter_cmd)
 
     def getHostname(self, url):
 
@@ -463,7 +459,7 @@ class ArachniPlugin(PluginXMLFormat):
         # Returns remote IP address from hostname.
         try:
             return socket.gethostbyname(hostname)
-        except socket.error as msg:
+        except socket.error:
             return self.hostname
 
 
