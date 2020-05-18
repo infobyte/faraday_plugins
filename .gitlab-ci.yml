@@ -8,6 +8,12 @@ before_script:
   - apt-get update -qy
   - pip install pip -U
 
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: never
+    - when: always
+
 flake8:
     image: python:3
     stage: pre_testing
@@ -22,16 +28,20 @@ flake8:
         - wc -l files.processed
 
 tests:
-    image: python:3
+    image: python:3.7
     stage: testing
     coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
     before_script:
       - pip3 install virtualenv
       - virtualenv -p python3 faraday_venv
       - source faraday_venv/bin/activate
-      - pip3 install pytest pytest-xdist pytest-cov faradaysec
-      - pip uninstall faraday-plugins -y # we need to install fardaysec for marshmallow schemas, we remove plugins frsom pipy
+      - pip3 install pytest pytest-xdist pytest-cov
+      - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday.git
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
+      - cd faraday
+      - python3 setup.py install
+      - pip uninstall faraday-plugins -y # we need to install fardaysec for marshmallow schemas, we remove plugins from pypi
+      - cd ..
     script:
       - source faraday_venv/bin/activate
       - python3 setup.py install
@@ -39,7 +49,7 @@ tests:
 
 
 test_performance:
-    image: python:3
+    image: python:3.7
     stage: post_testing
     coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
     allow_failure: true
@@ -47,27 +57,33 @@ test_performance:
       - pip3 install virtualenv
       - virtualenv -p python3 faraday_venv
       - source faraday_venv/bin/activate
-      - pip3 install pytest pytest-xdist pytest-cov pytest-benchmark faradaysec
-      - pip uninstall faraday-plugins -y # we need to install fardaysec for marshmallow schemas, we remove plugins frsom pipy
+      - pip3 install pytest pytest-xdist pytest-cov
+      - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday.git
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
+      - cd faraday
+      - python3 setup.py install
+      - pip uninstall faraday-plugins -y # we need to install fardaysec for marshmallow schemas, we remove plugins from pypi
+      - cd ..
     script:
       - source faraday_venv/bin/activate
       - python3 setup.py install
       - pytest tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings --performance
-    only:
-      - develop
+    rules:
+      - if: '$CI_COMMIT_BRANCH == "develop"'
+        when: always
 
-publish_pipy:
+publish_pypi:
     image: python:3
     stage: publish
     before_script:
       - pip3 install virtualenv
-      - virtualenv -p python3 faraday_venv twine
+      - virtualenv -p python3 faraday_venv
       - source faraday_venv/bin/activate
+      - pip install twine
     script:
       - python setup.py sdist bdist_wheel
       - twine upload dist/* -u $TWINE_USERNAME -p $TWINE_PASSWORD
 
-    only:
-      variables:
-        - $CI_COMMIT_TAG =~ /^v[0-9.]+$/
+    rules:
+      - if: '$CI_COMMIT_TAG =~ /^v[0-9.]+$/'
+        when: always

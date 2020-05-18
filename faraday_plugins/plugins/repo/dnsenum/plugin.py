@@ -18,7 +18,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -159,9 +158,11 @@ class DnsenumPlugin(PluginBase):
         self.version = "1.2.2"
         self.options = None
         self._current_output = None
+        self._use_temp_file = True
+        self._temp_file_extension = "txt"
         self._command_regex = re.compile(
-            r'^(sudo dnsenum|dnsenum|sudo dnsenum\.pl|dnsenum\.pl|perl dnsenum\.pl|\.\/dnsenum\.pl).*?')
-
+            r'^(sudo dnsenum|dnsenum|sudo dnsenum\.pl|dnsenum\.pl|perl dnsenum\.pl|\.\/dnsenum\.pl)\s+.*?')
+        self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
 
     def parseOutputString(self, output, debug=False):
         """
@@ -184,25 +185,18 @@ class DnsenumPlugin(PluginBase):
 
         del parser
 
-    xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
-
     def processCommandString(self, username, current_path, command_string):
         """
         Adds the -oX parameter to get xml output to the command string that the
         user has set.
         """
-
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:
-            return re.sub(
-                r"(^.*?dnsenum(\.pl)?)",
-                r"\1 -o %s" % self._output_file_path,
-                command_string)
+            return re.sub(r"(^.*?dnsenum(\.pl)?)", r"\1 -o %s" % self._output_file_path, command_string)
         else:
-            return re.sub(arg_match.group(1),
-                          r"-o %s" % self._output_file_path,
-                          command_string)
+            return re.sub(arg_match.group(1), r"-o %s" % self._output_file_path, command_string)
 
     def setHost(self):
         pass

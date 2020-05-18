@@ -4,9 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-import socket
 from os import path
-from faraday_plugins.plugins.plugin import PluginBase
 from urllib.parse import urlparse
 
 __author__ = "Andres Tarantini"
@@ -17,6 +15,9 @@ __version__ = "0.0.1"
 __maintainer__ = "Andres Tarantini"
 __email__ = "atarantini@gmail.com"
 __status__ = "Development"
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class PeepingTomPlugin(PluginBase):
@@ -31,7 +32,7 @@ class PeepingTomPlugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.version = "02.19.15"
         self._command_regex = re.compile(
-            r'^(python peepingtom.py|\./peepingtom.py).*?')
+            r'^(python peepingtom.py|\./peepingtom.py)\s+.*?')
         self._path = None
 
     def parseOutputString(self, output):
@@ -48,7 +49,7 @@ class PeepingTomPlugin(PluginBase):
         for url in re.findall(r'href=[\'"]?([^\'" >]+)', html):
             if "://" in url:
                 url_parsed = urlparse(url)
-                address = socket.gethostbyname(url_parsed.netloc)
+                address = resolve_hostname(url_parsed.netloc)
                 host = self.createAndAddHost(address)
                 iface = self.createAndAddInterface(
                     host, address, ipv4_address=address)
@@ -68,6 +69,7 @@ class PeepingTomPlugin(PluginBase):
         return True
 
     def processCommandString(self, username, current_path, command_string):
+        super().processCommandString(username, current_path, command_string)
         self._path = current_path
 
 

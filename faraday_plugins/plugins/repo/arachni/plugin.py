@@ -1,17 +1,13 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-import socket
-import random
 import re
 from urllib.parse import urlparse
 import os
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
@@ -43,7 +39,6 @@ class ArachniXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print('SyntaxError In xml: %s. %s' % (err, xml_output))
             return None
         return tree
 
@@ -133,8 +128,9 @@ class Issue():
             for param in parameters.findall('input'):
                 name = param.get('name')
                 result.append(name)
-        except Exception:
+        except:
             parameters = ''
+
 
         return ' - '.join(result)
 
@@ -146,18 +142,20 @@ class Issue():
             raw_data = self.node.find('page').find('request').find('raw')
             data = raw_data.text
             return data
-        except Exception:
+
+        except:
             return 'None'
 
     def getResponse(self):
+
         # Get data about response.
         try:
 
-            raw_data = self.node.find('page').find(
-                'response').find('raw_headers')
+            raw_data = self.node.find('page').find('response').find('raw_headers')
             data = raw_data.text
             return data
-        except Exception:
+
+        except:
             return 'None'
 
 
@@ -171,15 +169,24 @@ class System():
         self.audited_elements = None
         self.modules = ''
         self.cookies = None
+
         self.getOptions()
+
         self.version = self.getDesc('version')
         self.start_time = self.getDesc('start_datetime')
         self.finish_time = self.getDesc('finish_datetime')
+
         self.note = self.getNote()
 
     def getOptions(self):
 
         # Get values of options scan
+        options = self.node.find('options')
+        if options:
+            options_string = options.text
+        else:
+            options_string = None
+
         self.user_agent = self.node.find('user_agent').text
         self.url = self.node.find('url').text
         tags_audited_elements = self.node.find('audited_elements')
@@ -205,17 +212,18 @@ class System():
             return None
 
     def getNote(self):
-        result = f'Scan url:\n {self.url} \nUser Agent:\n {self.user_agent} ' \
-                 f'\nVersion Arachni:\n {self.version} \n' \
-                 f'Start time:\n {self.start_time} \nFinish time:\n ' \
-                 f'{self.finish_time} \nAudited Elements:\n ' \
-                 f'{self.audited_elements} \nModules:\n {self.modules} ' \
-                 f'\nCookies:\n {self.cookies}'
+        result = ('Scan url:\n {} \nUser Agent:\n {} \nVersion Arachni:\n {} \nStart time:\n {} \nFinish time:\n {}'
+                     '\nAudited Elements:\n {} \nModules:\n {} \nCookies:\n {}').format(self.url, self.user_agent,
+                                                                                        self.version, self.start_time,
+                                                                                        self.finish_time,
+                                                                                        self.audited_elements,
+                                                                                        self.modules, self.cookies)
 
         return result
 
 
 class Plugins():
+
     """
     Support:
     WAF (Web Application Firewall) Detector (waf_detector)
@@ -228,7 +236,7 @@ class Plugins():
         self.healthmap = self.getHealthmap()
         self.waf = self.getWaf()
         try:
-            self.ip = plugins_node.find('resolver').find('results')\
+            self.ip = plugins_node.find('resolver').find('results') \
                 .find('hostname').get('ipaddress')
         except Exception:
             self.ip = '0.0.0.0'
@@ -268,15 +276,14 @@ class Plugins():
             with_issues = get_value('with_issues', results)
             without_issues = get_value('without_issues', results)
             issue_percentage = get_value('issue_percentage', results)
+
             urls = '\n'.join(list_urls)
-            result = (f"Plugin Name: {plugin_name}\nDescription: {description}"
-                      f"\nStatistics:\nTotal: {total}"
-                      f"\nWith Issues: {with_issues}\nWithout Issues: "
-                      f"{without_issues} \nIssues percentage: "
-                      f"{issue_percentage}\nResults Map:\n {urls}")
+            result = (f"Plugin Name: {plugin_name}\nDescription: {description}\nStatistics:\nTotal: {total}"
+                      f"\nWith Issues: {with_issues}\nWithout Issues: {without_issues}"
+                      f"\nIssues percentage: {issue_percentage}\nResults Map:\n {urls}")
             return result
 
-        except Exception:
+        except:
             return 'None'
 
     def getWaf(self):
@@ -299,10 +306,10 @@ class Plugins():
             results = waf_tree.find('results')
             message = get_value('message', results)
             status = get_value('status', results)
-            result = (f"Plugin Name: {plugin_name}\nDescription: {description}"
-                      f"\nResults: \nMessage: {message}\nStatus: {status}")
+            result = (f"Plugin Name: {plugin_name}\nDescription: {description}\nResults:"
+                      f"\nMessage: {message}\nStatus: {status}")
             return result
-        except Exception:
+        except:
             return 'None'
 
 
@@ -319,11 +326,13 @@ class ArachniPlugin(PluginXMLFormat):
         self.version = '1.3.2'
         self.framework_version = '1.0.0'
         self.options = None
-        self._command_regex = re.compile(r'^(arachni |\.\/arachni).*?')
+        self._command_regex = re.compile(r'^(arachni|\.\/arachni)\s+.*?')
         self.protocol = None
         self.hostname = None
         self.port = '80'
         self.address = None
+        self._use_temp_file = True
+        self._temp_file_extension = ["afr", "xml"]
 
     def report_belongs_to(self, **kwargs):
         if super().report_belongs_to(**kwargs):
@@ -333,25 +342,40 @@ class ArachniPlugin(PluginXMLFormat):
             return re.search("/Arachni/arachni/", output) is not None
         return False
 
+    def _parse_filename(self, filename):
+        """
+        This plugin gets a dict of files, not just one file if it runs the command.
+        We just need the xml.
+        """
+        if isinstance(filename, dict):
+            filename = filename['xml']
+        with open(filename, **self.open_options) as output:
+            self.parseOutputString(output.read())
+        if isinstance(filename, dict):
+            for _file in filename.values():
+                try:
+                    os.remove(_file)
+                except Exception as e:
+                    self.logger.error("Error on delete file: (%s) [%s]", _file, e)
+        else:
+            try:
+                os.remove(filename)
+            except Exception as e:
+                self.logger.error("Error on delete file: (%s) [%s]", filename, e)
+
     def parseOutputString(self, output, debug=False):
         """
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.
         """
-
         parser = ArachniXmlParser(output)
 
         # Check xml parsed ok...
         if not parser.system:
-            print('Error in xml report... Exiting...')
             return
 
         self.hostname = self.getHostname(parser.system.url)
-
-        if parser.plugins.ip is None:
-            self.address = self.getAddress('0.0.0.0')
-        else:
-            self.address = self.getAddress(parser.plugins.ip)
+        self.address = resolve_hostname(parser.plugins.ip)
 
         # Create host and interface
         host_id = self.createAndAddHost(self.address)
@@ -407,37 +431,33 @@ class ArachniPlugin(PluginXMLFormat):
         """
         Use bash to run sequentialy arachni and arachni_reporter
         """
-
-        afr_output_file_path = os.path.join(
-            self.data_path,
-            "%s_%s_output-%s.afr" % (
-                self.get_ws(),
-                self.id,
-                random.uniform(1, 10))
-        )
-
+        # Dont call the parent beacuse this plugin needs a different implementation
+        if command_string.startswith("sudo"):
+            params = " ".join(command_string.split()[2:])
+        else:
+            params = " ".join(command_string.split()[1:])
+        self.vulns_data["command"]["params"] = params
+        self.vulns_data["command"]["user"] = username
+        self._output_file_path = {}
+        for ext in self._temp_file_extension:
+            self._output_file_path[ext] = self._get_temp_file(extension=ext)
+        afr_file_path = self._output_file_path['afr']
+        xml_file_path = self._output_file_path['xml']
         report_arg_re = r"^.*(--report-save-path[=\s][^\s]+).*$"
         arg_match = re.match(report_arg_re, command_string)
         if arg_match is None:
-            main_cmd = re.sub(r"(^.*?arachni)", r"\1 --report-save-path=%s"
-                              % afr_output_file_path, command_string)
+            main_cmd = re.sub(r"(^.*?arachni)", r"\1 --report-save-path=%s" % afr_file_path, command_string)
         else:
-            main_cmd = re.sub(arg_match.group(1), r"--report-save-path=%s"
-                              % afr_output_file_path, command_string)
+            main_cmd = re.sub(arg_match.group(1), r"--report-save-path=%s" % afr_file_path, command_string)
 
         # add reporter
-        self._output_file_path = re.sub('.afr', '.xml', afr_output_file_path)
         cmd_prefix_match = re.match(r"(^.*?)arachni ", command_string)
         cmd_prefix = cmd_prefix_match.group(1)
-        reporter_cmd = "%s%s --reporter=\"xml:outfile=%s\" \"%s\"" % (
-            cmd_prefix,
-            "arachni_reporter",
-            self._output_file_path,
-            afr_output_file_path)
-        return "/usr/bin/env -- bash -c '%s  2>&1 && if [ -e \"%s\" ];then " \
-               "%s 2>&1;fi'" % (main_cmd,
-                                afr_output_file_path,
-                                reporter_cmd)
+        reporter_cmd = "%s%s --reporter=\"xml:outfile=%s\" \"%s\"" % (cmd_prefix, "arachni_reporter", xml_file_path,
+                                                                      afr_file_path)
+        return "/usr/bin/env -- bash -c '%s  2>&1 && if [ -e \"%s\" ];then %s 2>&1;fi'" % (main_cmd,
+                                                                                           afr_file_path,
+                                                                                           reporter_cmd)
 
     def getHostname(self, url):
 
@@ -454,14 +474,8 @@ class ArachniPlugin(PluginXMLFormat):
 
         return self.hostname
 
-    def getAddress(self, hostname):
-
-        # Returns remote IP address from hostname.
-        try:
-            return socket.gethostbyname(hostname)
-        except socket.error:
-            return self.hostname
-
 
 def createPlugin():
     return ArachniPlugin()
+
+# I'm Py3

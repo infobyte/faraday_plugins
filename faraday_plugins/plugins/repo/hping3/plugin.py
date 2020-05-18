@@ -37,7 +37,7 @@ class hping3(PluginBase):
             ip_address = regex_ipv4.group(0).rstrip("):") # Regex pls
         else:
             # Exit plugin, ip address not found. bad output
-            self.log("Abort plugin: Ip address not found", "INFO")
+            self.logger.warning("Abort plugin: Ip address not found", "INFO")
             return
 
         hostname = output.split(" ")[1]
@@ -69,9 +69,6 @@ class hping3(PluginBase):
                 if list[2] == "S" and list[3] == "A":
                     s_id = self.createAndAddServiceToInterface(
                         host_id, i_id, service, protocol="tcp", ports=port, status="open")
-
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
 
 def createPlugin():

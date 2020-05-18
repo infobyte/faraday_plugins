@@ -5,16 +5,25 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import os
+import shutil
+import tempfile
+
+from collections import defaultdict
+
 import pytz
 import re
 import uuid
 import logging
 import simplejson as json
+import zipfile
 from datetime import datetime
+import hashlib
 
 
 logger = logging.getLogger("faraday").getChild(__name__)
 
+VALID_SERVICE_STATUS = ("open", "closed", "filtered")
+VULN_SKIP_FIELDS_TO_HASH = ['run_date']
 
 class PluginBase:
     # TODO: Add class generic identifier
@@ -32,12 +41,16 @@ class PluginBase:
         self.description = ""
         self._command_regex = None
         self._output_file_path = None
+        self._use_temp_file = False
+        self._delete_temp_file = False
+        self._temp_file_extension = "tmp"
+        self._current_path = None
         self.framework_version = None
         self._completition = {}
         self._new_elems = []
         self._settings = {}
         self.command_id = None
-        self.cache = {}
+        self._cache = {}
         self._hosts_cache = {}
         self._service_cache = {}
         self._vulns_cache = {}
@@ -55,6 +68,12 @@ class PluginBase:
 
     def __str__(self):
         return f"Plugin: {self.id}"
+
+    def _get_temp_file(self, extension="tmp"):
+        temp_dir = tempfile.gettempdir()
+        temp_filename = f"{self.id}_{next(tempfile._get_candidate_names())}.{extension}"
+        temp_file_path = os.path.join(temp_dir, temp_filename)
+        return temp_file_path
 
     @staticmethod
     def get_utctimestamp(date):
@@ -94,7 +113,7 @@ class PluginBase:
 
     # Caches
     def get_from_cache(self, cache_id):
-        return self.cache.get(cache_id, None)
+        return self._cache.get(cache_id, None)
 
     def save_host_cache(self, host):
         cache_id = self.get_host_cache_id(host)
@@ -143,6 +162,7 @@ class PluginBase:
     def _get_dict_hash(d, keys):
         return hash(frozenset(map(lambda x: (x, d.get(x, None)), keys)))
 
+
     @classmethod
     def get_host_cache_id(cls, host):
         cache_id = cls._get_dict_hash(host, ['ip'])
@@ -171,7 +191,7 @@ class PluginBase:
 
     def save_cache(self, obj):
         obj_uuid = uuid.uuid1()
-        self.cache[obj_uuid] = obj
+        self._cache[obj_uuid] = obj
         return obj_uuid
 
     def report_belongs_to(self, **kwargs):
@@ -224,6 +244,24 @@ class PluginBase:
         return (self._command_regex is not None and
                 self._command_regex.match(current_input.strip()) is not None)
 
+    def processCommandString(self, username, current_path, command_string):
+        """
+        With this method a plugin can add additional arguments to the
+        command that it's going to be executed.
+        """
+        self._current_path = current_path
+        if command_string.startswith("sudo"):
+            params = " ".join(command_string.split()[2:])
+        else:
+            params = " ".join(command_string.split()[1:])
+        self.vulns_data["command"]["params"] = params
+        self.vulns_data["command"]["user"] = username
+        self.vulns_data["command"]["import_source"] = "shell"
+        if self._use_temp_file:
+            self._delete_temp_file = True
+            self._output_file_path = self._get_temp_file(extension=self._temp_file_extension)
+        return None
+
     def getCompletitionSuggestionsList(self, current_input):
         """
         This method can be overriden in the plugin implementation
@@ -237,22 +275,30 @@ class PluginBase:
                 options[k] = v
         return options
 
-    def processOutput(self, term_output):
-        output = term_output
-        if self.has_custom_output() and os.path.isfile(self.get_custom_file_path()):
+    def processOutput(self, command_output):
+        if self.has_custom_output():
             self._parse_filename(self.get_custom_file_path())
         else:
-            self.parseOutputString(output)
+            self.parseOutputString(command_output)
 
     def _parse_filename(self, filename):
         with open(filename, **self.open_options) as output:
             self.parseOutputString(output.read())
+        if self._delete_temp_file:
+            try:
+                if os.path.isfile(filename):
+                    os.remove(filename)
+                elif os.path.isdir(filename):
+                    shutil.rmtree(filename)
+            except Exception as e:
+                self.logger.error("Error on delete file: (%s) [%s]", filename, e)
 
     def processReport(self, filepath, user="faraday"):
         if os.path.isfile(filepath):
-            self._parse_filename(filepath)
             self.vulns_data["command"]["params"] = filepath
             self.vulns_data["command"]["user"] = user
+            self.vulns_data["command"]["import_source"] = "report"
+            self._parse_filename(filepath)
         else:
             raise FileNotFoundError(filepath)
 
@@ -329,8 +375,7 @@ class PluginBase:
             elif isinstance(ports, str):
                 ports = int(ports)
 
-        if status not in ("open", "closed", "filtered"):
-            self.logger.warning('Unknown service status %s. Using "open" instead', status)
+        if status not in VALID_SERVICE_STATUS:
             status = 'open'
         service = {"name": name, "protocol": protocol, "port": ports, "status": status,
                    "version": version, "description": description, "credentials": [], "vulnerabilities": []}
@@ -376,7 +421,7 @@ class PluginBase:
 
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
-                                  custom_fields=None, policyviolations=None, impact=None, status="", 
+                                  custom_fields=None, policyviolations=None, impact=None, status="",
                                   confirmed=False, easeofresolution=None):
         if ref is None:
             ref = []
@@ -484,6 +529,35 @@ class PluginBase:
         self.logger.debug("Generate Json")
         return json.dumps(self.get_data())
 
+    def get_summary(self):
+        plugin_json = self.get_data()
+        summary = {'hosts': len(plugin_json['hosts']), 'services': 0,
+                   'hosts_vulns': sum(list(map(lambda x: len(x['vulnerabilities']), plugin_json['hosts']))),
+                   'services_vulns': 0, 'severity_vulns': defaultdict(int),
+                   'vuln_hashes': []
+                   }
+        hosts_with_services = filter(lambda x: len(x['services']) > 0, plugin_json['hosts'])
+        host_services = list(map(lambda x: x['services'], hosts_with_services))
+        summary['services'] = sum(map(lambda x: len(x), host_services))
+        services_vulns = 0
+        for host in plugin_json['hosts']:
+            for vuln in host['vulnerabilities']:
+                summary['severity_vulns'][vuln['severity']] += 1
+        for services in host_services:
+            for service in services:
+                services_vulns += len(service['vulnerabilities'])
+                for vuln in service['vulnerabilities']:
+                    summary['severity_vulns'][vuln['severity']] += 1
+        summary['services_vulns'] = services_vulns
+        for obj_uuid in self._vulns_cache.values():
+            vuln = self.get_from_cache(obj_uuid)
+            vuln_copy = vuln.copy()
+            for field in VULN_SKIP_FIELDS_TO_HASH:
+                vuln_copy.pop(field, None)
+            dict_hash = hashlib.sha1(json.dumps(vuln_copy).encode()).hexdigest()
+            summary['vuln_hashes'].append(dict_hash)
+        return summary
+
 # TODO Borrar
 class PluginTerminalOutput(PluginBase):
     def __init__(self):
@@ -576,3 +650,26 @@ class PluginCSVFormat(PluginByExtension):
                 match = self.csv_headers.issubset(file_csv_headers)
             self.logger.debug("CSV Headers Match: [%s =/in %s] -> %s", file_csv_headers, self.csv_headers, match)
         return match
+
+
+class PluginZipFormat(PluginByExtension):
+
+    def __init__(self):
+        super().__init__()
+        self.extension = ".zip"
+        self.files_list = set()
+
+    def _parse_filename(self, filename):
+        file = zipfile.ZipFile(filename, "r")
+        self.parseOutputString(file)
+
+    def report_belongs_to(self, files_in_zip=None, **kwargs):
+        match = False
+        if super().report_belongs_to(**kwargs):
+            if files_in_zip is None:
+                files_in_zip = set()
+            match = bool(self.files_list & files_in_zip)
+            self.logger.debug("Files List Match: [%s =/in %s] -> %s", files_in_zip, self.files_list, match)
+        return match
+
+

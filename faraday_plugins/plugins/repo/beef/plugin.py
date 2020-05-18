@@ -33,7 +33,7 @@ class BeefPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self.target = None
-        self._command_regex = re.compile(r'^(beef|sudo beef|\.\/beef).*?')
+        self._command_regex = re.compile(r'^(beef|sudo beef|\.\/beef)\s+.*?')
 
         self.addSetting("Host", str, "http://127.0.0.1:3000/")
         self.addSetting(
@@ -94,8 +94,6 @@ class BeefPlugin(PluginBase):
                         ref=["http://http://beefproject.com/"],
                         severity=3)
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass

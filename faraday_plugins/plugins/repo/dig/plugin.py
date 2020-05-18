@@ -6,9 +6,6 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-import socket
-
-from faraday_plugins.plugins.plugin import PluginBase
 
 __author__ = u"Andres Tarantini"
 __copyright__ = u"Copyright (c) 2015 Andres Tarantini"
@@ -18,6 +15,9 @@ __version__ = u"0.0.1"
 __maintainer__ = u"Andres Tarantini"
 __email__ = u"atarantini@gmail.com"
 __status__ = u"Development"
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class DigPlugin(PluginBase):
@@ -31,7 +31,7 @@ class DigPlugin(PluginBase):
         self.name = u"DiG"
         self.plugin_version = u"0.0.1"
         self.version = u"9.9.5-3"
-        self._command_regex = re.compile(r'^(dig).*?')
+        self._command_regex = re.compile(r'^(dig)\s+.*?')
 
     def parseOutputString(self, output):
         # Ignore all lines that start with ";"
@@ -64,7 +64,7 @@ class DigPlugin(PluginBase):
                     if result.get(u"type") == u"A": # A = IPv4 address from dig
                         ip_address = result.get(u"data")[0]
                     else:                           # if not, from socket
-                        ip_address = socket.gethostbyname(domain)
+                        ip_address = resolve_hostname(domain)
 
                     # Create host
                     host_id = self.createAndAddHost(ip_address)

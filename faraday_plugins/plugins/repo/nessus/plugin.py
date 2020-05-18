@@ -7,11 +7,8 @@ See the file 'doc/LICENSE' for the license information
 import dateutil
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-import re
-import os
 import xml.etree.ElementTree as ET
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Blas"
 __copyright__ = "Copyright (c) 2019, Infobyte LLC"
@@ -167,10 +164,6 @@ class Report():
             host_tags.setdefault(t.attrib.get('name'), t.text)
         return host_tags
 
-    def getnote(self):
-        result = "El nombre es {}".format(self.report_name)
-        return result
-
 
 class NessusPlugin(PluginXMLFormat):
     """
@@ -187,22 +180,8 @@ class NessusPlugin(PluginXMLFormat):
         self.version = "5.2.4"
         self.framework_version = "1.0.1"
         self.options = None
-        self._current_output = None
-        self._current_path = None
-        self._command_regex = re.compile(
-            r'^(nessus|sudo nessus|\.\/nessus).*?')
-        self.host = None
-        self.port = None
-        self.protocol = None
-        self.fail = None
 
-    def canParseCommandString(self, current_input):
-        if self._command_regex.match(current_input.strip()):
-            return True
-        else:
-            return False
-
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.
@@ -213,7 +192,6 @@ class NessusPlugin(PluginXMLFormat):
         try:
             parser = NessusParser(output)
         except:
-            print("Error parser output")
             return None
 
         if parser.report.report_json is not None:
@@ -358,8 +336,7 @@ class NessusPlugin(PluginXMLFormat):
                                                                          interface_id,
                                                                          name=serv_name,
                                                                          protocol=serv_protocol,
-                                                                         ports=serv_port,
-                                                                         status=serv_status)
+                                                                         ports=serv_port)
 
                         if serv_name == 'www' or serv_name == 'http':
                             self.createAndAddVulnWebToService(host_id,
@@ -388,7 +365,6 @@ class NessusPlugin(PluginXMLFormat):
             ip = '0.0.0.0'
             host_id = self.createAndAddHost(ip, hostnames="Not Information")
             interface_id = self.createAndAddInterface(host_id, ip)
-
             service_id = self.createAndAddServiceToInterface(host_id, interface_id, name="Not Information")
             self.createAndAddVulnToService(host_id,
                                            service_id,
@@ -398,5 +374,3 @@ class NessusPlugin(PluginXMLFormat):
 
 def createPlugin():
     return NessusPlugin()
-
-# I'm Py3

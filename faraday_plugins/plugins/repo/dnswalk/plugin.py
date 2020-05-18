@@ -4,13 +4,12 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-
-from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
-import socket
 
-current_path = os.path.abspath(os.getcwd())
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
+
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -56,19 +55,13 @@ class DnswalkParser:
                 line)
 
             if mregex is not None:
-                ip = self.getAddress(mregex.group(2))
+                ip = resolve_hostname(mregex.group(2))
                 item = {
                     'host': mregex.group(1),
                     'ip': ip,
                     'type': 'info'}
                 self.items.append(item)
 
-    def getAddress(self, hostname):
-        """Returns remote IP address from hostname."""
-        try:
-            return socket.gethostbyname(hostname)
-        except socket.error:
-            return hostname
 
 
 class DnswalkPlugin(PluginBase):
@@ -84,11 +77,9 @@ class DnswalkPlugin(PluginBase):
         self.version = "2.0.2"
         self.options = None
         self._current_output = None
-        self._current_path = None
         self._command_regex = re.compile(
-            r'^(sudo dnswalk|dnswalk|\.\/dnswalk).*?')
+            r'^(sudo dnswalk|dnswalk|\.\/dnswalk)\s+.*?')
 
-        global current_path
 
     def canParseCommandString(self, current_input):
         if self._command_regex.match(current_input.strip()):
@@ -138,9 +129,6 @@ class DnswalkPlugin(PluginBase):
                     ref=["CVE-1999-0532"])
 
         return True
-
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
 
 def createPlugin():

@@ -3,9 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
-import socket
 
 __author__ = "Federico Fernandez - @q3rv0"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -14,6 +12,9 @@ __version__ = "1.0.0"
 __maintainer__ = "Federico Fernandez"
 __email__ = "fede.merlo26@gmail.com"
 __status__ = "Development"
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class dirbPlugin(PluginBase):
@@ -40,7 +41,7 @@ class dirbPlugin(PluginBase):
 
     def getIP(self, host):
         try:
-            ip = socket.gethostbyname(host)
+            ip = resolve_hostname(host)
         except Exception:
             pass
 
@@ -73,7 +74,7 @@ class dirbPlugin(PluginBase):
 
         self.text = '\n'.join(self.text)
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         url = re.search(r"URL_BASE: " + self.regexpUrl, output)
         paths = self.pathsDirListing(output)
@@ -107,7 +108,7 @@ class dirbPlugin(PluginBase):
         Adds the -oX parameter to get xml output to the command string that the
         user has set.
         """
-
+        super().processCommandString(username, current_path, command_string)
         no_stop_on_warn_msg_re = r"\s+-w"
         arg_search = re.search(no_stop_on_warn_msg_re,command_string)
         extra_arg = ""

@@ -4,13 +4,13 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
-import socket
 import re
 import os
 import random
 
-current_path = os.path.abspath(os.getcwd())
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
+
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -109,18 +109,9 @@ class FiercePlugin(PluginBase):
         self.version = "0.9.9"
         self.options = None
         self._current_output = None
-        self._current_path = None
         self._command_regex = re.compile(
-            r'^(sudo fierce|fierce|sudo fierce\.pl|fierce\.pl|perl fierce\.pl|\.\/fierce\.pl).*?')
-        global current_path
+            r'^(sudo fierce|fierce|sudo fierce\.pl|fierce\.pl|perl fierce\.pl|\.\/fierce\.pl)\s+.*?')
 
-        self.xml_arg_re = re.compile(r"^.*(>\s*[^\s]+).*$")
-
-    def canParseCommandString(self, current_input):
-        if self._command_regex.match(current_input.strip()):
-            return True
-        else:
-            return False
 
     def resolveCNAME(self, item, items):
         for i in items:
@@ -128,7 +119,7 @@ class FiercePlugin(PluginBase):
                 item['ip'] = i['ip']
                 return item
         try:
-            item['ip'] = socket.gethostbyname(item['ip'])
+            item['ip'] = resolve_hostname(item['ip'])
         except:
             pass
         return item
@@ -136,7 +127,7 @@ class FiercePlugin(PluginBase):
     def resolveNS(self, item, items):
         try:
             item['hosts'][0] = item['ip']
-            item['ip'] = socket.gethostbyname(item['ip'])
+            item['ip'] = resolve_hostname(item['ip'])
         except:
             pass
         return item
@@ -183,23 +174,6 @@ class FiercePlugin(PluginBase):
                         desc="A Dns server allows unrestricted zone transfers",
                         ref=["CVE-1999-0532"])
 
-    def processCommandString(self, username, current_path, command_string):
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "%s_%s_output-%s.txt" % (
-                self.get_ws(),
-                self.id,
-                random.uniform(1, 10))
-        )
-
-        arg_match = self.xml_arg_re.match(command_string)
-
-        if arg_match is None:
-            return "%s > %s" % (command_string, self._output_file_path)
-        else:
-            return re.sub(arg_match.group(1),
-                          r"> %s" % self._output_file_path,
-                          command_string)
 
 
 def createPlugin():

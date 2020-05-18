@@ -4,11 +4,12 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
 import os
-import socket
-current_path = os.path.abspath(os.getcwd())
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
+
 
 __author__ = "Facundo de Guzmán, Esteban Guillardoy"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -35,7 +36,7 @@ class CmdWhoisPlugin(PluginBase):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^whois.*?')
+        self._command_regex = re.compile(r'^whois\s+.*?')
         self._host_ip = None
         self._info = 0
         self._completition = {
@@ -67,29 +68,18 @@ class CmdWhoisPlugin(PluginBase):
             "--version": "output version information and exit",
         }
 
-        global current_path
 
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
 
     def parseOutputString(self, output, debug=False):
         matches = re.findall("Name Server:\s*(.*)\s*", output)
         for m in matches:
             m = m.strip()
-            ip = self.resolve(m)
+            ip = resolve_hostname(m)
             h_id = self.createAndAddHost(ip, "os unknown")
             i_id = self.createAndAddInterface(
                 h_id, ip, "00:00:00:00:00:00", ip, hostname_resolution=[m])
         return True
 
-    def processCommandString(self, username, current_path, command_string):
-        """
-        """
-        return None
 
 
 def createPlugin():

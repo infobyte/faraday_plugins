@@ -4,12 +4,9 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
-import os
-import socket
-
-current_path = os.path.abspath(os.getcwd())
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Facundo de Guzmán, Esteban Guillardoy"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -36,7 +33,7 @@ class TelnetRouterPlugin(PluginBase):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^telnet.*?')
+        self._command_regex = re.compile(r'^telnet\s+.*?')
         self._host_ip = None
         self._host = []
         self._port = "23"
@@ -57,21 +54,14 @@ class TelnetRouterPlugin(PluginBase):
             "-n": "-n &lt;tracefile&gt; Opens tracefile for recording trace information.  See the set tracefile command below.",
         }
 
-        global current_path
 
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
 
     def parseOutputString(self, output, debug=False):
 
         host_info = re.search(r"Connected to (.+)\.", output)
 
         hostname = host_info.group(1)
-        ip_address = self.resolve(hostname)
+        ip_address = resolve_hostname(hostname)
 
         if host_info is not None:
             h_id = self.createAndAddHost(ip_address)
@@ -84,9 +74,8 @@ class TelnetRouterPlugin(PluginBase):
         return True
 
     def processCommandString(self, username, current_path, command_string):
-
+        super().processCommandString(username, current_path, command_string)
         count_args = command_string.split()
-
         c = count_args.__len__()
         self._port = "23"
         if re.search(r"[\d]+", count_args[c - 1]):
