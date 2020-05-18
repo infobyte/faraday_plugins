@@ -15,6 +15,7 @@ import re
 import uuid
 import logging
 import simplejson as json
+import zipfile
 from datetime import datetime
 import hashlib
 
@@ -420,7 +421,7 @@ class PluginBase:
 
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
-                                  custom_fields=None, policyviolations=None, impact=None, status="", 
+                                  custom_fields=None, policyviolations=None, impact=None, status="",
                                   confirmed=False, easeofresolution=None):
         if ref is None:
             ref = []
@@ -649,3 +650,26 @@ class PluginCSVFormat(PluginByExtension):
                 match = self.csv_headers.issubset(file_csv_headers)
             self.logger.debug("CSV Headers Match: [%s =/in %s] -> %s", file_csv_headers, self.csv_headers, match)
         return match
+
+
+class PluginZipFormat(PluginByExtension):
+
+    def __init__(self):
+        super().__init__()
+        self.extension = ".zip"
+        self.files_list = set()
+
+    def _parse_filename(self, filename):
+        file = zipfile.ZipFile(filename, "r")
+        self.parseOutputString(file)
+
+    def report_belongs_to(self, files_in_zip=None, **kwargs):
+        match = False
+        if super().report_belongs_to(**kwargs):
+            if files_in_zip is None:
+                files_in_zip = set()
+            match = bool(self.files_list & files_in_zip)
+            self.logger.debug("Files List Match: [%s =/in %s] -> %s", files_in_zip, self.files_list, match)
+        return match
+
+
