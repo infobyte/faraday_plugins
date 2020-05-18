@@ -8,6 +8,12 @@ before_script:
   - apt-get update -qy
   - pip install pip -U
 
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: never
+    - when: always
+
 flake8:
     image: python:3
     stage: pre_testing
