@@ -70,7 +70,7 @@ test_performance:
       - pytest tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings --performance
     rules:
       - if: '$CI_COMMIT_BRANCH == "develop"'
-        when: always
+        when: on_success
 
 publish_pypi:
     image: python:3
@@ -86,4 +86,4 @@ publish_pypi:
 
     rules:
       - if: '$CI_COMMIT_TAG =~ /^v[0-9.]+$/'
-        when: always
+        when: on_success
