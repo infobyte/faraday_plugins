@@ -6,7 +6,6 @@ See the file 'doc/LICENSE' for the license information
 import re
 from urllib.parse import urlparse
 import os
-
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
@@ -236,7 +235,11 @@ class Plugins():
         self.plugins_node = plugins_node
         self.healthmap = self.getHealthmap()
         self.waf = self.getWaf()
-        self.ip = plugins_node.find('resolver').find('results').find('hostname').get('ipaddress')
+        try:
+            self.ip = plugins_node.find('resolver').find('results') \
+                .find('hostname').get('ipaddress')
+        except Exception:
+            self.ip = '0.0.0.0'
 
     def getHealthmap(self):
 
@@ -373,7 +376,6 @@ class ArachniPlugin(PluginXMLFormat):
 
         self.hostname = self.getHostname(parser.system.url)
         self.address = resolve_hostname(parser.plugins.ip)
-
 
         # Create host and interface
         host_id = self.createAndAddHost(self.address)
