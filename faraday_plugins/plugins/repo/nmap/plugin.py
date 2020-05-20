@@ -511,7 +511,7 @@ class NmapPlugin(PluginXMLFormat):
                     desc = v.desc
                     refs = v.refs
 
-                    if re.search(r"VULNERABLE", desc):
+                    if re.search(r"(?<!NOT )VULNERABLE", desc):
                         severity = "high"
                     if re.search(r"ERROR", desc):
                         severity = "unclassified"
