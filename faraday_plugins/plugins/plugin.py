@@ -312,7 +312,7 @@ class PluginBase:
         """
         raise NotImplementedError('This method must be implemented.')
 
-    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None, description=""):
+    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None, description="", tags=None):
 
         if not hostnames:
             hostnames = []
@@ -320,8 +320,12 @@ class PluginBase:
         hostnames = [hostname for hostname in hostnames if hostname]
         if os is None:
             os = "unknown"
+        if tags is None:
+            tags = []
+        if isinstance(tags, str):
+            tags = [tags]
         host = {"ip": name, "os": os, "hostnames": hostnames, "description": description,  "mac": mac,
-                "credentials": [], "services": [], "vulnerabilities": []}
+                "credentials": [], "services": [], "vulnerabilities": [], "tags": tags}
         host_id = self.save_host_cache(host)
         return host_id
 
@@ -362,13 +366,13 @@ class PluginBase:
     def createAndAddServiceToInterface(self, host_id, interface_id, name,
                                        protocol="tcp", ports=None,
                                        status="open", version="unknown",
-                                       description=""):
-        return self.createAndAddServiceToHost(host_id, name, protocol, ports, status, version, description)
+                                       description="", tags=None):
+        return self.createAndAddServiceToHost(host_id, name, protocol, ports, status, version, description, tags)
 
     def createAndAddServiceToHost(self, host_id, name,
                                        protocol="tcp", ports=None,
                                        status="open", version="unknown",
-                                       description=""):
+                                       description="", tags=None):
         if ports:
             if isinstance(ports, list):
                 ports = int(ports[0])
@@ -377,8 +381,13 @@ class PluginBase:
 
         if status not in VALID_SERVICE_STATUS:
             status = 'open'
+        if tags is None:
+            tags = []
+        if isinstance(tags, str):
+            tags = [tags]
         service = {"name": name, "protocol": protocol, "port": ports, "status": status,
-                   "version": version, "description": description, "credentials": [], "vulnerabilities": []}
+                   "version": version, "description": description, "credentials": [], "vulnerabilities": [],
+                   "tags": tags}
 
         service_id = self.save_service_cache(host_id, service)
 
@@ -418,9 +427,9 @@ class PluginBase:
     # to Host")
     def createAndAddVulnToInterface(self, host_id, interface_id, name,
                                     desc="", ref=None, severity="",
-                                    resolution="", data=""):
+                                    resolution="", data="", tags=None):
         return self.createAndAddVulnToHost(host_id, name, desc=desc, ref=ref, severity=severity, resolution=resolution,
-                                           data=data)
+                                           data=data, tags=tags)
 
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
