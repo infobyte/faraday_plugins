@@ -504,7 +504,7 @@ class NmapPlugin(PluginXMLFormat):
                     description=srvname)
 
                 for v in port.vulns:
-                    severity = 0
+                    severity = "info"
                     desc = v.desc
                     refs = v.refs
 
