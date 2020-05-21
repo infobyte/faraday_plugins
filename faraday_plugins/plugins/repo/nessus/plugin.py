@@ -220,7 +220,7 @@ class NessusPlugin(PluginXMLFormat):
                     website = None
                     host_name = None
 
-                host_id = self.createAndAddHost(ip_host, os=os, hostnames=host_name, mac=mac, tags=["test_tag"])
+                host_id = self.createAndAddHost(ip_host, os=os, hostnames=host_name, mac=mac)
 
                 interface_id = self.createAndAddInterface(host_id, ip, ipv6_address=ip, mac=mac)
                 cve = []
@@ -336,7 +336,7 @@ class NessusPlugin(PluginXMLFormat):
                                                                          interface_id,
                                                                          name=serv_name,
                                                                          protocol=serv_protocol,
-                                                                         ports=serv_port, tags=["test_tag"])
+                                                                         ports=serv_port)
 
                         if serv_name == 'www' or serv_name == 'http':
                             self.createAndAddVulnWebToService(host_id,
