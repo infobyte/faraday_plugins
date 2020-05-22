@@ -51,6 +51,7 @@ class CSVParser:
             "params",
             "query",
             "status_code",
+            "tags"
         ]
 
         self.items = self.parse_csv(csv_output)
@@ -196,7 +197,7 @@ class CSVParser:
                 if "impact_" in item:
                     impact = re.match(r"impact_(\w+)", item).group(1)
                     impact_dict[impact] = True if row[item] == "True" else False
-                elif item == "refs" or item == "policyviolations":
+                elif item in ["refs", "policyviolations", "tags"]:
                     self.data[item] = literal_eval(row[item])
                 else:
                     self.data[item] = row[item]
@@ -288,7 +289,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
-                        custom_fields=item['custom_fields']
+                        custom_fields=item['custom_fields'],
+                        tags=item['tags']
                     )
                 if not item['web_vulnerability'] and s_id:
                     self.createAndAddVulnToService(
@@ -306,7 +308,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
-                        custom_fields=item['custom_fields']
+                        custom_fields=item['custom_fields'],
+                        tags=item['tags']
                     )
                 elif item['web_vulnerability']:
                     self.createAndAddVulnWebToService(
@@ -333,7 +336,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
                         status_code=item['status_code'] or None,
-                        custom_fields=item['custom_fields']
+                        custom_fields=item['custom_fields'],
+                        tags=item['tags']
                     )
 
 
