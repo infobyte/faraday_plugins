@@ -152,3 +152,5 @@ def test_detected_tools_on_all_report_collection(report_filename, benchmark):
     plugin_json = json.loads(plugin.get_json())
     assert "hosts" in plugin_json
     assert "command" in plugin_json
+    assert os.path.isfile(report_filename) is True
+
