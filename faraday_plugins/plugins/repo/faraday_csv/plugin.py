@@ -17,13 +17,15 @@ class CSVParser:
             "host_description",
             "os",
             "mac",
-            "hostnames"
+            "hostnames",
+            "host_tags"
         ]
         self.service_data = [
             "service_name",
             "service_description",
             "version",
-            "service_status"
+            "service_status",
+            "service_tags"
         ]
         self.vuln_data = [
             "name",
@@ -159,7 +161,10 @@ class CSVParser:
                 continue
 
             if item in row:
-                self.data[item] = row[item]
+                if item == "host_tags":
+                    self.data[item] = literal_eval(row[item])
+                else:
+                    self.data[item] = row[item]
             else:
                 self.data[item] = None
 
@@ -173,6 +178,9 @@ class CSVParser:
                         # If status is not specified, set it as 'open'
                         self.data[item] = "open"
                         continue
+                elif item == 'service_tags':
+                    self.data[item] = literal_eval(row[item])
+                    continue
                 self.data[item] = row[item]
             else:
                 self.data[item] = None
@@ -260,7 +268,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                 os=item['os'],
                 hostnames=item['hostnames'],
                 mac=item['mac'],
-                description=item['host_description'] or ""
+                description=item['host_description'] or "",
+                tags=item['host_tags']
             )
             s_id = None
             if item['row_with_service']:
@@ -271,7 +280,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                     ports=item['port'],
                     status=item['service_status'] or None,
                     version=item['version'],
-                    description=item['service_description']
+                    description=item['service_description'],
+                    tags=item['service_tags']
                 )
             if item['row_with_vuln']:
                 if not item['web_vulnerability'] and not s_id:
