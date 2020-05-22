@@ -9,7 +9,6 @@ import shlex
 import getpass
 
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer, CommandAnalyzer
-from faraday_plugins.plugins.plugins_utils import get_report_summary
 from faraday_plugins.plugins.plugin import PluginByExtension
 
 root_logger = logging.getLogger("faraday")
@@ -71,8 +70,7 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary):
         plugin.processReport(report_file, getpass.getuser())
         if summary:
             click.echo(click.style("\nPlugin Summary: ", fg="cyan"))
-            report_json = json.loads(plugin.get_json())
-            click.echo(json.dumps(get_report_summary(report_json), indent=4))
+            click.echo(json.dumps(plugin.get_summary(), indent=4))
         else:
             click.echo(click.style("\nFaraday API json: ", fg="cyan"))
             click.echo(json.dumps(plugin.get_data(), indent=4))
@@ -121,8 +119,7 @@ def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary
             plugin.processOutput(output_value)
             if summary:
                 click.echo(click.style("\nPlugin Summary: ", fg="cyan"))
-                report_json = json.loads(plugin.get_json())
-                click.echo(json.dumps(get_report_summary(report_json), indent=4))
+                click.echo(json.dumps(plugin.get_summary(), indent=4))
             else:
                 click.echo(click.style("\nFaraday API json: ", fg="cyan"))
                 click.echo(json.dumps(plugin.get_data(), indent=4))
