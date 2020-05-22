@@ -351,17 +351,18 @@ class ArachniPlugin(PluginXMLFormat):
             filename = filename['xml']
         with open(filename, **self.open_options) as output:
             self.parseOutputString(output.read())
-        if isinstance(filename, dict):
-            for _file in filename.values():
+        if self._delete_temp_file:
+            if isinstance(filename, dict):
+                for _file in filename.values():
+                    try:
+                        os.remove(_file)
+                    except Exception as e:
+                        self.logger.error("Error on delete file: (%s) [%s]", _file, e)
+            else:
                 try:
-                    os.remove(_file)
+                    os.remove(filename)
                 except Exception as e:
-                    self.logger.error("Error on delete file: (%s) [%s]", _file, e)
-        else:
-            try:
-                os.remove(filename)
-            except Exception as e:
-                self.logger.error("Error on delete file: (%s) [%s]", filename, e)
+                    self.logger.error("Error on delete file: (%s) [%s]", filename, e)
 
     def parseOutputString(self, output, debug=False):
         """
@@ -439,6 +440,7 @@ class ArachniPlugin(PluginXMLFormat):
         self.vulns_data["command"]["params"] = params
         self.vulns_data["command"]["user"] = username
         self._output_file_path = {}
+        self._delete_temp_file = True
         for ext in self._temp_file_extension:
             self._output_file_path[ext] = self._get_temp_file(extension=ext)
         afr_file_path = self._output_file_path['afr']
