@@ -17,13 +17,15 @@ class CSVParser:
             "host_description",
             "os",
             "mac",
-            "hostnames"
+            "hostnames",
+            "host_tags"
         ]
         self.service_data = [
             "service_name",
             "service_description",
             "version",
-            "service_status"
+            "service_status",
+            "service_tags"
         ]
         self.vuln_data = [
             "name",
@@ -51,6 +53,7 @@ class CSVParser:
             "params",
             "query",
             "status_code",
+            "tags"
         ]
 
         self.items = self.parse_csv(csv_output)
@@ -158,7 +161,10 @@ class CSVParser:
                 continue
 
             if item in row:
-                self.data[item] = row[item]
+                if item == "host_tags":
+                    self.data[item] = literal_eval(row[item])
+                else:
+                    self.data[item] = row[item]
             else:
                 self.data[item] = None
 
@@ -172,6 +178,9 @@ class CSVParser:
                         # If status is not specified, set it as 'open'
                         self.data[item] = "open"
                         continue
+                elif item == 'service_tags':
+                    self.data[item] = literal_eval(row[item])
+                    continue
                 self.data[item] = row[item]
             else:
                 self.data[item] = None
@@ -196,7 +205,7 @@ class CSVParser:
                 if "impact_" in item:
                     impact = re.match(r"impact_(\w+)", item).group(1)
                     impact_dict[impact] = True if row[item] == "True" else False
-                elif item == "refs" or item == "policyviolations":
+                elif item in ["refs", "policyviolations", "tags"]:
                     self.data[item] = literal_eval(row[item])
                 else:
                     self.data[item] = row[item]
@@ -259,7 +268,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                 os=item['os'],
                 hostnames=item['hostnames'],
                 mac=item['mac'],
-                description=item['host_description'] or ""
+                description=item['host_description'] or "",
+                tags=item['host_tags']
             )
             s_id = None
             if item['row_with_service']:
@@ -270,7 +280,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                     ports=item['port'],
                     status=item['service_status'] or None,
                     version=item['version'],
-                    description=item['service_description']
+                    description=item['service_description'],
+                    tags=item['service_tags']
                 )
             if item['row_with_vuln']:
                 if not item['web_vulnerability'] and not s_id:
@@ -288,7 +299,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
-                        custom_fields=item['custom_fields']
+                        custom_fields=item['custom_fields'],
+                        tags=item['tags']
                     )
                 if not item['web_vulnerability'] and s_id:
                     self.createAndAddVulnToService(
@@ -306,7 +318,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
-                        custom_fields=item['custom_fields']
+                        custom_fields=item['custom_fields'],
+                        tags=item['tags']
                     )
                 elif item['web_vulnerability']:
                     self.createAndAddVulnWebToService(
@@ -333,7 +346,8 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
                         status_code=item['status_code'] or None,
-                        custom_fields=item['custom_fields']
+                        custom_fields=item['custom_fields'],
+                        tags=item['tags']
                     )
 
 
