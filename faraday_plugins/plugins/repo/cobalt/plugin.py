@@ -6,13 +6,11 @@ See the file 'doc/LICENSE' for the license information
 """
 
 from faraday_plugins.plugins.plugin import PluginCSVFormat
-import re
-import os
 from urllib.parse import urlparse
 import csv
-import io 
+import io
+import dateutil
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Blas"
 __copyright__ = "Copyright (c) 2019, Infobyte LLC"
@@ -22,6 +20,8 @@ __version__ = "1.0.0"
 __maintainer__ = "Blas"
 __email__ = "bmoyano@infobytesec.com"
 __status__ = "Development"
+
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class CobaltParser:
@@ -40,6 +40,9 @@ class CobaltParser:
         self.headers = reader.fieldnames
         self.rows = []
         for row in reader:
+            for k, v in row.items():
+                if v.startswith("'"):
+                    row[k] = v[1:]
             self.rows.append(row)
 
 
@@ -50,66 +53,53 @@ class CobaltPlugin(PluginCSVFormat):
 
     def __init__(self):
         super().__init__()
-        self.extension = ".csv"
         self.csv_headers = [{'Token'}, {'Tag'}]
         self.id = "Cobalt"
         self.name = "Cobalt CSV Output Plugin"
         self.plugin_version = "0.0.1"
         self.version = "0.0.1"
         self.framework_version = "1.0.1"
-        self.options = None
-        self._current_output = None
-        self._current_path = None
-        self._command_regex = re.compile(
-            r'^(cobalt|sudo cobalt|\.\/cobalt).*?')
-        self.host = None
-        self.port = None
-        self.protocol = None
-        self.fail = None
 
-    def canParseCommandString(self, current_input):
-        if self._command_regex.match(current_input.strip()):
-            return True
-        else:
-            return False
-
-    def parseOutputString(self, output, debug=False):
-        """
-        This method will discard the output the shell sends, it will read it from
-        the xml where it expects it to be present.
-
-        NOTE: if 'debug' is true then it is being run from a test case and the
-        output being sent is valid.
-        """
+    def parseOutputString(self, output):
         try:
             parser = CobaltParser(output)
         except:
             print("Error parser output")
             return None
 
-        vul_ref = []
         for row in parser.rows:
-            vul_ref_info = "Criticality Justification:{} Tools Used:{}".format(row['CriticalityJustification'],
-                                                                               row['ToolsUsed'])
-            vul_ref.append(vul_ref_info)
-            url = urlparse(row['BrowserUrl'])
-            protocol = url.scheme
-            port = url.port
-            if url.port is None:
-                if protocol == 'https':
+            url = row['BrowserUrl']
+            if not url:
+                continue
+            url_data = urlparse(url)
+            scheme = url_data.scheme
+            port = url_data.port
+            try:
+                run_date = dateutil.parser.parse(row['CreatedAt'])
+            except:
+                run_date = None
+            if url_data.port is None:
+                if scheme == 'https':
                     port = 443
-                elif protocol == 'http':
+                elif scheme == 'http':
                     port = 80
-                else:
-                    port = None
-
-            h_id = self.createAndAddHost(name='0.0.0.0', hostnames=[row['BrowserUrl']])
-            s_id = self.createAndAddServiceToInterface(h_id, protocol, "tcp", ports=port, status="open")
+            else:
+                port = url_data.port
+            name = resolve_hostname(url_data.netloc)
+            references = []
+            if row['RefKey']:
+                references.append(row['RefKey'])
+            if row['ResearcherUrl']:
+                references.append(row['ResearcherUrl'])
+            references.append(row['ReportUrl'])
+            request = row['HttpRequest'] if row['HttpRequest'] else row['BrowserUrl']
+            h_id = self.createAndAddHost(name=name, hostnames=[url_data.netloc])
+            s_id = self.createAndAddServiceToHost(h_id, scheme, "tcp", ports=port, status="open")
             self.createAndAddVulnWebToService(h_id, s_id, name=row['Title'], desc=row['Description'],
-                                              ref=vul_ref, resolution=row['SuggestedFix'],
-                                              website=row['ReportUrl'], request=row['HttpRequest'],
-                                              pname=row['Tag'], category=row['Type'],
-                                              data=row['StepsToReproduce'], external_id=None)
+                                              ref=references, resolution=row['SuggestedFix'],
+                                              website=url_data.netloc, request=request,
+                                              pname=url_data.params, category=row['Type'], path=url_data.path,
+                                              data=row['StepsToReproduce'], external_id=row['Tag'], run_date=run_date)
 
 
 def createPlugin():
