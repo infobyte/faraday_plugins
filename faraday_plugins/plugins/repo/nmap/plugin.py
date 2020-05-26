@@ -400,6 +400,10 @@ class Service:
         name = service_node.get("name")
         self.name = name if name else 'unknown'
 
+        self.tunnel = service_node.get("tunnel")
+        if self.tunnel == "ssl" and self.name == "http":
+            self.name = "https"
+
         product = service_node.get("product")
         self.product = product if product else 'unknown'
 
