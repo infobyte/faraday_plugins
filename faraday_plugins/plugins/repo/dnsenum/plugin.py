@@ -176,12 +176,7 @@ class DnsenumPlugin(PluginBase):
         parser = DnsenumXmlParser(output)
 
         for item in parser.items:
-            h_id = self.createAndAddHost(item.ip)
-            i_id = self.createAndAddInterface(
-                h_id,
-                item.ip,
-                ipv4_address=item.ip,
-                hostname_resolution=[item.hostname])
+            h_id = self.createAndAddHost(item.ip, hostnames=[item.hostname])
 
         del parser
 
