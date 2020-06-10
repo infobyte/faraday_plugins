@@ -37,22 +37,15 @@ class AmapPlugin(PluginBase):
         for line in output.split('\n'):
             if line.startswith('#'):
                 continue
-
             fields = self.get_info(line)
-
             if len(fields) < 6:
                 continue
-
             address = fields[0]
-            h_id = self.createAndAddHost(address)
-
             port = fields[1]
             protocol = fields[2]
             port_status = fields[3]
-
             identification = fields[5]
             printable_banner = fields[6]
-
             if port in services.keys():
                 if identification != 'unidentified':
                     services[port][5] += ', ' + identification
@@ -67,25 +60,16 @@ class AmapPlugin(PluginBase):
                     printable_banner,
                     None]
 
-            args = {}
-
-            if self.args.__getattribute__("6"):
-                self.ip = self.get_ip_6(self.args.m)
-                args['ipv6_address'] = address
-            else:
-                self.ip = resolve_hostname(self.args.m)
-                args['ipv4_address'] = address
-
             if address != self.args.m:
-                args['hostname_resolution'] = [self.args.m]
-
-            i_id = self.createAndAddInterface(h_id, name=address, **args)
+                hostnames = [self.args.m]
+            else:
+                hostnames = None
+            h_id = self.createAndAddHost(address, hostnames=hostnames)
 
         for key in services:
             service = services.get(key)
-            self.createAndAddServiceToInterface(
+            self.createAndAddServiceToHost(
                 h_id,
-                i_id,
                 service[5],
                 service[2],
                 ports=[service[1]],
