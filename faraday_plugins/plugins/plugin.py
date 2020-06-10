@@ -316,6 +316,9 @@ class PluginBase:
 
         if not hostnames:
             hostnames = []
+        if not isinstance(hostnames, list):
+            self.logger.warning("hostnames parameter must be a list and is (%s)", type(hostnames))
+            hostnames = [hostnames]
         # Some plugins sends a list with None, we filter empty and None values.
         hostnames = [hostname for hostname in hostnames if hostname]
         if os is None:
