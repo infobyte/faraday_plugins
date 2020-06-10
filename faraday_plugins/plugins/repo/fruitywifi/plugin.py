@@ -56,18 +56,7 @@ class FruityWiFiPlugin(PluginBase):
             return 5
     
     def createHostInterfaceVuln(self, ip_address, macaddress, hostname, desc, vuln_name, severity):
-        h_id = self.createAndAddHost(ip_address)
-        if self._isIPV4(ip_address):
-            i_id = self.createAndAddInterface(
-                h_id,
-                ip_address,
-                macaddress,
-                ipv4_address=ip_address,
-                hostname_resolution=[hostname]
-                )
-        else:
-            self.createAndAddInterface(
-                h_id, ip_address, ipv6_address=ip_address, hostname_resolution=[hostname])
+        h_id = self.createAndAddHost(ip_address, hostnames=[hostname])
 
         self.createAndAddVulnToHost(
             h_id,
