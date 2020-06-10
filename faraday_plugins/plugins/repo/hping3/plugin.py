@@ -41,10 +41,7 @@ class hping3(PluginBase):
             return
 
         hostname = output.split(" ")[1]
-        host_id = self.createAndAddHost(hostname)
-
-        i_id = self.createAndAddInterface(
-            host_id, ip_address, ipv4_address=ip_address, hostname_resolution=[hostname])
+        host_id = self.createAndAddHost(ip_address, hostnames=[hostname])
 
         if re.match("HPING", output):
 
@@ -54,8 +51,8 @@ class hping3(PluginBase):
             service = self.srv[sport.group(1)]
 
             if reci.group(1) == "SA":
-                s_id = self.createAndAddServiceToInterface(
-                    host_id, i_id, service, protocol="tcp", ports=ssport, status="open")
+                s_id = self.createAndAddServiceToHost(
+                    host_id, service, protocol="tcp", ports=ssport, status="open")
 
         lineas = output.split("\n")
 
@@ -67,8 +64,8 @@ class hping3(PluginBase):
                 port = [list[0]]
 
                 if list[2] == "S" and list[3] == "A":
-                    s_id = self.createAndAddServiceToInterface(
-                        host_id, i_id, service, protocol="tcp", ports=port, status="open")
+                    s_id = self.createAndAddServiceToHost(
+                        host_id, service, protocol="tcp", ports=port, status="open")
 
 
 def createPlugin():
