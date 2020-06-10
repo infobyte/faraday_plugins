@@ -106,18 +106,8 @@ class CheckmarxPlugin(PluginXMLFormat):
             else:
                 port = 0
         project_name = 'ProjectName' in parser.cx_xml_results_attribs
-        if project_name:
-            host_id = self.createAndAddHost(url.hostname, hostnames=[url.hostname])
-            interface_id = self.createAndAddInterface(host_id, url.hostname, ipv4_address=url.hostname,
-                                                      hostname_resolution=[url.netloc])
-            service_to_interface = self.createAndAddServiceToInterface(host_id, interface_id, name=url.scheme,
-                                                                       ports=port)
-        else:
-            host_id = self.createAndAddHost(url.hostname, hostnames=[url.hostname])
-            interface_id = self.createAndAddInterface(host_id, url.hostname, ipv4_address=url.hostname,
-                                                      hostname_resolution=[url.netloc])
-            service_to_interface = self.createAndAddServiceToInterface(host_id, interface_id, name=url.scheme,
-                                                                       ports=port)
+        host_id = self.createAndAddHost(url.hostname, hostnames=[url.hostname, url.netloc])
+        service_to_interface = self.createAndAddServiceToHost(host_id, name=url.scheme, ports=port)
         for vulns in parser.query:
             refs = []
             categories = 'categories' in vulns.query_attrib
