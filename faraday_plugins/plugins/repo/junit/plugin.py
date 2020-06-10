@@ -137,7 +137,6 @@ class JunitPlugin(PluginXMLFormat):
         parser = JunitXmlParser(output)
         for item in parser.items:
             h_id = self.createAndAddHost(item.host, os="Linux")
-            i_id = self.createAndAddInterface(h_id, item.host, ipv4_address=item.host)
             self.createAndAddVulnToHost(h_id, name=item.name, desc=item.message, ref=[], severity="High")
         del parser
 
