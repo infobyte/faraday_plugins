@@ -84,17 +84,9 @@ class DirsearchPlugin(PluginBase):
         for (base_url, items) in data.items():
             base_split = urlparse.urlsplit(base_url)
             ip = resolve_hostname(base_split.hostname)
-            h_id = self.createAndAddHost(ip)
-
-            i_id = self.createAndAddInterface(
+            h_id = self.createAndAddHost(ip, hostnames=[base_split.hostname])
+            s_id = self.createAndAddServiceToHost(
                 h_id,
-                name=ip,
-                ipv4_address=ip,
-                hostname_resolution=[base_split.hostname])
-
-            s_id = self.createAndAddServiceToInterface(
-                h_id,
-                i_id,
                 base_split.scheme,
                 'tcp',
                 [base_split.port],
