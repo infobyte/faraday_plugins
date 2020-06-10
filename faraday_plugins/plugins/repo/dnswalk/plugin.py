@@ -94,33 +94,15 @@ class DnswalkPlugin(PluginBase):
         parser = DnswalkParser(output)
 
         for item in parser.items:
-
             if item['type'] == "A":
-
-                h_id = self.createAndAddHost(item['ip'])
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    item['ip'],
-                    ipv4_address=item['ip'],
-                    hostname_resolution=[item['host']])
-
+                h_id = self.createAndAddHost(item['ip'], hostnames=[item['host']])
             elif item['type'] == "info":
-
-                h_id = self.createAndAddHost(item['ip'])
-
-                i_id = self.createAndAddInterface(
+                h_id = self.createAndAddHost(item['ip'], hostnames=[item['host']])
+                s_id = self.createAndAddServiceToHost(
                     h_id,
-                    item['ip'],
-                    ipv4_address=item['ip'],
-                    hostname_resolution=[item['host']])
-
-                s_id = self.createAndAddServiceToInterface(
-                    h_id,
-                    i_id,
                     "domain",
                     "tcp",
                     ports=['53'])
-
                 self.createAndAddVulnToService(
                     h_id,
                     s_id,
