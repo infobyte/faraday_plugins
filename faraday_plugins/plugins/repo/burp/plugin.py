@@ -228,17 +228,9 @@ class BurpPlugin(PluginXMLFormat):
         parser = BurpXmlParser(output)
         for item in parser.items:
 
-            h_id = self.createAndAddHost(item.ip)
-
-            i_id = self.createAndAddInterface(
+            h_id = self.createAndAddHost(item.ip, hostnames=[item.host])
+            s_id = self.createAndAddServiceToHost(
                 h_id,
-                item.ip,
-                ipv4_address=item.ip,
-                hostname_resolution=[item.host])
-
-            s_id = self.createAndAddServiceToInterface(
-                h_id,
-                i_id,
                 item.protocol,
                 "tcp",
                 ports=[str(item.port)],
