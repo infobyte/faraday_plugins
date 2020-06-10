@@ -243,18 +243,13 @@ class AcunetixPlugin(PluginXMLFormat):
             if site.ip is None:
                 continue
 
-            if site.host != site.ip:
-                host = site.host
-            h_id = self.createAndAddHost(site.ip, site.os)
-            if site.host is None:
-                i_id = self.createAndAddInterface(h_id, site.ip, ipv4_address=site.ip)
+            if site.host != site.ip and site.host is not None:
+                hostnames = [site.host]
             else:
-                i_id = self.createAndAddInterface(h_id, site.ip,
-                                                  ipv4_address=site.ip,
-                                                  hostname_resolution=[host])
-            s_id = self.createAndAddServiceToInterface(
+                hostnames = None
+            h_id = self.createAndAddHost(site.ip, site.os, hostnames=hostnames)
+            s_id = self.createAndAddServiceToHost(
                 h_id,
-                i_id,
                 "http",
                 "tcp",
                 ports=[site.port],
