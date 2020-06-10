@@ -107,7 +107,9 @@ def test_schema_on_all_reports(report_filename):
     if plugin_json:
         serializer = BulkCreateSchema()
         res = serializer.loads(json.dumps(plugin_json))
-        assert not res.errors
+        assert set(res.keys()) == {'hosts', 'command'}
+
+
 
 
 @pytest.mark.skip(reason="Skip validate ip format")
