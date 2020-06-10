@@ -79,17 +79,7 @@ class Ip360Plugin(PluginBase):
 
         parser = Ip360Parser(output)
         for host, interface, service, vulnerability in parser.parse():
-
-            h_id = self.createAndAddHost(host.get("name"), host.get("os"))
-
-            i_id = self.createAndAddInterface(
-                h_id,
-                interface.get("name"),
-                ipv4_address=interface.get("name"),
-                hostname_resolution=interface.get("hostname_resolution"),
-                network_segment=interface.get("network_segment"))
-
-
+            h_id = self.createAndAddHost(host.get("name"), host.get("os"), hostnames=interface.get("hostname_resolution"))
             if service.get("port") == "-":
                 port = "0"
                 protocol = "unknown"
@@ -97,9 +87,8 @@ class Ip360Plugin(PluginBase):
                 port = service.get("port").split("/")[0]
                 protocol = service.get("port").split("/")[1]
 
-            s_id = self.createAndAddServiceToInterface(
+            s_id = self.createAndAddServiceToHost(
                 h_id,
-                i_id,
                 service.get("port"),
                 protocol=protocol,
                 ports=[port])
