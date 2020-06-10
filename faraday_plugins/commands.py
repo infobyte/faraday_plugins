@@ -51,7 +51,8 @@ def list_plugins(custom_plugins_folder):
 @click.option('--plugin_id', type=str)
 @click.option('-cpf', '--custom-plugins-folder', type=str)
 @click.option('--summary', is_flag=True)
-def process_report(report_file, plugin_id, custom_plugins_folder, summary):
+@click.option('-o', '--output-file', type=click.Path(exists=False))
+def process_report(report_file, plugin_id, custom_plugins_folder, summary, output_file):
     if not os.path.isfile(report_file):
         click.echo(click.style(f"File {report_file} Don't Exists", fg="red"))
     else:
@@ -67,13 +68,19 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary):
             if not plugin:
                 click.echo(click.style(f"Failed to detect report: {report_file}", fg="red"))
                 return
+        color_message = click.style("Processing report:", fg="green")
+        click.echo(f"{color_message} {report_file} ({plugin.id})\n")
         plugin.processReport(report_file, getpass.getuser())
         if summary:
             click.echo(click.style("\nPlugin Summary: ", fg="cyan"))
             click.echo(json.dumps(plugin.get_summary(), indent=4))
         else:
-            click.echo(click.style("\nFaraday API json: ", fg="cyan"))
-            click.echo(json.dumps(plugin.get_data(), indent=4))
+            if output_file:
+                with open(output_file, "w") as f:
+                    json.dump(plugin.get_data(), f)
+            else:
+                click.echo(click.style("\nFaraday API json: ", fg="cyan"))
+                click.echo(json.dumps(plugin.get_data(), indent=4))
 
 
 @cli.command()
@@ -82,7 +89,8 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary):
 @click.option('-cpf', '--custom-plugins-folder', type=str)
 @click.option('-dr', '--dont-run', is_flag=True)
 @click.option('--summary', is_flag=True)
-def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary):
+@click.option('-o', '--output-file', type=click.Path(exists=False))
+def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary, output_file):
     plugins_manager = PluginsManager(custom_plugins_folder)
     analyzer = CommandAnalyzer(plugins_manager)
     if plugin_id:
@@ -100,7 +108,7 @@ def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary
     if modified_command:
         command = modified_command
     if not dont_run:
-        color_message = click.style("Running command: ", fg="green")
+        color_message = click.style("Running command:", fg="green")
         click.echo(f"{color_message} {command}\n")
         p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = io.StringIO()
@@ -121,8 +129,12 @@ def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary
                 click.echo(click.style("\nPlugin Summary: ", fg="cyan"))
                 click.echo(json.dumps(plugin.get_summary(), indent=4))
             else:
-                click.echo(click.style("\nFaraday API json: ", fg="cyan"))
-                click.echo(json.dumps(plugin.get_data(), indent=4))
+                if output_file:
+                    with open(output_file, "w") as f:
+                        json.dump(plugin.get_data(), f)
+                else:
+                    click.echo(click.style("\nFaraday API json: ", fg="cyan"))
+                    click.echo(json.dumps(plugin.get_data(), indent=4))
         else:
             click.echo(click.style("Command execution error!!", fg="red"))
     else:
