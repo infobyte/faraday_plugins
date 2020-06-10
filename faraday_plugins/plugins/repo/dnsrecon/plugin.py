@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
@@ -198,26 +195,10 @@ class DnsreconPlugin(PluginBase):
             elif host.type == "A":
                 hostname = host.name
 
-            h_id = self.createAndAddHost(host.address)
-
-            if self._isIPV4(str(host.address)):
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    name=host.address,
-                    ipv4_address=host.address,
-                    hostname_resolution=[hostname])
-            else:
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    name=host.address,
-                    ipv6_address=host.address,
-                    hostname_resolution=[hostname])
-
+            h_id = self.createAndAddHost(host.address, hostnames=[hostname])
             if host.type == "info":
-
-                s_id = self.createAndAddServiceToInterface(
+                s_id = self.createAndAddServiceToHost(
                     h_id,
-                    i_id,
                     "domain",
                     protocol="tcp",
                     ports=["53"],
