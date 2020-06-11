@@ -49,14 +49,8 @@ class CmdPropeciaPlugin(PluginBase):
             for host in output.splitlines():
                 if host != "":
                     h_id = self.createAndAddHost(host)
-                    i_id = self.createAndAddInterface(
-                        h_id, host, ipv4_address=host)
-                    s_id = self.createAndAddServiceToInterface(h_id, i_id, str(self._port),
-                                                               "tcp",
-                                                               ports=[self._port],
-                                                               status="open",
-                                                               version="",
-                                                               description="")
+                    s_id = self.createAndAddServiceToHost(h_id, str(self._port), "tcp", ports=[self._port],
+                                                          status="open", version="", description="")
         if debug is True:
             self.logger.info("Debug is active")
 
