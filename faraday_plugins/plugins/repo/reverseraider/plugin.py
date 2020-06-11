@@ -74,7 +74,6 @@ class ReverseraiderPlugin(PluginBase):
         parser = ReverseraiderParser(output)
         for item in parser.items:
             h_id = self.createAndAddHost(item['ip'])
-            i_id = self.createAndAddInterface(h_id, item['ip'], ipv4_address=item['ip'])
         del parser
 
 
