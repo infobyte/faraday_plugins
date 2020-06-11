@@ -264,29 +264,15 @@ class NexposeFullPlugin(PluginXMLFormat):
         parser = NexposeFullXmlParser(output)
 
         for item in parser.items:
-            h_id = self.createAndAddHost(item['name'], item['os'], hostnames=item['hostnames'])
             pattern = '([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
             if not item['mac']:
                 item['mac'] = '0000000000000000'
-                match = re.search(pattern, item['mac'])
-            else:
-                match = re.search(pattern, item['mac'])
+            match = re.search(pattern, item['mac'])
             if match:
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    item['name'],
-                    mac=item['mac'],
-                    ipv4_address=item['name'],
-                    hostname_resolution=item['hostnames']
-                )
+                mac = item['mac']
             else:
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    item['name'],
-                    mac=':'.join(item['mac'][i:i + 2] for i in range(0, 12, 2)),
-                    ipv4_address=item['name'],
-                    hostname_resolution=item['hostnames'])
-
+                mac = ':'.join(item['mac'][i:i + 2] for i in range(0, 12, 2))
+            h_id = self.createAndAddHost(item['name'], item['os'], hostnames=item['hostnames'], mac=mac)
             for v in item['vulns']:
                 v['data'] = {"vulnerable_since": v['vulnerable_since'], "scan_id": v['scan_id'], "PCI": v['pci']}
                 v_id = self.createAndAddVulnToHost(
@@ -301,10 +287,8 @@ class NexposeFullPlugin(PluginXMLFormat):
             for s in item['services']:
                 web = False
                 version = s.get("version", "")
-
-                s_id = self.createAndAddServiceToInterface(
+                s_id = self.createAndAddServiceToHost(
                     h_id,
-                    i_id,
                     s['name'],
                     s['protocol'],
                     ports=[str(s['port'])],
