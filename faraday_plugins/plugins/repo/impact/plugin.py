@@ -223,7 +223,7 @@ class ImpactPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         parser = ImpactXmlParser(output)
         mapped_services = {}
         mapped_ports = {}

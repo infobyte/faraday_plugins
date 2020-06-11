@@ -190,7 +190,7 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         parser = NetsparkerCloudXmlParser(output)
         first = True
         for i in parser.items:

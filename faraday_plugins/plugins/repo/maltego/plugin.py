@@ -385,7 +385,7 @@ class MaltegoPlugin(PluginZipFormat):
             r'^(sudo maltego|maltego|\.\/maltego).*?')
         global current_path
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         if 'Graphs/Graph1.graphml' in output.namelist():
             maltego_parser = MaltegoMtgxParser(output, self.extension[1])

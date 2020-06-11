@@ -444,7 +444,7 @@ class NmapPlugin(PluginXMLFormat):
         self.xml_arg_re = re.compile(r"^.*(-oX\s*[^\s]+).*$")
         self.addSetting("Scan Technique", str, "-sS")
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.

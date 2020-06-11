@@ -338,13 +338,10 @@ class OpenvasPlugin(PluginXMLFormat):
             return re.search("OpenVAS", output) is not None or re.search('<omp>', output) is not None
         return False
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.
-
-        NOTE: if 'debug' is true then it is being run from a test case and the
-        output being sent is valid.
         """
         parser = OpenvasXmlParser(output, self.logger)
         web = False

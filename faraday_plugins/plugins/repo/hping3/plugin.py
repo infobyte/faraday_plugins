@@ -29,7 +29,7 @@ class hping3(PluginBase):
 
         self._command_regex = re.compile(r'^(sudo hping3|hping3)\s+.*$')
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         regex_ipv4 = re.search(r"(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}"
                                r"|2[0-4][0-9]|25[0-5])\)\:", output)

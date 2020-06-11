@@ -169,7 +169,7 @@ class X1Plugin(PluginXMLFormat):
 
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = X1XmlParser(output)
         for item in parser.items:
