@@ -122,10 +122,7 @@ class TheharvesterPlugin(PluginBase):
                 host = []
                 if item['host'] != item['ip']:
                     host = [item['host']]
-                h_id = self.createAndAddHost(item['ip'])
-                i_id = self.createAndAddInterface(h_id, item['ip'], ipv4_address=item[
-                                                  'ip'], hostname_resolution=host)
-
+                h_id = self.createAndAddHost(item['ip'], hostnames=host)
         del parser
 
 
