@@ -397,18 +397,15 @@ class MaltegoPlugin(PluginZipFormat):
                         ip = '0.0.0.0'
                     else:
                         ip = host.ip
-                    host_id = self.createAndAddHost(name=ip)
+                    try:
+                        network_segment = host.netblock["ipv4_range"]
+                        hostname_resolution = [host.dns_name["value"]]
+                    except TypeError:
+                        pass
+                        network_segment = "unknown"
+                        hostname_resolution = "unknown"
+                    host_id = self.createAndAddHost(name=ip, hostnames=[hostname_resolution])
                 # Create interface
-                try:
-                    network_segment = host.netblock["ipv4_range"]
-                    hostname_resolution = [host.dns_name["value"]]
-                except TypeError:
-                    pass
-                    network_segment = "unknown"
-                    hostname_resolution = "unknown"
-                interface_id = self.createAndAddInterface(host_id=host_id, name=ip, ipv4_address=ip,
-                                                          network_segment=network_segment,
-                                                          hostname_resolution=[hostname_resolution])
                 # Create note with NetBlock information
                 if host.netblock:
                     try:
@@ -440,9 +437,9 @@ class MaltegoPlugin(PluginZipFormat):
                     except TypeError:
                         description = "unknown"
 
-                    service_id = self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id,
-                                                                     name=host.website["name"], protocol="TCP:HTTP",
-                                                                     ports=[80], description=description)
+                    service_id = self.createAndAddServiceToHost(host_id=host_id, name=host.website["name"],
+                                                                protocol="TCP:HTTP", ports=[80],
+                                                                description=description)
 
                     try:
                         text = f'Urls: \n {host.website["urls"]}'
@@ -452,30 +449,23 @@ class MaltegoPlugin(PluginZipFormat):
                         pass
 
                 if host.mx_record:
-                    self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id,
-                                                        name=host.mx_record["value"], protocol="SMTP", ports=[25],
-                                                        description="E-mail Server")
+                    self.createAndAddServiceToHost(host_id=host_id, name=host.mx_record["value"], protocol="SMTP",
+                                                   ports=[25], description="E-mail Server")
 
                 if host.ns_record:
-                    self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id,
-                                                        name=host.ns_record["value"], protocol="DNS", ports=[53],
-                                                        description="DNS Server")
+                    self.createAndAddServiceToHost(host_id=host_id, name=host.ns_record["value"], protocol="DNS",
+                                                   ports=[53], description="DNS Server")
         else:
             maltego_parser = MaltegoMtgxParser(output, self.extension[0])
-            if maltego_parser.xml.get('ipv4'):
-                host_ip = maltego_parser.getInfoMtgl(maltego_parser.xml['ipv4'], 'ipv4-address')
-                host_id = self.createAndAddHost(name=host_ip)
-            else:
-                host_id = self.createAndAddHost(name=self.name)
-                host_ip = '0.0.0.0'
-
             if maltego_parser.xml.get('DNS'):
                 hostname_resolution = maltego_parser.getInfoMtgl(maltego_parser.xml['DNS'], 'fqdn')
-                interface_id = self.createAndAddInterface(host_id=host_id, name=host_ip, ipv4_address=host_ip,
-                                                          hostname_resolution=[hostname_resolution])
             else:
-                interface_id = self.createAndAddInterface(host_id=host_id, name=host_ip, ipv4_address=host_ip)
-
+                hostname_resolution = None
+            if maltego_parser.xml.get('ipv4'):
+                host_ip = maltego_parser.getInfoMtgl(maltego_parser.xml['ipv4'], 'ipv4-address')
+            else:
+                host_ip = '0.0.0.0'
+            host_id = self.createAndAddHost(name=host_ip, hostnames=hostname_resolution)
             if maltego_parser.xml.get('location'):
                 location_name = maltego_parser.getInfoMtgl(maltego_parser.xml['location'], 'location.name')
                 location_area = maltego_parser.getInfoMtgl(maltego_parser.xml['location'], 'location.area')
@@ -500,9 +490,8 @@ class MaltegoPlugin(PluginZipFormat):
                 web_ssh = maltego_parser.getInfoMtgl(maltego_parser.xml['web'], 'website.ssl-enabled')
                 description = f'SSL Enabled: {web_ssh}'
 
-                service_id = self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id,
-                                                                 name=web_name, protocol="TCP:HTTP", ports=web_port,
-                                                                 description=description)
+                service_id = self.createAndAddServiceToHost(host_id=host_id, name=web_name, protocol="TCP:HTTP",
+                                                            ports=web_port, description=description)
 
                 self.createAndAddNoteToService(host_id=host_id, service_id=service_id, name="URLs",
                                                text=text.encode('ascii', 'ignore'))
@@ -510,13 +499,13 @@ class MaltegoPlugin(PluginZipFormat):
             if maltego_parser.xml.get('mxrecord'):
                 mx_name = maltego_parser.getInfoMtgl(maltego_parser.xml['mxrecord'], 'fqdn')
 
-                self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id, name=mx_name,
-                                                    protocol="SMTP", ports=[25], description="E-mail Server")
+                self.createAndAddServiceToHost(host_id=host_id, name=mx_name, protocol="SMTP", ports=[25],
+                                               description="E-mail Server")
 
             if maltego_parser.xml.get('nsrecord'):
                 ns_name = maltego_parser.getInfoMtgl(maltego_parser.xml['nsrecord'], 'fqdn')
-                self.createAndAddServiceToInterface(host_id=host_id, interface_id=interface_id, name=ns_name,
-                                                    protocol="DNS", ports=[53], description="DNS Server")
+                self.createAndAddServiceToHost(host_id=host_id, name=ns_name, protocol="DNS", ports=[53],
+                                               description="DNS Server")
 
 
 
