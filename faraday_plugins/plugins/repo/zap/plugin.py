@@ -255,23 +255,9 @@ class ZapPlugin(PluginXMLFormat):
             if site.host != site.ip:
                 host = [site.host]
 
-            h_id = self.createAndAddHost(site.ip)
+            h_id = self.createAndAddHost(site.ip, hostnames=host)
 
-            i_id = self.createAndAddInterface(
-                h_id,
-                site.ip,
-                ipv4_address=site.ip,
-                hostname_resolution=host
-            )
-
-            s_id = self.createAndAddServiceToInterface(
-                h_id,
-                i_id,
-                "http",
-                "tcp",
-                ports=[site.port],
-                status='open'
-            )
+            s_id = self.createAndAddServiceToHost(h_id, "http", "tcp", ports=[site.port], status='open')
 
             for item in site.items:
                 self.createAndAddVulnWebToService(
