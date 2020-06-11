@@ -38,15 +38,7 @@ class CmdPingPlugin(PluginBase):
 
             ip_address = reg.group(3)
             hostname = reg.group(1)
-
-            h_id = self.createAndAddHost(ip_address)
-            if self._isIPV4(ip_address):
-                i_id = self.createAndAddInterface(
-                    h_id, ip_address, ipv4_address=ip_address, hostname_resolution=[hostname])
-            else:
-                self.createAndAddInterface(
-                    h_id, ip_address, ipv6_address=ip_address, hostname_resolution=[hostname])
-
+            h_id = self.createAndAddHost(ip_address, hostnames=[hostname])
         return True
 
     def _isIPV4(self, ip):

@@ -464,22 +464,9 @@ class NmapPlugin(PluginXMLFormat):
 
             if host.ipv4_address != 'unknown':
                 minterfase = host.ipv4_address
-                h_id = self.createAndAddHost(minterfase, host.os)
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    minterfase,
-                    host.mac_address,
-                    ipv4_address=host.ipv4_address,
-                    hostname_resolution=host.hostnames)
             else:
                 minterfase = host.ipv6_address
-                h_id = self.createAndAddHost(minterfase, host.os)
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    minterfase,
-                    host.mac_address,
-                    ipv6_address=host.ipv6_address,
-                    hostname_resolution=host.hostnames)
+            h_id = self.createAndAddHost(minterfase, host.os, mac=host.mac_address, hostnames=host.hostnames)
 
             for v in host.vulns:
                 desc = v.desc
@@ -502,9 +489,8 @@ class NmapPlugin(PluginXMLFormat):
                     srvversion = port.service.product if port.service.product != "unknown" else ""
                     srvversion += " " + port.service.version if port.service.version != "unknown" else ""
 
-                s_id = self.createAndAddServiceToInterface(
+                s_id = self.createAndAddServiceToHost(
                     h_id,
-                    i_id,
                     srvname,
                     port.protocol,
                     ports=[port.number],
