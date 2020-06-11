@@ -36,10 +36,8 @@ class xsssniper(PluginBase):
             linea = linea.lower()
             if ((linea.find("target:")>0)):
                 url = re.findall('(?:[-\w.]|(?:%[\da-fA-F]{2}))+', linea)
-                print(url)
-                host_id = self.createAndAddHost(url[3])
                 address = resolve_hostname(url[3])
-                interface_id = self.createAndAddInterface(host_id,address,ipv4_address=address,hostname_resolution=url[3])
+                host_id = self.createAndAddHost(address, hostnames=url[3])
             if ((linea.find("method")>0)):
                 list_a = re.findall("\w+", linea)
                 metodo= list_a[1]
@@ -49,8 +47,8 @@ class xsssniper(PluginBase):
             if ((linea.find("param:")>0)):
                 list2 = re.findall("\w+",linea)
                 parametro.append(list2[1])
-                service_id = self.createAndAddServiceToInterface(host_id, interface_id, self.protocol, 'tcp',
-                                                                 ports=['80'], status='Open', version="", description="")
+                service_id = self.createAndAddServiceToHost(host_id, self.protocol, 'tcp', ports=['80'], status='Open',
+                                                            version="", description="")
         if aux != 0:
             self.createAndAddVulnWebToService(host_id, service_id, name="xss", desc="XSS", ref='', severity='med',
                                               website=url[0], path='', method=metodo, pname='',
