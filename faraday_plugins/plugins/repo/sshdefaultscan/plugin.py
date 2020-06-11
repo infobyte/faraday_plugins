@@ -39,11 +39,7 @@ class SSHDefaultScanPlugin(PluginBase):
             if output_rexeg_match:
                 credentials, address = line.split("@")
                 host = self.createAndAddHost(address)
-                iface = self.createAndAddInterface(
-                    host, address, ipv4_address=address)
-                service = self.createAndAddServiceToInterface(
-                    host, iface, "ssh", protocol="tcp", ports=[22]
-                )
+                service = self.createAndAddServiceToHost(host, "ssh", protocol="tcp", ports=[22])
                 username, password = credentials.split(":")
                 cred = self.createAndAddCredToService(
                     host, service, username, password)
