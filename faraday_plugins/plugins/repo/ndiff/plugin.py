@@ -117,7 +117,7 @@ class CmdNdiffPlugin(PluginBase):
         self.version = "1.0.0"
         self._command_regex = re.compile(r'^(sudo ndiff|ndiff)\s+.*?')
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         parser = NdiffXmlParser(output)
         for host in parser.hostDiff:
             if host.ip is None:

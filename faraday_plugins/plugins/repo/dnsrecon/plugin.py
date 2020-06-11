@@ -175,7 +175,7 @@ class DnsreconPlugin(PluginBase):
         hosts = list(filter(lambda h: h.type in valid_records, hosts))
         return hosts
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.

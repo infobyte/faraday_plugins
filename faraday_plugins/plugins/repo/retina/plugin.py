@@ -183,7 +183,7 @@ class RetinaPlugin(PluginXMLFormat):
         self.options = None
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = RetinaXmlParser(output)
         for item in parser.items:

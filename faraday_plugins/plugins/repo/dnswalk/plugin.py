@@ -87,7 +87,7 @@ class DnswalkPlugin(PluginBase):
         else:
             return False
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         output is the shell output of command Dnswalk.
         """

@@ -52,7 +52,7 @@ class WfuzzPlugin(PluginBase):
 
         return data
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         output_list = output.split('\n')
         info = self.parseData(output_list)
 

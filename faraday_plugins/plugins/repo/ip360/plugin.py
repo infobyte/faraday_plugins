@@ -75,7 +75,7 @@ class Ip360Plugin(PluginBase):
         self.plugin_version = "0.0.1"
         self.options = None
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = Ip360Parser(output)
         for host, interface, service, vulnerability in parser.parse():

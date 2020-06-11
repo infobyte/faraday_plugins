@@ -66,7 +66,7 @@ class FruityWiFiPlugin(PluginBase):
             severity=severity
         )
     
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         
         try:
             output = json.loads(output)

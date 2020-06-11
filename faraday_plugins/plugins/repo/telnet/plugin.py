@@ -56,7 +56,7 @@ class TelnetRouterPlugin(PluginBase):
 
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         host_info = re.search(r"Connected to (.+)\.", output)
 

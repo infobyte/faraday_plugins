@@ -31,7 +31,7 @@ class CmdPingPlugin(PluginBase):
         self.version = "1.0.0"
         self._command_regex = re.compile(r'^(sudo ping|ping|sudo ping6|ping6)\s+.*?')
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         reg = re.search(r"PING ([\w\.-:]+)( |)\(([\w\.:]+)\)", output)
         if re.search("0 received|unknown host", output) is None and reg is not None:

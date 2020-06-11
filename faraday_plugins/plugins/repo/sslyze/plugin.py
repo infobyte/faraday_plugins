@@ -108,7 +108,7 @@ class SslyzePlugin(PluginXMLFormat):
             return re.search("SSLyzeVersion", output) is not None
         return False
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         parser = SslyzeXmlParser(output)
         host = parser.target[0].attrib['host']
         ip = parser.target[0].attrib['ip']

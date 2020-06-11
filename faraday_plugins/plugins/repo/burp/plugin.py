@@ -223,7 +223,7 @@ class BurpPlugin(PluginXMLFormat):
         self.target = None
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = BurpXmlParser(output)
         for item in parser.items:

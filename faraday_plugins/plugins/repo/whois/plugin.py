@@ -70,7 +70,7 @@ class CmdWhoisPlugin(PluginBase):
 
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         matches = re.findall("Name Server:\s*(.*)\s*", output)
         for m in matches:
             m = m.strip()

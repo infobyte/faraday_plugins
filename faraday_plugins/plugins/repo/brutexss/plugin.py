@@ -27,7 +27,7 @@ class brutexss (PluginBase):
         self._command_regex = re.compile(r'^(sudo brutexss|brutexss|sudo brutexss\.py|brutexss\.py|python brutexss\.py|'
                                          r'\.\/brutexss\.py)\s+.*?')
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         lineas = output.split("\n")
         parametro = []
         found_vuln = False

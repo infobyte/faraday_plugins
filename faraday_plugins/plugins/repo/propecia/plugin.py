@@ -38,7 +38,7 @@ class CmdPropeciaPlugin(PluginBase):
         self._host_ip = None
         self._port = "23"
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         host_info = re.search(
             r"(\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b)", output)
@@ -51,9 +51,6 @@ class CmdPropeciaPlugin(PluginBase):
                     h_id = self.createAndAddHost(host)
                     s_id = self.createAndAddServiceToHost(h_id, str(self._port), "tcp", ports=[self._port],
                                                           status="open", version="", description="")
-        if debug is True:
-            self.logger.info("Debug is active")
-
         return True
 
     def processCommandString(self, username, current_path, command_string):

@@ -225,7 +225,7 @@ class W3afPlugin(PluginXMLFormat):
             "-h": "Display this help message.",
         }
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = W3afXmlParser(output)
         ip = resolve_hostname(parser.host)
@@ -239,9 +239,6 @@ class W3afPlugin(PluginXMLFormat):
                                                      resolution=item.resolution, ref=item.ref, response=item.resp)
         del parser
 
-
-    def setHost(self):
-        pass
 
 
 def createPlugin():

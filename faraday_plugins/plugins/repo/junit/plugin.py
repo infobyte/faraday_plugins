@@ -132,7 +132,7 @@ class JunitPlugin(PluginXMLFormat):
         self.options = None
         self._current_output = None
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = JunitXmlParser(output)
         for item in parser.items:
