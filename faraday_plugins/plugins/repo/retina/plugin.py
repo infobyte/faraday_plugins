@@ -187,10 +187,8 @@ class RetinaPlugin(PluginXMLFormat):
 
         parser = RetinaXmlParser(output)
         for item in parser.items:
-            h_id = self.createAndAddHost(item.ip, item.os)
-            hostname = item.hostname if item.hostname else item.ip
-            i_id = self.createAndAddInterface(
-                h_id, item.ip, ipv4_address=item.ip, hostname_resolution=[hostname])
+            hostname = item.hostname if item.hostname else None
+            h_id = self.createAndAddHost(item.ip, item.os,hostnames=[hostname])
 
             if not item.netbiosname == 'N/A':
                 self.createAndAddNoteToHost(
@@ -204,10 +202,8 @@ class RetinaPlugin(PluginXMLFormat):
                 if k:
                     for v in vulns:
                         web = False
-                        s_id = self.createAndAddServiceToInterface(h_id, i_id, 'unknown',
-                                                                   v.protocol.lower(),
-                                                                   ports=[str(v.port)],
-                                                                   status="open")
+                        s_id = self.createAndAddServiceToHost(h_id, 'unknown', v.protocol.lower(), ports=[str(v.port)],
+                                                              status="open")
                         if v.port in ['80', '443'] or re.search("ssl|http", v.name.lower()):
                             web = True
                         else:
