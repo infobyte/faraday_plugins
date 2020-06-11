@@ -45,10 +45,8 @@ class pasteAnalyzerPlugin(PluginBase):
             return
         # Configuration initial.
         hostId = self.createAndAddHost("pasteAnalyzer")
-        interfaceId = self.createAndAddInterface(hostId, "Results")
-        serviceId = self.createAndAddServiceToInterface(
+        serviceId = self.createAndAddServiceToHost(
             hostId,
-            interfaceId,
             "Web",
             "TcpHTTP",
             ['80']
