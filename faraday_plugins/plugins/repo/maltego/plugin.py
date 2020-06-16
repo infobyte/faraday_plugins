@@ -403,7 +403,7 @@ class MaltegoPlugin(PluginZipFormat):
                     else:
                         ip = host.ip
                     host_id = self.createAndAddHost(ip, hostnames=list(host.dns_name))
-                     # Create note with NetBlock information
+                    # Create note with NetBlock information
                     if host.netblock:
                         try:
                             text = f'Network owner:\n {host.netblock["network_owner"]} ' \
