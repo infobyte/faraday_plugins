@@ -317,7 +317,6 @@ class PluginBase:
         if not hostnames:
             hostnames = []
         if not isinstance(hostnames, list):
-            self.logger.warning("hostnames parameter must be a list and is (%s)", type(hostnames))
             hostnames = [hostnames]
         # Some plugins sends a list with None, we filter empty and None values.
         hostnames = [hostname for hostname in hostnames if hostname]
@@ -481,14 +480,6 @@ class PluginBase:
         service["credentials"].append(credential)
         credential_id = self.save_cache(credential)
         return credential_id
-
-    def log(self, msg, level='INFO'):# TODO borrar
-        pass
-        #self.__addPendingAction(Modelactions.LOG, msg, level)
-
-    def devlog(self, msg): # TODO borrar
-        pass
-        #self.__addPendingAction(Modelactions.DEVLOG, msg)
 
     def get_data(self):
         self.vulns_data["command"]["tool"] = self.id

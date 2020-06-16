@@ -71,7 +71,7 @@ class NetsparkerCloudXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            self.devlog("SyntaxError: %s. %s" % (err, xml_output))
+            self.logger.error("SyntaxError: %s. %s" % (err, xml_output))
             return None
         return tree
 

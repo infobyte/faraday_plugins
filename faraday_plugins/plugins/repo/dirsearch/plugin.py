@@ -78,7 +78,7 @@ class DirsearchPlugin(PluginBase):
         try:
             data = json.loads(contents)
         except ValueError:
-            self.log('Error parsing report. Make sure the file has valid '
+            self.logger.error('Error parsing report. Make sure the file has valid '
                      'JSON', 'ERROR')
             return
         for (base_url, items) in data.items():
