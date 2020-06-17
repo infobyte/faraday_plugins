@@ -70,14 +70,12 @@ class CmdWhoisPlugin(PluginBase):
 
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         matches = re.findall("Name Server:\s*(.*)\s*", output)
         for m in matches:
             m = m.strip()
             ip = resolve_hostname(m)
-            h_id = self.createAndAddHost(ip, "os unknown")
-            i_id = self.createAndAddInterface(
-                h_id, ip, "00:00:00:00:00:00", ip, hostname_resolution=[m])
+            h_id = self.createAndAddHost(ip, "os unknown", hostnames=[m])
         return True
 
 

@@ -71,7 +71,7 @@ class NetsparkerCloudXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            self.devlog("SyntaxError: %s. %s" % (err, xml_output))
+            self.logger.error("SyntaxError: %s. %s" % (err, xml_output))
             return None
         return tree
 
@@ -190,16 +190,14 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         parser = NetsparkerCloudXmlParser(output)
         first = True
         for i in parser.items:
             if first:
                 ip = resolve_hostname(i.hostname)
-                h_id = self.createAndAddHost(ip)
-                i_id = self.createAndAddInterface(h_id, ip, ipv4_address=ip, hostname_resolution=[i.hostname])
-                s_id = self.createAndAddServiceToInterface(h_id, i_id, i.protocol, ports=[i.port], status="open")
-
+                h_id = self.createAndAddHost(ip, hostnames=[i.hostname])
+                s_id = self.createAndAddServiceToHost(h_id, i.protocol, ports=[i.port], status="open")
                 first = False
             v_id = self.createAndAddVulnWebToService(h_id, s_id, i.name, ref=i.ref, website=i.hostname,
                                                      severity=i.severity, desc=i.desc, path=i.url.path, method=i.method,

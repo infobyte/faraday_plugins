@@ -40,7 +40,7 @@ class BeefPlugin(PluginBase):
             "Authkey", str, "c818c7798ae1da38b45a6406c8dd0d6d4d007098")
         self.addSetting("Enable", str, "0")
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.

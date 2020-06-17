@@ -221,8 +221,6 @@ class NessusPlugin(PluginXMLFormat):
                     host_name = None
 
                 host_id = self.createAndAddHost(ip_host, os=os, hostnames=host_name, mac=mac)
-
-                interface_id = self.createAndAddInterface(host_id, ip, ipv6_address=ip, mac=mac)
                 cve = []
                 for serv in parser.report.report_json['serv'][set_info -1]:
                     serv_name = serv[1]
@@ -332,11 +330,8 @@ class NessusPlugin(PluginXMLFormat):
                         if 'xref' in data:
                             ref.append(data['xref'])
 
-                        service_id = self.createAndAddServiceToInterface(host_id,
-                                                                         interface_id,
-                                                                         name=serv_name,
-                                                                         protocol=serv_protocol,
-                                                                         ports=serv_port)
+                        service_id = self.createAndAddServiceToHost(host_id, name=serv_name, protocol=serv_protocol,
+                                                                    ports=serv_port)
 
                         if serv_name == 'www' or serv_name == 'http':
                             self.createAndAddVulnWebToService(host_id,
@@ -363,13 +358,9 @@ class NessusPlugin(PluginXMLFormat):
                                                            run_date=run_date)
         else:
             ip = '0.0.0.0'
-            host_id = self.createAndAddHost(ip, hostnames="Not Information")
-            interface_id = self.createAndAddInterface(host_id, ip)
-            service_id = self.createAndAddServiceToInterface(host_id, interface_id, name="Not Information")
-            self.createAndAddVulnToService(host_id,
-                                           service_id,
-                                           name=parser.policy.policy_name,
-                                           desc="No Description")
+            host_id = self.createAndAddHost(ip, hostnames=None)
+            service_id = self.createAndAddServiceToHost(host_id,name="Not Information")
+            self.createAndAddVulnToService(host_id, service_id, name=parser.policy.policy_name, desc="No Description")
 
 
 def createPlugin():
