@@ -54,32 +54,28 @@ def list_plugins(custom_plugins_folder):
 @click.option('-o', '--output-file', type=click.Path(exists=False))
 def process_report(report_file, plugin_id, custom_plugins_folder, summary, output_file):
     if not os.path.isfile(report_file):
-        click.echo(click.style(f"File {report_file} Don't Exists", fg="red"))
+        click.echo(click.style(f"File {report_file} Don't Exists", fg="red"), err=True)
     else:
         plugins_manager = PluginsManager(custom_plugins_folder)
         analyzer = ReportAnalyzer(plugins_manager)
         if plugin_id:
             plugin = plugins_manager.get_plugin(plugin_id)
             if not plugin:
-                click.echo(click.style(f"Invalid Plugin: {plugin_id}", fg="red"))
+                click.echo(click.style(f"Invalid Plugin: {plugin_id}", fg="red"), err=True)
                 return
         else:
             plugin = analyzer.get_plugin(report_file)
             if not plugin:
-                click.echo(click.style(f"Failed to detect report: {report_file}", fg="red"))
+                click.echo(click.style(f"Failed to detect report: {report_file}", fg="red"), err=True)
                 return
-        color_message = click.style("Processing report:", fg="green")
-        click.echo(f"{color_message} {report_file} ({plugin.id})\n")
         plugin.processReport(report_file, getpass.getuser())
         if summary:
-            click.echo(click.style("\nPlugin Summary: ", fg="cyan"))
             click.echo(json.dumps(plugin.get_summary(), indent=4))
         else:
             if output_file:
                 with open(output_file, "w") as f:
                     json.dump(plugin.get_data(), f)
             else:
-                click.echo(click.style("\nFaraday API json: ", fg="cyan"))
                 click.echo(json.dumps(plugin.get_data(), indent=4))
 
 
@@ -90,53 +86,52 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary, outpu
 @click.option('-dr', '--dont-run', is_flag=True)
 @click.option('--summary', is_flag=True)
 @click.option('-o', '--output-file', type=click.Path(exists=False))
-def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary, output_file):
+@click.option('--show-output', is_flag=True)
+def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary, output_file, show_output):
     plugins_manager = PluginsManager(custom_plugins_folder)
     analyzer = CommandAnalyzer(plugins_manager)
     if plugin_id:
         plugin = plugins_manager.get_plugin(plugin_id)
         if not plugin:
-            click.echo(click.style(f"Invalid Plugin: {plugin_id}", fg="red"))
+            click.echo(click.style(f"Invalid Plugin: {plugin_id}", fg="red"), err=True)
             return
     else:
         plugin = analyzer.get_plugin(command)
         if not plugin:
-            click.echo(click.style(f"Failed to detect command: {command}", fg="red"))
+            click.echo(click.style(f"Failed to detect command: {command}", fg="red"), err=True)
             return
     current_path = os.path.abspath(os.getcwd())
     modified_command = plugin.processCommandString(getpass.getuser(), current_path, command)
     if modified_command:
         command = modified_command
     if not dont_run:
-        color_message = click.style("Running command:", fg="green")
-        click.echo(f"{color_message} {command}\n")
         p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = io.StringIO()
         while True:
             retcode = p.poll()
             line = p.stdout.readline().decode('utf-8')
-            sys.stdout.write(line)
-            output.write(line)
+            if show_output:
+                sys.stdout.write(line)
+                output.write(line)
             if retcode is not None:
                 extra_lines = map(lambda x: x.decode('utf-8'), p.stdout.readlines())
-                sys.stdout.writelines(line)
-                output.writelines(extra_lines)
+                if show_output:
+                    sys.stdout.writelines(line)
+                    output.writelines(extra_lines)
                 break
         output_value = output.getvalue()
         if retcode == 0:
             plugin.processOutput(output_value)
             if summary:
-                click.echo(click.style("\nPlugin Summary: ", fg="cyan"))
                 click.echo(json.dumps(plugin.get_summary(), indent=4))
             else:
                 if output_file:
                     with open(output_file, "w") as f:
                         json.dump(plugin.get_data(), f)
                 else:
-                    click.echo(click.style("\nFaraday API json: ", fg="cyan"))
                     click.echo(json.dumps(plugin.get_data(), indent=4))
         else:
-            click.echo(click.style("Command execution error!!", fg="red"))
+            click.echo(click.style("Command execution error!!", fg="red"), err=True)
     else:
         color_message = click.style("Command: ", fg="green")
         click.echo(f"{color_message} {command}")
@@ -156,7 +151,7 @@ def detect_report(report_file, custom_plugins_folder):
         if plugin:
             click.echo(click.style(f"Faraday Plugin: {plugin.id}", fg="cyan"))
         else:
-            click.echo(click.style(f"Failed to detect report: {report_file}", fg="red"))
+            click.echo(click.style(f"Failed to detect report: {report_file}", fg="red"), err=True)
 
 
 @cli.command()
@@ -169,4 +164,4 @@ def detect_command(command, custom_plugins_folder):
     if plugin:
         click.echo(click.style(f"Faraday Plugin: {plugin.id}", fg="cyan"))
     else:
-        click.echo(click.style(f"Failed to detect command: {command}", fg="red"))
+        click.echo(click.style(f"Failed to detect command: {command}", fg="red"), err=True)
