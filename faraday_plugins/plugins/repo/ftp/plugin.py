@@ -44,7 +44,7 @@ class CmdFtpPlugin(PluginBase):
 
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         host_info = re.search(r"Connected to (.+)\.", output)
         banner = re.search("220?([\w\W]+)$", output)
@@ -52,28 +52,13 @@ class CmdFtpPlugin(PluginBase):
             hostname = host_info.group(1)
             ip_address = resolve_hostname(hostname)
             self._version = banner.groups(0) if banner else ""
-            if debug:
-                print(ip_address)
-
-            h_id = self.createAndAddHost(ip_address)
-
-            i_id = self.createAndAddInterface(
+            h_id = self.createAndAddHost(ip_address, hostnames=[hostname])
+            s_id = self.createAndAddServiceToHost(
                 h_id,
-                ip_address,
-                ipv4_address=ip_address,
-                hostname_resolution=[hostname])
-
-            s_id = self.createAndAddServiceToInterface(
-                h_id,
-                i_id,
                 "ftp",
                 "tcp",
                 ports=[self._port],
                 status="open")
-
-        if debug is True:
-            self.logger.info("Debug is active")
-
         return True
 
     def processCommandString(self, username, current_path, command_string):

@@ -74,7 +74,7 @@ class FortifyPlugin(PluginByExtension):
                 severity=vuln_data['severity']
             )
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         fp = FortifyParser(output)
         if fp.fvdl is not None:
             self._process_fvdl_vulns(fp)

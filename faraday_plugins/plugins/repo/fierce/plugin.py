@@ -132,7 +132,7 @@ class FiercePlugin(PluginBase):
             pass
         return item
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = FierceParser(output)
         for item in parser.items:

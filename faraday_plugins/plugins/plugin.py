@@ -316,6 +316,8 @@ class PluginBase:
 
         if not hostnames:
             hostnames = []
+        if not isinstance(hostnames, list):
+            hostnames = [hostnames]
         # Some plugins sends a list with None, we filter empty and None values.
         hostnames = [hostname for hostname in hostnames if hostname]
         if os is None:
@@ -328,46 +330,6 @@ class PluginBase:
                 "credentials": [], "services": [], "vulnerabilities": [], "tags": tags}
         host_id = self.save_host_cache(host)
         return host_id
-
-    # @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-    #                         current_version=VERSION,
-    #                         details="Interface object removed. Use host or service instead")
-    def createAndAddInterface(
-            self, host_id, name="", mac="00:00:00:00:00:00",
-            ipv4_address="0.0.0.0", ipv4_mask="0.0.0.0", ipv4_gateway="0.0.0.0",
-            ipv4_dns=None, ipv6_address="0000:0000:0000:0000:0000:0000:0000:0000",
-            ipv6_prefix="00",
-            ipv6_gateway="0000:0000:0000:0000:0000:0000:0000:0000", ipv6_dns=None,
-            network_segment="", hostname_resolution=None):
-        if ipv4_dns is None:
-            ipv4_dns = []
-        if ipv6_dns is None:
-            ipv6_dns = []
-        if hostname_resolution is None:
-            hostname_resolution = []
-        if not isinstance(hostname_resolution, list):
-            self.logger.warning("hostname_resolution parameter must be a list and is (%s)", type(hostname_resolution))
-            hostname_resolution = [hostname_resolution]
-        # We don't use interface anymore, so return a host id to maintain
-        # backwards compatibility
-        # Little hack because we dont want change all the plugins for add hostnames in Host object.
-        # SHRUG
-        host = self.get_from_cache(host_id)
-        for hostname in hostname_resolution:
-            if hostname not in host["hostnames"]:
-                host["hostnames"].append(hostname)
-        host["mac"] = mac
-        return host_id
-
-    # @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-    #                         current_version=VERSION,
-    #                         details="Interface object removed. Use host or service instead. Service will be attached
-    # to Host!")
-    def createAndAddServiceToInterface(self, host_id, interface_id, name,
-                                       protocol="tcp", ports=None,
-                                       status="open", version="unknown",
-                                       description="", tags=None):
-        return self.createAndAddServiceToHost(host_id, name, protocol, ports, status, version, description, tags)
 
     def createAndAddServiceToHost(self, host_id, name,
                                        protocol="tcp", ports=None,
@@ -420,16 +382,6 @@ class PluginBase:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
         vulnerability_id = self.save_host_vuln_cache(host_id, vulnerability)
         return vulnerability_id
-
-    # @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-    #                         current_version=VERSION,
-    #                         details="Interface object removed. Use host or service instead. Vuln will be added
-    # to Host")
-    def createAndAddVulnToInterface(self, host_id, interface_id, name,
-                                    desc="", ref=None, severity="",
-                                    resolution="", data="", tags=None):
-        return self.createAndAddVulnToHost(host_id, name, desc=desc, ref=ref, severity=severity, resolution=resolution,
-                                           data=data, tags=tags)
 
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
@@ -515,8 +467,6 @@ class PluginBase:
     def createAndAddNoteToHost(self, host_id, name, text):
         return None
 
-    def createAndAddNoteToInterface(self, host_id, interface_id, name, text):
-        return None
 
     def createAndAddNoteToService(self, host_id, service_id, name, text):
         return None
@@ -530,14 +480,6 @@ class PluginBase:
         service["credentials"].append(credential)
         credential_id = self.save_cache(credential)
         return credential_id
-
-    def log(self, msg, level='INFO'):# TODO borrar
-        pass
-        #self.__addPendingAction(Modelactions.LOG, msg, level)
-
-    def devlog(self, msg): # TODO borrar
-        pass
-        #self.__addPendingAction(Modelactions.DEVLOG, msg)
 
     def get_data(self):
         self.vulns_data["command"]["tool"] = self.id

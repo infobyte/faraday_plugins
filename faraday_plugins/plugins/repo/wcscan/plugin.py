@@ -105,17 +105,7 @@ class WcscanPlugin(PluginBase):
             host = parser.scaninfo[file]['host']
             port = parser.scaninfo[file]['port']
             h_id = self.createAndAddHost(host)
-            if(re.match("(^[2][0-5][0-5]|^[1]{0,1}[0-9]{1,2})\.([0-2][0-5][0-5]|[1]{0,1}[0-9]{1,2})\.([0-2][0-5][0-5]|[1]{0,1}[0-9]{1,2})\.([0-2][0-5][0-5]|[1]{0,1}[0-9]{1,2})$", host)):
-                i_id = self.createAndAddInterface(h_id,
-                                                  host,
-                                                  ipv4_address=host)
-            else:
-                i_id = self.createAndAddInterface(h_id,
-                                                  host,
-                                                  ipv6_address=host)
-
-            s_id = self.createAndAddServiceToInterface(
-                h_id, i_id, "http", protocol="tcp", ports=port)
+            s_id = self.createAndAddServiceToHost(h_id, "http", protocol="tcp", ports=port)
             for vuln in parser.result[file]:
                 if parser.scaninfo[file]['type'] == "phpini":
                     vuln_name = f"{parser.scaninfo[file]['file']}: {vuln}"

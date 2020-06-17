@@ -27,7 +27,7 @@ class brutexss (PluginBase):
         self._command_regex = re.compile(r'^(sudo brutexss|brutexss|sudo brutexss\.py|brutexss\.py|python brutexss\.py|'
                                          r'\.\/brutexss\.py)\s+.*?')
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         lineas = output.split("\n")
         parametro = []
         found_vuln = False
@@ -44,14 +44,12 @@ class brutexss (PluginBase):
                 vuln_list = re.findall("\w+", linea)
                 if vuln_list[2] == "Vulnerable":
                     parametro.append(vuln_list[1])
-                    found_vuln=len(parametro) > 0
-                    host_id = self.createAndAddHost(url)
+                    found_vuln = len(parametro) > 0
                     address = resolve_hostname(url)
-                    interface_id = self.createAndAddInterface(host_id, address, ipv4_address=address,
-                                                              hostname_resolution=[url])
-                    service_id = self.createAndAddServiceToInterface(host_id, interface_id, self.protocol, 'tcp',
-                                                                     ports=[port], status='Open', version="",
-                                                                     description="")
+                    host_id = self.createAndAddHost(url, hostnames=[url])
+                    service_id = self.createAndAddServiceToHost(host_id, self.protocol, 'tcp',
+                                                                ports=[port], status='Open', version="",
+                                                                description="")
         if found_vuln:
             self.createAndAddVulnWebToService(host_id, service_id, name="xss", desc="XSS", ref='', severity='med',
                                               website=url, path='', method='', pname='', params=''.join(parametro),

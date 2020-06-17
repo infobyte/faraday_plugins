@@ -223,26 +223,17 @@ class ImpactPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         parser = ImpactXmlParser(output)
         mapped_services = {}
         mapped_ports = {}
         for item in parser.items:
-
-            h_id = self.createAndAddHost(
-                item.ip,
-                item.os + " " + item.arch)
-
-            i_id = self.createAndAddInterface(
-                h_id,
-                item.ip,
-                ipv4_address=item.ip,
-                hostname_resolution=[item.host])
+            os_string = f"{item.os} {item.arch }"
+            h_id = self.createAndAddHost(item.ip, os=os_string, hostnames=[item.host])
 
             for service in item.services:
-                s_id = self.createAndAddServiceToInterface(
+                s_id = self.createAndAddServiceToHost(
                     h_id,
-                    i_id,
                     service['name'],
                     service['protocol'],
                     ports=[service['port']],
@@ -282,9 +273,8 @@ class ImpactPlugin(PluginXMLFormat):
                         ref=v.ref)
 
             for p in item.ports:
-                s_id = self.createAndAddServiceToInterface(
+                s_id = self.createAndAddServiceToHost(
                     h_id,
-                    i_id,
                     p['port'],
                     p['protocol'],
                     ports=[p['port']],

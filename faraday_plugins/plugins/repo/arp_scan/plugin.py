@@ -54,8 +54,7 @@ class CmdArpScanPlugin(PluginBase):
                     if len(vals[0].split(".")) == 4:
 
                         host = vals[0]
-                        h_id = self.createAndAddHost(host)
-                        i_id = self.createAndAddInterface(h_id, host, ipv4_address=host, mac=vals[1])
+                        h_id = self.createAndAddHost(host, mac=vals[1])
 
         return True
 

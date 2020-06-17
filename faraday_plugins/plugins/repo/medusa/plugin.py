@@ -85,25 +85,12 @@ class MedusaPlugin(PluginBase):
         
         for item in parser.items:
         
-            h_id = self.createAndAddHost(item['ip'])
-            if self._isIPV4(item['ip']):
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    item['ip'],
-                    ipv4_address=item['ip'],
-                    hostname_resolution=[item['host']])
-            else:
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    item['ip'],
-                    ipv6_address=item['ip'],
-                    hostname_resolution=[item['host']])
+            h_id = self.createAndAddHost(item['ip'], hostnames=[item['host']])
 
             port = self.port if self.port else item['port']
 
-            s_id = self.createAndAddServiceToInterface(
+            s_id = self.createAndAddServiceToHost(
                 h_id,
-                i_id,
                 item['service'],
                 ports=[port],
                 protocol="tcp",
