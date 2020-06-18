@@ -67,24 +67,7 @@ class DigPlugin(PluginBase):
                         ip_address = resolve_hostname(domain)
 
                     # Create host
-                    host_id = self.createAndAddHost(ip_address)
-
-                    # create interface (special if type "AAAA")
-                    if result.get(u"type") == u"AAAA": # AAAA = IPv6 address
-                        # TODO is there a function to dynamically update the paramter ipv6_address of an already-created interface?
-                        ipv6_address = result.get(u"data")[0]
-                        interface_id = self.createAndAddInterface(
-                            host_id,
-                            ip_address,
-                            ipv4_address=ip_address,
-                            ipv6_address=ipv6_address,
-                            hostname_resolution=[domain])
-                    else:
-                        interface_id = self.createAndAddInterface(
-                            host_id,
-                            ip_address,
-                            ipv4_address=ip_address,
-                            hostname_resolution=[domain])
+                    host_id = self.createAndAddHost(ip_address, hostnames=[domain])
 
 
                     # all other TYPES that aren't 'A' and 'AAAA' are dealt here:
@@ -92,9 +75,8 @@ class DigPlugin(PluginBase):
                         mx_priority = result.get(u"data")[0]
                         mx_record = result.get(u"data")[1]
 
-                        service_id = self.createAndAddServiceToInterface(
+                        service_id = self.createAndAddServiceToHost(
                             host_id=host_id,
-                            interface_id=interface_id,
                             name=mx_record,
                             protocol="SMTP",
                             ports=[25],
@@ -109,9 +91,7 @@ class DigPlugin(PluginBase):
 
                     elif result.get(u"type") == u"NS": # Name server record
                         ns_record = result.get(u"data")[0]
-                        self.createAndAddServiceToInterface(
-                            host_id=host_id,
-                            interface_id=interface_id,
+                        self.createAndAddServiceToHost(
                             name=ns_record,
                             protocol="DNS",
                             ports=[53],
@@ -126,9 +106,8 @@ class DigPlugin(PluginBase):
                         upper_limit_time = result.get(u"data")[5]
                         negative_result_ttl = result.get(u"data")[6]
 
-                        service_id = self.createAndAddServiceToInterface(
+                        service_id = self.createAndAddServiceToHost(
                             host_id=host_id,
-                            interface_id=interface_id,
                             name=ns_record,
                             protocol="DNS",
                             ports=[53],

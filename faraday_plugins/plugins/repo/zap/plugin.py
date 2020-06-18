@@ -238,13 +238,10 @@ class ZapPlugin(PluginXMLFormat):
         self.options = None
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.
-
-        NOTE: if 'debug' is true then it is being run from a test case and the
-        output being sent is valid.
         """
 
         parser = ZapXmlParser(output)
@@ -255,23 +252,9 @@ class ZapPlugin(PluginXMLFormat):
             if site.host != site.ip:
                 host = [site.host]
 
-            h_id = self.createAndAddHost(site.ip)
+            h_id = self.createAndAddHost(site.ip, hostnames=host)
 
-            i_id = self.createAndAddInterface(
-                h_id,
-                site.ip,
-                ipv4_address=site.ip,
-                hostname_resolution=host
-            )
-
-            s_id = self.createAndAddServiceToInterface(
-                h_id,
-                i_id,
-                "http",
-                "tcp",
-                ports=[site.port],
-                status='open'
-            )
+            s_id = self.createAndAddServiceToHost(h_id, "http", "tcp", ports=[site.port], status='open')
 
             for item in site.items:
                 self.createAndAddVulnWebToService(

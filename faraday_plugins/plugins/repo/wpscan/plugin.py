@@ -57,7 +57,7 @@ class WPScanPlugin(PluginJsonFormat):
         self.version = "3.4.5"
         self.json_keys = {"target_url", "effective_url", "interesting_findings"}
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         parser = WPScanJsonParser(output)
         url_data = parser.parse_url(parser.json_data['target_url'])
         host_id = self.createAndAddHost(url_data['address'], hostnames=[url_data['hostname']])

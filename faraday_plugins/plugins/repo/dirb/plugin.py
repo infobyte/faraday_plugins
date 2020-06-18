@@ -88,19 +88,13 @@ class dirbPlugin(PluginBase):
             puerto = self.getPort(url.group(1), proto)
 
             host_id = self.createAndAddHost(ip)
-            iface_id = self.createAndAddInterface(host_id, ip, ipv4_address = ip)
-
-            serv_id  = self.createAndAddServiceToInterface(host_id, iface_id, proto, protocol=proto, ports=[puerto],
-                                                           status=status)
-
+            serv_id = self.createAndAddServiceToHost(host_id, proto, protocol=proto, ports=[puerto], status=status)
             if len(self.text) > 0:
                 self.createAndAddVulnWebToService(host_id, serv_id, 'Url Fuzzing', severity=0, desc=self.text,
                                                   website=domain)
-
             if len(paths) > 0:
                 self.createAndAddVulnWebToService(host_id, serv_id, "Directory Listing", severity="med", website=domain,
                                                   request=paths, method="GET")
-
         return True
 
     def processCommandString(self, username, current_path, command_string):

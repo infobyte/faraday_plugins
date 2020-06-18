@@ -259,7 +259,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
         with open(filename, **self.open_options) as output:
             self.parseOutputString(output)
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         parser = CSVParser(output, self.logger)
 
         for item in parser.items:

@@ -166,20 +166,8 @@ class SkipfishPlugin(PluginBase):
 
                     ip = resolve_hostname(host)
 
-                    h_id = self.createAndAddHost(ip)
-                    i_id = self.createAndAddInterface(
-                        h_id,
-                        ip,
-                        ipv4_address=ip,
-                        hostname_resolution=[host])
-
-                    s_id = self.createAndAddServiceToInterface(
-                        h_id,
-                        i_id,
-                        "http",
-                        "tcp",
-                        ports=[port],
-                        status="open")
+                    h_id = self.createAndAddHost(ip, hostnames=[host])
+                    s_id = self.createAndAddServiceToHost(h_id, "http", "tcp", ports=[port], status="open")
 
                     hostc[sample["url"]] = {
                         'h_id': h_id,
@@ -187,7 +175,6 @@ class SkipfishPlugin(PluginBase):
                         'port': port,
                         'host': host,
                         'protocol': protocol,
-                        'i_id': i_id,
                         's_id': s_id}
 
                 try:

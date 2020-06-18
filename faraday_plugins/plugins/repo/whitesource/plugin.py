@@ -30,7 +30,7 @@ class WhitesourcePlugin(PluginJsonFormat):
         self.version = "3.4.5"
         self.json_keys = {"vulnerabilities"}
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         parser = json.loads(output)
         if parser.get('vulnerabilities'):
             for vulnerability in parser['vulnerabilities']:

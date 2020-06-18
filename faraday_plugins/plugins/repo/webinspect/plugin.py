@@ -132,17 +132,10 @@ class WebInspectPlugin(PluginXMLFormat):
 
         for vuln in vulns:
 
-            host_id = self.createAndAddHost(
-                vuln.get("Host").get("name"))
-
-            interface_id = self.createAndAddInterface(
-                host_id, vuln.get("Host").get("name"))
-
-            service_id = self.createAndAddServiceToInterface(
-                host_id, interface_id,
-                vuln.get("Service").get("name"),
-                protocol=vuln.get("Service").get("name"),
-                ports=[vuln.get("Service").get("port")])
+            host_id = self.createAndAddHost(vuln.get("Host").get("name"))
+            service_id = self.createAndAddServiceToHost(host_id, vuln.get("Service").get("name"),
+                                                        protocol=vuln.get("Service").get("name"),
+                                                        ports=[vuln.get("Service").get("port")])
             
             self.createAndAddVulnWebToService(
                 host_id, service_id,
