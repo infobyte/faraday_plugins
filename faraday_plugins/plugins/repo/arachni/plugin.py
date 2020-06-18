@@ -55,13 +55,15 @@ class ArachniXmlParser:
 
     def getSystem(self, tree):
         system_tree = tree.find('system')
-        return System(system_tree)
+        if system_tree is None:
+            return System(tree, False)
+        else:
+            return System(system_tree, True)
 
 
 class Issue():
 
     def __init__(self, issue_node):
-
         self.node = issue_node
         self.name = self.getDesc('name')
         self.severity = self.getDesc('severity')
@@ -131,7 +133,6 @@ class Issue():
         except:
             parameters = ''
 
-
         return ' - '.join(result)
 
     def getRequest(self):
@@ -161,33 +162,50 @@ class Issue():
 
 class System():
 
-    def __init__(self, node):
-
+    def __init__(self, node, tag_exists):
         self.node = node
-        self.user_agent = None
-        self.url = None
-        self.audited_elements = None
-        self.modules = ''
-        self.cookies = None
+        if not tag_exists:
+            self.user_agent = 'Arachni'
+            self.url = self.getUrl()
+            self.modules = ''
+            self.version = self.node.find('version')
+            self.start_time = self.node.find('start_datetime')
+            self.finish_time = self.node.find('finish_datetime')
+        else:
+            self.user_agent = None
+            self.url = None
+            self.audited_elements = None
+            self.modules = ''
+            self.cookies = None
+            self.getOptions()
+            self.version = self.getDesc('version')
+            self.start_time = self.getDesc('start_datetime')
+            self.finish_time = self.getDesc('finish_datetime')
 
-        self.getOptions()
+            self.note = self.getNote()
 
-        self.version = self.getDesc('version')
-        self.start_time = self.getDesc('start_datetime')
-        self.finish_time = self.getDesc('finish_datetime')
-
-        self.note = self.getNote()
+    def getUrl(self):
+        sitemap = self.node.find("sitemap/entry")
+        return sitemap.get('url')
 
     def getOptions(self):
 
         # Get values of options scan
-        options = self.node.find('options')
+        try:
+            options = self.node.find('options')
+        except:
+            options = False
         if options:
             options_string = options.text
         else:
             options_string = None
 
-        self.user_agent = self.node.find('user_agent').text
+
+        try:
+            self.user_agent = self.node.find('user_agent').text
+        except:
+            self.user_agent = None
+
         self.url = self.node.find('url').text
         tags_audited_elements = self.node.find('audited_elements')
         element_text = []
