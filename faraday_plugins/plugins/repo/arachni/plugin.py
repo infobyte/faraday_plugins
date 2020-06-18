@@ -382,7 +382,7 @@ class ArachniPlugin(PluginXMLFormat):
                 except Exception as e:
                     self.logger.error("Error on delete file: (%s) [%s]", filename, e)
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.
@@ -397,18 +397,11 @@ class ArachniPlugin(PluginXMLFormat):
         self.address = resolve_hostname(parser.plugins.ip)
 
         # Create host and interface
-        host_id = self.createAndAddHost(self.address)
-
-        interface_id = self.createAndAddInterface(
-            host_id,
-            self.address,
-            ipv4_address=self.address,
-            hostname_resolution=[self.hostname])
+        host_id = self.createAndAddHost(self.address, hostnames=[self.hostname])
 
         # Create service
-        service_id = self.createAndAddServiceToInterface(
+        service_id = self.createAndAddServiceToHost(
             host_id,
-            interface_id,
             self.protocol,
             'tcp',
             ports=[self.port],

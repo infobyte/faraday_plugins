@@ -225,13 +225,12 @@ class W3afPlugin(PluginXMLFormat):
             "-h": "Display this help message.",
         }
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = W3afXmlParser(output)
         ip = resolve_hostname(parser.host)
-        h_id = self.createAndAddHost(ip)
-        i_id = self.createAndAddInterface(h_id, ip, ipv4_address=ip, hostname_resolution=[parser.host])
-        s_id = self.createAndAddServiceToInterface(h_id, i_id, "http", "tcp", ports=[parser.port], status="open")
+        h_id = self.createAndAddHost(ip, hostnames=[parser.host])
+        s_id = self.createAndAddServiceToHost(h_id, "http", "tcp", ports=[parser.port], status="open")
 
         for item in parser.items:
             v_id = self.createAndAddVulnWebToService(h_id, s_id, item.name,
@@ -240,9 +239,6 @@ class W3afPlugin(PluginXMLFormat):
                                                      resolution=item.resolution, ref=item.ref, response=item.resp)
         del parser
 
-
-    def setHost(self):
-        pass
 
 
 def createPlugin():

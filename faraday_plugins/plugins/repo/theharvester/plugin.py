@@ -100,32 +100,17 @@ class TheharvesterPlugin(PluginBase):
         }
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.
-
-        NOTE: if 'debug' is true then it is being run from a test case and the
-        output being sent is valid.
         """
-
-        print("este es el output (%s)" % output)
-
-        if debug:
-            parser = TheharvesterParser(output)
-        else:
-
-            parser = TheharvesterParser(output)
-
-            print(len(parser.items))
-            for item in parser.items:
-                host = []
-                if item['host'] != item['ip']:
-                    host = [item['host']]
-                h_id = self.createAndAddHost(item['ip'])
-                i_id = self.createAndAddInterface(h_id, item['ip'], ipv4_address=item[
-                                                  'ip'], hostname_resolution=host)
-
+        parser = TheharvesterParser(output)
+        for item in parser.items:
+            host = []
+            if item['host'] != item['ip']:
+                host = [item['host']]
+            h_id = self.createAndAddHost(item['ip'], hostnames=host)
         del parser
 
 

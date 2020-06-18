@@ -169,17 +169,13 @@ class X1Plugin(PluginXMLFormat):
 
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = X1XmlParser(output)
         for item in parser.items:
-            h_id = self.createAndAddHost(item.host, item.name)
-            i_id = self.createAndAddInterface(
-                h_id, item.host, ipv4_address=item.host, hostname_resolution=[item.vclass])
-            s_id = self.createAndAddServiceToInterface(h_id, i_id, item.srvname,
-                                                       item.protocol,
-                                                       ports=[str(item.port)],
-                                                       status="open")
+            h_id = self.createAndAddHost(item.host, item.name, hostnames=[item.vclass])
+            s_id = self.createAndAddServiceToHost(h_id, item.srvname, item.protocol, ports=[str(item.port)],
+                                                  status="open")
             for v in item.results:
                 desc = v.description
                 v_id = self.createAndAddVulnToService(h_id, s_id, v.name, desc=desc,

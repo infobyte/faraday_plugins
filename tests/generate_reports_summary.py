@@ -37,13 +37,16 @@ def list_report_files():
 
 @click.command()
 @click.option('--force', is_flag=True)
-def generate_reports_tests(force):
+@click.option('--debug', is_flag=False)
+def generate_reports_tests(force, debug):
     generated_summaries = 0
     analysed_reports = 0
     click.echo(f"{colorama.Fore.GREEN}Generate Faraday Plugins Tests Summary")
     plugins_manager = PluginsManager()
     analyzer = ReportAnalyzer(plugins_manager)
     for report_file_path in list_report_files():
+        if debug:
+            click.echo(f"File: {report_file_path}")
         plugin: PluginBase = analyzer.get_plugin(report_file_path)
         if not plugin:
             click.echo(f"{colorama.Fore.YELLOW}Plugin for file: ({report_file_path}) not found")

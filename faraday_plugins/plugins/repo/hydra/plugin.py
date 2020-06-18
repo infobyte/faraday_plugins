@@ -61,7 +61,7 @@ class HydraPlugin(PluginBase):
         self._temp_file_extension = "txt"
         self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.
@@ -90,23 +90,8 @@ class HydraPlugin(PluginBase):
         for k, v in hosts.items():
 
             h_id = self.createAndAddHost(k)
-
-            if self._isIPV4(k):
-
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    k,
-                    ipv4_address=k)
-
-            else:
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    k,
-                    ipv6_address=k)
-
-            s_id = self.createAndAddServiceToInterface(
+            s_id = self.createAndAddServiceToHost(
                 h_id,
-                i_id,
                 service,
                 ports=[port],
                 protocol="tcp",

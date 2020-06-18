@@ -51,9 +51,7 @@ class PeepingTomPlugin(PluginBase):
                 url_parsed = urlparse(url)
                 address = resolve_hostname(url_parsed.netloc)
                 host = self.createAndAddHost(address)
-                iface = self.createAndAddInterface(
-                    host, address, ipv4_address=address)
-                service = self.createAndAddServiceToInterface(host, iface, "http", protocol="tcp", ports=[80])
+                service = self.createAndAddServiceToHost(host, "http", protocol="tcp", ports=[80])
                 self.createAndAddNoteToService(
                     host,
                     service,

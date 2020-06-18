@@ -34,10 +34,7 @@ class NetdiscoverPlugin(PluginBase):
                 ip_address = stdout[0]
                 mac = stdout[2]
                 hostname = stdout[6].strip()
-
-                h_id = self.createAndAddHost(ip_address)
-                self.createAndAddInterface(h_id, ip_address, ipv4_address=ip_address, mac=mac, hostname_resolution=[hostname])
-
+                h_id = self.createAndAddHost(ip_address, hostnames=[hostname])
         return True
 
 
