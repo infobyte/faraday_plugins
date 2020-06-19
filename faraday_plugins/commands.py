@@ -86,7 +86,7 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary, outpu
 @click.option('-dr', '--dont-run', is_flag=True)
 @click.option('--summary', is_flag=True)
 @click.option('-o', '--output-file', type=click.Path(exists=False))
-@click.option('--show-output', is_flag=True)
+@click.option('-sh', '--show-output', is_flag=True)
 def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary, output_file, show_output):
     plugins_manager = PluginsManager(custom_plugins_folder)
     analyzer = CommandAnalyzer(plugins_manager)
@@ -104,7 +104,10 @@ def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary
     modified_command = plugin.processCommandString(getpass.getuser(), current_path, command)
     if modified_command:
         command = modified_command
-    if not dont_run:
+    if dont_run:
+        color_message = click.style("Command: ", fg="green")
+        click.echo(f"{color_message} {command}")
+    else:
         p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = io.StringIO()
         while True:
@@ -112,12 +115,12 @@ def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary
             line = p.stdout.readline().decode('utf-8')
             if show_output:
                 sys.stdout.write(line)
-                output.write(line)
+            output.write(line)
             if retcode is not None:
                 extra_lines = map(lambda x: x.decode('utf-8'), p.stdout.readlines())
                 if show_output:
                     sys.stdout.writelines(line)
-                    output.writelines(extra_lines)
+                output.writelines(extra_lines)
                 break
         output_value = output.getvalue()
         if retcode == 0:
@@ -132,9 +135,6 @@ def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary
                     click.echo(json.dumps(plugin.get_data(), indent=4))
         else:
             click.echo(click.style("Command execution error!!", fg="red"), err=True)
-    else:
-        color_message = click.style("Command: ", fg="green")
-        click.echo(f"{color_message} {command}")
 
 
 

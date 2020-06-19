@@ -8,62 +8,61 @@ pip install faraday-plugins
 
 > List Plugins
 
+List all plugins and if its compatible with command or/and report
+
+Optional params:
+
+- -cpf / --custom-plugins-folder PATH: If given will also look for custom plugins on that path
+
 ```shell script
-faraday-plugins show
+faraday-plugins list-plugins
 ```
 
 > Test autodetect plugin from command
 
 ```shell script
 faraday-plugins detect-command "ping -c 4 www.google.com"
-> Faraday Plugin: ping
+
+Faraday Plugin: ping
 ```
 
-> Test command with plugin
+> Test process command with plugin
 
 Optional params:
 
-- -dr: Dont run, just show the generated command
+- --plugin_id PLUGIN_ID: Dont detect the plugin, use this one
+- -cpf / --custom-plugins-folder PATH: If given will also look for custom plugins on that path
+- -dr / --dont-run: Dont run, just show the generated command
+- -o / --output-file PATH: send json outout to file instead of stdout
+- -sh / --show-output: show the output of the command
 
 ```shell script
 faraday-plugins process-command "ping -c4 www.google.com"
-Running command:  ping -c4 www.google.com
-
-PING www.google.com (216.58.222.36): 56 data bytes
-64 bytes from 216.58.222.36: icmp_seq=0 ttl=54 time=11.144 ms
-64 bytes from 216.58.222.36: icmp_seq=1 ttl=54 time=14.330 ms
-64 bytes from 216.58.222.36: icmp_seq=2 ttl=54 time=11.997 ms
-64 bytes from 216.58.222.36: icmp_seq=3 ttl=54 time=11.190 ms
-
---- www.google.com ping statistics ---
-4 packets transmitted, 4 packets received, 0.0% packet loss
-round-trip min/avg/max/stddev = 11.144/12.165/14.330/1.295 ms
-
-Faraday API json:
 {
     "hosts": [
         {
-            "ip": "216.58.222.36",
+            "ip": "216.58.202.36",
             "os": "unknown",
             "hostnames": [
                 "www.google.com"
             ],
             "description": "",
-            "mac": "00:00:00:00:00:00",
+            "mac": null,
             "credentials": [],
             "services": [],
-            "vulnerabilities": []
+            "vulnerabilities": [],
+            "tags": []
         }
     ],
     "command": {
         "tool": "ping",
         "command": "ping",
         "params": "-c4 www.google.com",
-        "user": "aenima",
+        "user": "user",
         "hostname": "",
-        "start_date": "2020-05-05T23:09:39.656132",
-        "duration": 56789,
-        "import_source": "report"
+        "start_date": "2020-06-19T17:02:37.982293",
+        "duration": 39309,
+        "import_source": "shell"
     }
 }
 ```
@@ -72,24 +71,70 @@ Faraday API json:
 
 ```shell script
 faraday-plugins detect-report /path/to/report.xml
+
+Faraday Plugin: Nmap
 ```
 
 
 > Test report with plugin
 
+Optional params:
+
+- --plugin_id PLUGIN_ID: Dont detect the plugin, use this one
+- -cpf / --custom-plugins-folder PATH: If given will also look for custom plugins on that path
+
 ```shell script
-faraday-plugins process-report /path/to/report.xml
+faraday-plugins process-report /path/to/nmap_report.xml
+
+{
+    "hosts": [
+        {
+            "ip": "192.168.66.1",
+            "os": "unknown",
+            "hostnames": [],
+            "description": "",
+            "mac": "00:00:00:00:00:00",
+            "credentials": [],
+            "services": [
+                {
+                    "name": "domain",
+                    "protocol": "tcp",
+                    "port": 53,
+                    "status": "open",
+                    "version": "",
+                    "description": "domain",
+                    "credentials": [],
+                    "vulnerabilities": [],
+                    "tags": []
+                },
+                {
+                    "name": "netbios-ssn",
+                    "protocol": "tcp",
+                    "port": 139,
+                    "status": "open",
+                    "version": "",
+                    "description": "netbios-ssn",
+                    "credentials": [],
+                    "vulnerabilities": [],
+                    "tags": []
+                }
+            ],
+            "vulnerabilities": [],
+            "tags": []
+        }
+    ],
+    "command": {
+        "tool": "Nmap",
+        "command": "Nmap",
+        "params": "/path/to/nmap_report.xml",
+        "user": "user",
+        "hostname": "",
+        "start_date": "2020-06-19T17:22:11.608134",
+        "duration": 1233,
+        "import_source": "report"
+    }
+}
 ```
-
-> Process options:
-
-Both process-xxx command have this optional parameters
-
-- --plugin_id: If given will use that plugin instead of try to detect it
-- --summary: If given will generate a summary of the findings instead of the result
-- -cpf/--custom-plugins-folder: If given will also look for custom plugins if that path
-
-NOTE: you can also use -cpf in **show** command to test if your custom plugins load ok
 
 > Plugin Logger
 
