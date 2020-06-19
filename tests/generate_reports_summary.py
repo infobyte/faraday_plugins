@@ -1,11 +1,14 @@
 #!/usr/bin/env python
+import hashlib
 import os
 import shutil
 import json
 import click
+import colorama
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import get_report_summary
+
+colorama.init(autoreset=True)
 
 BLACK_LIST = [
     'LICENSE',
@@ -17,7 +20,7 @@ BLACK_LIST = [
 
 REPORT_COLLECTION_DIR = '../report-collection'
 FARADAY_PLUGINS_TESTS_DIR = 'faraday_plugins_tests'
-
+REPORTS_CHECKSUM = []
 
 def list_report_files():
     report_filenames = os.walk(os.path.join(REPORT_COLLECTION_DIR))
@@ -34,17 +37,28 @@ def list_report_files():
 
 @click.command()
 @click.option('--force', is_flag=True)
-def generate_reports_tests(force):
+@click.option('--debug', is_flag=False)
+def generate_reports_tests(force, debug):
     generated_summaries = 0
     analysed_reports = 0
-    click.echo("Generate Faraday Plugins Tests Summary")
+    click.echo(f"{colorama.Fore.GREEN}Generate Faraday Plugins Tests Summary")
     plugins_manager = PluginsManager()
     analyzer = ReportAnalyzer(plugins_manager)
     for report_file_path in list_report_files():
+        if debug:
+            click.echo(f"File: {report_file_path}")
         plugin: PluginBase = analyzer.get_plugin(report_file_path)
         if not plugin:
-            continue
+            click.echo(f"{colorama.Fore.YELLOW}Plugin for file: ({report_file_path}) not found")
         else:
+            with open(report_file_path, 'rb') as f:
+                m = hashlib.md5(f.read())
+            file_checksum = m.hexdigest()
+            if file_checksum not in REPORTS_CHECKSUM:
+                REPORTS_CHECKSUM.append(file_checksum)
+            else:
+                click.echo(f"{colorama.Fore.YELLOW}Ignore duplicated file: ({report_file_path})")
+                continue
             analysed_reports += 1
             report_file_name = os.path.basename(report_file_path)
             plugin_name = plugin.id
@@ -62,14 +76,13 @@ def generate_reports_tests(force):
             if summary_needed:
                 try:
                     plugin.processReport(report_file_path)
-                    plugin_json = json.loads(plugin.get_json())
-                    click.echo(f"Generate Summary for: {dst_report_file_path} [{plugin}]")
-                    summary = get_report_summary(plugin_json)
+                    click.echo(f"{colorama.Fore.GREEN}Generate Summary for: {dst_report_file_path} [{plugin}]")
+                    summary = plugin.get_summary()
                     with open(summary_file, "w") as f:
                         json.dump(summary, f)
                     generated_summaries += 1
                 except Exception as e:
-                    click.echo(f"Error generating summary for file: {report_file_path} [{e}]")
+                    click.echo(f"{colorama.Fore.RED}Error generating summary for file: {report_file_path} [{plugin}]: [{e}]")
     click.echo(f"Generated {generated_summaries} summaries of {analysed_reports} reports")
 
 

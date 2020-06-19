@@ -12,7 +12,9 @@ install_requires = [
     'lxml',
     'html2text',
     'beautifulsoup4',
-    'pytz'
+    'pytz',
+    'python-dateutil',
+    'colorama'
 ]
 
 
@@ -27,4 +29,9 @@ setup(
     description='Faraday plugins package',
     include_package_data=True,
     install_requires=install_requires,
+    entry_points={
+            'console_scripts': [
+                'faraday-plugins=faraday_plugins.commands:cli',
+            ],
+        },
 )

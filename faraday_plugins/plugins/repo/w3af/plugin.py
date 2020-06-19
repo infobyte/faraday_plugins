@@ -4,13 +4,10 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
-import os
-import socket
 from urllib.parse import urlparse
-
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
@@ -22,7 +19,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -69,7 +65,6 @@ class W3afXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print("SyntaxError: %s. %s" % (err, xml_output))
             return None
 
         return tree
@@ -224,19 +219,18 @@ class W3afPlugin(PluginXMLFormat):
         self.options = None
         self._current_output = None
         self.target = None
-        self._command_regex = re.compile(r'^(w3af|sudo w3af|\.\/w3af).*?')
+        self._command_regex = re.compile(r'^(w3af|sudo w3af|\.\/w3af)\s+.*?')
         self._completition = {
             "": "",
             "-h": "Display this help message.",
         }
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = W3afXmlParser(output)
-        ip = self.resolve(parser.host)
-        h_id = self.createAndAddHost(ip)
-        i_id = self.createAndAddInterface(h_id, ip, ipv4_address=ip, hostname_resolution=[parser.host])
-        s_id = self.createAndAddServiceToInterface(h_id, i_id, "http", "tcp", ports=[parser.port], status="open")
+        ip = resolve_hostname(parser.host)
+        h_id = self.createAndAddHost(ip, hostnames=[parser.host])
+        s_id = self.createAndAddServiceToHost(h_id, "http", "tcp", ports=[parser.port], status="open")
 
         for item in parser.items:
             v_id = self.createAndAddVulnWebToService(h_id, s_id, item.name,
@@ -245,18 +239,6 @@ class W3afPlugin(PluginXMLFormat):
                                                      resolution=item.resolution, ref=item.ref, response=item.resp)
         del parser
 
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
-
-    def processCommandString(self, username, current_path, command_string):
-        return None
-
-    def setHost(self):
-        pass
 
 
 def createPlugin():

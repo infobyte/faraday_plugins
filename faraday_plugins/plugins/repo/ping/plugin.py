@@ -29,25 +29,16 @@ class CmdPingPlugin(PluginBase):
         self.name = "Ping"
         self.plugin_version = "0.0.1"
         self.version = "1.0.0"
-        self._command_regex = re.compile(
-            r'^(sudo ping|ping|sudo ping6|ping6).*?')
+        self._command_regex = re.compile(r'^(sudo ping|ping|sudo ping6|ping6)\s+.*?')
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         reg = re.search(r"PING ([\w\.-:]+)( |)\(([\w\.:]+)\)", output)
         if re.search("0 received|unknown host", output) is None and reg is not None:
 
             ip_address = reg.group(3)
             hostname = reg.group(1)
-
-            h_id = self.createAndAddHost(ip_address)
-            if self._isIPV4(ip_address):
-                i_id = self.createAndAddInterface(
-                    h_id, ip_address, ipv4_address=ip_address, hostname_resolution=[hostname])
-            else:
-                self.createAndAddInterface(
-                    h_id, ip_address, ipv6_address=ip_address, hostname_resolution=[hostname])
-
+            h_id = self.createAndAddHost(ip_address, hostnames=[hostname])
         return True
 
     def _isIPV4(self, ip):
@@ -56,10 +47,6 @@ class CmdPingPlugin(PluginBase):
         else:
             return False
 
-    def processCommandString(self, username, current_path, command_string):
-        """
-        """
-        return None
 
 
 def createPlugin():

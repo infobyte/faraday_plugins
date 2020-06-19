@@ -5,11 +5,11 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import get_vulnweb_url_fields
 
 try:
-    import xml.etree.ElementTree as ET
+    import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
 
@@ -43,7 +43,7 @@ class WebInspectParser():
 
     def return_text(self, tag,element):
         try:
-            text = element.find(tag).text.encode("ascii", errors="backslashreplace")
+            text = element.find(tag).text
             return text
         except:
             return ""
@@ -95,8 +95,8 @@ class WebInspectParser():
             for section in issue.findall("ReportSection"):
 
                 try:
-                    field = section.find("Name").text.encode("ascii", errors="backslashreplace")
-                    value = section.find("SectionText").text.encode("ascii", errors="backslashreplace")
+                    field = section.find("Name").text
+                    value = section.find("SectionText").text
 
                     faraday_obj_name = map_objects_fields.get(field)[0]
                     faraday_field = map_objects_fields.get(field)[1]
@@ -112,7 +112,7 @@ class WebInspectParser():
         return result
 
 
-class WebInspectPlugin(PluginBase):
+class WebInspectPlugin(PluginXMLFormat):
     """
     This plugin handles WebInspect reports.
     """
@@ -123,25 +123,19 @@ class WebInspectPlugin(PluginBase):
         self.name = "Webinspect"
         self.plugin_version = "0.0.1"
         self.version = "1.0.0"
+        self.identifier_tag = ["Scan"]
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         
         parser = WebInspectParser(output)
         vulns = parser.parse()
 
         for vuln in vulns:
 
-            host_id = self.createAndAddHost(
-                vuln.get("Host").get("name"))
-
-            interface_id = self.createAndAddInterface(
-                host_id, vuln.get("Host").get("name"))
-
-            service_id = self.createAndAddServiceToInterface(
-                host_id, interface_id,
-                vuln.get("Service").get("name"),
-                protocol=vuln.get("Service").get("name"),
-                ports=[vuln.get("Service").get("port")])
+            host_id = self.createAndAddHost(vuln.get("Host").get("name"))
+            service_id = self.createAndAddServiceToHost(host_id, vuln.get("Service").get("name"),
+                                                        protocol=vuln.get("Service").get("name"),
+                                                        ports=[vuln.get("Service").get("port")])
             
             self.createAndAddVulnWebToService(
                 host_id, service_id,
@@ -158,10 +152,7 @@ class WebInspectPlugin(PluginBase):
                 severity=parser.parse_severity(vuln.get("Vuln").get("severity"))
             )
 
-        return True
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
 
 def createPlugin():

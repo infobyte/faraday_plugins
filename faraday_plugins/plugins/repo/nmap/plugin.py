@@ -8,8 +8,6 @@ See the file 'doc/LICENSE' for the license information
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-import sys
-import random
 
 
 try:
@@ -402,6 +400,15 @@ class Service:
         name = service_node.get("name")
         self.name = name if name else 'unknown'
 
+        self.tunnel = service_node.get("tunnel")
+        if self.tunnel == "ssl":
+            if self.name == "http":
+                self.name = "https"
+            elif self.name == 'imap':
+                self.name = 'imaps'
+            elif self.name == 'pop3':
+                self.name = 'pop3s'
+
         product = service_node.get("product")
         self.product = product if product else 'unknown'
 
@@ -431,14 +438,13 @@ class NmapPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(sudo nmap|nmap|\.\/nmap).*?')
-
-
-
+        self._command_regex = re.compile(r'^(sudo nmap|nmap|\.\/nmap)\s+.*?')
+        self._use_temp_file = True
+        self._temp_file_extension = "xml"
         self.xml_arg_re = re.compile(r"^.*(-oX\s*[^\s]+).*$")
         self.addSetting("Scan Technique", str, "-sS")
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.
@@ -458,22 +464,9 @@ class NmapPlugin(PluginXMLFormat):
 
             if host.ipv4_address != 'unknown':
                 minterfase = host.ipv4_address
-                h_id = self.createAndAddHost(minterfase, host.os)
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    minterfase,
-                    host.mac_address,
-                    ipv4_address=host.ipv4_address,
-                    hostname_resolution=host.hostnames)
             else:
                 minterfase = host.ipv6_address
-                h_id = self.createAndAddHost(minterfase, host.os)
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    minterfase,
-                    host.mac_address,
-                    ipv6_address=host.ipv6_address,
-                    hostname_resolution=host.hostnames)
+            h_id = self.createAndAddHost(minterfase, host.os, mac=host.mac_address, hostnames=host.hostnames)
 
             for v in host.vulns:
                 desc = v.desc
@@ -496,9 +489,8 @@ class NmapPlugin(PluginXMLFormat):
                     srvversion = port.service.product if port.service.product != "unknown" else ""
                     srvversion += " " + port.service.version if port.service.version != "unknown" else ""
 
-                s_id = self.createAndAddServiceToInterface(
+                s_id = self.createAndAddServiceToHost(
                     h_id,
-                    i_id,
                     srvname,
                     port.protocol,
                     ports=[port.number],
@@ -507,11 +499,11 @@ class NmapPlugin(PluginXMLFormat):
                     description=srvname)
 
                 for v in port.vulns:
-                    severity = 0
+                    severity = "info"
                     desc = v.desc
                     refs = v.refs
 
-                    if re.search(r"VULNERABLE", desc):
+                    if re.search(r"(?<!NOT )VULNERABLE", desc):
                         severity = "high"
                     if re.search(r"ERROR", desc):
                         severity = "unclassified"
@@ -538,24 +530,14 @@ class NmapPlugin(PluginXMLFormat):
                             severity=severity,
                             external_id=v.name)
         del parser
-        return True
 
     def processCommandString(self, username, current_path, command_string):
         """
         Adds the -oX parameter to get xml output to the command string that the
         user has set.
         """
-
-        self._output_file_path = os.path.join(
-            self.data_path,
-            "%s_%s_output-%s.xml" % (
-                self.get_ws(),
-                self.id,
-                random.uniform(1, 10))
-        )
-
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
-
         if arg_match is None:
             return re.sub(r"(^.*?nmap)",
                           r"\1 -oX %s" % self._output_file_path,
@@ -564,10 +546,6 @@ class NmapPlugin(PluginXMLFormat):
             return re.sub(arg_match.group(1),
                           r"-oX %s" % self._output_file_path,
                           command_string)
-
-    def setHost(self):
-        pass
-
 
 def createPlugin():
     return NmapPlugin()

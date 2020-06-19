@@ -5,11 +5,10 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
-import os
-import socket
-
 from urllib.parse import urlparse
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
+
 try:
     import xml.etree.cElementTree as ET
     import xml.etree.ElementTree as ET_ORIG
@@ -20,7 +19,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -120,7 +118,7 @@ class Item:
         self.node = item_node
         self.url = self.get_url(item_node)
         if self.url.hostname is not None:
-            self.ip = socket.gethostbyname(self.url.hostname)
+            self.ip = resolve_hostname(self.url.hostname)
         else:
             self.ip = '0.0.0.0'
         self.hostname = self.url.hostname
@@ -234,14 +232,15 @@ class WapitiPlugin(PluginXMLFormat):
         self.plugin_version = "0.0.1"
         self.version = "2.2.1"
         self.options = None
-        self._current_output = None
         self.protocol = None
         self.host = None
         self.port = "80"
+        self._use_temp_file = True
+        self._temp_file_extension = "xml"
         self.xml_arg_re = re.compile(r"^.*(-oX\s*[^\s]+).*$")
         self._command_regex = re.compile(
-            r'^(python wapiti|wapiti|sudo wapiti|sudo wapiti\.py|wapiti\.py|python wapiti\.py|\.\/wapiti\.py|wapiti|\.'
-            r'\/wapiti|python wapiti|python \.\/wapiti).*?')
+            r'^(python wapiti|wapiti|sudo wapiti|sudo wapiti\.py|wapiti\.py|python wapiti\.py|\.\/wapiti\.py|wapiti |\.'
+            r'\.\/wapiti|python wapiti|python \.\/wapiti)\s+.*?')
         self._completition = {
             "": "python wapiti.py http://server.com/base/url/ [options]",
             "-s": "&lt;url&gt; ",
@@ -325,6 +324,7 @@ class WapitiPlugin(PluginXMLFormat):
         Adds the -oX parameter to get xml output to the command string that the
         user has set.
         """
+        super().processCommandString(username, current_path, command_string)
         host = re.search(
             "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]"
             "{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2"
@@ -340,7 +340,6 @@ class WapitiPlugin(PluginXMLFormat):
         if self.protocol == 'https':
             self.port = 443
         self.logger.debug("host = %s, port = %s",self.host, self.port)
-        arg_match = self.xml_arg_re.match(command_string)
         return "%s -o %s -f xml \n" % (command_string, self._output_file_path)
 
     def setHost(self):

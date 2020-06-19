@@ -5,8 +5,11 @@ import os
 import sys
 import json
 import pkgutil
+import zipfile
 from importlib import import_module
 from importlib.machinery import SourceFileLoader
+import csv
+from io import StringIO
 
 from . import repo
 
@@ -38,7 +41,7 @@ class ReportAnalyzer:
                 if not plugin:
                     logger.debug("Plugin by file not found")
         if not plugin:
-            logger.warning("Plugin for file (%s) not found", report_path)
+            logger.debug("Plugin for file (%s) not found", report_path)
         return plugin
 
     def _get_plugin_by_name(self, file_name_base):
@@ -65,7 +68,10 @@ class ReportAnalyzer:
         file_name_base, file_extension = os.path.splitext(file_name)
         file_extension = file_extension.lower()
         main_tag = None
+        file_json_keys = {}
+        file_csv_headers = set()
         file_json_keys = set()
+        files_in_zip = set()
         logger.debug("Analyze report File")
         # Try to parse as xml
         try:
@@ -87,18 +93,51 @@ class ReportAnalyzer:
                     logger.debug("Found JSON content on file: %s - Keys: %s", report_path, file_json_keys)
                 except Exception as e:
                     logger.debug("Non JSON content [%s] - %s", report_path, e)
+                    try:
+                        report_file.seek(0)
+                        reader_file_string = StringIO(report_file.read().decode('utf-8'))
+                        reader = csv.DictReader(reader_file_string)
+                        file_csv_headers = set(reader.fieldnames)
+                        logger.debug("Found JSON content on file: %s - Keys: %s", report_path, file_json_keys)
+                    except Exception as e:
+                        logger.debug("Non JSON content [%s] - %s", report_path, e)
+                        try:
+                            file_zip = zipfile.ZipFile(report_path, "r")
+                            files_in_zip = set(file_zip.namelist())
+                            logger.debug("List of files found in ZIP %s", file_zip)
+                        except Exception as e:
+                            logger.debug("Non ZIP content [%s] - %s", report_path, e)
             finally:
                 report_file.close()
                 for _plugin_id, _plugin in self.plugin_manager.get_plugins():
                     logger.debug("Try plugin: %s", _plugin_id)
                     try:
                         if _plugin.report_belongs_to(main_tag=main_tag, report_path=report_path,
-                                                     extension=file_extension, file_json_keys=file_json_keys):
+                                                     extension=file_extension, file_json_keys=file_json_keys,
+                                                     file_csv_headers=file_csv_headers, files_in_zip=files_in_zip):
                             plugin = _plugin
                             logger.debug("Plugin by File Found: %s", plugin.id)
                             break
                     except Exception as e:
                         logger.error("Error in plugin analysis: (%s) %s", _plugin_id, e)
+        return plugin
+
+
+class CommandAnalyzer:
+
+    def __init__(self, plugin_manager):
+        self.plugin_manager = plugin_manager
+
+    def get_plugin(self, command_string):
+        plugin = None
+        logger.debug("Look plugin for command: %s", command_string)
+        for _plugin_id, _plugin in self.plugin_manager.get_plugins():
+            logger.debug("Try plugin: %s", _plugin_id)
+            try:
+                if _plugin.canParseCommandString(command_string):
+                    plugin = _plugin
+            except Exception as e:
+                logger.error("Error in plugin analysis: (%s) %s", _plugin_id, e)
         return plugin
 
 
@@ -138,8 +177,8 @@ class PluginsManager:
                         if dir_name_regexp.match(name) and name != "__pycache__":
                             module_path = os.path.join(custom_plugins_folder, name)
                             module_filename = os.path.join(module_path, "plugin.py")
-                            try:         
-                                sys.path.append(module_path)            
+                            try:
+                                sys.path.append(module_path)
                                 file_ext = os.path.splitext(module_filename)[1]
                                 if file_ext.lower() == '.py':
                                     if name not in self.plugin_modules:

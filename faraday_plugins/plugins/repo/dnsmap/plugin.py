@@ -1,16 +1,12 @@
-"""from __future__ import print_function
-
+"""
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginBase
 import re
-import os
-import random
 from collections import defaultdict
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -103,9 +99,10 @@ class DnsmapPlugin(PluginBase):
         self.version = "0.30"
         self.options = None
         self._current_output = None
-        self.current_path = None
-        self._command_regex = re.compile(r'^(sudo dnsmap|dnsmap|\.\/dnsmap).*?')
+        self._command_regex = re.compile(r'^(sudo dnsmap|dnsmap|\.\/dnsmap)\s+.*?')
         self.xml_arg_re = re.compile(r"^.*(-r\s*[^\s]+).*$")
+        self._use_temp_file = True
+        self._temp_file_extension = "txt"
 
 
     def canParseCommandString(self, current_input):
@@ -114,7 +111,7 @@ class DnsmapPlugin(PluginBase):
         else:
             return False
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.
@@ -129,6 +126,7 @@ class DnsmapPlugin(PluginBase):
         Adds the parameter to get output to the command string that the
         user has set.
         """
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:

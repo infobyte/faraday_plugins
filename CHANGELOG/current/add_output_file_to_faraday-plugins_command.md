@@ -1,0 +1,1 @@
+Add --output-file parameter to faraday-plugins process command

@@ -19,8 +19,7 @@ class WfuzzPlugin(PluginBase):
         self.port = None
         self.protocol = None
         self.fail = None
-        self._command_regex = re.compile(
-            r'^(wfuzz).*?')
+        self._command_regex = re.compile(r'^(wfuzz)\s+.*?')
 
     def parseData(self, output):
 
@@ -53,7 +52,7 @@ class WfuzzPlugin(PluginBase):
 
         return data
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         output_list = output.split('\n')
         info = self.parseData(output_list)
 
@@ -80,7 +79,7 @@ class WfuzzPlugin(PluginBase):
             words = item['words']
             name = "Wfuzz found: {path} with status {status} on url {url}".format(path=path, status=status, url=url)
             desc = 'Wfuzz found a response with status {status}. Response contains: \n* {words} words \n* {lines} ' \
-                   'lines \n* {chars} chars'.format(words=words, url=url, lines=lines, chars=chars, status=status)
+                   'lines \n* {chars} chars'.format(words=words, lines=lines, chars=chars, status=status)
             self.createAndAddVulnWebToService(host_id, service_id, name, desc, severity="info", website=target,
                                               path=path)
 

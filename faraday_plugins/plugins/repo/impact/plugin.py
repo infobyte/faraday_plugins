@@ -5,7 +5,6 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
-import os
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 try:
@@ -18,7 +17,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -60,7 +58,6 @@ class ImpactXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            #logger.error("SyntaxError: %s. %s" % (err, xml_output))
             return None
 
         return tree
@@ -225,29 +222,18 @@ class ImpactPlugin(PluginXMLFormat):
         self.version = "Core Impact 2013R1/2017R2"
         self.framework_version = "1.0.0"
         self.options = None
-        self._current_output = None
-        self._command_regex = re.compile(r'^(sudo impact|\.\/impact).*?')
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         parser = ImpactXmlParser(output)
         mapped_services = {}
         mapped_ports = {}
         for item in parser.items:
-
-            h_id = self.createAndAddHost(
-                item.ip,
-                item.os + " " + item.arch)
-
-            i_id = self.createAndAddInterface(
-                h_id,
-                item.ip,
-                ipv4_address=item.ip,
-                hostname_resolution=[item.host])
+            os_string = f"{item.os} {item.arch }"
+            h_id = self.createAndAddHost(item.ip, os=os_string, hostnames=[item.host])
 
             for service in item.services:
-                s_id = self.createAndAddServiceToInterface(
+                s_id = self.createAndAddServiceToHost(
                     h_id,
-                    i_id,
                     service['name'],
                     service['protocol'],
                     ports=[service['port']],
@@ -278,8 +264,6 @@ class ImpactPlugin(PluginXMLFormat):
                         ref=v.ref)
                 else:
                     s_id = mapped_services.get(v.service_name) or mapped_ports.get(v.port)
-                    print(v.service_name)
-                    print(s_id)
                     self.createAndAddVulnToService(
                         h_id,
                         s_id,
@@ -289,17 +273,14 @@ class ImpactPlugin(PluginXMLFormat):
                         ref=v.ref)
 
             for p in item.ports:
-                s_id = self.createAndAddServiceToInterface(
+                s_id = self.createAndAddServiceToHost(
                     h_id,
-                    i_id,
                     p['port'],
                     p['protocol'],
                     ports=[p['port']],
                     status=p['status'])
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass
@@ -308,4 +289,4 @@ class ImpactPlugin(PluginXMLFormat):
 def createPlugin():
     return ImpactPlugin()
 
-# I'm Py3
+

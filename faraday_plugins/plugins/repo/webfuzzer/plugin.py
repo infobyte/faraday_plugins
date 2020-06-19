@@ -65,7 +65,6 @@ class WebfuzzerParser:
                     self.items.append(vuln)
 
             except SyntaxError as err:
-                print("SyntaxError: %s. %s" % (err, self.filepath))
                 return None
 
 
@@ -83,8 +82,7 @@ class WebfuzzerPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self.host = None
-        self._command_regex = re.compile(
-            r'^(sudo webfuzzer|webfuzzer|\.\/webfuzzer).*?')
+        self._command_regex = re.compile(r'^(sudo webfuzzer|webfuzzer|\.\/webfuzzer)\s+.*?')
         self._completition = {'': '__Usage: ./webfuzzer -G|-P URL [OPTIONS]',
                               '-G': '<url>	get this as starting url (with parameters)',
                               '-P': '<url>	post this as starting url (with parameters)',
@@ -100,13 +98,10 @@ class WebfuzzerPlugin(PluginBase):
 
         self._output_path = None
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.
-
-        NOTE: if 'debug' is true then it is being run from a test case and the
-        output being sent is valid.
         """
 
         if self._output_path is None:
@@ -116,24 +111,15 @@ class WebfuzzerPlugin(PluginBase):
                 return False
 
             parser = WebfuzzerParser(self._output_path)
-
-            h_id = self.createAndAddHost(parser.ipaddress)
-
-            i_id = self.createAndAddInterface(
-                h_id, parser.ipaddress, ipv4_address=parser.ipaddress, hostname_resolution=[parser.hostname])
-
+            h_id = self.createAndAddHost(parser.ipaddress, hostnames=[parser.hostname])
             first = True
             for item in parser.items:
                 if first:
-                    s_id = self.createAndAddServiceToInterface(h_id, i_id, parser.port,
-                                                               "tcp",
-                                                               ports=[parser.port])
+                    s_id = self.createAndAddServiceToHost(h_id, parser.port, "tcp", ports=[parser.port])
                     first = False
-
-                v_id = self.createAndAddVulnWebToService(h_id, s_id, name=item['desc'],
-                                                         path=item['url'], response=item[
-                                                             'resp'],
-                                                         method=item['method'], website=parser.hostname)
+                v_id = self.createAndAddVulnWebToService(h_id, s_id, name=item['desc'],path=item['url'],
+                                                         response=item['resp'], method=item['method'],
+                                                         website=parser.hostname)
 
         del parser
 
@@ -142,8 +128,8 @@ class WebfuzzerPlugin(PluginBase):
     def processCommandString(self, username, current_path, command_string):
         """
         """
+        super().processCommandString(username, current_path, command_string)
         host = re.search("\-([G|P]) ([\w\.\-]+)", command_string)
-
         if host is not None:
             self.host = host.group(2)
             self._output_path = current_path + "/" + self.host + ".txt"

@@ -5,16 +5,25 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import os
+import shutil
+import tempfile
+
+from collections import defaultdict
+
 import pytz
 import re
 import uuid
 import logging
 import simplejson as json
+import zipfile
 from datetime import datetime
+import hashlib
 
 
 logger = logging.getLogger("faraday").getChild(__name__)
 
+VALID_SERVICE_STATUS = ("open", "closed", "filtered")
+VULN_SKIP_FIELDS_TO_HASH = ['run_date']
 
 class PluginBase:
     # TODO: Add class generic identifier
@@ -32,13 +41,19 @@ class PluginBase:
         self.description = ""
         self._command_regex = None
         self._output_file_path = None
+        self._use_temp_file = False
+        self._delete_temp_file = False
+        self._temp_file_extension = "tmp"
+        self._current_path = None
         self.framework_version = None
         self._completition = {}
         self._new_elems = []
         self._settings = {}
         self.command_id = None
-        self.cache = {}
+        self._cache = {}
         self._hosts_cache = {}
+        self._service_cache = {}
+        self._vulns_cache = {}
         self.start_date = datetime.now()
         self.logger = logger.getChild(self.__class__.__name__)
         self.open_options = {"mode": "r", "encoding": "utf-8"}
@@ -53,6 +68,12 @@ class PluginBase:
 
     def __str__(self):
         return f"Plugin: {self.id}"
+
+    def _get_temp_file(self, extension="tmp"):
+        temp_dir = tempfile.gettempdir()
+        temp_filename = f"{self.id}_{next(tempfile._get_candidate_names())}.{extension}"
+        temp_file_path = os.path.join(temp_dir, temp_filename)
+        return temp_file_path
 
     @staticmethod
     def get_utctimestamp(date):
@@ -90,22 +111,87 @@ class PluginBase:
             severity = numeric_severities.get(severity, 'unclassified')
         return severity
 
+    # Caches
     def get_from_cache(self, cache_id):
-        return self.cache.get(cache_id, None)
+        return self._cache.get(cache_id, None)
 
-    def save_host_cache(self, obj):
-        cache_id = f"ip:{obj['ip']}_os:{obj['os']}"
+    def save_host_cache(self, host):
+        cache_id = self.get_host_cache_id(host)
         if cache_id not in self._hosts_cache:
-            obj_uuid = self.save_cache(obj)
-            self.vulns_data["hosts"].append(obj)
+            obj_uuid = self.save_cache(host)
+            self.vulns_data["hosts"].append(host)
             self._hosts_cache[cache_id] = obj_uuid
         else:
             obj_uuid = self._hosts_cache[cache_id]
         return obj_uuid
 
+    def save_service_cache(self, host_id, service):
+        cache_id = self.get_host_service_cache_id(host_id, service)
+        if cache_id not in self._service_cache:
+            obj_uuid = self.save_cache(service)
+            host = self.get_from_cache(host_id)
+            host["services"].append(service)
+            self._service_cache[cache_id] = obj_uuid
+        else:
+            obj_uuid = self._service_cache[cache_id]
+        return obj_uuid
+
+    def save_service_vuln_cache(self, host_id, service_id, vuln):
+        cache_id = self.get_service_vuln_cache_id(host_id, service_id, vuln)
+        if cache_id not in self._vulns_cache:
+            obj_uuid = self.save_cache(vuln)
+            service = self.get_from_cache(service_id)
+            service["vulnerabilities"].append(vuln)
+            self._vulns_cache[cache_id] = obj_uuid
+        else:
+            obj_uuid = self._vulns_cache[cache_id]
+        return obj_uuid
+
+    def save_host_vuln_cache(self, host_id, vuln):
+        cache_id = self.get_host_vuln_cache_id(host_id, vuln)
+        if cache_id not in self._vulns_cache:
+            obj_uuid = self.save_cache(vuln)
+            host = self.get_from_cache(host_id)
+            host["vulnerabilities"].append(vuln)
+            self._vulns_cache[cache_id] = obj_uuid
+        else:
+            obj_uuid = self._vulns_cache[cache_id]
+        return obj_uuid
+
+    @staticmethod
+    def _get_dict_hash(d, keys):
+        return hash(frozenset(map(lambda x: (x, d.get(x, None)), keys)))
+
+
+    @classmethod
+    def get_host_cache_id(cls, host):
+        cache_id = cls._get_dict_hash(host, ['ip'])
+        return cache_id
+
+    @classmethod
+    def get_host_service_cache_id(cls, host_id, service):
+        service_copy = service.copy()
+        service_copy.update({"host_cache_id": host_id})
+        cache_id = cls._get_dict_hash(service_copy, ['host_cache_id', 'protocol', 'port'])
+        return cache_id
+
+    @classmethod
+    def get_service_vuln_cache_id(cls, host_id, service_id, vuln):
+        vuln_copy = vuln.copy()
+        vuln_copy.update({"host_cache_id": host_id, "service_cache_id": service_id})
+        cache_id = cls._get_dict_hash(vuln_copy, ['host_cache_id', 'service_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
+        return cache_id
+
+    @classmethod
+    def get_host_vuln_cache_id(cls, host_id, vuln):
+        vuln_copy = vuln.copy()
+        vuln_copy.update({"host_cache_id": host_id})
+        cache_id = cls._get_dict_hash(vuln_copy, ['host_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
+        return cache_id
+
     def save_cache(self, obj):
         obj_uuid = uuid.uuid1()
-        self.cache[obj_uuid] = obj
+        self._cache[obj_uuid] = obj
         return obj_uuid
 
     def report_belongs_to(self, **kwargs):
@@ -158,6 +244,24 @@ class PluginBase:
         return (self._command_regex is not None and
                 self._command_regex.match(current_input.strip()) is not None)
 
+    def processCommandString(self, username, current_path, command_string):
+        """
+        With this method a plugin can add additional arguments to the
+        command that it's going to be executed.
+        """
+        self._current_path = current_path
+        if command_string.startswith("sudo"):
+            params = " ".join(command_string.split()[2:])
+        else:
+            params = " ".join(command_string.split()[1:])
+        self.vulns_data["command"]["params"] = params
+        self.vulns_data["command"]["user"] = username
+        self.vulns_data["command"]["import_source"] = "shell"
+        if self._use_temp_file:
+            self._delete_temp_file = True
+            self._output_file_path = self._get_temp_file(extension=self._temp_file_extension)
+        return None
+
     def getCompletitionSuggestionsList(self, current_input):
         """
         This method can be overriden in the plugin implementation
@@ -171,22 +275,30 @@ class PluginBase:
                 options[k] = v
         return options
 
-    def processOutput(self, term_output):
-        output = term_output
-        if self.has_custom_output() and os.path.isfile(self.get_custom_file_path()):
+    def processOutput(self, command_output):
+        if self.has_custom_output():
             self._parse_filename(self.get_custom_file_path())
         else:
-            self.parseOutputString(output)
+            self.parseOutputString(command_output)
 
     def _parse_filename(self, filename):
         with open(filename, **self.open_options) as output:
             self.parseOutputString(output.read())
+        if self._delete_temp_file:
+            try:
+                if os.path.isfile(filename):
+                    os.remove(filename)
+                elif os.path.isdir(filename):
+                    shutil.rmtree(filename)
+            except Exception as e:
+                self.logger.error("Error on delete file: (%s) [%s]", filename, e)
 
     def processReport(self, filepath, user="faraday"):
         if os.path.isfile(filepath):
-            self._parse_filename(filepath)
             self.vulns_data["command"]["params"] = filepath
             self.vulns_data["command"]["user"] = user
+            self.vulns_data["command"]["import_source"] = "report"
+            self._parse_filename(filepath)
         else:
             raise FileNotFoundError(filepath)
 
@@ -200,129 +312,112 @@ class PluginBase:
         """
         raise NotImplementedError('This method must be implemented.')
 
-    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None, scan_template="", site_name="",
-                         site_importance="", risk_score="", fingerprints="", fingerprints_software=""):
+    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None, description="", tags=None):
 
         if not hostnames:
             hostnames = []
+        if not isinstance(hostnames, list):
+            hostnames = [hostnames]
         # Some plugins sends a list with None, we filter empty and None values.
         hostnames = [hostname for hostname in hostnames if hostname]
         if os is None:
             os = "unknown"
-        host = {"ip": name, "os": os, "hostnames": hostnames, "description": "",  "mac": mac,
-                "credentials": [], "services": [], "vulnerabilities": [], "scan_template": scan_template,
-                "site_name": site_name, "site_importance": site_importance, "risk_score": risk_score,
-                "fingerprints": fingerprints, "fingerprints_software": fingerprints_software
-                }
+        if tags is None:
+            tags = []
+        if isinstance(tags, str):
+            tags = [tags]
+        host = {"ip": name, "os": os, "hostnames": hostnames, "description": description,  "mac": mac,
+                "credentials": [], "services": [], "vulnerabilities": [], "tags": tags}
         host_id = self.save_host_cache(host)
         return host_id
 
-    # @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-    #                         current_version=VERSION,
-    #                         details="Interface object removed. Use host or service instead")
-    def createAndAddInterface(
-            self, host_id, name="", mac="00:00:00:00:00:00",
-            ipv4_address="0.0.0.0", ipv4_mask="0.0.0.0", ipv4_gateway="0.0.0.0",
-            ipv4_dns=None, ipv6_address="0000:0000:0000:0000:0000:0000:0000:0000",
-            ipv6_prefix="00",
-            ipv6_gateway="0000:0000:0000:0000:0000:0000:0000:0000", ipv6_dns=None,
-            network_segment="", hostname_resolution=None):
-        if ipv4_dns is None:
-            ipv4_dns = []
-        if ipv6_dns is None:
-            ipv6_dns = []
-        if hostname_resolution is None:
-            hostname_resolution = []
-        if not isinstance(hostname_resolution, list):
-            self.logger.warning("hostname_resolution parameter must be a list and is (%s)", type(hostname_resolution))
-            hostname_resolution = [hostname_resolution]
-        # We don't use interface anymore, so return a host id to maintain
-        # backwards compatibility
-        # Little hack because we dont want change all the plugins for add hostnames in Host object.
-        # SHRUG
-        host = self.get_from_cache(host_id)
-        for hostname in hostname_resolution:
-            if hostname not in host["hostnames"]:
-                host["hostnames"].append(hostname)
-        host["mac"] = mac
-        return host_id
-
-    # @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-    #                         current_version=VERSION,
-    #                         details="Interface object removed. Use host or service instead. Service will be attached
-    # to Host!")
-    def createAndAddServiceToInterface(self, host_id, interface_id, name,
-                                       protocol="tcp?", ports=None,
-                                       status="open", version="unknown",
-                                       description=""):
-        return self.createAndAddServiceToHost(host_id, name, protocol, ports, status, version, description)
-
     def createAndAddServiceToHost(self, host_id, name,
-                                       protocol="tcp?", ports=None,
+                                       protocol="tcp", ports=None,
                                        status="open", version="unknown",
-                                       description=""):
+                                       description="", tags=None):
         if ports:
             if isinstance(ports, list):
                 ports = int(ports[0])
             elif isinstance(ports, str):
                 ports = int(ports)
 
-        if status not in ("open", "closed", "filtered"):
-            self.logger.warning('Unknown service status %s. Using "open" instead', status)
+        if status not in VALID_SERVICE_STATUS:
             status = 'open'
+        if tags is None:
+            tags = []
+        if isinstance(tags, str):
+            tags = [tags]
         service = {"name": name, "protocol": protocol, "port": ports, "status": status,
-                   "version": version, "description": description, "credentials": [], "vulnerabilities": []}
-        host = self.get_from_cache(host_id)
-        host["services"].append(service)
-        service_id = self.save_cache(service)
+                   "version": version, "description": description, "credentials": [], "vulnerabilities": [],
+                   "tags": tags}
+
+        service_id = self.save_service_cache(host_id, service)
+
         return service_id
 
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
-                               severity="", resolution="", vulnerable_since="", scan_id="", pci="", data="",
-                               external_id=None, run_date=None):
+                               severity="", resolution="", data="", external_id=None, run_date=None,
+                               impact=None, custom_fields=None, status="", policyviolations=None,
+                               easeofresolution=None, confirmed=False, tags=None):
         if ref is None:
             ref = []
+        if status == "":
+            status = "opened"
+        if impact is None:
+            impact = {}
+        if policyviolations is None:
+            policyviolations = []
+        if custom_fields is None:
+            custom_fields = {}
+        if tags is None:
+            tags = []
+        if isinstance(tags, str):
+            tags = [tags]
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
-                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution,
-                         "vulnerable_since": vulnerable_since, "scan_id": scan_id, "pci": pci, "data": data
+                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
+                         "custom_fields": custom_fields, "status": status, "impact": impact, "policyviolations": policyviolations,
+                         "confirmed": confirmed, "easeofresolution": easeofresolution, "tags": tags
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
-        host = self.get_from_cache(host_id)
-        host["vulnerabilities"].append(vulnerability)
-        vulnerability_id = len(host["vulnerabilities"]) - 1
+        vulnerability_id = self.save_host_vuln_cache(host_id, vulnerability)
         return vulnerability_id
 
-    # @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-    #                         current_version=VERSION,
-    #                         details="Interface object removed. Use host or service instead. Vuln will be added
-    # to Host")
-    def createAndAddVulnToInterface(self, host_id, interface_id, name,
-                                    desc="", ref=None, severity="",
-                                    resolution="", data=""):
-        return self.createAndAddVulnToHost(host_id, name, desc=desc, ref=ref, severity=severity, resolution=resolution,
-                                           data=data)
-
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
-                                  ref=None, severity="", resolution="", risk="", data="", external_id=None, run_date=None):
+                                  ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
+                                  custom_fields=None, policyviolations=None, impact=None, status="",
+                                  confirmed=False, easeofresolution=None, tags=None):
         if ref is None:
             ref = []
+        if status == "":
+            status = "opened"
+        if impact is None:
+            impact = {}
+        if policyviolations is None:
+            policyviolations = []
+        if custom_fields is None:
+            custom_fields = {}
+        if tags is None:
+            tags = []
+        if isinstance(tags, str):
+            tags = [tags]
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
-                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "risk": risk,
-                         "data": data
+                         "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
+                         "custom_fields": custom_fields, "status": status, "impact": impact, "policyviolations": policyviolations,
+                         "easeofresolution": easeofresolution, "confirmed": confirmed, "tags": tags
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
-        service = self.get_from_cache(service_id)
-        service["vulnerabilities"].append(vulnerability)
-        vulnerability_id = self.save_cache(vulnerability)
+        vulnerability_id = self.save_service_vuln_cache(host_id, service_id, vulnerability)
         return vulnerability_id
 
     def createAndAddVulnWebToService(self, host_id, service_id, name, desc="",
                                      ref=None, severity="", resolution="",
                                      website="", path="", request="",
                                      response="", method="", pname="",
-                                     params="", query="", category="", data="", external_id=None, run_date=None):
+                                     params="", query="", category="", data="", external_id=None,
+                                     confirmed=False, status="", easeofresolution=None, impact=None,
+                                     policyviolations=None, status_code=None, custom_fields=None, run_date=None, tags=None):
         if params is None:
             params = ""
         if response is None:
@@ -345,23 +440,33 @@ class PluginBase:
             response = ""
         if ref is None:
             ref = []
+        if status == "":
+            status = "opened"
+        if impact is None:
+            impact = {}
+        if policyviolations is None:
+            policyviolations = []
+        if custom_fields is None:
+            custom_fields = {}
+        if tags is None:
+            tags = []
+        if isinstance(tags, str):
+            tags = [tags]
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
                          "data": data, "website": website, "path": path, "request": request, "response": response,
-                         "method": method, "pname": pname, "params": params, "query": query, "category": category
-                         }
+                         "method": method, "pname": pname, "params": params, "query": query, "category": category,
+                         "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
+                         "impact": impact, "policyviolations": policyviolations,
+                         "status_code": status_code, "custom_fields": custom_fields, "tags": tags}
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
-        service = self.get_from_cache(service_id)
-        service["vulnerabilities"].append(vulnerability)
-        vulnerability_id = self.save_cache(vulnerability)
+        vulnerability_id = self.save_service_vuln_cache(host_id, service_id, vulnerability)
         return vulnerability_id
 
     def createAndAddNoteToHost(self, host_id, name, text):
         return None
 
-    def createAndAddNoteToInterface(self, host_id, interface_id, name, text):
-        return None
 
     def createAndAddNoteToService(self, host_id, service_id, name, text):
         return None
@@ -376,14 +481,6 @@ class PluginBase:
         credential_id = self.save_cache(credential)
         return credential_id
 
-    def log(self, msg, level='INFO'):# TODO borrar
-        pass
-        #self.__addPendingAction(Modelactions.LOG, msg, level)
-
-    def devlog(self, msg): # TODO borrar
-        pass
-        #self.__addPendingAction(Modelactions.DEVLOG, msg)
-
     def get_data(self):
         self.vulns_data["command"]["tool"] = self.id
         self.vulns_data["command"]["command"] = self.id
@@ -393,6 +490,35 @@ class PluginBase:
     def get_json(self):
         self.logger.debug("Generate Json")
         return json.dumps(self.get_data())
+
+    def get_summary(self):
+        plugin_json = self.get_data()
+        summary = {'hosts': len(plugin_json['hosts']), 'services': 0,
+                   'hosts_vulns': sum(list(map(lambda x: len(x['vulnerabilities']), plugin_json['hosts']))),
+                   'services_vulns': 0, 'severity_vulns': defaultdict(int),
+                   'vuln_hashes': []
+                   }
+        hosts_with_services = filter(lambda x: len(x['services']) > 0, plugin_json['hosts'])
+        host_services = list(map(lambda x: x['services'], hosts_with_services))
+        summary['services'] = sum(map(lambda x: len(x), host_services))
+        services_vulns = 0
+        for host in plugin_json['hosts']:
+            for vuln in host['vulnerabilities']:
+                summary['severity_vulns'][vuln['severity']] += 1
+        for services in host_services:
+            for service in services:
+                services_vulns += len(service['vulnerabilities'])
+                for vuln in service['vulnerabilities']:
+                    summary['severity_vulns'][vuln['severity']] += 1
+        summary['services_vulns'] = services_vulns
+        for obj_uuid in self._vulns_cache.values():
+            vuln = self.get_from_cache(obj_uuid)
+            vuln_copy = vuln.copy()
+            for field in VULN_SKIP_FIELDS_TO_HASH:
+                vuln_copy.pop(field, None)
+            dict_hash = hashlib.sha1(json.dumps(vuln_copy).encode()).hexdigest()
+            summary['vuln_hashes'].append(dict_hash)
+        return summary
 
 # TODO Borrar
 class PluginTerminalOutput(PluginBase):
@@ -467,4 +593,45 @@ class PluginJsonFormat(PluginByExtension):
             self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", file_json_keys, self.json_keys, match)
         return match
 
-# I'm Py3
+
+class PluginCSVFormat(PluginByExtension):
+
+    def __init__(self):
+        super().__init__()
+        self.extension = ".csv"
+        self.csv_headers = set()
+
+    def report_belongs_to(self, file_csv_headers=None, **kwargs):
+        match = False
+        if file_csv_headers is None:
+            file_csv_headers = set()
+        if super().report_belongs_to(**kwargs):
+            if isinstance(self.csv_headers, list):
+                match = bool(list(filter(lambda x: x.issubset(file_csv_headers), self.csv_headers)))
+            else:
+                match = self.csv_headers.issubset(file_csv_headers)
+            self.logger.debug("CSV Headers Match: [%s =/in %s] -> %s", file_csv_headers, self.csv_headers, match)
+        return match
+
+
+class PluginZipFormat(PluginByExtension):
+
+    def __init__(self):
+        super().__init__()
+        self.extension = ".zip"
+        self.files_list = set()
+
+    def _parse_filename(self, filename):
+        file = zipfile.ZipFile(filename, "r")
+        self.parseOutputString(file)
+
+    def report_belongs_to(self, files_in_zip=None, **kwargs):
+        match = False
+        if super().report_belongs_to(**kwargs):
+            if files_in_zip is None:
+                files_in_zip = set()
+            match = bool(self.files_list & files_in_zip)
+            self.logger.debug("Files List Match: [%s =/in %s] -> %s", files_in_zip, self.files_list, match)
+        return match
+
+

@@ -4,10 +4,9 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-import os
-import socket
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 from urllib.parse import urlparse
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
@@ -18,7 +17,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -29,14 +27,6 @@ __maintainer__ = "Francisco Amato"
 __email__ = "famato@infobytesec.com"
 __status__ = "Development"
 
-
-class ParserEtToAscii(ET.TreeBuilder):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        print(self._data)
-
-    def data(self, data):
-        self._data.append(data.encode("ascii", errors="backslashreplace"))
 
 
 class ZapXmlParser:
@@ -135,7 +125,7 @@ class Site:
         self.node = item_node
 
         self.host = self.node.get('host')
-        self.ip = self.resolve(self.host)
+        self.ip = resolve_hostname(self.host)
         self.port = self.node.get('port')
 
         self.items = []
@@ -153,14 +143,6 @@ class Site:
             return sub_node.text
         return None
 
-    def resolve(self, host):
-
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-
-        return host
 
 
 class Item:
@@ -254,17 +236,12 @@ class ZapPlugin(PluginXMLFormat):
         self.version = "2.4.3"
         self.framework_version = "1.0.0"
         self.options = None
-        self._current_output = None
-        self.target = None
-        self._command_regex = re.compile(r'^(zap|sudo zap|\.\/zap).*?')
 
-    def parseOutputString(self, output, debug=False):
+
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.
-
-        NOTE: if 'debug' is true then it is being run from a test case and the
-        output being sent is valid.
         """
 
         parser = ZapXmlParser(output)
@@ -275,23 +252,9 @@ class ZapPlugin(PluginXMLFormat):
             if site.host != site.ip:
                 host = [site.host]
 
-            h_id = self.createAndAddHost(site.ip)
+            h_id = self.createAndAddHost(site.ip, hostnames=host)
 
-            i_id = self.createAndAddInterface(
-                h_id,
-                site.ip,
-                ipv4_address=site.ip,
-                hostname_resolution=host
-            )
-
-            s_id = self.createAndAddServiceToInterface(
-                h_id,
-                i_id,
-                "http",
-                "tcp",
-                ports=[site.port],
-                status='open'
-            )
+            s_id = self.createAndAddServiceToHost(h_id, "http", "tcp", ports=[site.port], status='open')
 
             for item in site.items:
                 self.createAndAddVulnWebToService(
@@ -310,8 +273,6 @@ class ZapPlugin(PluginXMLFormat):
 
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass

@@ -4,7 +4,6 @@ import json
 import pytest
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import get_report_summary
 from faraday.server.api.modules.bulk_create import BulkCreateSchema
 
 BLACK_LIST = [
@@ -94,7 +93,7 @@ def is_valid_ip_address(address):
     return (is_valid_ipv4_address(address) or is_valid_ipv6_address(address))
 
 def test_reports_collection_exists():
-    assert os.path.isdir(REPORTS_SUMMARY_DIR) is True
+    assert os.path.isdir(REPORTS_SUMMARY_DIR) is True, "Please clone the report-collection repo!"
 
 @pytest.mark.parametrize("report_filename", list_report_files())
 def test_autodetected_on_all_report_collection(report_filename):
@@ -108,7 +107,9 @@ def test_schema_on_all_reports(report_filename):
     if plugin_json:
         serializer = BulkCreateSchema()
         res = serializer.loads(json.dumps(plugin_json))
-        assert not res.errors
+        assert set(res.keys()) == {'hosts', 'command'}
+
+
 
 
 @pytest.mark.skip(reason="Skip validate ip format")
@@ -129,12 +130,15 @@ def test_summary_reports(report_filename):
         assert os.path.isfile(summary_file) is True
         with open(summary_file) as f:
             saved_summary = json.load(f)
-        summary = get_report_summary(plugin_json)
+        summary = plugin.get_summary()
+        vuln_hashes = set(summary['vuln_hashes'])
+        saved_vuln_hashes = set(saved_summary.get('vuln_hashes', []))
         assert summary['hosts'] == saved_summary['hosts']
         assert summary['services'] == saved_summary['services']
         assert summary['hosts_vulns'] == saved_summary['hosts_vulns']
         assert summary['services_vulns'] == saved_summary['services_vulns']
         assert summary['severity_vulns'] == saved_summary['severity_vulns']
+        assert vuln_hashes == saved_vuln_hashes
 
 
 @pytest.mark.performance
@@ -150,3 +154,5 @@ def test_detected_tools_on_all_report_collection(report_filename, benchmark):
     plugin_json = json.loads(plugin.get_json())
     assert "hosts" in plugin_json
     assert "command" in plugin_json
+    assert os.path.isfile(report_filename) is True
+

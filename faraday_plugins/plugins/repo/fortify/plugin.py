@@ -1,7 +1,7 @@
 import base64
 import io
 import re
-from html.parser import HTMLParser
+import html
 from zipfile import ZipFile
 
 import html2text
@@ -27,16 +27,16 @@ class FortifyPlugin(PluginByExtension):
         for host in fp.hosts.keys():
             fp.hosts[host] = self.createAndAddHost(host)
 
-        for vuln in fp.vulns.keys():
+        for vuln_key, vuln in fp.vulns.items():
             self.createAndAddVulnToHost(
-                host_id=fp.hosts[fp.vulns[vuln]['host']],
-                name=fp.vulns[vuln]['name'],
-                desc=fp.format_description(vuln),
-                ref=fp.descriptions[fp.vulns[vuln]['class']]['references'],
-                severity=fp.vulns[vuln]['severity'],
+                host_id=fp.hosts[vuln['host']],
+                name=vuln['name'],
+                desc=fp.format_description(vuln_key),
+                ref=fp.descriptions[vuln['class']]['references'],
+                severity=vuln['severity'],
                 resolution="",
                 data="",
-                external_id=vuln.text
+                external_id=vuln_key.text
             )
 
     def _process_webinspect_vulns(self, fp):
@@ -74,7 +74,7 @@ class FortifyPlugin(PluginByExtension):
                 severity=vuln_data['severity']
             )
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         fp = FortifyParser(output)
         if fp.fvdl is not None:
             self._process_fvdl_vulns(fp)
@@ -331,37 +331,25 @@ class FortifyParser:
         if self.fvdl is None:
             return
         for description in self.fvdl.Description:
-
-            self.descriptions[description.get("classID")] = {}
-
-            if description.get('classID') not in self.vuln_classes:
+            class_id = description.get("classID")
+            self.descriptions[class_id] = {}
+            if class_id not in self.vuln_classes:
                 continue
-
-            tips = ""
             if hasattr(description, 'Tips'):
-                for tip in description.Tips.getchildren():
-                    tips += "\n" + tip.text
-
-            htmlparser = HTMLParser()
-            self.descriptions[description.get("classID")]['text'] = htmlparser.unescape(
-                "Summary:\n{}\n\nExplanation:\n{}\n\nRecommendations:\n{}\n\nTips:{}".format(
-                    description.Abstract, description.Explanation, description.Recommendations, tips))
-
+                tips = "\n".join(map(lambda x: x.text, description.Tips.getchildren()))
+            else:
+                tips = ""
+            text = f"Summary:\n{description.Abstract}\n\nExplanation:\n{description.Explanation}\n\nRecommendations:\n{description.Recommendations}\n\nTips:{tips}"
+            self.descriptions[description.get("classID")]['text'] = html.unescape(text)
             # group vuln references
             references = []
-            try:
-                children = description.References.getchildren()
-            except AttributeError:
-                children = []
-
-            for reference in children:
-
-                for attr in dir(reference):
-                    if attr == '__class__':
-                        break
-
-                    references.append("{}: {}\n".format(attr, getattr(reference, attr)))
-
+            if hasattr(description, "References"):
+                references_elements = description.References.getchildren()
+                for reference in references_elements:
+                    for children in reference.getchildren():
+                        name = children.tag.split("}")[1]
+                        value = children.text
+                        references.append(f"{name}: {value}")
             self.descriptions[description.get("classID")]['references'] = references
 
     def format_description(self, vulnID):

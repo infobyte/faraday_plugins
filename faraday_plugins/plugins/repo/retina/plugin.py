@@ -5,7 +5,6 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
-import os
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 
@@ -19,7 +18,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -183,18 +181,14 @@ class RetinaPlugin(PluginXMLFormat):
         self.version = "Retina Network 5.19.2.2718"
         self.framework_version = "1.0.0"
         self.options = None
-        self._current_output = None
-        self._command_regex = re.compile(r'^(sudo retina|\.\/retina).*?')
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = RetinaXmlParser(output)
         for item in parser.items:
-            h_id = self.createAndAddHost(item.ip, item.os)
-            hostname = item.hostname if item.hostname else item.ip
-            i_id = self.createAndAddInterface(
-                h_id, item.ip, ipv4_address=item.ip, hostname_resolution=[hostname])
+            hostname = item.hostname if item.hostname else None
+            h_id = self.createAndAddHost(item.ip, item.os,hostnames=[hostname])
 
             if not item.netbiosname == 'N/A':
                 self.createAndAddNoteToHost(
@@ -208,30 +202,26 @@ class RetinaPlugin(PluginXMLFormat):
                 if k:
                     for v in vulns:
                         web = False
-                        s_id = self.createAndAddServiceToInterface(h_id, i_id, 'unknown',
-                                                                   v.protocol.lower(),
-                                                                   ports=[str(v.port)],
-                                                                   status="open")
-
+                        s_id = self.createAndAddServiceToHost(h_id, 'unknown', v.protocol.lower(), ports=[str(v.port)],
+                                                              status="open")
                         if v.port in ['80', '443'] or re.search("ssl|http", v.name.lower()):
                             web = True
                         else:
                             web = False
-
                         if web:
-                            v_id = self.createAndAddVulnWebToService(h_id, s_id, v.name.encode(
-                                "utf-8"), ref=v.ref, website=hostname, severity=v.severity, resolution=v.solution.encode("utf-8"), desc=v.desc.encode("utf-8"))
+                            v_id = self.createAndAddVulnWebToService(h_id, s_id, v.name, ref=v.ref,
+                                                                     website=hostname, severity=v.severity,
+                                                                     resolution=v.solution, desc=v.desc)
                         else:
-                            v_id = self.createAndAddVulnToService(h_id, s_id, v.name.encode(
-                                "utf-8"), ref=v.ref, severity=v.severity, resolution=v.solution.encode("utf-8"), desc=v.desc.encode("utf-8"))
+                            v_id = self.createAndAddVulnToService(h_id, s_id, v.name, ref=v.ref,
+                                                                  severity=v.severity, resolution=v.solution,
+                                                                  desc=v.desc)
                 else:
                     for v in vulns:
-                        v_id = self.createAndAddVulnToHost(h_id, v.name.encode(
-                            "utf-8"), ref=v.ref, severity=v.severity, resolution=v.solution.encode("utf-8"), desc=v.desc.encode("utf-8"))
+                        v_id = self.createAndAddVulnToHost(h_id, v.name, ref=v.ref, severity=v.severity,
+                                                           resolution=v.solution, desc=v.desc)
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass

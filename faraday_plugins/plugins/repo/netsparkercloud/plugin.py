@@ -4,11 +4,10 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
-import os
-import socket
 from urllib.parse import urlparse
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
@@ -20,7 +19,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -31,20 +29,6 @@ __maintainer__ = "Francisco Amato"
 __email__ = "famato@infobytesec.com"
 __status__ = "Development"
 
-
-def cleaner_unicode(string):
-    if string is not None:
-        return string.encode('ascii', errors='backslashreplace')
-    else:
-        return string
-
-
-def cleaner_results(string):
-    try:
-        q = re.compile(r'<.*?>', re.IGNORECASE)
-        return re.sub(q, '', string)
-    except:
-        return ''
 
 
 def get_urls(string):
@@ -87,7 +71,7 @@ class NetsparkerCloudXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            self.devlog("SyntaxError: %s. %s" % (err, xml_output))
+            self.logger.error("SyntaxError: %s. %s" % (err, xml_output))
             return None
         return tree
 
@@ -177,10 +161,6 @@ class Item:
                     " \nCAPEC: {} \nHIPA: {} \nExtra: {}".format(self.impact, self.exploitationskills,
                                                                  self.proofofconcept, self.wasc, self.pci, self.pci2,
                                                                  self.capec, self.hipaa, self.extra)
-        if self.response:
-            self.response = self.response.encode(encoding, errors="backslashreplace").decode(encoding)
-        if self.request:
-            self.request = self.request.encode(encoding, errors="backslashreplace").decode(encoding)
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
@@ -209,27 +189,15 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
         self.version = "NetsparkerCloud"
         self.framework_version = "1.0.0"
         self.options = None
-        self._current_output = None
-        self._command_regex = re.compile(
-            r'^(sudo netsparkercloud|\.\/netsparkercloud).*?')
 
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
-
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         parser = NetsparkerCloudXmlParser(output)
         first = True
         for i in parser.items:
             if first:
-                ip = self.resolve(i.hostname)
-                h_id = self.createAndAddHost(ip)
-                i_id = self.createAndAddInterface(h_id, ip, ipv4_address=ip, hostname_resolution=[i.hostname])
-                s_id = self.createAndAddServiceToInterface(h_id, i_id, i.protocol, ports=[i.port], status="open")
-
+                ip = resolve_hostname(i.hostname)
+                h_id = self.createAndAddHost(ip, hostnames=[i.hostname])
+                s_id = self.createAndAddServiceToHost(h_id, i.protocol, ports=[i.port], status="open")
                 first = False
             v_id = self.createAndAddVulnWebToService(h_id, s_id, i.name, ref=i.ref, website=i.hostname,
                                                      severity=i.severity, desc=i.desc, path=i.url.path, method=i.method,
@@ -237,8 +205,6 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
                                                      pname=i.param)
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass
