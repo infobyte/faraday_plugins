@@ -4,14 +4,15 @@ Copyright (C) 2018  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-import socket
 from urllib.parse import urlparse
-from faraday_plugins.plugins.plugin import PluginBase
 
 __author__ = "Roberto Focke"
 __copyright__ = "Copyright (c) 2017, Infobyte LLC"
 __license__ = ""
 __version__ = "1.0.0"
+
+from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class brutexss (PluginBase):
@@ -24,15 +25,14 @@ class brutexss (PluginBase):
         self.version = "1.0.0"
         self.protocol ='tcp'
         self._command_regex = re.compile(r'^(sudo brutexss|brutexss|sudo brutexss\.py|brutexss\.py|python brutexss\.py|'
-                                         r'\.\/brutexss\.py).*?')
+                                         r'\.\/brutexss\.py)\s+.*?')
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         lineas = output.split("\n")
         parametro = []
         found_vuln = False
         for linea in lineas:
             if linea.find("is available! Good!") > 0:
-                print(linea)
                 url = re.findall('(?:[-\w.]|(?:%[\da-fA-F]{2}))+', linea)[0]
                 port = 80
                 if urlparse(url).scheme == 'https':
@@ -44,21 +44,17 @@ class brutexss (PluginBase):
                 vuln_list = re.findall("\w+", linea)
                 if vuln_list[2] == "Vulnerable":
                     parametro.append(vuln_list[1])
-                    found_vuln=len(parametro) > 0
-                    host_id = self.createAndAddHost(url)
-                    address=socket.gethostbyname(url)
-                    interface_id = self.createAndAddInterface(host_id, address, ipv4_address=address,
-                                                              hostname_resolution=[url])
-                    service_id = self.createAndAddServiceToInterface(host_id, interface_id, self.protocol, 'tcp',
-                                                                     ports=[port], status='Open', version="",
-                                                                     description="")
+                    found_vuln = len(parametro) > 0
+                    address = resolve_hostname(url)
+                    host_id = self.createAndAddHost(url, hostnames=[url])
+                    service_id = self.createAndAddServiceToHost(host_id, self.protocol, 'tcp',
+                                                                ports=[port], status='Open', version="",
+                                                                description="")
         if found_vuln:
-            self.createAndAddVulnWebToService(host_id,service_id, name="xss", desc="XSS", ref='', severity='med',
+            self.createAndAddVulnWebToService(host_id, service_id, name="xss", desc="XSS", ref='', severity='med',
                                               website=url, path='', method='', pname='', params=''.join(parametro),
                                               request='', response='')
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
 
 def createPlugin():

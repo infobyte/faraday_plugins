@@ -33,14 +33,14 @@ class BeefPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self.target = None
-        self._command_regex = re.compile(r'^(beef|sudo beef|\.\/beef).*?')
+        self._command_regex = re.compile(r'^(beef|sudo beef|\.\/beef)\s+.*?')
 
         self.addSetting("Host", str, "http://127.0.0.1:3000/")
         self.addSetting(
             "Authkey", str, "c818c7798ae1da38b45a6406c8dd0d6d4d007098")
         self.addSetting("Enable", str, "0")
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.
@@ -94,8 +94,6 @@ class BeefPlugin(PluginBase):
                         ref=["http://http://beefproject.com/"],
                         severity=3)
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass

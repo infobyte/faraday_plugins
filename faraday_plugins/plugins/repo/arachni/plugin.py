@@ -1,17 +1,13 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-import socket
-import random
 import re
 from urllib.parse import urlparse
 import os
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
@@ -43,7 +39,6 @@ class ArachniXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print('SyntaxError In xml: %s. %s' % (err, xml_output))
             return None
         return tree
 
@@ -60,13 +55,15 @@ class ArachniXmlParser:
 
     def getSystem(self, tree):
         system_tree = tree.find('system')
-        return System(system_tree)
+        if system_tree is None:
+            return System(tree, False)
+        else:
+            return System(system_tree, True)
 
 
 class Issue():
 
     def __init__(self, issue_node):
-
         self.node = issue_node
         self.name = self.getDesc('name')
         self.severity = self.getDesc('severity')
@@ -87,7 +84,7 @@ class Issue():
         description = self.node.find(tag)
 
         if description is not None and description.text is not None:
-            return description.text.encode('ascii', 'ignore')
+            return description.text
         else:
             return 'None'
 
@@ -102,7 +99,7 @@ class Issue():
         result = main_entity.find(child_tag)
 
         if result is not None and result.text is not None:
-            return result.text.encode('ascii', 'ignore')
+            return result.text
         else:
             return 'None'
 
@@ -136,7 +133,6 @@ class Issue():
         except:
             parameters = ''
 
-
         return ' - '.join(result)
 
     def getRequest(self):
@@ -145,7 +141,7 @@ class Issue():
         try:
 
             raw_data = self.node.find('page').find('request').find('raw')
-            data = raw_data.text.encode('ascii', 'ignore')
+            data = raw_data.text
             return data
 
         except:
@@ -156,9 +152,8 @@ class Issue():
         # Get data about response.
         try:
 
-            raw_data = self.node.find('page').find(
-                'response').find('raw_headers')
-            data = raw_data.text.encode('ascii', 'ignore')
+            raw_data = self.node.find('page').find('response').find('raw_headers')
+            data = raw_data.text
             return data
 
         except:
@@ -167,33 +162,50 @@ class Issue():
 
 class System():
 
-    def __init__(self, node):
-
+    def __init__(self, node, tag_exists):
         self.node = node
-        self.user_agent = None
-        self.url = None
-        self.audited_elements = None
-        self.modules = ''
-        self.cookies = None
+        if not tag_exists:
+            self.user_agent = 'Arachni'
+            self.url = self.getUrl()
+            self.modules = ''
+            self.version = self.node.find('version')
+            self.start_time = self.node.find('start_datetime')
+            self.finish_time = self.node.find('finish_datetime')
+        else:
+            self.user_agent = None
+            self.url = None
+            self.audited_elements = None
+            self.modules = ''
+            self.cookies = None
+            self.getOptions()
+            self.version = self.getDesc('version')
+            self.start_time = self.getDesc('start_datetime')
+            self.finish_time = self.getDesc('finish_datetime')
 
-        self.getOptions()
+            self.note = self.getNote()
 
-        self.version = self.getDesc('version')
-        self.start_time = self.getDesc('start_datetime')
-        self.finish_time = self.getDesc('finish_datetime')
-
-        self.note = self.getNote()
+    def getUrl(self):
+        sitemap = self.node.find("sitemap/entry")
+        return sitemap.get('url')
 
     def getOptions(self):
 
         # Get values of options scan
-        options = self.node.find('options')
+        try:
+            options = self.node.find('options')
+        except:
+            options = False
         if options:
             options_string = options.text
         else:
             options_string = None
 
-        self.user_agent = self.node.find('user_agent').text
+
+        try:
+            self.user_agent = self.node.find('user_agent').text
+        except:
+            self.user_agent = None
+
         self.url = self.node.find('url').text
         tags_audited_elements = self.node.find('audited_elements')
         element_text = []
@@ -241,7 +253,11 @@ class Plugins():
         self.plugins_node = plugins_node
         self.healthmap = self.getHealthmap()
         self.waf = self.getWaf()
-        self.ip = plugins_node.find('resolver').find('results').find('hostname').get('ipaddress')
+        try:
+            self.ip = plugins_node.find('resolver').find('results') \
+                .find('hostname').get('ipaddress')
+        except Exception:
+            self.ip = '0.0.0.0'
 
     def getHealthmap(self):
 
@@ -328,11 +344,13 @@ class ArachniPlugin(PluginXMLFormat):
         self.version = '1.3.2'
         self.framework_version = '1.0.0'
         self.options = None
-        self._command_regex = re.compile(r'^(arachni |\.\/arachni).*?')
+        self._command_regex = re.compile(r'^(arachni|\.\/arachni)\s+.*?')
         self.protocol = None
         self.hostname = None
         self.port = '80'
         self.address = None
+        self._use_temp_file = True
+        self._temp_file_extension = ["afr", "xml"]
 
     def report_belongs_to(self, **kwargs):
         if super().report_belongs_to(**kwargs):
@@ -342,36 +360,48 @@ class ArachniPlugin(PluginXMLFormat):
             return re.search("/Arachni/arachni/", output) is not None
         return False
 
-    def parseOutputString(self, output, debug=False):
+    def _parse_filename(self, filename):
+        """
+        This plugin gets a dict of files, not just one file if it runs the command.
+        We just need the xml.
+        """
+        if isinstance(filename, dict):
+            filename = filename['xml']
+        with open(filename, **self.open_options) as output:
+            self.parseOutputString(output.read())
+        if self._delete_temp_file:
+            if isinstance(filename, dict):
+                for _file in filename.values():
+                    try:
+                        os.remove(_file)
+                    except Exception as e:
+                        self.logger.error("Error on delete file: (%s) [%s]", _file, e)
+            else:
+                try:
+                    os.remove(filename)
+                except Exception as e:
+                    self.logger.error("Error on delete file: (%s) [%s]", filename, e)
+
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.
         """
-
         parser = ArachniXmlParser(output)
 
         # Check xml parsed ok...
         if not parser.system:
-            print('Error in xml report... Exiting...')
             return
 
         self.hostname = self.getHostname(parser.system.url)
-        self.address = self.getAddress(parser.plugins.ip)
-
+        self.address = resolve_hostname(parser.plugins.ip)
 
         # Create host and interface
-        host_id = self.createAndAddHost(self.address)
-
-        interface_id = self.createAndAddInterface(
-            host_id,
-            self.address,
-            ipv4_address=self.address,
-            hostname_resolution=[self.hostname])
+        host_id = self.createAndAddHost(self.address, hostnames=[self.hostname])
 
         # Create service
-        service_id = self.createAndAddServiceToInterface(
+        service_id = self.createAndAddServiceToHost(
             host_id,
-            interface_id,
             self.protocol,
             'tcp',
             ports=[self.port],
@@ -413,37 +443,33 @@ class ArachniPlugin(PluginXMLFormat):
         """
         Use bash to run sequentialy arachni and arachni_reporter
         """
-
-        afr_output_file_path = os.path.join(
-            self.data_path,
-            "%s_%s_output-%s.afr" % (
-                self.get_ws(),
-                self.id,
-                random.uniform(1, 10))
-        )
-
-        report_arg_re = r"^.*(--report-save-path[=\s][^\s]+).*$"
-        arg_match = re.match(report_arg_re,command_string)
-        if arg_match is None:
-            main_cmd = re.sub(r"(^.*?arachni)",
-                          r"\1 --report-save-path=%s" % afr_output_file_path,
-                          command_string)
+        # Dont call the parent beacuse this plugin needs a different implementation
+        if command_string.startswith("sudo"):
+            params = " ".join(command_string.split()[2:])
         else:
-            main_cmd = re.sub(arg_match.group(1),
-                          r"--report-save-path=%s" % afr_output_file_path,
-                          command_string)
+            params = " ".join(command_string.split()[1:])
+        self.vulns_data["command"]["params"] = params
+        self.vulns_data["command"]["user"] = username
+        self._output_file_path = {}
+        self._delete_temp_file = True
+        for ext in self._temp_file_extension:
+            self._output_file_path[ext] = self._get_temp_file(extension=ext)
+        afr_file_path = self._output_file_path['afr']
+        xml_file_path = self._output_file_path['xml']
+        report_arg_re = r"^.*(--report-save-path[=\s][^\s]+).*$"
+        arg_match = re.match(report_arg_re, command_string)
+        if arg_match is None:
+            main_cmd = re.sub(r"(^.*?arachni)", r"\1 --report-save-path=%s" % afr_file_path, command_string)
+        else:
+            main_cmd = re.sub(arg_match.group(1), r"--report-save-path=%s" % afr_file_path, command_string)
 
         # add reporter
-        self._output_file_path = re.sub('.afr', '.xml', afr_output_file_path)
         cmd_prefix_match = re.match(r"(^.*?)arachni ", command_string)
         cmd_prefix = cmd_prefix_match.group(1)
-        reporter_cmd = "%s%s --reporter=\"xml:outfile=%s\" \"%s\"" % (
-            cmd_prefix,
-            "arachni_reporter",
-            self._output_file_path,
-            afr_output_file_path)
+        reporter_cmd = "%s%s --reporter=\"xml:outfile=%s\" \"%s\"" % (cmd_prefix, "arachni_reporter", xml_file_path,
+                                                                      afr_file_path)
         return "/usr/bin/env -- bash -c '%s  2>&1 && if [ -e \"%s\" ];then %s 2>&1;fi'" % (main_cmd,
-                                                                                           afr_output_file_path,
+                                                                                           afr_file_path,
                                                                                            reporter_cmd)
 
     def getHostname(self, url):
@@ -460,14 +486,6 @@ class ArachniPlugin(PluginXMLFormat):
                 self.port = 80
 
         return self.hostname
-
-    def getAddress(self, hostname):
-
-        # Returns remote IP address from hostname.
-        try:
-            return socket.gethostbyname(hostname)
-        except socket.error as msg:
-            return self.hostname
 
 
 def createPlugin():

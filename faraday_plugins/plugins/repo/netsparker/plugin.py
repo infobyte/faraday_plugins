@@ -4,11 +4,10 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
-import os
-import socket
 from bs4 import BeautifulSoup
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
@@ -20,7 +19,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -64,7 +62,7 @@ class NetsparkerXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            self.devlog("SyntaxError: %s. %s" % (err, xml_output))
+            self.logger.error("SyntaxError: %s. %s" % (err, xml_output))
             return None
 
         return tree
@@ -122,14 +120,6 @@ class Item:
         self.resolution = self.get_text_from_subnode("actionsToTake")
         self.request = self.get_text_from_subnode("rawrequest")
         self.response = self.get_text_from_subnode("rawresponse")
-        if self.response:
-            self.response = self.response.encode(encoding,errors="backslashreplace").decode(encoding)
-        if self.request:
-            self.request = self.request.encode(encoding,errors="backslashreplace").decode(encoding)
-        if self.reference:
-            self.reference = self.reference.encode(encoding,errors="backslashreplace").decode(encoding)
-
-
         self.kvulns = []
         for v in self.node.findall("knownvulnerabilities/knownvulnerability"):
             self.node = v
@@ -159,7 +149,7 @@ class Item:
         if self.owasp:
             self.ref.append("OWASP-" + self.owasp)
         if self.reference:
-            self.ref.extend(list(set(re.findall('https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', self.reference))))
+            self.ref.extend(sorted(set(re.findall('https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', self.reference))))
         if self.cvss:
             self.ref.append(self.cvss)
     
@@ -203,25 +193,13 @@ class NetsparkerPlugin(PluginXMLFormat):
         self.version = "Netsparker 3.1.1.0"
         self.framework_version = "1.0.0"
         self.options = None
-        self._current_output = None
-        self._command_regex = re.compile(
-            r'^(sudo netsparker|\.\/netsparker).*?')
 
-
-    def resolve(self, host):
-        try:
-            return socket.gethostbyname(host)
-        except:
-            pass
-        return host
-
-    def parseOutputString(self, output, debug=False):
-
+    def parseOutputString(self, output):
         parser = NetsparkerXmlParser(output)
         first = True
         for i in parser.items:
             if first:
-                ip = self.resolve(i.hostname)
+                ip = resolve_hostname(i.hostname)
                 h_id = self.createAndAddHost(ip, hostnames=[ip])
                 
                 s_id = self.createAndAddServiceToHost(h_id, str(i.port),
@@ -245,9 +223,6 @@ class NetsparkerPlugin(PluginXMLFormat):
                                                      pname=i.param, data=i.data)
 
         del parser
-
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
 
 def createPlugin():

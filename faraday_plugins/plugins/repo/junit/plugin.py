@@ -6,7 +6,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import os
 from lxml import etree
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 
 try:
@@ -117,7 +117,7 @@ class Testsuite:
         return None
 
 
-class JunitPlugin(PluginBase):
+class JunitPlugin(PluginXMLFormat):
     """
     Example plugin to parse junit output.
     """
@@ -131,14 +131,12 @@ class JunitPlugin(PluginBase):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = None 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = JunitXmlParser(output)
         for item in parser.items:
             h_id = self.createAndAddHost(item.host, os="Linux")
-            i_id = self.createAndAddInterface(h_id, item.host, ipv4_address=item.host)
             self.createAndAddVulnToHost(h_id, name=item.name, desc=item.message, ref=[], severity="High")
         del parser
 

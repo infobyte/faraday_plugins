@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
@@ -9,7 +6,6 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import os
-import sys
 import base64
 from bs4 import BeautifulSoup, Comment
 from faraday_plugins.plugins.plugin import PluginXMLFormat
@@ -27,7 +23,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -228,22 +223,14 @@ class BurpPlugin(PluginXMLFormat):
         self.target = None
 
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = BurpXmlParser(output)
         for item in parser.items:
 
-            h_id = self.createAndAddHost(item.ip)
-
-            i_id = self.createAndAddInterface(
+            h_id = self.createAndAddHost(item.ip, hostnames=[item.host])
+            s_id = self.createAndAddServiceToHost(
                 h_id,
-                item.ip,
-                ipv4_address=item.ip,
-                hostname_resolution=[item.host])
-
-            s_id = self.createAndAddServiceToInterface(
-                h_id,
-                i_id,
                 item.protocol,
                 "tcp",
                 ports=[str(item.port)],
@@ -270,8 +257,6 @@ class BurpPlugin(PluginXMLFormat):
 
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def removeHtml(self, markup):
         soup = BeautifulSoup(markup, "html.parser")

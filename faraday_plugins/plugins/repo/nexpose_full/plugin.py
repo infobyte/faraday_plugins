@@ -6,7 +6,6 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
-import os
 
 try:
     import xml.etree.cElementTree as ET
@@ -20,7 +19,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Micaela Ranea Sanchez"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -65,7 +63,6 @@ class NexposeFullXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print("SyntaxError: %s. %s" % (err, xml_output))
             return None
 
         return tree
@@ -172,16 +169,12 @@ class NexposeFullXmlParser:
                     if item.tag == 'exploits':
                         for exploit in list(item):
                             if exploit.get('title') and exploit.get('link') and exploit.get('type') \
-                                    and exploit.get('sklLevel'):
-                                title = exploit.get('title').encode(
-                                    "ascii", errors="backslashreplace").strip()
-                                link = exploit.get('link').encode(
-                                    "ascii", errors="backslashreplace").strip()
-                                type = exploit.get('type').encode(
-                                    "ascii", errors="backslashreplace").strip()
-                                skillLevel = exploit.get('sklLevel').encode(
-                                    "ascii", errors="backslashreplace").strip()
-                                vuln['refs'].append(title + b' ' + link +  b' ' + type +  b' ' + skillLevel)
+                                    and exploit.get('skillLevel'):
+                                title = exploit.get('title').strip()
+                                link = exploit.get('link').strip()
+                                type = exploit.get('type').strip()
+                                skillLevel = exploit.get('skillLevel').strip()
+                                vuln['refs'].append(" ".join([title, link, type, skillLevel]))
                     if item.tag == 'malware':
                         for names in item.findall("name"):
                             nameMalware = names.text
@@ -189,8 +182,7 @@ class NexposeFullXmlParser:
                     if item.tag == 'references':
                         for ref in list(item):
                             if ref.text:
-                                rf = ref.text.encode(
-                                    "ascii", errors="backslashreplace").strip()
+                                rf = ref.text.strip()
                                 vuln['refs'].append(rf)
                     if item.tag == 'solution':
                         for htmlType in list(item):
@@ -219,13 +211,7 @@ class NexposeFullXmlParser:
                 host['hostnames'] = list()
                 host['os'] = ""
                 host['services'] = list()
-                host['fingerprints'] = list()
-                host['fingerprints_software'] = list()
                 host['vulns'] = self.parse_tests_type(node, vulns)
-                host['scan-template'] = node.get('scan-template')
-                host['scan-name'] = node.get('scan-name')
-                host['scan-importance'] = node.get('scan-importance')
-                host['risk-score'] = node.get('risk-score')
 
                 for names in node.iter('names'):
                     for name in list(names):
@@ -236,15 +222,6 @@ class NexposeFullXmlParser:
                         os_name = os_data.get('product')
                         if os_name:
                             host['os'] = os_name
-
-                    for fingerprints_tag in fingerprints.iter('fingerprint'):
-                        data_fingerprints_tag = {
-                            'certainty': fingerprints_tag.get('certainty'),
-                            'product': fingerprints_tag.get('product'),
-                            'version': fingerprints_tag.get('version'),
-                        }
-                        host['fingerprints'].append(data_fingerprints_tag)
-
                 for endpoints in node.iter('endpoints'):
                     for endpoint in list(endpoints):
                         svc = {
@@ -262,17 +239,6 @@ class NexposeFullXmlParser:
                                         if "banner" in config.get('name'):
                                             svc['version'] = config.get('name')
                         host['services'].append(svc)
-
-                for softwaretag in node.iter('software'):
-                    for soft_data in softwaretag.iter('fingerprint'):
-                        data_soft = {
-                            'certainty': soft_data.get('certainty'),
-                            'vendor': soft_data.get('vendor'),
-                            'family': soft_data.get('family'),
-                            'product': soft_data.get('product'),
-                            'version': soft_data.get('version'),
-                        }
-                        host['fingerprints_software'].append(data_soft)
                 hosts.append(host)
 
         return hosts
@@ -292,48 +258,21 @@ class NexposeFullPlugin(PluginXMLFormat):
         self.version = "Nexpose Enterprise 5.7.19"
         self.framework_version = "1.0.0"
         self.options = None
-        self._current_output = None
-        self._command_regex = re.compile(r'^(sudo nexpose|\.\/nexpose).*?')
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         parser = NexposeFullXmlParser(output)
 
         for item in parser.items:
-            h_id = self.createAndAddHost(item['name'], item['os'], hostnames=item['hostnames'],
-                                         scan_template=item['scan-template'], site_name=item['scan-name'],
-                                         site_importance=item['scan-importance'], risk_score=item['risk-score'],
-                                         fingerprints=item['fingerprints'],
-                                         fingerprints_software=item['fingerprints_software']
-                                         )
             pattern = '([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
             if not item['mac']:
                 item['mac'] = '0000000000000000'
-                match = re.search(pattern, item['mac'])
-            else:
-                match = re.search(pattern, item['mac'])
+            match = re.search(pattern, item['mac'])
             if match:
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    item['name'],
-                    mac=item['mac'],
-                    ipv4_address=item['name'],
-                    hostname_resolution=item['hostnames'],
-                    scan_template=item['scan-template'],
-                    site_name=item['scan-name'],
-                    site_importance=item['scan-importance'],
-                    risk_score=item['risk-score'],
-                    fingerprints=item['fingerprints'],
-                    fingerprints_software=item['fingerprints_software'],
-                )
+                mac = item['mac']
             else:
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    item['name'],
-                    mac=':'.join(item['mac'][i:i + 2] for i in range(0, 12, 2)),
-                    ipv4_address=item['name'],
-                    hostname_resolution=item['hostnames'])
-
+                mac = ':'.join(item['mac'][i:i + 2] for i in range(0, 12, 2))
+            h_id = self.createAndAddHost(item['name'], item['os'], hostnames=item['hostnames'], mac=mac)
             for v in item['vulns']:
                 v['data'] = {"vulnerable_since": v['vulnerable_since'], "scan_id": v['scan_id'], "PCI": v['pci']}
                 v_id = self.createAndAddVulnToHost(
@@ -342,19 +281,14 @@ class NexposeFullPlugin(PluginXMLFormat):
                     v['desc'],
                     v['refs'],
                     v['severity'],
-                    v['resolution'],
-                    v['vulnerable_since'],
-                    v['scan_id'],
-                    v['pci']
+                    v['resolution']
                 )
 
             for s in item['services']:
                 web = False
                 version = s.get("version", "")
-
-                s_id = self.createAndAddServiceToInterface(
+                s_id = self.createAndAddServiceToHost(
                     h_id,
-                    i_id,
                     s['name'],
                     s['protocol'],
                     ports=[str(s['port'])],
@@ -372,7 +306,6 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['refs'],
                             v['severity'],
                             v['resolution'],
-                            v['risk'],
                             path=v.get('path', ''))
                     else:
                         v_id = self.createAndAddVulnToService(
@@ -382,14 +315,11 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['desc'],
                             v['refs'],
                             v['severity'],
-                            v['resolution'],
-                            v['risk']
+                            v['resolution']
                         )
 
         del parser
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass

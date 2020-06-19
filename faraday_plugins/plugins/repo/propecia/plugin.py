@@ -34,11 +34,11 @@ class CmdPropeciaPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._command_regex = re.compile(
-            r'^(sudo propecia|\.\/propecia|propecia).*?')
+            r'^(sudo propecia|\.\/propecia|propecia)\s+.*?')
         self._host_ip = None
         self._port = "23"
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
 
         host_info = re.search(
             r"(\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b)", output)
@@ -49,22 +49,12 @@ class CmdPropeciaPlugin(PluginBase):
             for host in output.splitlines():
                 if host != "":
                     h_id = self.createAndAddHost(host)
-                    i_id = self.createAndAddInterface(
-                        h_id, host, ipv4_address=host)
-                    s_id = self.createAndAddServiceToInterface(h_id, i_id, str(self._port),
-                                                               "tcp",
-                                                               ports=[self._port],
-                                                               status="open",
-                                                               version="",
-                                                               description="")
-        if debug is True:
-            self.logger.info("Debug is active")
-
+                    s_id = self.createAndAddServiceToHost(h_id, str(self._port), "tcp", ports=[self._port],
+                                                          status="open", version="", description="")
         return True
 
     def processCommandString(self, username, current_path, command_string):
-        """
-        """
+        super().processCommandString(username, current_path, command_string)
         count_args = command_string.split()
 
         if count_args.__len__() == 3:

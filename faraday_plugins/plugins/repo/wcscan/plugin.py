@@ -19,7 +19,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Morgan Lemarechal"
 __copyright__ = "Copyright 2014, Faraday Project"
@@ -88,90 +87,50 @@ class WcscanPlugin(PluginBase):
         }
 
         self.options = None
-        self._current_output = None
-        self.current_path = None
-        self._command_regex = re.compile(
-            r'^(sudo wcscan|wcscan|\.\/wcscan).*?')
+        self._command_regex = re.compile(r'^(sudo wcscan|wcscan|\.\/wcscan)\s+.*?')
+        self._use_temp_file = True
+        self._temp_file_extension = "xml"
+        self.xml_arg_re = re.compile(r"^.*(--xml\s*[^\s]+).*$")
 
 
-    def canParseCommandString(self, current_input):
-        if self._command_regex.match(current_input.strip()):
-            return True
-        else:
-            return False
-
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.
         NOTE: if 'debug' is true then it is being run from a test case and the
         output being sent is valid.
         """
-        if debug:
-            parser = WcscanParser(self._output_file_path)
-        else:
+        parser = WcscanParser(output)
+        for file in parser.scaninfo:
+            host = parser.scaninfo[file]['host']
+            port = parser.scaninfo[file]['port']
+            h_id = self.createAndAddHost(host)
+            s_id = self.createAndAddServiceToHost(h_id, "http", protocol="tcp", ports=port)
+            for vuln in parser.result[file]:
+                if parser.scaninfo[file]['type'] == "phpini":
+                    vuln_name = f"{parser.scaninfo[file]['file']}: {vuln}"
+                    vuln_description = f"{vuln}: {str(parser.result[file][vuln][0])}\n{str(parser.result[file][vuln][1])}"
+                    v_id = self.createAndAddVulnToService(h_id, s_id, vuln_name, desc=vuln_description, severity=0)
 
-            if not os.path.exists(self._output_file_path):
-                return False
-            parser = WcscanParser(self._output_file_path)
+                if parser.scaninfo[file]['type'] == "webconfig":
+                    vuln_name = f"{parser.scaninfo[file]['file']}: {str(parser.result[file][vuln][3])}"
+                    vuln_description = f"{str(parser.result[file][vuln][3])} : {str(parser.result[file][vuln][2])} = {str(parser.result[file][vuln][0])}\n{str(parser.result[file][vuln][1])}"
+                    v_id = self.createAndAddVulnToService(h_id, s_id, vuln_name, desc=vuln_description, severity=0)
 
-            for file in parser.scaninfo:
-                host = parser.scaninfo[file]['host']
-                port = parser.scaninfo[file]['port']
-                h_id = self.createAndAddHost(host)
-                if(re.match("(^[2][0-5][0-5]|^[1]{0,1}[0-9]{1,2})\.([0-2][0-5][0-5]|[1]{0,1}[0-9]{1,2})\.([0-2][0-5][0-5]|[1]{0,1}[0-9]{1,2})\.([0-2][0-5][0-5]|[1]{0,1}[0-9]{1,2})$", host)):
-                    i_id = self.createAndAddInterface(h_id,
-                                                      host,
-                                                      ipv4_address=host)
-                else:
-                    i_id = self.createAndAddInterface(h_id,
-                                                      host,
-                                                      ipv6_address=host)
 
-                s_id = self.createAndAddServiceToInterface(
-                    h_id, i_id, "http", protocol="tcp", ports=port)
-                for vuln in parser.result[file]:
-                    if parser.scaninfo[file]['type'] == "phpini":
-                        v_id = self.createAndAddVulnToService(h_id, s_id,
-                                                              parser.scaninfo[file][
-                                                                  'file'] + ":" + vuln,
-                                                              desc="{} : {}\n{}".format(vuln,
-                                                                                        str(parser.result[
-                                                                                            file][vuln][0]),
-                                                                                        str(parser.result[file][vuln][1])),
-                                                              severity=0)
-
-                    if parser.scaninfo[file]['type'] == "webconfig":
-                        v_id = self.createAndAddVulnToService(h_id, s_id,
-                                                              parser.scaninfo[file][
-                                                                  'file'] + ":" + str(parser.result[file][vuln][3]),
-                                                              desc="{} : {} = {}\n{}".format(str(parser.result[file][vuln][3]),
-                                                                                             str(parser.result[
-                                                                                                 file][vuln][2]),
-                                                                                             str(parser.result[
-                                                                                                 file][vuln][0]),
-                                                                                             str(parser.result[file][vuln][1])),
-                                                              severity=0)
-        del parser
-
-        return True
-
-    xml_arg_re = re.compile(r"^.*(--xml\s*[^\s]+).*$")
 
     def processCommandString(self, username, current_path, command_string):
         """
         Adds the parameter to get output to the command string that the
         user has set.
         """
-
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:
             return "%s --xml %s" % (command_string, self._output_file_path)
         else:
-            return re.sub(arg_match.group(1),
-                          r"-xml %s" % self._output_file_path,
-                          command_string)
+            return re.sub(arg_match.group(1), r"-xml %s" % self._output_file_path, command_string)
 
 
 def createPlugin():

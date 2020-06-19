@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
@@ -8,8 +5,6 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginBase
 import re
-import os
-import sys
 
 try:
     import xml.etree.cElementTree as ET
@@ -21,7 +16,6 @@ except ImportError:
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -172,14 +166,16 @@ class DnsreconPlugin(PluginBase):
         self.options = None
         self._current_output = None
         self._command_regex = re.compile(
-            r'^(sudo dnsrecon|dnsrecon|sudo dnsrecon\.py|dnsrecon\.py|python dnsrecon\.py|\.\/dnsrecon\.py).*?')
+            r'^(sudo dnsrecon|dnsrecon|sudo dnsrecon\.py|dnsrecon\.py|python dnsrecon\.py|\.\/dnsrecon\.py)\s+.*?')
+        self._use_temp_file = True
+        self._temp_file_extension = "xml"
 
     def validHosts(self, hosts):
         valid_records = ["NS", "CNAME", "A", "MX", "info"]
         hosts = list(filter(lambda h: h.type in valid_records, hosts))
         return hosts
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.
@@ -199,26 +195,10 @@ class DnsreconPlugin(PluginBase):
             elif host.type == "A":
                 hostname = host.name
 
-            h_id = self.createAndAddHost(host.address)
-
-            if self._isIPV4(str(host.address)):
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    name=host.address,
-                    ipv4_address=host.address,
-                    hostname_resolution=[hostname])
-            else:
-                i_id = self.createAndAddInterface(
-                    h_id,
-                    name=host.address,
-                    ipv6_address=host.address,
-                    hostname_resolution=[hostname])
-
+            h_id = self.createAndAddHost(host.address, hostnames=[hostname])
             if host.type == "info":
-
-                s_id = self.createAndAddServiceToInterface(
+                s_id = self.createAndAddServiceToHost(
                     h_id,
-                    i_id,
                     "domain",
                     protocol="tcp",
                     ports=["53"],
@@ -247,6 +227,7 @@ class DnsreconPlugin(PluginBase):
         Adds the -oX parameter to get xml output to the command string that the
         user has set.
         """
+        super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:

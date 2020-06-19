@@ -5,9 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
-import os
 from collections import defaultdict
-
 from copy import copy
 
 try:
@@ -23,7 +21,6 @@ from faraday_plugins.plugins.plugins_utils import filter_services
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
-current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -80,16 +77,21 @@ class OpenvasXmlParser:
         """
         try:
             report = tree.find('report')
-            results = report.findall('results')
-            if results:
-                nodes = report.findall('results')[0]
+            if report:
+                results = report.findall('results')
+                if results:
+                    nodes = report.findall('results')[0]
+                else:
+                    nodes = tree.findall('result')
             else:
                 nodes = tree.findall('result')
+
             for node in nodes:
                 try:
                     yield Item(node, hosts)
                 except Exception as e:
-                    self.logger.error("Error generating Item from %s [%s]", node.attrib, e)
+                    self.logger.error("Error generating Iteem from %s [%s]", node.attrib, e)
+
         except Exception as e:
             self.logger.error("Tag not found: %s", e)
 
@@ -186,8 +188,11 @@ class Item:
         if not self.port:
             self.service = info[0]
         else:
-            host_details = hosts[self.host].get('details')
-            self.service = self.get_service(port_string, self.port, host_details)
+            if hosts:
+                host_details = hosts[self.host].get('details')
+                self.service = self.get_service(port_string, self.port, host_details)
+            else:
+                self.service = "Not Service"
         self.nvt = self.node.findall('nvt')[0]
         self.node = self.nvt
         self.id = self.node.get('oid')
@@ -317,18 +322,13 @@ class OpenvasPlugin(PluginXMLFormat):
 
     def __init__(self):
         super().__init__()
-        self.identifier_tag = "report"
+        self.identifier_tag = ["report", "get_results_response"]
         self.id = "Openvas"
         self.name = "Openvas XML Output Plugin"
         self.plugin_version = "0.3"
         self.version = "9.0.3"
         self.framework_version = "1.0.0"
         self.options = None
-        self._current_output = None
-        self.target = None
-        self._command_regex = re.compile(
-            r'^(openvas|sudo openvas|\.\/openvas).*?')
-
 
     def report_belongs_to(self, **kwargs):
         if super().report_belongs_to(**kwargs):
@@ -338,13 +338,10 @@ class OpenvasPlugin(PluginXMLFormat):
             return re.search("OpenVAS", output) is not None or re.search('<omp>', output) is not None
         return False
 
-    def parseOutputString(self, output, debug=False):
+    def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
         from the xml where it expects it to be present.
-
-        NOTE: if 'debug' is true then it is being run from a test case and the
-        output being sent is valid.
         """
         parser = OpenvasXmlParser(output, self.logger)
         web = False
@@ -358,22 +355,22 @@ class OpenvasPlugin(PluginXMLFormat):
                 hostnames=values['hostnames']
             )
             ids[ip] = h_id
-
         for item in parser.items:
+
             if item.name is not None:
                 ref = []
                 if item.cve:
                     cves = item.cve.split(',')
                     for cve in cves:
-                        ref.append(cve.encode("utf-8").strip())
+                        ref.append(cve.strip())
                 if item.bid:
                     bids = item.bid.split(',')
                     for bid in bids:
-                        ref.append("BID-%s" % bid.encode("utf-8").strip() )
+                        ref.append("BID-%s" % bid.strip())
                 if item.xref:
-                    ref.append(item.xref.encode("utf-8"))
+                    ref.append(item.xref)
                 if item.tags and item.cvss_vector:
-                    ref.append(item.cvss_vector.encode("utf-8"))
+                    ref.append(item.cvss_vector)
 
                 if item.subnet in ids:
                     h_id = ids[item.host]
@@ -444,8 +441,6 @@ class OpenvasPlugin(PluginXMLFormat):
         else:
             return False
 
-    def processCommandString(self, username, current_path, command_string):
-        return None
 
     def setHost(self):
         pass
