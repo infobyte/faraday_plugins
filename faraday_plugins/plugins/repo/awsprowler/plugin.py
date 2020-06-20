@@ -22,18 +22,9 @@ __status__ = "Development"
 class AwsProwlerJsonParser:
 
     def __init__(self, json_output):
-        string_manipulate = json_output.replace("}", "},")
-        json_manipulate = string_manipulate[:len(string_manipulate) - 2]
-        json_bla = "{%s}" % json_manipulate
-
-        self.json_data = json.loads(json_bla)
-
-    def get_address(self, hostname):
-        # Returns remote IP address from hostname.
-        try:
-            return socket.gethostbyname(hostname)
-        except socket.error as msg:
-            return '0.0.0.0'
+        string_manipulate = json_output.replace("}", "} #")
+        string_manipulate = string_manipulate[:len(string_manipulate) - 2]
+        self.report_aws = string_manipulate.split("#")
 
 
 class AwsProwlerPlugin(PluginJsonFormat):
@@ -51,7 +42,22 @@ class AwsProwlerPlugin(PluginJsonFormat):
 
     def parseOutputString(self, output, debug=False):
         parser = AwsProwlerJsonParser(output)
-        print(parser)
+        host_id = self.createAndAddHost(name='0.0.0.0', description="AWS Prowler")
+        for vuln in parser.report_aws:
+            json_vuln = json.loads(vuln)
+            vuln_name = json_vuln.get('Account Number', 'Not Info')
+            vuln_desc = json_vuln.get('Control', 'Not Info')
+            vuln_severity = json_vuln.get('Level', 'Not Info')
+            vuln_run_date = json_vuln.get('Timestamp', 'Not Info')
+            vuln_status = json_vuln.get('Status', 'Not Info')
+            vuln_external_id = json_vuln.get('Control ID', 'Not Info')
+            vuln_data = json_vuln.get('Message', 'Not Info')
+
+            self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc,
+                                        severity=self.normalize_severity(vuln_severity),
+                                        run_date=vuln_run_date, status=vuln_status,
+                                        external_id=vuln_external_id, data=vuln_data)
+
 
 def createPlugin():
     return AwsProwlerPlugin()
