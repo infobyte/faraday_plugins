@@ -23,9 +23,17 @@ def test_detect_invalid_command():
 
 def test_detect_command():
     runner = CliRunner()
-    result = runner.invoke(cli, ['detect-command', 'ping -c www.google.com'])
+    result = runner.invoke(cli, ['detect-command', 'ping -c 1 www.google.com'])
     assert result.exit_code == 0
     assert result.output.strip() == "Faraday Plugin: ping"
+
+
+def test_process_command():
+    runner = CliRunner()
+    result = runner.invoke(cli, ['process-command', 'ping -c 1 www.google.com', '--summary'])
+    assert result.exit_code == 0
+    summary = json.loads(result.output.strip())
+    assert summary['hosts'] == 1
 
 
 def test_detect_report():
