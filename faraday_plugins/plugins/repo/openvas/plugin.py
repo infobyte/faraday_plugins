@@ -330,14 +330,6 @@ class OpenvasPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
 
-    def report_belongs_to(self, **kwargs):
-        if super().report_belongs_to(**kwargs):
-            report_path = kwargs.get("report_path", "")
-            with open(report_path) as f:
-                output = f.read()
-            return re.search("OpenVAS", output) is not None or re.search('<omp>', output) is not None
-        return False
-
     def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
@@ -440,7 +432,6 @@ class OpenvasPlugin(PluginXMLFormat):
             return True
         else:
             return False
-
 
     def setHost(self):
         pass
