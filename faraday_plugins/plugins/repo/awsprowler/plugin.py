@@ -6,6 +6,8 @@ See the file 'doc/LICENSE' for the license information
 """
 import socket
 import json
+from datetime import datetime
+import re
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 
 
@@ -34,29 +36,41 @@ class AwsProwlerPlugin(PluginJsonFormat):
 
     def __init__(self):
         super().__init__()
+        self.json_keys = {""}
         self.id = "awsprowler"
         self.name = "AWS Prowler"
         self.plugin_version = "0.1"
         self.version = "0.0.1"
         self.json_keys = {""}
 
+    def report_belongs_to(self, **kwargs):
+        with open(kwargs.get("report_path", "")) as f:
+                output = f.read()
+        return re.search("Region", output) is not None
+
     def parseOutputString(self, output, debug=False):
         parser = AwsProwlerJsonParser(output)
-        host_id = self.createAndAddHost(name='0.0.0.0', description="AWS Prowler")
+        region_list = []
+        for region in parser.report_aws:
+            json_reg = json.loads(region)
+            region_list.append(json_reg.get('Region', 'Not Info'))
+
+        host_id = self.createAndAddHost(name=f'{self.name} - {region_list}', description="AWS Prowler")
+
         for vuln in parser.report_aws:
             json_vuln = json.loads(vuln)
-            vuln_name = json_vuln.get('Account Number', 'Not Info')
-            vuln_desc = json_vuln.get('Control', 'Not Info')
+            vuln_name = json_vuln.get('Control', 'Not Info')
+            vuln_desc = json_vuln.get('Message', 'Not Info')
             vuln_severity = json_vuln.get('Level', 'Not Info')
             vuln_run_date = json_vuln.get('Timestamp', 'Not Info')
-            vuln_status = json_vuln.get('Status', 'Not Info')
             vuln_external_id = json_vuln.get('Control ID', 'Not Info')
-            vuln_data = json_vuln.get('Message', 'Not Info')
-
+            vuln_policy = f'{vuln_name}:{vuln_external_id}'
+            vuln_run_date = vuln_run_date.replace('T',' ')
+            vuln_run_date = vuln_run_date.replace('Z', '')
             self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc,
                                         severity=self.normalize_severity(vuln_severity),
-                                        run_date=vuln_run_date, status=vuln_status,
-                                        external_id=vuln_external_id, data=vuln_data)
+                                        run_date=datetime.strptime(vuln_run_date, '%Y-%m-%d %H:%M:%S'),
+                                        external_id=vuln_external_id, policyviolations=[vuln_policy])
 
 
 def createPlugin():
