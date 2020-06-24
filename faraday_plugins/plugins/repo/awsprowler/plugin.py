@@ -46,7 +46,7 @@ class AwsProwlerPlugin(PluginJsonFormat):
     def report_belongs_to(self, **kwargs):
         with open(kwargs.get("report_path", "")) as f:
                 output = f.read()
-        return re.search("Region", output) is not None
+        return re.search("Account Number", output) is not None and re.search('"Control:"', output) is not None
 
     def parseOutputString(self, output, debug=False):
         parser = AwsProwlerJsonParser(output)
