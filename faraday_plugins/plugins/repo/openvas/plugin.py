@@ -335,7 +335,9 @@ class OpenvasPlugin(PluginXMLFormat):
             report_path = kwargs.get("report_path", "")
             with open(report_path) as f:
                 output = f.read()
-            return re.search("OpenVAS", output) is not None or re.search('<omp>', output) is not None
+            return re.search("OpenVAS", output) is not None \
+                   or re.search('<omp>', output) is not None\
+                   or re.search('<owner>', output) is not None
         return False
 
     def parseOutputString(self, output):
@@ -440,7 +442,6 @@ class OpenvasPlugin(PluginXMLFormat):
             return True
         else:
             return False
-
 
     def setHost(self):
         pass
