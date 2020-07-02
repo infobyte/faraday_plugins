@@ -18,11 +18,11 @@ except ImportError:
     ETREE_VERSION = ET.VERSION
 from lxml import etree
 from lxml.etree import XMLParser
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 current_path = os.path.abspath(os.getcwd())
 
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 
 class NmapXmlParser:
