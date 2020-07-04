@@ -10,7 +10,6 @@ from datetime import datetime
 import re
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 
-
 __author__ = "Blas Moyano"
 __copyright__ = "Copyright (c) 2020, Infobyte LLC"
 __credits__ = ["Blas Moyano"]
@@ -36,17 +35,19 @@ class AwsProwlerPlugin(PluginJsonFormat):
 
     def __init__(self):
         super().__init__()
-        self.json_keys = {""}
         self.id = "awsprowler"
         self.name = "AWS Prowler"
         self.plugin_version = "0.1"
         self.version = "0.0.1"
-        self.json_keys = {""}
+        self.json_keys = set()
 
     def report_belongs_to(self, **kwargs):
-        with open(kwargs.get("report_path", "")) as f:
+        if super().report_belongs_to(**kwargs):
+            report_path = kwargs.get("report_path", "")
+            with open(report_path) as f:
                 output = f.read()
-        return re.search("Account Number", output) is not None 
+            return re.search("Account Number", output) is not None
+        return False
 
     def parseOutputString(self, output, debug=False):
         parser = AwsProwlerJsonParser(output)
@@ -65,7 +66,7 @@ class AwsProwlerPlugin(PluginJsonFormat):
             vuln_run_date = json_vuln.get('Timestamp', 'Not Info')
             vuln_external_id = json_vuln.get('Control ID', 'Not Info')
             vuln_policy = f'{vuln_name}:{vuln_external_id}'
-            vuln_run_date = vuln_run_date.replace('T',' ')
+            vuln_run_date = vuln_run_date.replace('T', ' ')
             vuln_run_date = vuln_run_date.replace('Z', '')
             self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc,
                                         severity=self.normalize_severity(vuln_severity),
