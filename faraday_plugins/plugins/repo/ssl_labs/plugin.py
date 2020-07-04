@@ -75,11 +75,6 @@ class SslLabsPlugin(PluginJsonFormat):
         self.version = "3.4.5"
         self.json_keys = {"host", "criteriaVersion", "engineVersion"}
 
-    def report_belongs_to(self, **kwargs):
-        with open(kwargs.get("report_path", "")) as f:
-            output = f.read()
-        return re.search("criteriaVersion", output) is not None
-
     def parseOutputString(self, output):
         parser = SslLabsJsonParser(output)
         host = parser.host_info(parser.json_data)
