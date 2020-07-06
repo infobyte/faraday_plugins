@@ -46,12 +46,12 @@ class AwsProwlerPlugin(PluginJsonFormat):
             report_path = kwargs.get("report_path", "")
             with open(report_path) as f:
                 output = f.readlines()
-                for line in output:
-                    prueba = json.loads(line)
-                    if prueba.keys() >= {"Profile", "Account Number"}:
-                        pass
-                    else:
-                        return False
+            for line in output:
+                prueba = json.loads(line)
+                if prueba.keys() >= {"Profile", "Account Number"}:
+                    pass
+                else:
+                    return False
             return True
         return False
 
