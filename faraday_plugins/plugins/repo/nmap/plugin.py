@@ -5,10 +5,9 @@ See the file 'doc/LICENSE' for the license information
 
 """
 
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
 import os
-
+from io import BytesIO
 
 try:
     import xml.etree.cElementTree as ET
@@ -17,10 +16,13 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
     ETREE_VERSION = ET.VERSION
+from lxml import etree
+from lxml.etree import XMLParser
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 current_path = os.path.abspath(os.getcwd())
+
 
 
 class NmapXmlParser:
@@ -55,7 +57,8 @@ class NmapXmlParser:
         """
 
         try:
-            return ET.fromstring(xml_output)
+            magical_parser = XMLParser(recover=True)
+            return etree.parse(BytesIO(xml_output), magical_parser)
         except SyntaxError as err:
             #logger.error("SyntaxError: %s." % (err))
             return None
