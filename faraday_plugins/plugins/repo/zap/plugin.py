@@ -183,16 +183,19 @@ class Item:
 
         for elem in arr:
             uri = elem.find('uri').text
-            self.parse_uri(uri)
+            method_element = elem.find('method')
+            if method_element:
+                method = elem.find('method').text
+            else:
+                method = ""
+            self.parse_uri(uri, method)
 
-        self.requests = "\n".join([i['uri'] for i in self.items])
+    def parse_uri(self, uri, method):
 
-    def parse_uri(self, uri):
-        
-        url_parse = urlparse(uri)
-        protocol = url_parse.scheme
-        host = url_parse.netloc
-        port = url_parse.port
+        parsed_url = urlparse(uri)
+        protocol = parsed_url.scheme
+        host = parsed_url.netloc
+        port = parsed_url.port
 
         try:
             params = [i.split('=')[0]
@@ -204,8 +207,12 @@ class Item:
             'uri': uri,
             'params': ', '.join(params),
             'host': host,
+            'website': f"{protocol}://{host}",
             'protocol': protocol,
-            'port': port
+            'port': port,
+            'method': method,
+            'path': parsed_url.path,
+            'query': parsed_url.query
         }
         self.items.append(item)
 
@@ -257,19 +264,21 @@ class ZapPlugin(PluginXMLFormat):
             s_id = self.createAndAddServiceToHost(h_id, "http", "tcp", ports=[site.port], status='open')
 
             for item in site.items:
-                self.createAndAddVulnWebToService(
-                    h_id,
-                    s_id,
-                    item.name,
-                    item.desc,
-                    website=site.host,
-                    severity=item.severity,
-                    path=item.items[0]['uri'],
-                    params=item.items[0]['params'],
-                    request=item.requests,
-                    ref=item.ref,
-                    resolution=item.resolution
-                )
+                for instance in item.items:
+                    self.createAndAddVulnWebToService(
+                        h_id,
+                        s_id,
+                        item.name,
+                        item.desc,
+                        website=instance['website'],
+                        query=instance['query'],
+                        severity=item.severity,
+                        path=instance['path'],
+                        params=instance['params'],
+                        method=instance['method'],
+                        ref=item.ref,
+                        resolution=item.resolution
+                    )
 
         del parser
 

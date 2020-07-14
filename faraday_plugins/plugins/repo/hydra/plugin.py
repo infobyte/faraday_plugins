@@ -4,7 +4,9 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 import re
+from collections import defaultdict
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -71,9 +73,7 @@ class HydraPlugin(PluginBase):
         """
 
         parser = HydraParser(output)
-
-        i = 0
-        hosts = {}
+        hosts = defaultdict(list)
         service = ''
         port = ''
 
@@ -81,15 +81,15 @@ class HydraPlugin(PluginBase):
 
             service = item['plugin']
             port = item['port']
-
-            if item['ip'] not in hosts:
-                hosts[item['ip']] = []
-
             hosts[item['ip']].append([item['login'], item['password']])
 
         for k, v in hosts.items():
-
-            h_id = self.createAndAddHost(k)
+            ip = resolve_hostname(k)
+            if ip != k:
+                hostnames = [k]
+            else:
+                hostnames = None
+            h_id = self.createAndAddHost(ip, hostnames=hostnames)
             s_id = self.createAndAddServiceToHost(
                 h_id,
                 service,
