@@ -18,7 +18,6 @@ __maintainer__ = "Ezequiel Tavella"
 __status__ = "Development"
 
 
-
 class AppscanParser():
 
     def __init__(self, output, logger):
@@ -139,7 +138,7 @@ class AppscanPlugin(PluginXMLFormat):
             report_path = kwargs.get("report_path", "")
             with open(report_path) as f:
                 output = f.read()
-            return re.search("url-group", output) is not None
+            return re.search("filtered-link-group", output) is not None
         return False
 
 
