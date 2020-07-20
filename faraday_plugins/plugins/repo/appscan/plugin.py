@@ -3,7 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2017  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-
+import re
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 from lxml import objectify
@@ -133,6 +133,15 @@ class AppscanPlugin(PluginXMLFormat):
         self.plugin_version = "0.0.1"
         self.options = None
         self.open_options = {"mode": "r", "encoding": "utf-8"}
+
+    def report_belongs_to(self, **kwargs):
+        if super().report_belongs_to(**kwargs):
+            report_path = kwargs.get("report_path", "")
+            with open(report_path) as f:
+                output = f.read()
+            return re.search("url-group", output) is not None
+        return False
+
 
     def parseOutputString(self, output):
         try:
