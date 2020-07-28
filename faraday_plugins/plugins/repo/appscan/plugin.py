@@ -2,19 +2,19 @@
 # -*- coding: utf-8 -*-
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-from datetime import datetime
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
-import re
 
-__author__ = 'Blas Moyano'
-__copyright__ = 'Copyright 2020, Faraday Project'
-__credits__ = ['Blas Moyano']
-__license__ = ''
-__version__ = '1.0.0'
-__status__ = 'Development'
+
+__author__ = "Alejando Parodi, Ezequiel Tavella, Blas Moyano"
+__copyright__ = "Copyright (c) 2015, Infobyte LLC"
+__credits__ = ["Alejando Parodi", "Ezequiel Tavella"]
+__license__ = ""
+__version__ = "1.0"
+__maintainer__ = "Ezequiel Tavella"
+__status__ = "Development"
 
 
 class HclAsocParser:
@@ -33,7 +33,6 @@ class HclAsocParser:
             self.name_scan = self.get_issue_data(self.tree.find('advisory-group'))
             self.host_data = None if self.tree.find('scan-configuration/scanned-hosts/item') is None else \
                 self.get_scan_conf_data(self.tree.find('scan-configuration/scanned-hosts/item'))
-            #self.fix_recomendation = self.get_fix_info(self.tree.find('fix-recommendation-group'))
             self.req_res = self.get_req_res(self.tree.find("issue-group"))
 
         else:
@@ -58,28 +57,14 @@ class HclAsocParser:
             json_res_req = {
                 "request": "Not request" if item.find("variant-group/item/test-http-traffic") is None else
                 item.find("variant-group/item/test-http-traffic").text,
-                "response": resp
+                "response": resp,
+                "location": "Not Location" if item.find("location") is None else item.find("location").text,
+                "source_file": "0.0.0.0" if item.find("source-file") is None else item.find("source-file").text,
+                "line": 0 if item.find("line") is None else item.find("line").text
             }
+
             data_res_req.append(json_res_req)
         return data_res_req
-
-    # def get_fix_info(self, tree):
-    #     list_fix = []
-    #     for item in tree:
-    #         text_info_join = []
-    #         if tree.find("general"):
-    #         # ACA VALIDA APP SCAN
-    #             pass
-    #         else:
-    #             for text_tag in item.find('fixRecommendations/fixRecommendation'):
-    #                 text_info_join.append(text_tag.text)
-    #             info_fix = {
-    #                 "id": item.attrib.get('id', None),
-    #                 "name": item.attrib.get('name', None),
-    #                 "text": text_info_join
-    #             }
-    #             list_fix.append(info_fix)
-    #     return list_fix
 
     def get_layout_info(self, tree):
         info_layout = {
@@ -125,7 +110,6 @@ class HclAsocParser:
                     xfid = adivisory.find("xfid/link").text
                 else:
                     xfid = "Not Response"
-
 
                 item_data = {
                     "id": item.attrib.get('id', None),
@@ -228,9 +212,9 @@ class HclAsocPlugin(PluginXMLFormat):
     def __init__(self):
         super().__init__()
         self.identifier_tag = "xml-report"
-        self.id = 'appscan'
-        self.name = 'HCL ASOC XML Output Plugin'
-        self.plugin_version = '1.0.0'
+        self.id = 'Appscan'
+        self.name = 'Appscan XML Plugin'
+        self.plugin_version = '0.0.1'
         self.version = '1.0.0'
         self.framework_version = '1.0.0'
         self.options = None
@@ -238,24 +222,14 @@ class HclAsocPlugin(PluginXMLFormat):
         self.port = '80'
         self.address = None
 
-    # def report_belongs_to(self, **kwargs):
-    #     if super().report_belongs_to(**kwargs):
-    #         report_path = kwargs.get("report_path", "")
-    #         with open(report_path) as f:
-    #             output = f.read()
-    #         return re.search("createdByAppScan", output) is not None
-    #     return False
-
     def parseOutputString(self, output):
         parser = HclAsocParser(output)
         layout = parser.layout
         operating_system = parser.operating_system
         host_data = parser.host_data
-        # Listas
         urls = parser.urls
         item = parser.item
         name_scan = parser.name_scan
-        #fixs = parser.fix_recomendation
         res_req = parser.req_res
 
         if operating_system == 'DAST':
@@ -287,17 +261,35 @@ class HclAsocPlugin(PluginXMLFormat):
                                                   response=response, method=request,
                                                   data=f'xfix: {vulnserv["xfid"]} cme: {vulnserv["cwe"]}')
 
+        elif operating_system == 'SAST':
+
+            for info_loc_source in res_req:
+                location = info_loc_source['location']
+                source_file = info_loc_source['source_file']
+                line = info_loc_source["line"]
+                host_id = self.createAndAddHost(source_file, os=operating_system)
+                service_id = self.createAndAddServiceToHost(host_id, location, ports=line)
+                for vulnserv in name_scan:
+                    for sev in item:
+                        if sev['id'] == vulnserv['id']:
+                            info_severity = sev['severity_id']
+
+                    self.createAndAddVulnToService(host_id=host_id, service_id=service_id, name=vulnserv['name'],
+                                                   desc=vulnserv['description'], severity=info_severity,
+                                                   resolution=vulnserv['fixRecommendations'], run_date=None,
+                                                   data=f'xfix: {vulnserv["xfid"]} cme: {vulnserv["cwe"]}')
 
         else:
-            host_id = self.createAndAddHost('0.0.0.0', os=operating_system)
+            host_id = self.createAndAddHost(layout['name'], os=operating_system)
             for vulnserv in name_scan:
                 for sev in item:
                     if sev['id'] == vulnserv['id']:
                         info_severity = sev['severity_id']
 
-                self.createAndAddVulnToHost(host_id=host_id,name=vulnserv['name'], desc=vulnserv['description'],
+                self.createAndAddVulnToHost(host_id=host_id, name=vulnserv['name'], desc=vulnserv['description'],
                                             severity=info_severity, resolution=vulnserv['fixRecommendations'],
                                             data=f'xfix: {vulnserv["xfid"]} cme: {vulnserv["cwe"]}', run_date=None)
+
 
 def createPlugin():
     return HclAsocPlugin()
