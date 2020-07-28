@@ -43,23 +43,5 @@ class RDPScanPlugin(PluginBase):
                     )
 
 
-        for ip_address, parsed_urls in services.items():
-            hostnames = list(set([parsed_url.netloc.split(':').pop() for parsed_url in parsed_urls]))
-            h_id = self.createAndAddHost(ip_address, hostnames=hostnames)
-            for parsed_url in parsed_urls:
-                port = parsed_url.port
-                if not port:
-                    if parsed_url.scheme == 'http':
-                        port = 80
-                    if parsed_url.scheme == 'https':
-                        port = 443
-                self.createAndAddServiceToHost(
-                    host_id=h_id,
-                    name=parsed_url.scheme,
-                    ports=port,
-                    protocol='tcp',
-                )
-
-
 def createPlugin():
     return RDPScanPlugin()
