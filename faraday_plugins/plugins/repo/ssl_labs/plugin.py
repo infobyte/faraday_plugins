@@ -107,11 +107,17 @@ class SslLabsPlugin(PluginJsonFormat):
         vulns = parser.get_vulns(parser.json_data['endpoints'][0]['details'])
 
         for vuln in vulns:
+            policy_info = f"Long max age: {vuln['policy'][0]['LONG_MAX_AGE']}" \
+                          f"Status: {vuln['policy'][0]['status']} | {vuln['policy'][1]['status']} | {vuln['policy'][2]['status']} " \
+                          f"directives: {vuln['policy'][0]['directives']} | {vuln['policy'][1]['directives']} | {vuln['policy'][2]['directives']}" \
+                          f"pins: {vuln['policy'][1]['directives']} | {vuln['policy'][2]['directives']} " \
+                          f"matchedPins: {vuln['policy'][1]['matchedPins']} | {vuln['policy'][2]['matchedPins']} "
+
             self.createAndAddVulnToService(host_id,
                                            service_id=service_id,
                                            name=vuln['name'],
                                            desc=vuln['desc'],
-                                           policyviolations=vuln['policy'],
+                                           policyviolations=[policy_info],
                                            data=vuln['data'])
 
 
