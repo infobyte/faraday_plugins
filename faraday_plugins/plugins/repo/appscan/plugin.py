@@ -250,19 +250,17 @@ class HclAsocPlugin(PluginXMLFormat):
                         url_name = url['url']
 
                 for info_rs_rq in res_req:
-                    print(info_rs_rq)
                     request = info_rs_rq['request']
                     response = info_rs_rq['response']
-
+                resolution = f'Text: {vulnserv["fixRecommendations"]["text"]}. Link: {vulnserv["fixRecommendations"]["link"]}'
                 self.createAndAddVulnWebToService(host_id=host_id, service_id=service_id, name=vulnserv['name'],
                                                   desc=vulnserv['description'], severity=info_severity,
-                                                  path=url_name, website=host_data['host'], ref=ref,
-                                                  resolution=vulnserv['fixRecommendations'], request=request,
+                                                  path=url_name, website=host_data['host'], ref=[ref],
+                                                  resolution=resolution, request=request,
                                                   response=response, method=request,
                                                   data=f'xfix: {vulnserv["xfid"]} cme: {vulnserv["cwe"]}')
 
         elif operating_system == 'SAST':
-
             for info_loc_source in res_req:
                 location = info_loc_source['location']
                 source_file = info_loc_source['source_file']
@@ -285,9 +283,14 @@ class HclAsocPlugin(PluginXMLFormat):
                 for sev in item:
                     if sev['id'] == vulnserv['id']:
                         info_severity = sev['severity_id']
+                if vulnserv['description'] is None:
+                    desc = ""
+                else:
+                    desc = vulnserv['description']
 
-                self.createAndAddVulnToHost(host_id=host_id, name=vulnserv['name'], desc=vulnserv['description'],
-                                            severity=info_severity, resolution=vulnserv['fixRecommendations'],
+                resolution = f"Text:{vulnserv['fixRecommendations']['text']}. Link: {vulnserv['fixRecommendations']['link']}."
+                self.createAndAddVulnToHost(host_id=host_id, name=vulnserv['name'], desc=desc,
+                                            severity=info_severity, resolution=resolution,
                                             data=f'xfix: {vulnserv["xfid"]} cme: {vulnserv["cwe"]}', run_date=None)
 
 
