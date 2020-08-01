@@ -276,7 +276,8 @@ class NessusPlugin(PluginXMLFormat):
                                     ref.append(policy_check_data)
 
                             if 'FAILED' in policy_item:
-                                risk_factor = 'high'
+                                # risk_factor = 'high'
+                                risk_factor = 'info'
                                 policyviolations.append(policy_item)
 
                             vulnerability_name = f'{serv[6]} {vulnerability_name} {policy_item}'
