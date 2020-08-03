@@ -1,1 +1,1 @@
-Fix Nessus mod severity HIGH for INFO 
+Fix Nessus mod severity HIGH for Low 
