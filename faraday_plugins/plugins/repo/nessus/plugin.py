@@ -265,6 +265,7 @@ class NessusPlugin(PluginXMLFormat):
                             ref = []
 
                         policyviolations = []
+                        tags_info = None
                         if serv[6] == 'Policy Compliance':
                             # This condition was added to support CIS Benchmark in policy violation field.
                             risk_factor = 'info'
@@ -282,7 +283,6 @@ class NessusPlugin(PluginXMLFormat):
                                 policyviolations.append(policy_item)
 
                             vulnerability_name = f'{serv[6]} {vulnerability_name} {policy_item}'
-
                         self.createAndAddVulnToHost(host_id,
                                                     vulnerability_name,
                                                     desc=desc,
