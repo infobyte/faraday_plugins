@@ -17,7 +17,7 @@ __maintainer__ = "Ezequiel Tavella"
 __status__ = "Development"
 
 
-class HclAsocParser:
+class AppScanParser:
     def __init__(self, xml_output):
         self.tree = self.parse_xml(xml_output)
         if self.tree:
@@ -33,7 +33,8 @@ class HclAsocParser:
             self.name_scan = self.get_issue_data(self.tree.find('advisory-group'))
             self.host_data = None if self.tree.find('scan-configuration/scanned-hosts/item') is None else \
                 self.get_scan_conf_data(self.tree.find('scan-configuration/scanned-hosts/item'))
-            self.req_res = self.get_req_res(self.tree.find("issue-group"))
+            self.issue_group = self.get_info_issue_group(self.tree.find("issue-group"))
+            self.fix_recomendation = self.get_fix_info(self.tree.find('fix-recommendation-group'))
 
         else:
             self.tree = None
@@ -46,7 +47,21 @@ class HclAsocParser:
             return None
         return tree
 
-    def get_req_res(sef,tree):
+    def get_fix_info(self, tree):
+        list_fix = []
+        for item in tree:
+            text_info_join = []
+            if item.find("general/fixRecommendation"):
+                for text_tag in tree.findall('text'):
+                    text_info_join += text_tag.text
+                    info_fix = {
+                        "id": item.attrib.get('id', None),
+                        "text": text_info_join
+                    }
+                    list_fix.append(info_fix)
+        return list_fix
+
+    def get_info_issue_group(sef,tree):
         data_res_req = []
         for item in tree:
             if item.find("variant-group/item/issue-information"):
@@ -60,7 +75,15 @@ class HclAsocParser:
                 "response": resp,
                 "location": "Not Location" if item.find("location") is None else item.find("location").text,
                 "source_file": "0.0.0.0" if item.find("source-file") is None else item.find("source-file").text,
-                "line": 0 if item.find("line") is None else item.find("line").text
+                "line": 0 if item.find("line") is None else item.find("line").text,
+                "id_item": item.attrib.get('id', 'Not id item'),
+                "severity": 0 if item.find("severity-id") is None else item.find("severity-id").text,
+                "cvss": "No cvss" if item.find("cvss-score") is None else item.find("cvss-score").text,
+                "cwe": "No cwe" if item.find("cwe") is None else item.find("cwe").text,
+                "remediation": "No remedation" if item.find("remediation/ref") is None else item.find(
+                    "remediation/ref").text,
+                "advisory": "No advisory" if item.find("advisory/ref") is None else item.find("advisory/ref").text,
+                "url_id": "No url id" if item.find("url/ref") is None else item.find("url/ref").text
             }
 
             data_res_req.append(json_res_req)
@@ -72,7 +95,8 @@ class HclAsocParser:
             "date": "Not info" if tree.find("report-date") is None else tree.find("report-date").text,
             "details": f'Departamento: {"Not info" if tree.find("department") is None else tree.find("department").text}'
                        f'Compania: {"Not info" if tree.find("company") is None else tree.find("company").text}'
-                       f'Titulo Reporte: {"Not info" if tree.find("title") is None else tree.find("title").text}'
+                       f'Titulo Reporte: {"Not info" if tree.find("title") is None else tree.find("title").text}',
+            "nro_issues": None if tree.find("total-issues-in-application") is None else tree.find("total-issues-in-application").text,
         }
         return info_layout
 
@@ -190,6 +214,7 @@ class HclAsocParser:
         list_url = []
         for url in tree:
             url_info = {
+                "id_item": url.attrib.get('id', 'Not id item'),
                 "id": "Not info" if url.find("issue-type") is None else url.find("issue-type").text,
                 "url": "Not info" if url.find("name") is None else url.find("name").text,
             }
@@ -208,7 +233,7 @@ class HclAsocParser:
         return info_host
 
 
-class HclAsocPlugin(PluginXMLFormat):
+class AppScanPlugin(PluginXMLFormat):
     def __init__(self):
         super().__init__()
         self.identifier_tag = "xml-report"
@@ -223,45 +248,65 @@ class HclAsocPlugin(PluginXMLFormat):
         self.address = None
 
     def parseOutputString(self, output):
-        parser = HclAsocParser(output)
+        parser = AppScanParser(output)
         layout = parser.layout
         operating_system = parser.operating_system
         host_data = parser.host_data
         urls = parser.urls
         item = parser.item
         name_scan = parser.name_scan
-        res_req = parser.req_res
+        issues = parser.issue_group
+        recomendation = parser.fix_recomendation
 
         if operating_system == 'DAST':
             host_id = self.createAndAddHost(resolve_hostname(host_data['host']), os=host_data['os'],
                                             hostnames=[host_data['host']], description=layout['details'])
 
             service_id = self.createAndAddServiceToHost(host_id, host_data['host'], ports=host_data['port'],
-                                                        protocol="tcp?HTTP", description=f'{host_data["webserver"]} - {host_data["appserver"]}')
+                                                        protocol="tcp?HTTP",
+                                                        description=f'{host_data["webserver"]} - {host_data["appserver"]}')
+            if layout['nro_issues'] is None:
+                nro_check = True
 
-            for vulnserv in name_scan:
-                for sev in item:
-                    if sev['id'] == vulnserv['id']:
-                        info_severity = sev['severity_id']
-                        ref = f'cwe: {sev["cwe"]} xfid: {sev["xfid"]} advisory: {sev["advisory"]}'
+            else:
+                nro_check = False
+            check_issues = []
 
-                for url in urls:
-                    if url['id'] == vulnserv['id']:
-                        url_name = url['url']
+            for issue in issues:
+                id = f"{issue['url_id']}{issue['advisory']}"
+                if id in check_issues and nro_check is True:
+                    check_issues.append(id)
+                else:
+                    check_issues.append(id)
+                    for info in name_scan:
+                        if info['id'] == issue['advisory']:
+                            vuln_name = info['name']
+                            vuln_desc = info['description']
+                            resolution = f'Text: {info["fixRecommendations"]["text"]}. ' \
+                                         f'Link: {info["fixRecommendations"]["link"]}'
+                            vuln_data = f'xfix: {info["xfid"]} cme: {info["cwe"]}'
 
-                for info_rs_rq in res_req:
-                    request = info_rs_rq['request']
-                    response = info_rs_rq['response']
-                resolution = f'Text: {vulnserv["fixRecommendations"]["text"]}. Link: {vulnserv["fixRecommendations"]["link"]}'
-                self.createAndAddVulnWebToService(host_id=host_id, service_id=service_id, name=vulnserv['name'],
-                                                  desc=vulnserv['description'], severity=info_severity,
-                                                  path=url_name, website=host_data['host'], ref=[ref],
-                                                  resolution=resolution, request=request,
-                                                  response=response, method=request,
-                                                  data=f'xfix: {vulnserv["xfid"]} cme: {vulnserv["cwe"]}')
+                    for url in urls:
+                        if url['id'] == issue['advisory']:
+                            url_name = url['url']
+                        elif url['id_item'] == issue['id_item']:
+                            url_name = url['url']
+                        else:
+                            url_name = None
+
+                    for rec in recomendation:
+                        if rec['id'] == issue['advisory']:
+                            vuln_data = f'{vuln_data}, {rec["text"]} '
+
+                    ref = f'cwe: {issue["cwe"]} cvss: {issue["cvss"]} remediation: {issue["remediation"]}'
+                    self.createAndAddVulnWebToService(host_id=host_id, service_id=service_id, name=vuln_name,
+                                                      desc=vuln_desc, severity=issue['severity'], ref=[ref],
+                                                      website=host_data['host'], request=issue['request'],
+                                                      response=issue['response'], method=issue['request'],
+                                                      resolution=resolution, data=vuln_data, path=url_name)
 
         elif operating_system == 'SAST':
-            for info_loc_source in res_req:
+            for info_loc_source in issues:
                 location = info_loc_source['location']
                 source_file = info_loc_source['source_file']
                 line = info_loc_source["line"]
@@ -295,4 +340,4 @@ class HclAsocPlugin(PluginXMLFormat):
 
 
 def createPlugin():
-    return HclAsocPlugin()
+    return AppScanPlugin()
