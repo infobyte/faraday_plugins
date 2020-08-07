@@ -12,7 +12,7 @@ class RDPScanPlugin(PluginBase):
         self.identifier_tag = "rdpscan"
         self.id = "rdpscan"
         self.name = "rdpscan"
-        self._command_regex = re.compile(r'rdpscan')
+        self._command_regex = re.compile(r'^(sudo rdpscan|rdpscan|\.\/rdpscan)\s+.*?')
 
     def parseOutputString(self, output):
         services = defaultdict(set)
