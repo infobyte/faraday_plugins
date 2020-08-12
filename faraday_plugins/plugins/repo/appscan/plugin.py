@@ -83,7 +83,8 @@ class AppScanParser:
                 "remediation": "No remedation" if item.find("remediation/ref") is None else item.find(
                     "remediation/ref").text,
                 "advisory": "No advisory" if item.find("advisory/ref") is None else item.find("advisory/ref").text,
-                "url_id": "No url id" if item.find("url/ref") is None else item.find("url/ref").text
+                "url_id": "No url id" if item.find("url/ref") is None else item.find("url/ref").text,
+                "id_adv": "Not info" if item.find("issue-type/ref") is None else item.find("issue-type/ref").text
             }
 
             data_res_req.append(json_res_req)
@@ -114,7 +115,7 @@ class AppScanParser:
                 "severity": item.attrib.get('severity', None),
                 "cwe": "Not info" if item.find("cme") is None else item.find("cwe").text,
                 "xfid": "Not info" if item.find("xfid") is None else item.find("xfid").text,
-                "advisory": "Not info" if item.find("advisory/ref") is None else item.find("advisory/ref").text,
+                "advisory": "Not info" if item.find("advisory/ref") is None else item.find("advisory/ref").text
             }
             list_item.append(item_info)
 
@@ -148,6 +149,11 @@ class AppScanParser:
                     },
                     "testTechnicalDescription": "Not info" if adivisory.find("testTechnicalDescription") is None else
                     self.get_parser(adivisory.find("testTechnicalDescription")),
+                    "testTechnicalDescriptionMixed": "Not info" if adivisory.find("testTechnicalDescriptionMixed") is None else
+                    self.get_parser(adivisory.find("testTechnicalDescriptionMixed")),
+
+                    "testDescriptionMixed": "Not info" if adivisory.find("testDescriptionMixed") is None else
+                    self.get_parser(adivisory.find("testDescriptionMixed")),
                     "causes": "Not info" if adivisory.find("causes/cause") is None else
                     adivisory.find("causes/cause").text,
                     "securityRisks": "Not info" if adivisory.find("securityRisks/securityRisk") is None else
@@ -180,6 +186,28 @@ class AppScanParser:
             tech_data = {
                 "text": text_join,
                 "code": code_join
+            }
+
+        elif tree.tag == 'testDescriptionMixed':
+
+            for text_info in tree.findall('p'):
+                text_join += text_info.text
+
+            for code_info in tree.findall('li'):
+                text_join += code_info.text
+
+            tech_data = {
+                "text": text_join,
+                "items": code_join
+            }
+
+        elif tree.tag == 'testTechnicalDescriptionMixed':
+
+            for text_info in tree.findall('p'):
+                text_join += text_info.text
+
+            tech_data = {
+                "text": text_join,
             }
 
         elif tree.tag == 'references':
@@ -307,21 +335,24 @@ class AppScanPlugin(PluginXMLFormat):
 
         elif operating_system == 'SAST':
             for info_loc_source in issues:
-                location = info_loc_source['location']
                 source_file = info_loc_source['source_file']
-                line = info_loc_source["line"]
                 host_id = self.createAndAddHost(source_file, os=operating_system)
-                service_id = self.createAndAddServiceToHost(host_id, location, ports=line)
-                for vulnserv in name_scan:
-                    for sev in item:
-                        if sev['id'] == vulnserv['id']:
-                            info_severity = sev['severity_id']
+                ref = f'{info_loc_source["location"]} - {info_loc_source["line"]}'
+                for vuln_data in name_scan:
+                    if vuln_data['id'] == info_loc_source["id_adv"]:
+                        desc = f'desc: {vuln_data["description"]} DescMix {vuln_data["testDescriptionMixed"]}'
+                        resolution = f'Fix Recomendarion {vuln_data["fixRecommendations"]}' \
+                                     f' - TestTecnical {vuln_data["testTechnicalDescriptionMixed"]}'
 
-                    self.createAndAddVulnToService(host_id=host_id, service_id=service_id, name=vulnserv['name'],
-                                                   desc=vulnserv['description'], severity=info_severity,
-                                                   resolution=vulnserv['fixRecommendations'], run_date=None,
-                                                   data=f'xfix: {vulnserv["xfid"]} cme: {vulnserv["cwe"]}')
-
+                        self.createAndAddVulnToHost(host_id=host_id,
+                                                    name=vuln_data['name'],
+                                                    desc=desc,
+                                                    ref=[ref],
+                                                    severity=info_loc_source['severity'],
+                                                    resolution=resolution,
+                                                    data=f'xfix: {vuln_data["xfid"]} cme: {vuln_data["cwe"]}',
+                                                    run_date=None,
+                                                    )
         else:
             host_id = self.createAndAddHost(layout['name'], os=operating_system)
             for vulnserv in name_scan:
