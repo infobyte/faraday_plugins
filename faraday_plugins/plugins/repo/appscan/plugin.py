@@ -1,15 +1,14 @@
-"""
-Faraday Penetration Test IDE
-Copyright (C) 2017  Infobyte LLC (http://www.infobytesec.com/)
-See the file 'doc/LICENSE' for the license information
-"""
-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-from lxml import objectify
-from urllib.parse import urlparse
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
 
-__author__ = "Alejando Parodi, Ezequiel Tavella"
+
+__author__ = "Alejando Parodi, Ezequiel Tavella, Blas Moyano"
 __copyright__ = "Copyright (c) 2015, Infobyte LLC"
 __credits__ = ["Alejando Parodi", "Ezequiel Tavella"]
 __license__ = ""
@@ -18,177 +17,358 @@ __maintainer__ = "Ezequiel Tavella"
 __status__ = "Development"
 
 
-
-class AppscanParser():
-
-    def __init__(self, output, logger):
-        self.issue_list = []
-        self.logger = logger
-        self.obj_xml = objectify.fromstring(output)
-
-    def parse_issues(self):
-        issue_type = self.parse_issue_type()
-        for issue in self.obj_xml["issue-group"]["item"]:
-            issue_data = issue_type[issue['issue-type']['ref']]
-            obj_issue = {}
-            obj_issue["name"] = issue_data["name"]
-            obj_issue['advisory'] = issue_data["advisory"]
-            if "cve" in issue_data:
-                obj_issue['cve'] = issue_data["cve"].text
-            obj_issue['url'] = self.get_url(issue['url']['ref'].text)
-            obj_issue['cvss_score'] = issue["cvss-score"].text
-            obj_issue['response'] = self.get_response(issue)
-            obj_issue['request'] = issue['variant-group']['item']["test-http-traffic"].text
-            obj_issue['method'] = self.get_method(issue['variant-group']['item']["test-http-traffic"].text)
-            obj_issue['severity'] = issue['severity'].text
-            obj_issue['issue-description'] = self.parse_advisory_group(issue_data['advisory'])
-            for recommendation in self.obj_xml["fix-recommendation-group"]["item"]:
-                full_data = ""
-                if recommendation.attrib['id'] == issue_data["fix-recommendation"]:
-                    for data in recommendation['general']['fixRecommendation']["text"]:
-                        full_data += '' + data
-                    obj_issue["recomendation"] = full_data
-                    if hasattr(recommendation['general']['fixRecommendation'], 'link'):
-                        obj_issue["ref_link"] = recommendation['general']['fixRecommendation']['link'].text
-            self.issue_list.append(obj_issue)
-        return self.issue_list
-
-    def parse_hosts(self):
-        hosts_list = []
-        for host in self.obj_xml['scan-configuration']['scanned-hosts']['item']:
-            hosts_dict = {}
-            hosts_dict['ip'] = resolve_hostname(host['host'].text)
-            hosts_dict['hostname'] = host['host'].text
-            hosts_dict['os'] = host['operating-system'].text
-            hosts_dict['port'] = host['port'].text
-            if host['port'].text == '443':
-                hosts_dict['scheme'] = 'https'
+class AppScanParser:
+    def __init__(self, xml_output):
+        self.tree = self.parse_xml(xml_output)
+        if self.tree:
+            self.operating_system = self.tree.attrib['technology']
+            url_group = [tags.tag for tags in self.tree]
+            check_url = True if 'url-group' in url_group else False
+            if check_url:
+                self.urls = self.get_urls_info(self.tree.find('url-group'))
             else:
-                hosts_dict['scheme'] = 'http'
-            hosts_list.append(hosts_dict)
-        return hosts_list
+                self.urls = None
+            self.layout = self.get_layout_info(self.tree.find('layout'))
+            self.item = self.get_issue_type(self.tree.find('issue-type-group'))
+            self.name_scan = self.get_issue_data(self.tree.find('advisory-group'))
+            self.host_data = None if self.tree.find('scan-configuration/scanned-hosts/item') is None else \
+                self.get_scan_conf_data(self.tree.find('scan-configuration/scanned-hosts/item'))
+            self.issue_group = self.get_info_issue_group(self.tree.find("issue-group"))
+            self.fix_recomendation = self.get_fix_info(self.tree.find('fix-recommendation-group'))
 
-    def parse_issue_type(self):
-        res = {}
-        for issue_type in self.obj_xml["issue-type-group"]["item"]:
-            res[issue_type.attrib['id']] = {
-                'name': issue_type.name.text, 
-                'advisory': issue_type["advisory"]["ref"].text,
-                'fix-recommendation': issue_type["fix-recommendation"]["ref"].text
+        else:
+            self.tree = None
+
+    def parse_xml(self, xml_output):
+        try:
+            tree = ET.fromstring(xml_output)
+        except SyntaxError as err:
+            print('SyntaxError In xml: %s. %s' % (err, xml_output))
+            return None
+        return tree
+
+    def get_fix_info(self, tree):
+        list_fix = []
+        for item in tree:
+            text_info_join = []
+            if item.find("general/fixRecommendation"):
+                for text_tag in tree.findall('text'):
+                    text_info_join += text_tag.text
+                    info_fix = {
+                        "id": item.attrib.get('id', None),
+                        "text": text_info_join
+                    }
+                    list_fix.append(info_fix)
+        return list_fix
+
+    def get_info_issue_group(sef,tree):
+        data_res_req = []
+        for item in tree:
+            if item.find("variant-group/item/issue-information"):
+                resp = item.find("variant-group/item/issue-information").text
+            else:
+                resp = "Not Response"
+
+            json_res_req = {
+                "request": "Not request" if item.find("variant-group/item/test-http-traffic") is None else
+                item.find("variant-group/item/test-http-traffic").text,
+                "response": resp,
+                "location": "Not Location" if item.find("location") is None else item.find("location").text,
+                "source_file": "0.0.0.0" if item.find("source-file") is None else item.find("source-file").text,
+                "line": 0 if item.find("line") is None else item.find("line").text,
+                "id_item": item.attrib.get('id', 'Not id item'),
+                "severity": 0 if item.find("severity-id") is None else item.find("severity-id").text,
+                "cvss": "No cvss" if item.find("cvss-score") is None else item.find("cvss-score").text,
+                "cwe": "No cwe" if item.find("cwe") is None else item.find("cwe").text,
+                "remediation": "No remedation" if item.find("remediation/ref") is None else item.find(
+                    "remediation/ref").text,
+                "advisory": "No advisory" if item.find("advisory/ref") is None else item.find("advisory/ref").text,
+                "url_id": "No url id" if item.find("url/ref") is None else item.find("url/ref").text,
+                "id_adv": "Not info" if item.find("issue-type/ref") is None else item.find("issue-type/ref").text
+            }
+
+            data_res_req.append(json_res_req)
+        return data_res_req
+
+    def get_layout_info(self, tree):
+        info_layout = {
+            "name": "Not info" if tree.find("application-name") is None else tree.find("application-name").text,
+            "date": "Not info" if tree.find("report-date") is None else tree.find("report-date").text,
+            "details": f'Departamento: {"Not info" if tree.find("department") is None else tree.find("department").text}'
+                       f'Compania: {"Not info" if tree.find("company") is None else tree.find("company").text}'
+                       f'Titulo Reporte: {"Not info" if tree.find("title") is None else tree.find("title").text}',
+            "nro_issues": None if tree.find("total-issues-in-application") is None else tree.find("total-issues-in-application").text,
+        }
+        return info_layout
+
+    def get_issue_type(self, tree):
+        list_item = []
+        for item in tree:
+            severity = item.attrib.get('severity-id', None)
+            if severity is None:
+                severity = item.attrib.get('maxIssueSeverity', None)
+
+            item_info = {
+                "id": item.attrib.get('id', None),
+                "name": item.find("name").text,
+                "severity_id": severity,
+                "severity": item.attrib.get('severity', None),
+                "cwe": "Not info" if item.find("cme") is None else item.find("cwe").text,
+                "xfid": "Not info" if item.find("xfid") is None else item.find("xfid").text,
+                "advisory": "Not info" if item.find("advisory/ref") is None else item.find("advisory/ref").text
+            }
+            list_item.append(item_info)
+
+        return list_item
+
+    def get_issue_data(self, tree):
+        list_item_data = []
+        item_data = {}
+        for item in tree:
+            for adivisory in item:
+                if adivisory.find("cwe/link"):
+                    cwe = adivisory.find("cwe/link").text
+                else:
+                    cwe = "Not Response"
+
+                if adivisory.find("xfid/link"):
+                    xfid = adivisory.find("xfid/link").text
+                else:
+                    xfid = "Not Response"
+
+                item_data = {
+                    "id": item.attrib.get('id', None),
+                    "name": "Not info" if adivisory.find("name") is None else adivisory.find("name").text,
+                    "description": "Not info" if adivisory.find("testDescription") is None else
+                    adivisory.find("testDescription").text,
+                    "threatClassification": {
+                        "name": "Not info" if adivisory.find("threatClassification/name") is None else
+                        adivisory.find("threatClassification/name").text,
+                        "reference": "Not info" if adivisory.find("threatClassification/reference") is None else
+                        adivisory.find("threatClassification/reference").text,
+                    },
+                    "testTechnicalDescription": "Not info" if adivisory.find("testTechnicalDescription") is None else
+                    self.get_parser(adivisory.find("testTechnicalDescription")),
+                    "testTechnicalDescriptionMixed": "Not info" if adivisory.find("testTechnicalDescriptionMixed") is None else
+                    self.get_parser(adivisory.find("testTechnicalDescriptionMixed")),
+
+                    "testDescriptionMixed": "Not info" if adivisory.find("testDescriptionMixed") is None else
+                    self.get_parser(adivisory.find("testDescriptionMixed")),
+                    "causes": "Not info" if adivisory.find("causes/cause") is None else
+                    adivisory.find("causes/cause").text,
+                    "securityRisks": "Not info" if adivisory.find("securityRisks/securityRisk") is None else
+                    adivisory.find("securityRisks/securityRisk").text,
+                    "affectedProducts": "Not info" if adivisory.find("affectedProducts/affectedProduct") is None else
+                    adivisory.find("affectedProducts/affectedProduct").text,
+                    "cwe": cwe,
+                    "xfid": xfid,
+                    "references": "Not info" if adivisory.find("references") is None else
+                    self.get_parser(adivisory.find("references")),
+                    "fixRecommendations": "Not info" if adivisory.find("fixRecommendations/fixRecommendation") is None else
+                    self.get_parser(adivisory.find("fixRecommendations/fixRecommendation"))
                 }
-            if "cve" in issue_type:
-                res[issue_type.attrib['id']] = {'cve': issue_type["cve"].text}
-        return res
+                list_item_data.append(item_data)
+        return list_item_data
 
-    def parse_advisory_group(self, advisory):
-        """
-        Function that parse advisory-group in order to get the item's description
-        """
-        for item in self.obj_xml["advisory-group"]["item"]:
-            if item.attrib['id'] == advisory:
-                return item['advisory']['testTechnicalDescription']['text'].text
+    def get_parser(self, tree):
+        text_join = ""
+        code_join = ""
+        link_join = ""
 
-    def get_url(self, ref):
-        for item in self.obj_xml['url-group']['item']:
-            if item.attrib['id'] == ref:
-                return item['name'].text
+        if tree.tag == 'testTechnicalDescription':
 
-    def get_method(self, http_traffic):
-        methods_list = ['GET', 'POST', 'PUT', 'DELETE', 'CONNECT', 'PATCH', 'HEAD', 'OPTIONS']
-        try:
-            if http_traffic:
-                for item in methods_list:
-                    if http_traffic.startswith(item):
-                        return item
-        except TypeError:
-            return None
-        return None
+            for text_info in tree.findall('text'):
+                text_join += text_info.text
 
-    def get_response(self, node):
-        try:
-            response = node['variant-group']['item']['issue-information']["testResponseChunk"].text
-            return response
-        except AttributeError:
-            return None
+            for code_info in tree.findall('code'):
+                text_join += code_info.text
 
-    def get_scan_information(self):
+            tech_data = {
+                "text": text_join,
+                "code": code_join
+            }
 
-        scan_information = "File: " + self.obj_xml["scan-information"]["scan-file-name"]\
-            + "\nStart: " + self.obj_xml["scan-information"]["scan-date-and-time"]\
-            + "\nSoftware: " + self.obj_xml["scan-information"]["product-name"]\
-            + "\nVersion: " + self.obj_xml["scan-information"]["product-version"]\
-            + "\nScanner Elapsed time: " + self.obj_xml["scan-summary"]["scan-Duration"]
+        elif tree.tag == 'testDescriptionMixed':
 
-        return scan_information
+            for text_info in tree.findall('p'):
+                text_join += text_info.text
+
+            for code_info in tree.findall('li'):
+                text_join += code_info.text
+
+            tech_data = {
+                "text": text_join,
+                "items": code_join
+            }
+
+        elif tree.tag == 'testTechnicalDescriptionMixed':
+
+            for text_info in tree.findall('p'):
+                text_join += text_info.text
+
+            tech_data = {
+                "text": text_join,
+            }
+
+        elif tree.tag == 'references':
+            for text_info in tree.findall('text'):
+                text_join += "no info " if text_info.text is None else text_info.text
+
+            for link_info in tree.findall('link'):
+                link_join += "no info " if link_info.text is None else link_info.text
+                link_join += link_info.attrib.get('target', 'not target')
+
+            tech_data = {
+                "text": text_join,
+                "Link": link_join
+            }
+
+        elif tree.tag == 'fixRecommendation':
+            for text_info in tree.findall('text'):
+                text_join += "no info " if text_info.text is None else text_info.text
+
+            for link_info in tree.findall('link'):
+                link_join += "no info " if link_info.text is None else link_info.text
+                link_join += link_info.attrib.get('target', 'not target')
+
+            tech_data = {
+                "text": text_join,
+                "link": link_join
+            }
+
+        return tech_data
+
+    def get_urls_info(self, tree):
+        list_url = []
+        for url in tree:
+            url_info = {
+                "id_item": url.attrib.get('id', 'Not id item'),
+                "id": "Not info" if url.find("issue-type") is None else url.find("issue-type").text,
+                "url": "Not info" if url.find("name") is None else url.find("name").text,
+            }
+            list_url.append(url_info)
+
+        return list_url
+
+    def get_scan_conf_data(self, host_info):
+        info_host = {
+            "host": "Not info" if host_info.find("host") is None else host_info.find("host").text,
+            "port": "Not info" if host_info.find("port") is None else host_info.find("port").text,
+            "os": "Not info" if host_info.find("operating-system") is None else host_info.find("operating-system").text,
+            "webserver": "Not info" if host_info.find("web-server") is None else host_info.find("web-server").text,
+            "appserver": "Not info" if host_info.find("application-server") is None else host_info.find("application-server").text,
+        }
+        return info_host
 
 
-class AppscanPlugin(PluginXMLFormat):
-    """ Example plugin to parse Appscan XML report"""
-
+class AppScanPlugin(PluginXMLFormat):
     def __init__(self):
         super().__init__()
         self.identifier_tag = "xml-report"
-        self.id = "Appscan"
-        self.name = "Appscan XML Plugin"
-        self.plugin_version = "0.0.1"
+        self.id = 'Appscan'
+        self.name = 'Appscan XML Plugin'
+        self.plugin_version = '0.0.1'
+        self.version = '1.0.0'
+        self.framework_version = '1.0.0'
         self.options = None
-        self.open_options = {"mode": "r", "encoding": "utf-8"}
+        self.protocol = None
+        self.port = '80'
+        self.address = None
 
     def parseOutputString(self, output):
-        try:
-            parser = AppscanParser(output, self.logger)
-            issues = parser.parse_issues()
-            scanned_hosts = parser.parse_hosts()
-            hosts_dict = {}
-            for host in scanned_hosts:
-                host_id = self.createAndAddHost(host['ip'], os=host['os'], hostnames=[host['hostname']])
-                service_id = self.createAndAddServiceToHost(
-                    host_id,
-                    host['scheme'],
-                    ports=[host['port']],
-                    protocol="tcp?HTTP")
-                if host['port']:
-                    if host['port'] not in ('443', '80'):
-                        key_url = f"{host['scheme']}://{host['hostname']}:{host['port']}"
-                    else:
-                        key_url = f"{host['scheme']}://{host['hostname']}"
-                else:
-                    key_url = f"{host['scheme']}://{host['hostname']}"
-                hosts_dict[key_url] = {'host_id': host_id, 'service_id': service_id}
+        parser = AppScanParser(output)
+        layout = parser.layout
+        operating_system = parser.operating_system
+        host_data = parser.host_data
+        urls = parser.urls
+        item = parser.item
+        name_scan = parser.name_scan
+        issues = parser.issue_group
+        recomendation = parser.fix_recomendation
+
+        if operating_system == 'DAST':
+            host_id = self.createAndAddHost(resolve_hostname(host_data['host']), os=host_data['os'],
+                                            hostnames=[host_data['host']], description=layout['details'])
+
+            service_id = self.createAndAddServiceToHost(host_id, host_data['host'], ports=host_data['port'],
+                                                        protocol="tcp?HTTP",
+                                                        description=f'{host_data["webserver"]} - {host_data["appserver"]}')
+            if layout['nro_issues'] is None:
+                nro_check = True
+
+            else:
+                nro_check = False
+            check_issues = []
+
             for issue in issues:
-                url_parsed = urlparse(issue['url'])
-                url_string = f'{url_parsed.scheme}://{url_parsed.netloc}'
-                for key in hosts_dict:
-                    if url_string == key:
-                        h_id = hosts_dict[key]['host_id']
-                        s_id = hosts_dict[key]['service_id']
-                        refs = []
-                        if "ref_link" in issue:
-                            refs.append(f"Fix link: {issue['ref_link']}" )
-                        if "cvss_score" in issue:
-                            refs.append(f"CVSS Score: {issue['cvss_score']}")
-                        if "cve" in issue:
-                            refs.append(f"CVE: {issue['cve']}")
-                        if "advisory" in issue:
-                            refs.append(f"Advisory: {issue['advisory']}")
-                        self.createAndAddVulnWebToService(
-                            h_id,
-                            s_id,
-                            issue["name"],
-                            desc=issue["issue_description"] if "issue_description" in issue else "",
-                            ref=refs,
-                            severity=issue["severity"],
-                            resolution=issue["recomendation"],
-                            website=url_parsed.netloc,
-                            path=url_parsed.path,
-                            request=issue["request"] if "request" in issue else "",
-                            response=issue["response"] if issue["response"] else "",
-                            method=issue["method"] if issue["method"] else "")
-        except Exception as e:
-            self.logger.error("Parsing Output Error: %s", e)
+                id = f"{issue['url_id']}{issue['advisory']}"
+                if id in check_issues and nro_check is True:
+                    check_issues.append(id)
+                else:
+                    check_issues.append(id)
+                    for info in name_scan:
+                        if info['id'] == issue['advisory']:
+                            vuln_name = info['name']
+                            vuln_desc = info['description']
+                            resolution = f'Text: {info["fixRecommendations"]["text"]}. ' \
+                                         f'Link: {info["fixRecommendations"]["link"]}'
+                            vuln_data = f'xfix: {info["xfid"]} cme: {info["cwe"]}'
+
+                    for url in urls:
+                        if url['id'] == issue['advisory']:
+                            url_name = url['url']
+                        elif url['id_item'] == issue['id_item']:
+                            url_name = url['url']
+                        else:
+                            url_name = None
+
+                    for rec in recomendation:
+                        if rec['id'] == issue['advisory']:
+                            vuln_data = f'{vuln_data}, {rec["text"]} '
+
+                    ref = f'cwe: {issue["cwe"]} cvss: {issue["cvss"]} remediation: {issue["remediation"]}'
+                    self.createAndAddVulnWebToService(host_id=host_id, service_id=service_id, name=vuln_name,
+                                                      desc=vuln_desc, severity=issue['severity'], ref=[ref],
+                                                      website=host_data['host'], request=issue['request'],
+                                                      response=issue['response'], method=issue['request'],
+                                                      resolution=resolution, data=vuln_data, path=url_name)
+
+        elif operating_system == 'SAST':
+            for info_loc_source in issues:
+                source_file = info_loc_source['source_file']
+                host_id = self.createAndAddHost(source_file, os=operating_system)
+                ref = f'{info_loc_source["location"]} - {info_loc_source["line"]}'
+                for vuln_data in name_scan:
+                    if vuln_data['id'] == info_loc_source["id_adv"]:
+                        desc = f'desc: {vuln_data["description"]} DescMix {vuln_data["testDescriptionMixed"]}'
+                        resolution = f'Fix Recomendarion {vuln_data["fixRecommendations"]}' \
+                                     f' - TestTecnical {vuln_data["testTechnicalDescriptionMixed"]}'
+
+                        self.createAndAddVulnToHost(host_id=host_id,
+                                                    name=vuln_data['name'],
+                                                    desc=desc,
+                                                    ref=[ref],
+                                                    severity=info_loc_source['severity'],
+                                                    resolution=resolution,
+                                                    data=f'xfix: {vuln_data["xfid"]} cme: {vuln_data["cwe"]}',
+                                                    run_date=None,
+                                                    )
+        else:
+            host_id = self.createAndAddHost(layout['name'], os=operating_system)
+            for vulnserv in name_scan:
+                for sev in item:
+                    if sev['id'] == vulnserv['id']:
+                        info_severity = sev['severity_id']
+                if vulnserv['description'] is None:
+                    desc = ""
+                else:
+                    desc = vulnserv['description']
+
+                resolution = f"Text:{vulnserv['fixRecommendations']['text']}. Link: {vulnserv['fixRecommendations']['link']}."
+                self.createAndAddVulnToHost(host_id=host_id, name=vulnserv['name'], desc=desc,
+                                            severity=info_severity, resolution=resolution,
+                                            data=f'xfix: {vulnserv["xfid"]} cme: {vulnserv["cwe"]}', run_date=None)
 
 
 def createPlugin():
-    return AppscanPlugin()
-
-# I'm Py3
+    return AppScanPlugin()
