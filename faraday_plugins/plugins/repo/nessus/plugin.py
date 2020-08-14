@@ -45,7 +45,10 @@ class NessusParser:
 
     def getPolicy(self, tree):
         policy_tree = tree.find('Policy')
-        return Policy(policy_tree)
+        if policy_tree:
+            return Policy(policy_tree)
+        else:
+            return None
 
     def getReport(self, tree):
         report_tree = tree.find('Report')
@@ -191,7 +194,8 @@ class NessusPlugin(PluginXMLFormat):
         """
         try:
             parser = NessusParser(output)
-        except:
+        except Exception as e:
+            print(e)
             return None
 
         if parser.report.report_json is not None:
