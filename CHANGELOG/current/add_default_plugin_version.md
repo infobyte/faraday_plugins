@@ -1,0 +1,1 @@
+add a default value to plugin_version
