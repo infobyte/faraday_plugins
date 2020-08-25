@@ -77,6 +77,7 @@ class CmdWhoisPlugin(PluginBase):
         if not matches:
             ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', self.command_string)
             matches_descr = re.findall("descr:\s*(.*)\s*", output)
+            desc = ""
             for md in matches_descr:
                 desc = md.strip()
             h_id = self.createAndAddHost(ip[0], "os unknown", description=desc)
