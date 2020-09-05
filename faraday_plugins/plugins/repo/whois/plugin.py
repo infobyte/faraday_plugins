@@ -77,20 +77,25 @@ class CmdWhoisPlugin(PluginBase):
         if not matches:
             ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', self.command_string)
             matches_descr = re.findall("descr:\s*(.*)\s*", output)
+            matches_netname = re.findall("NetName:\s*(.*)\s*", output)
             desc = ""
+            os_name = "os unknown"
             for md in matches_descr:
                 desc = md.strip()
-            h_id = self.createAndAddHost(ip[0], "os unknown", description=desc)
+
+            for osname in matches_netname:
+                os_name = osname.strip()
+            self.createAndAddHost(ip[0], os_name, description=desc)
         else:
             for m in matches:
                 m = m.strip()
                 ip = resolve_hostname(m)
-                h_id = self.createAndAddHost(ip, "os unknown", hostnames=[m])
+                self.createAndAddHost(ip, "os unknown", hostnames=[m])
             matches_domain = re.findall("Domain Name:\s*(.*)\s*", output)
             for md in matches_domain:
                 md = md.strip()
                 ip = resolve_hostname(md)
-                h_id = self.createAndAddHost(ip, "os unknown", hostnames=[md])
+                self.createAndAddHost(ip, "os unknown", hostnames=[md])
         return True
 
 
