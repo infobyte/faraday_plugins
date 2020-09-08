@@ -75,7 +75,13 @@ class CmdWhoisPlugin(PluginBase):
     def parseOutputString(self, output):
         matches = re.findall("Name Server:\s*(.*)\s*", output)
         if not matches:
+            matches = re.findall("nserver:\s*(.*)\s*", output)
+
+        if not matches:
             ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', self.command_string)
+            if not ip:
+                url = self.command_string.replace('whois ', '')
+                ip = [resolve_hostname(url)]
             matches_descr = re.findall("descr:\s*(.*)\s*", output)
 
             matches_netname = re.findall("NetName:\s*(.*)\s*", output)
@@ -103,7 +109,8 @@ class CmdWhoisPlugin(PluginBase):
         else:
             for m in matches:
                 m = m.strip()
-                ip = resolve_hostname(m)
+                url = re.findall(r'https?://[^\s<>"]+|.[^\s<>"]+', str(m))
+                ip = resolve_hostname(url[0])
                 self.createAndAddHost(
                     ip,
                     hostnames=[m]
