@@ -77,25 +77,45 @@ class CmdWhoisPlugin(PluginBase):
         if not matches:
             ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', self.command_string)
             matches_descr = re.findall("descr:\s*(.*)\s*", output)
+
             matches_netname = re.findall("NetName:\s*(.*)\s*", output)
+            if not matches_netname:
+                matches_netname = re.findall("netname:\s*(.*)\s*", output)
+            matches_ref = re.findall("Ref:\s*(.*)\s*", output)
             desc = ""
-            os_name = "os unknown"
+            ref = []
+            os_name = "unknown"
+
             for md in matches_descr:
                 desc = md.strip()
 
+            for mr in matches_ref:
+                ref.append(mr.strip())
+
             for osname in matches_netname:
                 os_name = osname.strip()
-            self.createAndAddHost(ip[0], os_name, description=desc)
+            self.createAndAddHost(
+                ip[0],
+                os_name,
+                hostnames=[ref],
+                description=desc
+            )
         else:
             for m in matches:
                 m = m.strip()
                 ip = resolve_hostname(m)
-                self.createAndAddHost(ip, "os unknown", hostnames=[m])
+                self.createAndAddHost(
+                    ip,
+                    hostnames=[m]
+                )
             matches_domain = re.findall("Domain Name:\s*(.*)\s*", output)
             for md in matches_domain:
                 md = md.strip()
                 ip = resolve_hostname(md)
-                self.createAndAddHost(ip, "os unknown", hostnames=[md])
+                self.createAndAddHost(
+                    ip,
+                    hostnames=[md]
+                )
         return True
 
 
