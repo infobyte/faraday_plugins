@@ -89,7 +89,11 @@ class ReportAnalyzer:
                 try:
                     report_file.seek(0)
                     json_data = json.load(report_file)
-                    file_json_keys = set(json_data.keys())
+                    if isinstance(json_data, list):
+                        if len(json_data) > 0:
+                            file_json_keys = set(json_data[0].keys())
+                    else:
+                        file_json_keys = set(json_data.keys())
                     logger.debug("Found JSON content on file: %s - Keys: %s", report_path, file_json_keys)
                 except Exception as e:
                     logger.debug("Non JSON content [%s] - %s", report_path, e)
