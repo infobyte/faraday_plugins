@@ -73,19 +73,8 @@ class SslLabsPlugin(PluginJsonFormat):
         self.name = "SSL Labs"
         self.plugin_version = "0.1"
         self.version = "3.4.5"
-        self.json_keys = set()
+        self.json_keys = {'engineVersion', 'criteriaVersion', 'endpoints'}
 
-    def report_belongs_to(self, **kwargs):
-        result = False
-        if super().report_belongs_to(**kwargs):
-            report_path = kwargs.get("report_path", "")
-            with open(report_path) as f:
-                output = f.readlines()
-            for line in output:
-                check = line.find('"criteriaVersion":')
-                if check > 0:
-                    result = True
-        return result
 
     def parseOutputString(self, output):
         parser = SslLabsJsonParser(output)

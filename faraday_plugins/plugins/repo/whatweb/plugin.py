@@ -56,20 +56,8 @@ class WhatWebPlugin(PluginJsonFormat):
         self.name = "WhatWebPlugin"
         self.plugin_version = "0.1"
         self.version = "0.0.1"
-        self.json_keys = set()
+        self.json_keys = {'target', 'http_status', 'plugins'}
 
-    def report_belongs_to(self, **kwargs):
-        result = False
-        if super().report_belongs_to(**kwargs):
-            report_path = kwargs.get("report_path", "")
-            with open(report_path) as f:
-                output = f.readlines()
-            for line in output:
-                check_target = line.find('"target":')
-                check = line.find('"plugins":')
-                if check > 0 and check_target > 0:
-                    result = True
-        return result
 
     def parseOutputString(self, output):
         parser = WhatWebJsonParser(output)
