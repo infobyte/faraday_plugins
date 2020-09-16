@@ -184,7 +184,7 @@ class OpenScapPlugin(PluginXMLFormat):
                     host_id,
                     vuln_name,
                     desc=desc,
-                    ref=vuln_ref,
+                    ref=[vuln_ref],
                     severity=severity,
                     data=vuln_data,
                     external_id=rule['id'],
