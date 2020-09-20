@@ -45,7 +45,10 @@ class NessusParser:
 
     def getPolicy(self, tree):
         policy_tree = tree.find('Policy')
-        return Policy(policy_tree)
+        if policy_tree:
+            return Policy(policy_tree)
+        else:
+            return None
 
     def getReport(self, tree):
         report_tree = tree.find('Report')
@@ -191,7 +194,8 @@ class NessusPlugin(PluginXMLFormat):
         """
         try:
             parser = NessusParser(output)
-        except:
+        except Exception as e:
+            print(e)
             return None
 
         if parser.report.report_json is not None:
@@ -265,9 +269,11 @@ class NessusPlugin(PluginXMLFormat):
                             ref = []
 
                         policyviolations = []
+                        tags_info = None
                         if serv[6] == 'Policy Compliance':
                             # This condition was added to support CIS Benchmark in policy violation field.
                             risk_factor = 'info'
+                            tags_info = "Passed Checks"
                             bis_benchmark_data = serv[7].split('\n')
                             policy_item = bis_benchmark_data[0]
 
@@ -276,11 +282,11 @@ class NessusPlugin(PluginXMLFormat):
                                     ref.append(policy_check_data)
 
                             if 'FAILED' in policy_item:
-                                risk_factor = 'high'
+                                risk_factor = 'low'
+                                tags_info = "Failed checks"
                                 policyviolations.append(policy_item)
 
                             vulnerability_name = f'{serv[6]} {vulnerability_name} {policy_item}'
-
                         self.createAndAddVulnToHost(host_id,
                                                     vulnerability_name,
                                                     desc=desc,
@@ -290,7 +296,8 @@ class NessusPlugin(PluginXMLFormat):
                                                     ref=ref,
                                                     policyviolations=policyviolations,
                                                     external_id=external_id,
-                                                    run_date=run_date)
+                                                    run_date=run_date,
+                                                    tags=tags_info)
                     else:
                         data = serv[9]
                         if not data:
