@@ -14,6 +14,25 @@ workflow:
       when: never
     - when: always
 
+.install_faraday_venv: &install_faraday_venv
+- pip3 install virtualenv
+- virtualenv -p python3 faraday_venv
+- source faraday_venv/bin/activate
+- pip3 install pytest pytest-xdist pytest-cov
+- git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday.git
+- cd faraday
+- pip3 install $PIP_FLAGS .
+- pip uninstall faraday-plugins -y # we need to install fardaysec for marshmallow schemas, we remove plugins from pypi
+- cd ..
+
+.clone_reports: &clone_reports
+- git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
+- cd report-collection
+- (git branch -a | grep $CI_COMMIT_BRANCH) && export REPORT_REF=$CI_COMMIT_BRANCH || export REPORT_REF=master
+- git checkout $REPORT_REF
+- cd ..
+
+
 flake8:
     image: python:3
     stage: pre_testing
@@ -27,50 +46,29 @@ flake8:
     after_script:
         - wc -l files.processed
 
-tests:
-    image: python:3.7
-    stage: testing
-    coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
-    before_script:
-      - pip3 install virtualenv
-      - virtualenv -p python3 faraday_venv
-      - source faraday_venv/bin/activate
-      - pip3 install pytest pytest-xdist pytest-cov Flask-Restless==0.17.0
-      - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday.git
-      - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
-      - cd faraday
-      - python3 setup.py install
-      - pip uninstall faraday-plugins -y # we need to install fardaysec for marshmallow schemas, we remove plugins from pypi
-      - cd ..
-    script:
-      - source faraday_venv/bin/activate
-      - python3 setup.py install
-      - pytest tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings
+.test_base:
+  stage: testing
+  coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
+  script:
+    - *clone_reports
+    - *install_faraday_venv
+    - pip3 install $PIP_FLAGS .
+    - pytest tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings $PYTEST_FLAGS
 
+tests:
+  extends: .test_base
+  image: python:3
 
 test_performance:
-    image: python:3.7
-    stage: post_testing
-    coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
-    allow_failure: true
-    before_script:
-      - pip3 install virtualenv
-      - virtualenv -p python3 faraday_venv
-      - source faraday_venv/bin/activate
-      - pip3 install pytest pytest-xdist pytest-cov
-      - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday.git
-      - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
-      - cd faraday
-      - python3 setup.py install
-      - pip uninstall faraday-plugins -y # we need to install fardaysec for marshmallow schemas, we remove plugins from pypi
-      - cd ..
-    script:
-      - source faraday_venv/bin/activate
-      - python3 setup.py install
-      - pytest tests --capture=sys -v --cov=faraday_plugins --color=yes --disable-warnings --performance
-    rules:
-      - if: '$CI_COMMIT_BRANCH == "develop"'
-        when: on_success
+  extends: .test_base
+  image: python:3
+  stage: post_testing
+  allow_failure: true
+  variables:
+    PYTEST_FLAGS: --performance
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      when: on_success
 
 publish_pypi:
     image: python:3

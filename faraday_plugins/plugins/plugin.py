@@ -57,6 +57,7 @@ class PluginBase:
         self.start_date = datetime.now()
         self.logger = logger.getChild(self.__class__.__name__)
         self.open_options = {"mode": "r", "encoding": "utf-8"}
+        self.plugin_version = "0.0"
         self.vulns_data = {"hosts": [], "command": {"tool": "",
                                                     "command": "",
                                                     "params": "",

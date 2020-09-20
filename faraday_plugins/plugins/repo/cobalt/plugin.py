@@ -104,4 +104,3 @@ class CobaltPlugin(PluginCSVFormat):
 
 def createPlugin():
     return CobaltPlugin()
-

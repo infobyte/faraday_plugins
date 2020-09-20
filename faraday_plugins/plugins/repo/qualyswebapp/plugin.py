@@ -55,10 +55,12 @@ class QualysWebappParser:
         for self.results_tags in tree.find('VULNERABILITY_LIST'):
             yield Results(self.results_tags)
 
+
 class Appendix():
     def __init__(self, appendix_tags):
         if appendix_tags.tag == 'SCAN_LIST':
             self.lista_scan = self.get_scan(appendix_tags.find('SCAN'))
+
         elif appendix_tags.tag == 'WEBAPP':
             self.lista_webapp = self.get_webapp(appendix_tags)
 
@@ -124,13 +126,15 @@ class QualysWebappPlugin(PluginXMLFormat):
         for host_create in parser.info_appendix:
             self.scan_list_result.append(host_create)
 
-        self.credential = self.scan_list_result[0].lista_scan.get('AUTHENTICATION_RECORD')
-        os = self.scan_list_result[1].lista_webapp.get('OPERATING_SYSTEM')
-
-        if self.scan_list_result[1].lista_webapp.get('URL'):
-            initial_url = self.scan_list_result[1].lista_webapp.get('URL')
-            parsed_url = urlparse(initial_url)
-            hostnames = [parsed_url.netloc]
+        for k in self.scan_list_result:
+            if 'result_scan' in k.__dict__:
+                self.credential = k.lista_scan.get('AUTHENTICATION_RECORD')
+            elif 'result_webapp' in k.__dict__:
+                operating_system = k.lista_webapp.get('OPERATING_SYSTEM')
+                if k.lista_webapp.get('URL'):
+                    initial_url = k.lista_webapp.get('URL')
+                    parsed_url = urlparse(initial_url)
+                    hostnames = [parsed_url.netloc]
 
         glossary = []
         for glossary_qid in parser.info_glossary:
@@ -139,7 +143,7 @@ class QualysWebappPlugin(PluginXMLFormat):
         for v in parser.info_results:
             url = urlparse(v.dict_result_vul.get('URL'))
 
-            host_id = self.createAndAddHost(name=url.netloc, os=os, hostnames=hostnames)
+            host_id = self.createAndAddHost(name=url.netloc, os=operating_system, hostnames=hostnames)
 
             vuln_scan_id = v.dict_result_vul.get('QID')
 
@@ -151,7 +155,11 @@ class QualysWebappPlugin(PluginXMLFormat):
             raw_severity = int(vuln_data.get('SEVERITY', 0))
             vuln_severity = raw_severity - 1
 
-            run_date = parse(v.dict_result_vul.get('FIRST_TIME_DETECTED'))
+            if not v.dict_result_vul.get('FIRST_TIME_DETECTED'):
+                run_date = ''
+            else:
+                run_date = parse(v.dict_result_vul.get('FIRST_TIME_DETECTED'))
+
             vuln_resolution = vuln_data.get('SOLUTION')
 
             vuln_ref = []

@@ -100,6 +100,11 @@ def get_all_protocols():
 
 def resolve_hostname(hostname):
     try:
+        socket.inet_aton(hostname)  # is already an ip
+        return hostname
+    except socket.error:
+        pass
+    try:
         ip_address = socket.gethostbyname(hostname)
     except Exception as e:
         return hostname
