@@ -5,7 +5,6 @@ See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginByExtension
 import re
-import os
 from datetime import datetime
 
 __author__ = "Blas Moyano"
@@ -19,7 +18,12 @@ __status__ = "Development"
 
 class MbsaParser:
     def __init__(self, log_output):
-        pass
+        self.computer_name = re.search('(Computer name:) (.*[A-Z])', log_output)
+        self.ip = re.search('(IP address:) ([0-9]+(?:\.[0-9]+){3})', log_output)
+        self.scan_date = re.search('(Scan date:) (.*[0-9])', log_output)
+        self.issues = re.findall(r'Issue: .*', log_output)
+        self.score = re.findall(r'Score: .*', log_output)
+        self.result = re.findall(r'Result: .*', log_output)
 
 
 class MbsaPlugin(PluginByExtension):
@@ -33,28 +37,22 @@ class MbsaPlugin(PluginByExtension):
         self.extension = ".log"
 
     def parseOutputString(self, output):
-
-        computer_name = re.search('(Computer name:) (.*[A-Z])', output)
-        ip = re.search('(IP address:) ([0-9]+(?:\.[0-9]+){3})', output)
-        scan_date = re.search('(Scan date:) (.*[0-9])', output)
-        issues = re.findall(r'Issue: .*', output)
-        score = re.findall(r'Score: .*', output)
-        result = re.findall(r'Result: .*', output)
+        parser = MbsaParser(output)
         detail = ''
         i = 0
-        issues_top = len(issues)
+        issues_top = len(parser.issues)
 
         host_id = self.createAndAddHost(
-            ip.group(2),
+            parser.ip.group(2),
             'Windows',
-            hostnames=[computer_name.group(2)])
+            hostnames=[parser.computer_name.group(2)])
 
-        for issue in issues:
+        for issue in parser.issues:
 
-            test = re.search(issues[i], output)
+            test = re.search(parser.issues[i], output)
 
             if i+1 != issues_top:
-                test_issue = re.search(issues[i+1], output)
+                test_issue = re.search(parser.issues[i+1], output)
             else:
                 end = None
             try:
@@ -69,27 +67,26 @@ class MbsaPlugin(PluginByExtension):
                 else:
                     result_info = output[start:end]
                     result_info.rstrip('\n')
-                    result_info = result_info.replace(score[i], '')
-                    result_info = result_info.replace(result[i], '')
+                    result_info = result_info.replace(parser.score[i], '')
+                    result_info = result_info.replace(parser.result[i], '')
                     result_info = result_info.strip()
                     if result_info:
-                        print("ntro")
                         detail = re.search('(Detail:)', result_info)
                         if not None:
                             detail = result_info
-                            result_info = result[i]
+                            result_info = parser.result[i]
 
                     else:
                         detail = ''
-                        result_info = result[i]
+                        result_info = parser.result[i]
 
             self.createAndAddVulnToHost(host_id,
                                         issue.replace('Issue: ', ''),
-                                        desc=score[i].replace('Score: ', ''),
+                                        desc=parser.score[i].replace('Score: ', ''),
                                         ref=None,
                                         resolution=result_info.replace('Result: ', ''),
                                         data=detail,
-                                        run_date=datetime.strptime(scan_date.group(2), '%Y/%m/%d %H:%M'))
+                                        run_date=datetime.strptime(parser.scan_date.group(2), '%Y/%m/%d %H:%M'))
 
             i += 1
 
