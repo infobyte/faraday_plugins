@@ -41,11 +41,21 @@ class MbsaPlugin(PluginByExtension):
         detail = ''
         i = 0
         issues_top = len(parser.issues)
+        ip = '0.0.0.0'
+        hostname = []
+        run_date = None
+
+        if parser.ip is not None:
+            ip = parser.ip.group(2)
+        if parser.computer_name is not None:
+            hostname.append(parser.computer_name.group(2))
+        if parser.scan_date is not None:
+            run_date = datetime.strptime(parser.scan_date.group(2), '%Y/%m/%d %H:%M')
 
         host_id = self.createAndAddHost(
-            parser.ip.group(2),
+            ip,
             'Windows',
-            hostnames=[parser.computer_name.group(2)])
+            hostnames=hostname)
 
         for issue in parser.issues:
 
@@ -86,7 +96,7 @@ class MbsaPlugin(PluginByExtension):
                                         ref=None,
                                         resolution=result_info.replace('Result: ', ''),
                                         data=detail,
-                                        run_date=datetime.strptime(parser.scan_date.group(2), '%Y/%m/%d %H:%M'))
+                                        run_date=run_date)
 
             i += 1
 
