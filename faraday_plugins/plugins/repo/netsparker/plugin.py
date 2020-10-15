@@ -110,6 +110,7 @@ class Item:
             self.port = host.group(11)
 
         self.name = self.get_text_from_subnode("type")
+        self.name_title = self.get_text_from_subnode("title")
         self.desc = self.get_text_from_subnode("description")
         self.severity = self.re_map_severity(self.get_text_from_subnode("severity"))
         self.certainty = self.get_text_from_subnode("certainty")
@@ -216,8 +217,11 @@ class NetsparkerPlugin(PluginXMLFormat):
                 desc = BeautifulSoup(i.desc, "lxml").text
             else:
                 desc = ""
-
-            v_id = self.createAndAddVulnWebToService(h_id, s_id, i.name, ref=i.ref, website=i.hostname, 
+            if i.name_title is None:
+                name = i.name
+            else:
+                name = i.name_title
+            v_id = self.createAndAddVulnWebToService(h_id, s_id, name, ref=i.ref, website=i.hostname,
                                                      severity=i.severity, desc=desc, path=i.url, method=i.method,
                                                      request=i.request, response=i.response, resolution=resolution,
                                                      pname=i.param, data=i.data)
