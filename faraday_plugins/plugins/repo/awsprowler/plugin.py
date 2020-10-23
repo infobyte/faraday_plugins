@@ -8,7 +8,7 @@ import socket
 import json
 from datetime import datetime
 import re
-from faraday_plugins.plugins.plugin import PluginJsonFormat
+from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
 
 __author__ = "Blas Moyano"
 __copyright__ = "Copyright (c) 2020, Infobyte LLC"
@@ -28,7 +28,7 @@ class AwsProwlerJsonParser:
         self.report_aws = string_manipulate.split("#")
 
 
-class AwsProwlerPlugin(PluginJsonFormat):
+class AwsProwlerPlugin(PluginMultiLineJsonFormat):
     """ Handle the AWS Prowler tool. Detects the output of the tool
     and adds the information to Faraday.
     """
@@ -39,24 +39,8 @@ class AwsProwlerPlugin(PluginJsonFormat):
         self.name = "AWS Prowler"
         self.plugin_version = "0.1"
         self.version = "0.0.1"
-        self.json_keys = set()
+        self.json_keys = {"Profile", "Account Number"}
 
-    def report_belongs_to(self, **kwargs):
-        if super().report_belongs_to(**kwargs):
-            report_path = kwargs.get("report_path", "")
-            with open(report_path) as f:
-                output = f.readlines()
-            try:
-                for line in output:
-                    check_line = json.loads(line)
-                    if check_line.keys() >= {"Profile", "Account Number"}:
-                        pass
-                    else:
-                        return False
-            except ValueError:
-                return False
-            return True
-        return False
 
     def parseOutputString(self, output, debug=False):
         parser = AwsProwlerJsonParser(output)
