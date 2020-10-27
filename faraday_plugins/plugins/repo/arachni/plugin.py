@@ -257,7 +257,7 @@ class Plugins():
             self.ip = plugins_node.find('resolver').find('results') \
                 .find('hostname').get('ipaddress')
         except Exception:
-            self.ip = '0.0.0.0'
+            self.ip = None
 
     def getHealthmap(self):
 
@@ -394,7 +394,10 @@ class ArachniPlugin(PluginXMLFormat):
             return
 
         self.hostname = self.getHostname(parser.system.url)
-        self.address = resolve_hostname(parser.plugins.ip)
+        if parser.plugins.ip:
+            self.address = resolve_hostname(parser.plugins.ip)
+        else:
+            self.address = resolve_hostname(self.hostname)
 
         # Create host and interface
         host_id = self.createAndAddHost(self.address, hostnames=[self.hostname])
