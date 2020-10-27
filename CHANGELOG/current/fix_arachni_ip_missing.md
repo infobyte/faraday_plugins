@@ -1,0 +1,1 @@
+Fix missing ip in some arachni reports
