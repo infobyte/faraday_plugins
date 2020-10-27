@@ -397,7 +397,7 @@ class ArachniPlugin(PluginXMLFormat):
         if parser.plugins.ip:
             self.address = resolve_hostname(parser.plugins.ip)
         else:
-            self.address = self.hostname
+            self.address = resolve_hostname(self.hostname)
 
         # Create host and interface
         host_id = self.createAndAddHost(self.address, hostnames=[self.hostname])
