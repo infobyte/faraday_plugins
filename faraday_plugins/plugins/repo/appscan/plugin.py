@@ -310,14 +310,12 @@ class AppScanPlugin(PluginXMLFormat):
                         if info['id'] == issue['advisory']:
                             vuln_name = info['name']
                             vuln_desc = info['description']
+                            resolution = ""
+                            if 'text' in info['fixRecommendations']:
+                                resolution += info['fixRecommendations']['text']
+                            if 'link' in info['fixRecommendations']:
+                                resolution += info['fixRecommendations']['link']
 
-                            text_info = info['fixRecommendations']['text'] \
-                                if 'text' in info['fixRecommendations'] else "Not Text"
-
-                            link_info = info['fixRecommendations']['link'] \
-                                if 'link' in info['fixRecommendations'] else "Not Info"
-
-                            resolution = f"Text:{text_info}. Link: {link_info}."
                             vuln_data = f'xfix: {info["xfid"]} cme: {info["cwe"]}'
 
                     for url in urls:
