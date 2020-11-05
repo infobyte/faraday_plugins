@@ -65,10 +65,14 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 name=ip,
                 hostnames=[host],
                 description="Nuclei")
+            port = 80
+            if url.scheme == 'https':
+                port = 443
 
             service_id = self.createAndAddServiceToHost(
                 host_id,
                 name=url_name,
+                ports=port,
                 protocol=url_protocol,
                 status='open',
                 version='',
