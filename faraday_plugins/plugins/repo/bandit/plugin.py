@@ -16,14 +16,13 @@ class BanditPlugin(PluginXMLFormat):
 
     def parseOutputString(self, output):
         bp = BanditParser(output)
-        bp.preload_hosts()
 
-        for host in bp.hosts.keys():
-            bp.hosts[host] = self.createAndAddHost(bp.hosts[host])
+        host = self._get_host_name()
+        host_id = self.createAndAddHost(host)
 
         for vuln in bp.vulns:
             self.createAndAddVulnToHost(
-                host_id=bp.hosts[vuln['path']],
+                host_id=host_id,
                 name=vuln['name'],
                 desc=vuln['issue_text'],
                 ref=vuln['references'],
@@ -32,13 +31,25 @@ class BanditPlugin(PluginXMLFormat):
 
         return True
 
+    def _get_host_name(self):
+        try:
+            filename = self.vulns_data['command']['params'].split('/')[-1].lower()
+            if filename.endswith('_faraday_bandit.xml'):
+                return filename.lower().replace('_faraday_bandit.xml', '')
+
+            return filename
+        except:
+            pass
+
+        return 'bandit-report'
+
+
 class BanditParser:
     """
     Parser for bandit on demand
     """
 
     def __init__(self, xml_output):
-        self.hosts = {}
         self.vulns = self._parse_xml(xml_output)
 
 
@@ -56,13 +67,9 @@ class BanditParser:
             more_info = error.attrib['more_info']
             ref = [more_info]
 
-            vulns.append({'name': name, 'path':path, 'references': ref, 'issue_text': issue_text, 'severity': severity})
+            vulns.append({'name': name, 'path': path, 'references': ref, 'issue_text': issue_text, 'severity': severity})
 
         return vulns
-
-    def preload_hosts(self):
-        for vuln in self.vulns:
-            self.hosts[vuln['path']] = None
 
 def createPlugin():
     return BanditPlugin()
