@@ -47,8 +47,8 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             if vuln != '':
                 json_vuln = json.loads(vuln)
                 matched = json_vuln.get('matched', None)
-                url = urlparse(matched)
-                url_scheme = f'{url.scheme}://{url.hostname}'
+                url_parser = urlparse(matched)
+                url_scheme = f'{url_parser.scheme}://{url_parser.hostname}'
 
                 if url_scheme in matched_list:
                     matched_json[url_scheme].append(json_vuln)
@@ -56,17 +56,16 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                     matched_list.append(url_scheme)
                     matched_json[url_scheme] = [json_vuln]
 
-        for host in matched_list:
-            url_data = urlparse(host)
+        for url in matched_list:
+            url_data = urlparse(url)
             url_name = url_data.hostname
             url_protocol = url_data.scheme
-            ip = resolve_hostname(host)
+            ip = resolve_hostname(url_name)
             host_id = self.createAndAddHost(
                 name=ip,
-                hostnames=[host],
-                description="Nuclei")
+                hostnames=[url_name])
             port = 80
-            if url.scheme == 'https':
+            if url_parser.scheme == 'https':
                 port = 443
 
             service_id = self.createAndAddServiceToHost(
@@ -78,7 +77,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 version='',
                 description='')
 
-            for info_vuln in matched_json[host]:
+            for info_vuln in matched_json[url]:
                 desc = f'{info_vuln.get("template", None)} - {info_vuln.get("author", None)}'
 
                 self.createAndAddVulnWebToService(
@@ -88,7 +87,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                     desc=desc,
                     ref=None,
                     severity=info_vuln.get('severity', ""),
-                    website=host,
+                    website=url,
                     request=info_vuln.get('request', None),
                     response=info_vuln.get('response', None),
                     method=info_vuln.get('type', None),
