@@ -89,8 +89,9 @@ class SslyzeJsonParser:
 
     def get_certification(self, certificate):
         certif_deploy = certificate['certificate_deployments']
-        send_certif = certif_deploy[0].get('leaf_certificate_subject_matches_hostname', True) == False
-        if send_certif:
+        send_certif = certif_deploy[0].get('leaf_certificate_subject_matches_hostname', True)
+
+        if not send_certif:
             json_certif = {
                 "name": "Certificate mismatch",
                 "desc": f"Certificate does not match server hostname {certificate.get('hostname_used_for_server_name_indication', 'Not hostname')}",
@@ -121,7 +122,7 @@ class SslyzeJsonParser:
                     for cipher_suite in scan_result[command]['accepted_cipher_suites']:
                         name_cipher = cipher_suite['cipher_suite'].get('name')
                         if name_cipher in weak_cipher_list:
-                            if not name_cipher in weak_cipher[command]:
+                            if name_cipher not in weak_cipher[command]:
                                 weak_cipher[command].append(name_cipher)
             except KeyError:
                 pass
@@ -131,7 +132,7 @@ class SslyzeJsonParser:
                     for cipher_suite in scan_result[command]['accepted_cipher_suites']:
                         name_cipher = cipher_suite['cipher_suite'].get('name')
                         if name_cipher in weak_cipher_list:
-                            if not name_cipher in weak_cipher[command]:
+                            if name_cipher not in weak_cipher[command]:
                                 weak_cipher[command].append(name_cipher)
             except KeyError:
                 pass
@@ -163,7 +164,7 @@ class SslyzePlugin(PluginJsonFormat):
 
     def __init__(self):
         super().__init__()
-        self.id = "sslyzejson"
+        self.id = "Sslyze JSON"
         self.name = "Sslyze Json"
         self.plugin_version = "0.1"
         self.version = "3.4.5"
