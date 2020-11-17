@@ -47,14 +47,16 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             if vuln != '':
                 json_vuln = json.loads(vuln)
                 matched = json_vuln.get('matched', None)
-                url_parser = urlparse(matched)
-                url_scheme = f'{url_parser.scheme}://{url_parser.hostname}'
+                
+                if matched is not None:
+                    url_parser = urlparse(matched)
+                    url_scheme = f'{url_parser.scheme}://{url_parser.hostname}'
 
-                if url_scheme in matched_list:
-                    matched_json[url_scheme].append(json_vuln)
-                else:
-                    matched_list.append(url_scheme)
-                    matched_json[url_scheme] = [json_vuln]
+                    if url_scheme in matched_list:
+                        matched_json[url_scheme].append(json_vuln)
+                    else:
+                        matched_list.append(url_scheme)
+                        matched_json[url_scheme] = [json_vuln]
 
         for url in matched_list:
             url_data = urlparse(url)
