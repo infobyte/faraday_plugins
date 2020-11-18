@@ -595,6 +595,31 @@ class PluginJsonFormat(PluginByExtension):
         return match
 
 
+class PluginMultiLineJsonFormat(PluginByExtension):
+
+    def __init__(self):
+        super().__init__()
+        self.json_keys = set()
+        self.extension = ".json"
+
+    def report_belongs_to(self, file_json_keys=None, **kwargs):
+        match = False
+        report_path = kwargs.get("report_path", "")
+        if super().report_belongs_to(**kwargs):
+            with open(report_path) as f:
+                try:
+                    json_lines = list(map(lambda x: json.loads(x), f.readlines()))
+                    if len(json_lines) > 0:
+                        matched_lines = list(filter(lambda json_line: self.json_keys.issubset(json_line.keys()),
+                                                    json_lines))
+                        match = len(matched_lines) == len(json_lines)
+                        self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", json_lines[0].keys(), self.json_keys,
+                                          match)
+                except ValueError:
+                    return False
+        return match
+
+
 class PluginCSVFormat(PluginByExtension):
 
     def __init__(self):

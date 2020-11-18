@@ -89,7 +89,11 @@ class ReportAnalyzer:
                 try:
                     report_file.seek(0)
                     json_data = json.load(report_file)
-                    file_json_keys = set(json_data.keys())
+                    if isinstance(json_data, list):
+                        if len(json_data) > 0:
+                            file_json_keys = set(json_data[0].keys())
+                    else:
+                        file_json_keys = set(json_data.keys())
                     logger.debug("Found JSON content on file: %s - Keys: %s", report_path, file_json_keys)
                 except Exception as e:
                     logger.debug("Non JSON content [%s] - %s", report_path, e)
@@ -98,9 +102,9 @@ class ReportAnalyzer:
                         reader_file_string = StringIO(report_file.read().decode('utf-8'))
                         reader = csv.DictReader(reader_file_string)
                         file_csv_headers = set(reader.fieldnames)
-                        logger.debug("Found JSON content on file: %s - Keys: %s", report_path, file_json_keys)
+                        logger.debug("Found CSV content on file: %s - Keys: %s", report_path, file_json_keys)
                     except Exception as e:
-                        logger.debug("Non JSON content [%s] - %s", report_path, e)
+                        logger.debug("Non CSV content [%s] - %s", report_path, e)
                         try:
                             file_zip = zipfile.ZipFile(report_path, "r")
                             files_in_zip = set(file_zip.namelist())

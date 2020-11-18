@@ -68,19 +68,63 @@ class CmdWhoisPlugin(PluginBase):
             "--version": "output version information and exit",
         }
 
-
+    def processCommandString(self, username, current_path, command_string):
+        self.command_string = command_string
+        super(CmdWhoisPlugin, self).processCommandString(username, current_path, command_string)
 
     def parseOutputString(self, output):
         matches = re.findall("Name Server:\s*(.*)\s*", output)
-        for m in matches:
-            m = m.strip()
-            ip = resolve_hostname(m)
-            h_id = self.createAndAddHost(ip, "os unknown", hostnames=[m])
-        return True
+        if not matches:
+            matches = re.findall("nserver:\s*(.*)\s*", output)
 
+        if not matches:
+            ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', self.command_string)
+            if not ip:
+                url = self.command_string.replace('whois ', '')
+                ip = [resolve_hostname(url)]
+            matches_descr = re.findall("descr:\s*(.*)\s*", output)
+
+            matches_netname = re.findall("NetName:\s*(.*)\s*", output)
+            if not matches_netname:
+                matches_netname = re.findall("netname:\s*(.*)\s*", output)
+            matches_ref = re.findall("Ref:\s*(.*)\s*", output)
+            desc = ""
+            ref = []
+            os_name = "unknown"
+
+            for md in matches_descr:
+                desc = md.strip()
+
+            for mr in matches_ref:
+                ref.append(mr.strip())
+
+            for osname in matches_netname:
+                os_name = osname.strip()
+            self.createAndAddHost(
+                ip[0],
+                os_name,
+                hostnames=[ref],
+                description=desc
+            )
+        else:
+            for m in matches:
+                m = m.strip()
+                url = re.findall(r'https?://[^\s<>"]+|.[^\s<>"]+', str(m))
+                ip = resolve_hostname(url[0])
+                self.createAndAddHost(
+                    ip,
+                    hostnames=[m]
+                )
+            matches_domain = re.findall("Domain Name:\s*(.*)\s*", output)
+            for md in matches_domain:
+                md = md.strip()
+                ip = resolve_hostname(md)
+                self.createAndAddHost(
+                    ip,
+                    hostnames=[md]
+                )
+        return True
 
 
 def createPlugin():
     return CmdWhoisPlugin()
-
-# I'm Py3
