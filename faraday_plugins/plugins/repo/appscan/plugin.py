@@ -310,8 +310,12 @@ class AppScanPlugin(PluginXMLFormat):
                         if info['id'] == issue['advisory']:
                             vuln_name = info['name']
                             vuln_desc = info['description']
-                            resolution = f'Text: {info["fixRecommendations"]["text"]}. ' \
-                                         f'Link: {info["fixRecommendations"]["link"]}'
+                            resolution = ""
+                            if 'text' in info['fixRecommendations']:
+                                resolution += info['fixRecommendations']['text']
+                            if 'link' in info['fixRecommendations']:
+                                resolution += info['fixRecommendations']['link']
+
                             vuln_data = f'xfix: {info["xfid"]} cme: {info["cwe"]}'
 
                     for url in urls:
@@ -341,6 +345,7 @@ class AppScanPlugin(PluginXMLFormat):
                 for vuln_data in name_scan:
                     if vuln_data['id'] == info_loc_source["id_adv"]:
                         desc = f'desc: {vuln_data["description"]} DescMix {vuln_data["testDescriptionMixed"]}'
+
                         resolution = f'Fix Recomendarion {vuln_data["fixRecommendations"]}' \
                                      f' - TestTecnical {vuln_data["testTechnicalDescriptionMixed"]}'
 
@@ -364,7 +369,14 @@ class AppScanPlugin(PluginXMLFormat):
                 else:
                     desc = vulnserv['description']
 
-                resolution = f"Text:{vulnserv['fixRecommendations']['text']}. Link: {vulnserv['fixRecommendations']['link']}."
+                text_info = vulnserv['fixRecommendations']['text'] \
+                    if 'text' in vulnserv['fixRecommendations'] else "Not Text"
+
+                link_info = vulnserv['fixRecommendations']['link'] \
+                    if 'link' in vulnserv['fixRecommendations'] else "Not Info"
+
+                resolution = f"Text:{text_info}. Link: {link_info}."
+
                 self.createAndAddVulnToHost(host_id=host_id, name=vulnserv['name'], desc=desc,
                                             severity=info_severity, resolution=resolution,
                                             data=f'xfix: {vulnserv["xfid"]} cme: {vulnserv["cwe"]}', run_date=None)
