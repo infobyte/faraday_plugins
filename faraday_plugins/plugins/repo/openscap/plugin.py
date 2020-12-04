@@ -127,7 +127,7 @@ class OpenScapParser:
 class OpenScapPlugin(PluginXMLFormat):
     def __init__(self):
         super().__init__()
-        self.identifier_tag = ["Benchmark"]
+        self.identifier_tag = "Benchmark"
         self.id = 'OpenScap'
         self.name = 'OpenScap XML Output Plugin'
         self.plugin_version = '1.0.0'
@@ -136,15 +136,7 @@ class OpenScapPlugin(PluginXMLFormat):
         self.options = None
         self.protocol = None
         self.port = '80'
-        self.address = None
 
-    def report_belongs_to(self, main_tag="", **kwargs):
-        match = False
-        if not super().report_belongs_to(**kwargs):
-            if type(self.identifier_tag) == list:
-                if main_tag.find(self.identifier_tag[0]) >= 0:
-                    match = True
-        return match
 
     def parseOutputString(self, output):
 
