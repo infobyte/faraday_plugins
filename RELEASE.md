@@ -1,3 +1,15 @@
+1.4.0:
+---
+ * Add new plugin base class, for multi line json
+ * New ncrack plugin 
+ * New nuclei plugin
+ * New sslyze json plugin
+ * New WhatWeb plugin
+ * Fix missing ip in some arachni reports
+ * Fix change name vuln in Netsparker plugin
+ * Fix whois plugin, command whois IP not parse data
+ * Change the way we detect json reports when they are lists of dictionaries
+
 1.3.0:
 ---
  * ADD plugin AppSpider
