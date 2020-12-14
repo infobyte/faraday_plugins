@@ -1,4 +1,4 @@
-1.4.0:
+1.4.0b1:
 ---
  * Add new plugin base class, for multi line json
  * New ncrack plugin 
@@ -10,7 +10,7 @@
  * Fix whois plugin, command whois IP not parse data
  * Change the way we detect json reports when they are lists of dictionaries
 
-1.3.0:
+1.3.0 [Sep 2nd, 2020]:
 ---
  * ADD plugin AppSpider
  * Add tests to faraday-plugins cli
