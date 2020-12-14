@@ -1,1 +1,1 @@
-ADD plugin WhatWeb
+New WhatWeb plugin

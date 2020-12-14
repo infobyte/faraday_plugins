@@ -1,1 +1,1 @@
-add plugin nuclei
+New nuclei plugin

@@ -1,1 +1,1 @@
-ADD plugins sslyze for json
+New sslyze json plugin

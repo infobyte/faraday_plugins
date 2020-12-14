@@ -1,1 +1,1 @@
-FIX Netsparker change name vuln
+Fix change name vuln in Netsparker plugin

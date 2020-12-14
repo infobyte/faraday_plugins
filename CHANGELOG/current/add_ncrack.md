@@ -1,1 +1,1 @@
-ADD plugin ncrack 
+New ncrack plugin 
