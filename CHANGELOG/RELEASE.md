@@ -1,4 +1,8 @@
-1.4.0b1:
+1.4.0b2 [Dec 15th, 2020]:
+---
+ * Fix nuclei plugin bug when url is None
+
+1.4.0b1 [Dec 14th, 2020]:
 ---
  * Add new plugin base class, for multi line json
  * New ncrack plugin 
