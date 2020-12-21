@@ -72,28 +72,32 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
 
             service_id = self.createAndAddServiceToHost(
                 host_id,
-                name=url_name,
+                name=url_parser.scheme,
                 ports=port,
-                protocol=url_protocol,
+                protocol="tcp",
                 status='open',
                 version='',
                 description='')
 
             for info_vuln in matched_json[url]:
                 desc = f'{info_vuln.get("template", None)} - {info_vuln.get("author", None)}'
-
+                if info_vuln.get("author", None):
+                    ref = [f"author: {info_vuln.get('author', None)}"]
+                else:
+                    ref = None
                 self.createAndAddVulnWebToService(
                     host_id,
                     service_id,
-                    name=info_vuln.get('matcher_name', "Nuclei"),
-                    desc=desc,
-                    ref=None,
+                    name=info_vuln.get('template', ""),
+                    desc=info_vuln.get('description', info_vuln.get('name', None)),
+                    ref=ref,
                     severity=info_vuln.get('severity', ""),
                     website=url,
                     request=info_vuln.get('request', None),
                     response=info_vuln.get('response', None),
                     method=info_vuln.get('type', None),
-                    data=info_vuln.get('name', None))
+                    data=info_vuln.get('matcher_name', info_vuln.get('name', None)),
+                    external_id=info_vuln.get('template', ""))
 
 
 def createPlugin():
