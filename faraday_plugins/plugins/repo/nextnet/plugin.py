@@ -43,7 +43,7 @@ class CmdNextNetin(PluginBase):
             h_id = self.createAndAddHost(
                 json_line.get("host", "0.0.0.0"),
                 os=json_line.get("name", "unknown"),
-                hostnames=json_line.get("nets", "unknown")
+                hostnames=json_line.get("nets")
             )
             desc = f'Probe Tag: {json_line.get("probe", "Not tag probe")}' \
                    f'Info Tag: {json_line.get("info", "Not tag info")}'
