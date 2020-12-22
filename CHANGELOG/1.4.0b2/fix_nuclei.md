@@ -1,0 +1,1 @@
+Fix nuclei plugin bug when url is None
