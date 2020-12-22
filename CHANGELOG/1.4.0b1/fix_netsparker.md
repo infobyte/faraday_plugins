@@ -1,0 +1,1 @@
+Fix change name vuln in Netsparker plugin
