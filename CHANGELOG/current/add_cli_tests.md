@@ -1,0 +1,1 @@
+Add tests to faraday-plugins cli

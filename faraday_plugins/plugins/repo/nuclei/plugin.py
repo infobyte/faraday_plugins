@@ -47,15 +47,17 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             if vuln != '':
                 json_vuln = json.loads(vuln)
                 matched = json_vuln.get('matched', None)
+                
                 if matched is not None:
                     url_parser = urlparse(matched)
-                    if url_parser.hostname is not None:
-                        url_scheme = f'{url_parser.scheme}://{url_parser.hostname}'
-                        if url_scheme in matched_list:
-                            matched_json[url_scheme].append(json_vuln)
-                        else:
-                            matched_list.append(url_scheme)
-                            matched_json[url_scheme] = [json_vuln]
+                    url_scheme = f'{url_parser.scheme}://{url_parser.hostname}'
+
+                    if url_scheme in matched_list:
+                        matched_json[url_scheme].append(json_vuln)
+                    else:
+                        matched_list.append(url_scheme)
+                        matched_json[url_scheme] = [json_vuln]
+
         for url in matched_list:
             url_data = urlparse(url)
             url_name = url_data.hostname
@@ -63,37 +65,43 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             ip = resolve_hostname(url_name)
             host_id = self.createAndAddHost(
                 name=ip,
-                hostnames=[url_name]
-            )
+                hostnames=[url_name])
             port = 80
             if url_parser.scheme == 'https':
                 port = 443
 
             service_id = self.createAndAddServiceToHost(
                 host_id,
-                name=url_name,
+                name=url_parser.scheme,
                 ports=port,
-                protocol=url_protocol,
+                protocol="tcp",
                 status='open',
                 version='',
                 description='')
 
             for info_vuln in matched_json[url]:
                 desc = f'{info_vuln.get("template", None)} - {info_vuln.get("author", None)}'
-
+                if info_vuln.get("author", None):
+                    ref = [f"author: {info_vuln.get('author', None)}"]
+                else:
+                    ref = None
                 self.createAndAddVulnWebToService(
                     host_id,
                     service_id,
-                    name=info_vuln.get('matcher_name', "Nuclei"),
-                    desc=desc,
-                    ref=None,
+                    name=info_vuln.get('template', ""),
+                    desc=info_vuln.get('description', info_vuln.get('name', None)),
+                    ref=ref,
                     severity=info_vuln.get('severity', ""),
                     website=url,
                     request=info_vuln.get('request', None),
                     response=info_vuln.get('response', None),
                     method=info_vuln.get('type', None),
-                    data=info_vuln.get('name', None))
+                    data=info_vuln.get('matcher_name', info_vuln.get('name', None)),
+                    external_id=info_vuln.get('template', ""))
 
 
 def createPlugin():
     return NucleiPlugin()
+
+
+
