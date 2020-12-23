@@ -346,7 +346,10 @@ class AppScanPlugin(PluginXMLFormat):
                     if vuln_data['id'] == info_loc_source["id_adv"]:
                         desc = f'desc: {vuln_data["description"]} DescMix {vuln_data["testDescriptionMixed"]}'
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> a87108bf714a4abf60f5ebce2e3cac3d11893cc2
                         resolution = f'Fix Recomendarion {vuln_data["fixRecommendations"]}' \
                                      f' - TestTecnical {vuln_data["testTechnicalDescriptionMixed"]}'
 

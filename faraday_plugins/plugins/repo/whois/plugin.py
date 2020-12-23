@@ -72,7 +72,10 @@ class CmdWhoisPlugin(PluginBase):
         self.command_string = command_string
         super(CmdWhoisPlugin, self).processCommandString(username, current_path, command_string)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> a87108bf714a4abf60f5ebce2e3cac3d11893cc2
     def parseOutputString(self, output):
         matches = re.findall("Name Server:\s*(.*)\s*", output)
         if not matches:
