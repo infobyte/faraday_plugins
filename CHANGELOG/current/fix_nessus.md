@@ -1,1 +1,0 @@
-Fix Nessus mod severity HIGH for Low 
