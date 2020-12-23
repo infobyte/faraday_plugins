@@ -75,10 +75,7 @@ class SslLabsPlugin(PluginJsonFormat):
         self.version = "3.4.5"
         self.json_keys = {'engineVersion', 'criteriaVersion', 'endpoints'}
 
-<<<<<<< HEAD
-=======
 
->>>>>>> a87108bf714a4abf60f5ebce2e3cac3d11893cc2
     def parseOutputString(self, output):
         parser = SslLabsJsonParser(output)
         host = parser.host_info(parser.json_data)
