@@ -1,1 +1,0 @@
-Change the way we detect json reports when they are lists of dictionaries

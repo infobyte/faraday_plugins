@@ -1,1 +1,0 @@
-FIX whois. command whois IP not parse data
