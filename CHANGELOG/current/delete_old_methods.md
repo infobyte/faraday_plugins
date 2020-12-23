@@ -1,1 +1,0 @@
-delete old deprecated methods
