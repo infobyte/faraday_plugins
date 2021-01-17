@@ -1,5 +1,6 @@
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 import xml.etree.ElementTree as ET
+import re
 
 class BanditPlugin(PluginXMLFormat):
     """
@@ -8,11 +9,19 @@ class BanditPlugin(PluginXMLFormat):
 
     def __init__(self):
         super().__init__()
-        self.identifier_tag = 'bandit'
+        self.identifier_tag = 'testsuite'
         self.extension = ".xml"
         self.id = "Bandit"
         self.name = "Bandit XML Output Plugin"
         self.plugin_version = "0.0.1"
+
+    def report_belongs_to(self, **kwargs):
+        if super().report_belongs_to(**kwargs):
+            report_path = kwargs.get("report_path", "")
+            with open(report_path) as f:
+                output = f.read()
+            return re.search("testsuite name=\"bandit\"", output) is not None
+        return False
 
     def parseOutputString(self, output):
         bp = BanditParser(output)
