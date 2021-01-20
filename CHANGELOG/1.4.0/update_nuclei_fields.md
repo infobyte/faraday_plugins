@@ -1,0 +1,1 @@
+Update the fields of the nuclei output used to create a vuln
