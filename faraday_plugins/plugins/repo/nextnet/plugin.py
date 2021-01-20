@@ -36,20 +36,28 @@ class CmdNextNetin(PluginBase):
         self._info = 0
 
     def parseOutputString(self, output):
+        print(output)
         output_lines = output.split('\n')
         output_lines = output_lines[:-1]
+
         for line in output_lines:
             json_line = json.loads(line)
+            info_data = json_line.get("info", None)
+            desc = ""
+            mac = None
+            if info_data is not None:
+                desc = f'Domain Tag: {info_data.get("domain", "Not tag info")}'
+                mac = info_data.get("hwaddr")
+
             h_id = self.createAndAddHost(
                 json_line.get("host", "0.0.0.0"),
                 os=json_line.get("name", "unknown"),
-                hostnames=json_line.get("nets")
+                hostnames=json_line.get("nets"),
+                mac=mac
             )
-            desc = f'Probe Tag: {json_line.get("probe", "Not tag probe")}' \
-                   f'Info Tag: {json_line.get("info", "Not tag info")}'
             self.createAndAddServiceToHost(
                 h_id,
-                name=json_line.get("host", "0.0.0.0"),
+                name=f'Probe Tag: {json_line.get("probe", "unknown")}',
                 protocol=json_line.get("proto", "tcp"),
                 ports=json_line.get("port", None),
                 description=desc

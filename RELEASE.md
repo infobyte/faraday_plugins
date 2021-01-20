@@ -1,3 +1,7 @@
+1.4.0 [Dec 23rd, 2020]:
+---
+ * Update the fields of the nuclei output used to create a vuln
+
 1.4.0b2 [Dec 15th, 2020]:
 ---
  * Fix nuclei plugin bug when url is None
