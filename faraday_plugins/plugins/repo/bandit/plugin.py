@@ -26,10 +26,9 @@ class BanditPlugin(PluginXMLFormat):
     def parseOutputString(self, output):
         bp = BanditParser(output)
 
-        host = self._get_host_name()
-        host_id = self.createAndAddHost(host)
-
         for vuln in bp.vulns:
+            host_id = self.createAndAddHost(vuln['path'])
+
             self.createAndAddVulnToHost(
                 host_id=host_id,
                 name=vuln['name'],
