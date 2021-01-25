@@ -89,14 +89,26 @@ class MbsaPlugin(PluginByExtension):
                     else:
                         detail = ''
                         result_info = parser.result[i]
+            score = parser.score[i].replace('Score: ', '').strip()
+            if score != 'Check passed':
+                if score == 'Best practice' or score == 'Unable to scan':
+                    severity = "info"
+                elif score == 'Check failed (non-critical)':
+                    severity = 'med'
+                elif score == 'Check failed':
+                    severity = 'high'
+                else:
+                    severity = 'info'
 
-            self.createAndAddVulnToHost(host_id,
-                                        issue.replace('Issue: ', ''),
-                                        desc=parser.score[i].replace('Score: ', ''),
-                                        ref=None,
-                                        resolution=result_info.replace('Result: ', ''),
-                                        data=detail,
-                                        run_date=run_date)
+                self.createAndAddVulnToHost(
+                    host_id,
+                    issue.replace('Issue: ', '').strip(),
+                    desc=result_info.replace('Result: ', '').strip(),
+                    ref=None,
+                    severity=severity,
+                    data=detail,
+                    run_date=run_date
+                )
 
             i += 1
 
