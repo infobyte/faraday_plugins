@@ -36,7 +36,6 @@ class CmdNextNetin(PluginBase):
         self._info = 0
 
     def parseOutputString(self, output):
-        print(output)
         output_lines = output.split('\n')
         output_lines = output_lines[:-1]
 
@@ -57,7 +56,7 @@ class CmdNextNetin(PluginBase):
             )
             self.createAndAddServiceToHost(
                 h_id,
-                name=f'Probe Tag: {json_line.get("probe", "unknown")}',
+                name=json_line.get("probe", "unknown"),
                 protocol=json_line.get("proto", "tcp"),
                 ports=json_line.get("port", None),
                 description=desc
