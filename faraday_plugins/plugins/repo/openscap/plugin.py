@@ -8,6 +8,7 @@ See the file 'doc/LICENSE' for the license information
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from datetime import datetime
 from lxml import etree
+import ipaddress
 
 try:
     import xml.etree.cElementTree as ET
@@ -137,15 +138,41 @@ class OpenScapPlugin(PluginXMLFormat):
         self.protocol = None
         self.port = '80'
 
-
     def parseOutputString(self, output):
-
         parser = OpenScapParser(output)
+        ips = []
+
+        for ip in parser.result_data[0]['ips']:
+            len_start_port = ip.find(":")
+            if len_start_port > -1:
+                ip = ip[:len_start_port]
+            try:
+                ipaddress.ip_address(ip)
+                ips.append(ip)
+            except ValueError:
+                pass
+        for ip in ips:
+            if ip != '127.0.0.1':
+                ip = ip
+                ips.remove(ip)
+                break
+
+        list_mac = parser.result_data[0]['mac']
+        for mac in list_mac:
+            if mac != '00:00:00:00:00:00':
+                mac_address = mac
+                list_mac.remove(mac_address)
+                break
+
+        description = f'Title: {parser.result_data[0]["result_title"]} ' \
+                      f'Ips: {ips} ' \
+                      f'Macs: {list_mac}'
         host_id = self.createAndAddHost(
-            name=parser.result_data[0]['target'],
-            hostnames=parser.result_data[0]['ips'],
-            description=parser.result_data[0]['result_title'],
-            mac=str(parser.result_data[0]['mac']))
+            name=ip,
+            hostnames=[parser.result_data[0]['target']],
+            description=description,
+            mac=mac_address
+        )
 
         rules_fail = parser.result_data[0]['rule_result']
         if rules_fail:
