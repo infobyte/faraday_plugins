@@ -1,1 +1,0 @@
-ADD plugin WhatWeb

@@ -1,0 +1,1 @@
+Fix whois plugin, command whois IP not parse data
