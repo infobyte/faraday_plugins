@@ -47,7 +47,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             if vuln != '':
                 json_vuln = json.loads(vuln)
                 matched = json_vuln.get('matched', None)
-                
+
                 if matched is not None:
                     url_parser = urlparse(matched)
                     url_scheme = f'{url_parser.scheme}://{url_parser.hostname}'
@@ -102,6 +102,5 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
 
 def createPlugin():
     return NucleiPlugin()
-
 
 
