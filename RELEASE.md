@@ -1,3 +1,10 @@
+1.4.1 [Feb 26th, 2021]:
+---
+ * ADD microsoft baseline security analyzer plugin
+ * ADD nextnet plugin
+ * ADD openscap plugin 
+ * FIX old versions of Nessus plugins bugs
+
 1.4.0 [Dec 23rd, 2020]:
 ---
  * Update the fields of the nuclei output used to create a vuln
