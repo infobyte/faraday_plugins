@@ -81,7 +81,11 @@ class ReportAnalyzer:
         else:
             try:
                 for event, elem in ET.iterparse(report_file, ('start',)):
-                    main_tag = elem.tag
+                    prefix, has_namespace, postfix = elem.tag.partition("}")
+                    if has_namespace:
+                        main_tag = postfix
+                    else:
+                        main_tag = elem.tag
                     break
                 logger.debug("Found XML content on file: %s - Main tag: %s", report_path, main_tag)
             except Exception as e:
