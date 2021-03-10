@@ -171,6 +171,8 @@ class SslyzePlugin(PluginJsonFormat):
         self.json_keys = {'server_scan_results', 'sslyze_url'}
         self._command_regex = re.compile(r'^(sudo sslyze|sslyze|\.\/sslyze)\s+.*?')
         self.json_arg_re = re.compile(r"^.*(--json_out\s*[^\s]+).*$")
+        self._use_temp_file = True
+        self._temp_file_extension = "json"
 
     def parseOutputString(self, output):
         parser = SslyzeJsonParser(output)
