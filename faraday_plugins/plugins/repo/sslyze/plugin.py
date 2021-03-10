@@ -87,7 +87,7 @@ class SslyzePlugin(PluginXMLFormat):
     def __init__(self):
         super().__init__()
         self.identifier_tag = "document"
-        self.id = "Sslyze XML"
+        self.id = "Sslyze_XML"
         self.name = "Sslyze Plugin"
         self.plugin_version = "0.0.1"
         self.version = "2.0.6"

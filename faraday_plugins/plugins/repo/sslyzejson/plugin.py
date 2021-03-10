@@ -164,7 +164,7 @@ class SslyzePlugin(PluginJsonFormat):
 
     def __init__(self):
         super().__init__()
-        self.id = "Sslyze JSON"
+        self.id = "Sslyze_JSON"
         self.name = "Sslyze Json"
         self.plugin_version = "0.1"
         self.version = "3.4.5"
