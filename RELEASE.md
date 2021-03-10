@@ -1,3 +1,8 @@
+1.4.2 [Mar 10th, 2021]:
+---
+ * Fix bug with sslyze output file
+ * FIX change id sslyze for JSON/XML
+
 1.4.1 [Feb 26th, 2021]:
 ---
  * ADD microsoft baseline security analyzer plugin
