@@ -19,8 +19,8 @@ from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 class dirbPlugin(PluginBase):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "dirb"
         self.name = "Dirb"
         self.plugin_version = "0.0.1"
@@ -116,7 +116,7 @@ class dirbPlugin(PluginBase):
         return "%s%s" % (command_string, extra_arg)
 
 
-def createPlugin():
-    return dirbPlugin()
+def createPlugin(ignore_info=False):
+    return dirbPlugin(ignore_info=ignore_info)
 
 # I'm Py3

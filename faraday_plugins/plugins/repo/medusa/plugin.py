@@ -59,8 +59,8 @@ class MedusaPlugin(PluginBase):
     Example plugin to parse medusa output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Medusa"
         self.name = "Medusa Output Plugin"
         self.plugin_version = "0.0.1"
@@ -134,5 +134,5 @@ class MedusaPlugin(PluginBase):
         pass
 
 
-def createPlugin():
-    return MedusaPlugin()
+def createPlugin(ignore_info=False):
+    return MedusaPlugin(ignore_info=ignore_info)

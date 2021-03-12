@@ -33,8 +33,8 @@ class AwsProwlerPlugin(PluginMultiLineJsonFormat):
     and adds the information to Faraday.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "awsprowler"
         self.name = "AWS Prowler"
         self.plugin_version = "0.1"
@@ -67,5 +67,5 @@ class AwsProwlerPlugin(PluginMultiLineJsonFormat):
                                         external_id=vuln_external_id, policyviolations=[vuln_policy])
 
 
-def createPlugin():
-    return AwsProwlerPlugin()
+def createPlugin(ignore_info=False):
+    return AwsProwlerPlugin(ignore_info=ignore_info)

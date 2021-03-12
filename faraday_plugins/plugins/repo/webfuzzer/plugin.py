@@ -73,8 +73,8 @@ class WebfuzzerPlugin(PluginBase):
     Example plugin to parse webfuzzer output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Webfuzzer"
         self.name = "Webfuzzer Output Plugin"
         self.plugin_version = "0.0.2"
@@ -135,7 +135,7 @@ class WebfuzzerPlugin(PluginBase):
             self._output_path = current_path + "/" + self.host + ".txt"
 
 
-def createPlugin():
-    return WebfuzzerPlugin()
+def createPlugin(ignore_info=False):
+    return WebfuzzerPlugin(ignore_info=ignore_info)
 
 # I'm Py3

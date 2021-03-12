@@ -156,8 +156,8 @@ class DnsreconPlugin(PluginBase):
     Example plugin to parse dnsrecon output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Dnsrecon"
         self.name = "Dnsrecon XML Output Plugin"
         self.plugin_version = "0.0.2"
@@ -243,7 +243,7 @@ class DnsreconPlugin(PluginBase):
         pass
 
 
-def createPlugin():
-    return DnsreconPlugin()
+def createPlugin(ignore_info=False):
+    return DnsreconPlugin(ignore_info=ignore_info)
 
 # I'm Py3

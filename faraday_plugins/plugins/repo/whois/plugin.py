@@ -27,8 +27,8 @@ class CmdWhoisPlugin(PluginBase):
     Basically detects if user was able to connect to a device
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "whois"
         self.name = "Whois"
         self.plugin_version = "0.0.1"
@@ -126,5 +126,5 @@ class CmdWhoisPlugin(PluginBase):
         return True
 
 
-def createPlugin():
-    return CmdWhoisPlugin()
+def createPlugin(ignore_info=False):
+    return CmdWhoisPlugin(ignore_info=ignore_info)

@@ -117,8 +117,8 @@ class WebInspectPlugin(PluginXMLFormat):
     This plugin handles WebInspect reports.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Webinspect"
         self.name = "Webinspect"
         self.plugin_version = "0.0.1"
@@ -153,8 +153,6 @@ class WebInspectPlugin(PluginXMLFormat):
             )
 
 
-
-
-def createPlugin():
-    return WebInspectPlugin()
+def createPlugin(ignore_info=False):
+    return WebInspectPlugin(ignore_info=ignore_info)
 

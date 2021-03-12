@@ -185,8 +185,8 @@ class NetsparkerPlugin(PluginXMLFormat):
     Example plugin to parse netsparker output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "netsparker"
         self.id = "Netsparker"
         self.name = "Netsparker XML Output Plugin"
@@ -229,7 +229,7 @@ class NetsparkerPlugin(PluginXMLFormat):
         del parser
 
 
-def createPlugin():
-    return NetsparkerPlugin()
+def createPlugin(ignore_info=False):
+    return NetsparkerPlugin(ignore_info=ignore_info)
 
 # I'm Py3

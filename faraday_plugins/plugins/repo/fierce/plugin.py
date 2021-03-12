@@ -101,8 +101,8 @@ class FiercePlugin(PluginBase):
     Example plugin to parse fierce output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Fierce"
         self.name = "Fierce Output Plugin"
         self.plugin_version = "0.0.1"
@@ -176,7 +176,7 @@ class FiercePlugin(PluginBase):
 
 
 
-def createPlugin():
-    return FiercePlugin()
+def createPlugin(ignore_info=False):
+    return FiercePlugin(ignore_info=ignore_info)
 
 # I'm Py3

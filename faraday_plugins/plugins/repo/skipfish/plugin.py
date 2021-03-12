@@ -111,8 +111,8 @@ class SkipfishPlugin(PluginBase):
     Example plugin to parse skipfish output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Skipfish"
         self.name = "Skipfish Output Plugin"
         self.plugin_version = "0.0.2"
@@ -218,7 +218,7 @@ class SkipfishPlugin(PluginBase):
         pass
 
 
-def createPlugin():
-    return SkipfishPlugin()
+def createPlugin(ignore_info=False):
+    return SkipfishPlugin(ignore_info=ignore_info)
 
 # I'm Py3

@@ -69,8 +69,8 @@ class DnswalkPlugin(PluginBase):
     Example plugin to parse dnswalk output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Dnswalk"
         self.name = "Dnswalk XML Output Plugin"
         self.plugin_version = "0.0.1"
@@ -113,7 +113,7 @@ class DnswalkPlugin(PluginBase):
         return True
 
 
-def createPlugin():
-    return DnswalkPlugin()
+def createPlugin(ignore_info=False):
+    return DnswalkPlugin(ignore_info=ignore_info)
 
 # I'm Py3

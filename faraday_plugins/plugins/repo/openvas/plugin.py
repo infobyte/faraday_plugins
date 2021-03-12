@@ -320,8 +320,8 @@ class OpenvasPlugin(PluginXMLFormat):
     Example plugin to parse openvas output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = ["report", "get_results_response"]
         self.id = "Openvas"
         self.name = "Openvas XML Output Plugin"
@@ -447,7 +447,7 @@ class OpenvasPlugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return OpenvasPlugin()
+def createPlugin(ignore_info=False):
+    return OpenvasPlugin(ignore_info=ignore_info)
 
 # I'm Py3
