@@ -349,4 +349,4 @@ class WapitiPlugin(PluginXMLFormat):
 def createPlugin(ignore_info=False):
     return WapitiPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

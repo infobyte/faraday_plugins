@@ -196,4 +196,4 @@ class X1Plugin(PluginXMLFormat):
 def createPlugin(ignore_info=False):
     return X1Plugin(ignore_info=ignore_info)
 
-# I'm Py3
+

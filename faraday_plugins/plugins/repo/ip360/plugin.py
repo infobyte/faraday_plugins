@@ -106,4 +106,4 @@ class Ip360Plugin(PluginBase):
 def createPlugin(ignore_info=False):
     return Ip360Plugin(ignore_info=ignore_info)
 
-# I'm Py3
+

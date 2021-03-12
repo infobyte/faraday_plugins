@@ -328,4 +328,4 @@ class NexposeFullPlugin(PluginXMLFormat):
 def createPlugin(ignore_info=False):
     return NexposeFullPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

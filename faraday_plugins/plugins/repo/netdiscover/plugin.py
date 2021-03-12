@@ -42,4 +42,4 @@ class NetdiscoverPlugin(PluginBase):
 def createPlugin(ignore_info=False):
     return NetdiscoverPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

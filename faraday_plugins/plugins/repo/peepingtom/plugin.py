@@ -74,4 +74,4 @@ class PeepingTomPlugin(PluginBase):
 def createPlugin(ignore_info=False):
     return PeepingTomPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

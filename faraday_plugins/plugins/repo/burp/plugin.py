@@ -292,4 +292,4 @@ class BurpPlugin(PluginXMLFormat):
 def createPlugin(ignore_info=False):
     return BurpPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

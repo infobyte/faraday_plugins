@@ -144,4 +144,4 @@ class DigPlugin(PluginBase):
 def createPlugin(ignore_info=False):
     return DigPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

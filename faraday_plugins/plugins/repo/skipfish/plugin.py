@@ -221,4 +221,4 @@ class SkipfishPlugin(PluginBase):
 def createPlugin(ignore_info=False):
     return SkipfishPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

@@ -69,4 +69,4 @@ class SSHDefaultScanPlugin(PluginBase):
 def createPlugin(ignore_info=False):
     return SSHDefaultScanPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+
