@@ -122,8 +122,8 @@ class JunitPlugin(PluginXMLFormat):
     Example plugin to parse junit output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Junit"
         self.name = "Junit XML Output Plugin"
         self.plugin_version = "0.0.1"
@@ -141,5 +141,5 @@ class JunitPlugin(PluginXMLFormat):
         del parser
 
 
-def createPlugin():
-    return JunitPlugin()
+def createPlugin(ignore_info=False):
+    return JunitPlugin(ignore_info=ignore_info)

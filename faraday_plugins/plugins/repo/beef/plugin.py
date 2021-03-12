@@ -23,8 +23,8 @@ class BeefPlugin(PluginBase):
     Example plugin to parse beef output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Beef"
         self.name = "BeEF Online Service Plugin"
         self.plugin_version = "0.0.1"
@@ -99,6 +99,6 @@ class BeefPlugin(PluginBase):
         pass
 
 
-def createPlugin():
-    return BeefPlugin()
+def createPlugin(ignore_info=False):
+    return BeefPlugin(ignore_info=ignore_info)
 

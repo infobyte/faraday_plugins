@@ -52,8 +52,9 @@ status_codes = {
 
 
 class DirsearchPlugin(PluginBase):
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "dirsearch"
         self.name = "dirsearch"
         self.plugin_version = "0.0.1"
@@ -132,7 +133,6 @@ class DirsearchPlugin(PluginBase):
             return '{} --json-report {}'.format(command_string, self._output_file_path)
 
 
-def createPlugin():
-    return DirsearchPlugin()
+def createPlugin(ignore_info=False):
+    return DirsearchPlugin(ignore_info=ignore_info)
 
-# I'm Py3

@@ -91,8 +91,8 @@ class DnsmapParser:
 class DnsmapPlugin(PluginBase):
     """Example plugin to parse dnsmap output."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Dnsmap"
         self.name = "Dnsmap Output Plugin"
         self.plugin_version = "0.3"
@@ -137,7 +137,7 @@ class DnsmapPlugin(PluginBase):
                           command_string)
 
 
-def createPlugin():
-    return DnsmapPlugin()
+def createPlugin(ignore_info=False):
+    return DnsmapPlugin(ignore_info=ignore_info)
 
 # I'm Py3

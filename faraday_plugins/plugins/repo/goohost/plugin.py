@@ -65,8 +65,8 @@ class GoohostPlugin(PluginBase):
     Example plugin to parse goohost output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Goohost"
         self.name = "Goohost XML Output Plugin"
         self.plugin_version = "0.0.1"
@@ -129,6 +129,6 @@ class GoohostPlugin(PluginBase):
             self.parseOutputString(command_output)
 
 
-def createPlugin():
-    return GoohostPlugin()
+def createPlugin(ignore_info=False):
+    return GoohostPlugin(ignore_info=ignore_info)
 

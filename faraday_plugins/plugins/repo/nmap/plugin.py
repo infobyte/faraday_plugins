@@ -431,8 +431,8 @@ class NmapPlugin(PluginXMLFormat):
     Example plugin to parse nmap output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "nmaprun"
         self.id = "Nmap"
         self.name = "Nmap XML Output Plugin"
@@ -550,7 +550,7 @@ class NmapPlugin(PluginXMLFormat):
                           r"-oX %s" % self._output_file_path,
                           command_string)
 
-def createPlugin():
-    return NmapPlugin()
+def createPlugin(ignore_info=False):
+    return NmapPlugin(ignore_info=ignore_info)
 
 # I'm Py3

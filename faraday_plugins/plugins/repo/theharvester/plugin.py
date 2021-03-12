@@ -73,8 +73,8 @@ class TheharvesterPlugin(PluginBase):
     Example plugin to parse theharvester output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Theharvester"
         self.name = "Theharvester XML Output Plugin"
         self.plugin_version = "0.0.1"
@@ -115,8 +115,8 @@ class TheharvesterPlugin(PluginBase):
 
 
 
-def createPlugin():
-    return TheharvesterPlugin()
+def createPlugin(ignore_info=False):
+    return TheharvesterPlugin(ignore_info=ignore_info)
 
 
 # I'm Py3

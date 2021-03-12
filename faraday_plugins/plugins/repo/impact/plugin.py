@@ -213,8 +213,8 @@ class ImpactPlugin(PluginXMLFormat):
     Example plugin to parse impact output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "entities"
         self.id = "CoreImpact"
         self.name = "Core Impact XML Output Plugin"
@@ -286,7 +286,7 @@ class ImpactPlugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return ImpactPlugin()
+def createPlugin(ignore_info=False):
+    return ImpactPlugin(ignore_info=ignore_info)
 
 

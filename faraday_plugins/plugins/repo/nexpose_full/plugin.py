@@ -249,8 +249,8 @@ class NexposeFullPlugin(PluginXMLFormat):
     Example plugin to parse nexpose output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "NexposeReport"
         self.id = "NexposeFull"
         self.name = "Nexpose XML 2.0 Report Plugin"
@@ -325,7 +325,7 @@ class NexposeFullPlugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return NexposeFullPlugin()
+def createPlugin(ignore_info=False):
+    return NexposeFullPlugin(ignore_info=ignore_info)
 
 # I'm Py3

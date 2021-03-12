@@ -27,8 +27,9 @@ class MbsaParser:
 
 
 class MbsaPlugin(PluginByExtension):
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "MBSA"
         self.name = "Microsoft Baseline Security Analyzer"
         self.plugin_version = "1.0.1"
@@ -113,5 +114,5 @@ class MbsaPlugin(PluginByExtension):
             i += 1
 
 
-def createPlugin():
-    return MbsaPlugin()
+def createPlugin(ignore_info=False):
+    return MbsaPlugin(ignore_info=ignore_info)

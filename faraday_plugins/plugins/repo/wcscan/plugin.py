@@ -70,8 +70,8 @@ class WcscanPlugin(PluginBase):
     Example plugin to parse wcscan output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Wcscan"
         self.name = "Wcscan XML Output Plugin"
         self.plugin_version = "0.0.2"
@@ -133,7 +133,7 @@ class WcscanPlugin(PluginBase):
             return re.sub(arg_match.group(1), r"-xml %s" % self._output_file_path, command_string)
 
 
-def createPlugin():
-    return WcscanPlugin()
+def createPlugin(ignore_info=False):
+    return WcscanPlugin(ignore_info=ignore_info)
 
 # I'm Py3

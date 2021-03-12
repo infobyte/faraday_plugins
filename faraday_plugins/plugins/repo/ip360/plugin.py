@@ -68,8 +68,8 @@ class Ip360Plugin(PluginBase):
     Example plugin to parse Ip360 output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Ip360"
         self.name = "Ip360 CSV Output Plugin"
         self.plugin_version = "0.0.1"
@@ -103,7 +103,7 @@ class Ip360Plugin(PluginBase):
                 ref=vulnerability.get("ref"))
 
 
-def createPlugin():
-    return Ip360Plugin()
+def createPlugin(ignore_info=False):
+    return Ip360Plugin(ignore_info=ignore_info)
 
 # I'm Py3

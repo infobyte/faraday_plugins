@@ -27,8 +27,8 @@ class CmdFtpPlugin(PluginBase):
     Basically detects if user was able to connect to a device
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "ftp"
         self.name = "Ftp"
         self.plugin_version = "0.0.1"
@@ -72,7 +72,7 @@ class CmdFtpPlugin(PluginBase):
             self._port = count_args[c - 1]
 
 
-def createPlugin():
-    return CmdFtpPlugin()
+def createPlugin(ignore_info=False):
+    return CmdFtpPlugin(ignore_info=ignore_info)
 
 # I'm Py3

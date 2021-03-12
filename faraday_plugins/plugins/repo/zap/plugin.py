@@ -234,8 +234,8 @@ class ZapPlugin(PluginXMLFormat):
     Example plugin to parse zap output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "OWASPZAPReport"
         self.id = "Zap"
         self.name = "Zap XML Output Plugin"
@@ -287,5 +287,5 @@ class ZapPlugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return ZapPlugin()
+def createPlugin(ignore_info=False):
+    return ZapPlugin(ignore_info=ignore_info)

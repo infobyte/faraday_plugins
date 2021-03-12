@@ -84,8 +84,8 @@ class SslyzeXmlParser:
 
 class SslyzePlugin(PluginXMLFormat):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "document"
         self.id = "Sslyze_XML"
         self.name = "Sslyze Plugin"
@@ -168,5 +168,5 @@ class SslyzePlugin(PluginXMLFormat):
                 severity="medium")
 
 
-def createPlugin():
-    return SslyzePlugin()
+def createPlugin(ignore_info=False):
+    return SslyzePlugin(ignore_info=ignore_info)

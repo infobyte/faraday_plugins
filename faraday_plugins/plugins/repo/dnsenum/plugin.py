@@ -150,8 +150,8 @@ class DnsenumPlugin(PluginBase):
     Example plugin to parse dnsenum output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Dnsenum"
         self.name = "Dnsenum XML Output Plugin"
         self.plugin_version = "0.0.1"
@@ -197,7 +197,7 @@ class DnsenumPlugin(PluginBase):
         pass
 
 
-def createPlugin():
-    return DnsenumPlugin()
+def createPlugin(ignore_info=False):
+    return DnsenumPlugin(ignore_info=ignore_info)
 
 # I'm Py3

@@ -21,8 +21,8 @@ __version__ = "1.0.0"
 
 class pasteAnalyzerPlugin(PluginBase):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "pasteAnalyzer"
         self.name = "pasteAnalyzer JSON Output Plugin"
         self.plugin_version = "1.0.0"
@@ -86,7 +86,7 @@ class pasteAnalyzerPlugin(PluginBase):
         return command_string
 
 
-def createPlugin():
-    return pasteAnalyzerPlugin()
+def createPlugin(ignore_info=False):
+    return pasteAnalyzerPlugin(ignore_info=ignore_info)
 
 # I'm Py3

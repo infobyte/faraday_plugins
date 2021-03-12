@@ -109,8 +109,8 @@ class CmdNdiffPlugin(PluginBase):
     Add a new vuln INFO if detect a new host or a new port ..
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Ndiff"
         self.name = "ndiff"
         self.plugin_version = "0.0.1"
@@ -156,7 +156,7 @@ class CmdNdiffPlugin(PluginBase):
             return f"{command_string} --xml "
 
 
-def createPlugin():
-    return CmdNdiffPlugin()
+def createPlugin(ignore_info=False):
+    return CmdNdiffPlugin(ignore_info=ignore_info)
 
 # I'm Py3

@@ -217,8 +217,8 @@ class AcunetixPlugin(PluginXMLFormat):
     Example plugin to parse acunetix output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "ScanGroup"
         self.id = "Acunetix"
         self.name = "Acunetix XML Output Plugin"
@@ -291,5 +291,5 @@ class AcunetixPlugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return AcunetixPlugin()
+def createPlugin(ignore_info=False):
+    return AcunetixPlugin(ignore_info=ignore_info)
