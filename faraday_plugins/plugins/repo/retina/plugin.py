@@ -230,4 +230,4 @@ class RetinaPlugin(PluginXMLFormat):
 def createPlugin(ignore_info=False):
     return RetinaPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

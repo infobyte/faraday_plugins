@@ -136,4 +136,4 @@ class WcscanPlugin(PluginBase):
 def createPlugin(ignore_info=False):
     return WcscanPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

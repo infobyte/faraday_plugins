@@ -244,4 +244,4 @@ class W3afPlugin(PluginXMLFormat):
 def createPlugin(ignore_info=False):
     return W3afPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

@@ -64,4 +64,4 @@ class CmdPropeciaPlugin(PluginBase):
 def createPlugin(ignore_info=False):
     return CmdPropeciaPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

@@ -159,4 +159,4 @@ class CmdNdiffPlugin(PluginBase):
 def createPlugin(ignore_info=False):
     return CmdNdiffPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

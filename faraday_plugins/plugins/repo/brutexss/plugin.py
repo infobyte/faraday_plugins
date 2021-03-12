@@ -60,4 +60,4 @@ class brutexss (PluginBase):
 def createPlugin(ignore_info=False):
     return brutexss(ignore_info=ignore_info)
 
-# I'm Py3
+

@@ -232,4 +232,4 @@ class NetsparkerPlugin(PluginXMLFormat):
 def createPlugin(ignore_info=False):
     return NetsparkerPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

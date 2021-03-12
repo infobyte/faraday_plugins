@@ -406,4 +406,4 @@ class MetasploitPlugin(PluginXMLFormat):
 def createPlugin(ignore_info=False):
     return MetasploitPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

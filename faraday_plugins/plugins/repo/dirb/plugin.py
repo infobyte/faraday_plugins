@@ -119,4 +119,4 @@ class dirbPlugin(PluginBase):
 def createPlugin(ignore_info=False):
     return dirbPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

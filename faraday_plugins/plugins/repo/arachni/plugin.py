@@ -494,4 +494,4 @@ class ArachniPlugin(PluginXMLFormat):
 def createPlugin(ignore_info=False):
     return ArachniPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

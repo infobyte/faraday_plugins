@@ -138,4 +138,4 @@ class WebfuzzerPlugin(PluginBase):
 def createPlugin(ignore_info=False):
     return WebfuzzerPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+
