@@ -303,7 +303,7 @@ class PluginBase:
 
     def processReport(self, filepath, user="faraday"):
         if os.path.isfile(filepath):
-            self.vulns_data["command"]["params"] = filepath
+            self.vulns_data["command"]["params"] = filepath if not self.ignore_info else f"{filepath} (Info ignored)"
             self.vulns_data["command"]["user"] = user
             self.vulns_data["command"]["import_source"] = "report"
             self._parse_filename(filepath)
