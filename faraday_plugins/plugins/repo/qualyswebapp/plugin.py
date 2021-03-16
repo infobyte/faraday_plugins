@@ -101,8 +101,9 @@ class Results():
 
 
 class QualysWebappPlugin(PluginXMLFormat):
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = ["WAS_SCAN_REPORT"]
         self.id = 'QualysWebapp'
         self.name = 'QualysWebapp XML Output Plugin'
@@ -175,5 +176,5 @@ class QualysWebappPlugin(PluginXMLFormat):
                                         external_id=vuln_scan_id, data=vuln_data_add)
 
 
-def createPlugin():
-    return QualysWebappPlugin()
+def createPlugin(ignore_info=False):
+    return QualysWebappPlugin(ignore_info=ignore_info)

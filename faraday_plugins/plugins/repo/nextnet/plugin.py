@@ -22,8 +22,9 @@ __status__ = "Development"
 
 
 class CmdNextNetin(PluginBase):
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "nextnet"
         self.name = "nextnet"
         self.plugin_version = "0.0.1"
@@ -64,5 +65,5 @@ class CmdNextNetin(PluginBase):
         return True
 
 
-def createPlugin():
-    return CmdNextNetin()
+def createPlugin(ignore_info=False):
+    return CmdNextNetin(ignore_info=ignore_info)

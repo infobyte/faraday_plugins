@@ -50,8 +50,8 @@ class WhatWebJsonParser:
 
 class WhatWebPlugin(PluginJsonFormat):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "whatweb"
         self.name = "WhatWebPlugin"
         self.plugin_version = "0.1"
@@ -74,5 +74,5 @@ class WhatWebPlugin(PluginJsonFormat):
                                   description=desc)
 
 
-def createPlugin():
-    return WhatWebPlugin()
+def createPlugin(ignore_info=False):
+    return WhatWebPlugin(ignore_info=ignore_info)

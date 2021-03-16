@@ -224,8 +224,8 @@ class WapitiPlugin(PluginXMLFormat):
     Example plugin to parse wapiti output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "report"
         self.id = "Wapiti"
         self.name = "Wapiti XML Output Plugin"
@@ -346,7 +346,7 @@ class WapitiPlugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return WapitiPlugin()
+def createPlugin(ignore_info=False):
+    return WapitiPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

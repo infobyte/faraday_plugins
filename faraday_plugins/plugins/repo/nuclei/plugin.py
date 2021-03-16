@@ -31,8 +31,8 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
     and adds the information to Faraday.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "nuclei"
         self.name = "Nuclei"
         self.plugin_version = "0.1"
@@ -100,7 +100,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                     external_id=info_vuln.get('template', ""))
 
 
-def createPlugin():
-    return NucleiPlugin()
+def createPlugin(ignore_info=False):
+    return NucleiPlugin(ignore_info=ignore_info)
 
 

@@ -39,8 +39,9 @@ class AppSpiderParser:
 
 
 class AppSpiderPlugin(PluginXMLFormat):
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = ["VulnSummary"]
         self.id = 'AppSpider'
         self.name = 'AppSpider XML Output Plugin'
@@ -113,5 +114,5 @@ class AppSpiderPlugin(PluginXMLFormat):
                                         external_id=vuln_external_id, data=str_data)
 
 
-def createPlugin():
-    return AppSpiderPlugin()
+def createPlugin(ignore_info=False):
+    return AppSpiderPlugin(ignore_info=ignore_info)

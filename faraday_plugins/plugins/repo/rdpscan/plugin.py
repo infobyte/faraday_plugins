@@ -7,8 +7,8 @@ from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 class RDPScanPlugin(PluginBase):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "rdpscan"
         self.id = "rdpscan"
         self.name = "rdpscan"
@@ -43,5 +43,5 @@ class RDPScanPlugin(PluginBase):
                     )
 
 
-def createPlugin():
-    return RDPScanPlugin()
+def createPlugin(ignore_info=False):
+    return RDPScanPlugin(ignore_info=ignore_info)

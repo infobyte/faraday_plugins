@@ -221,8 +221,8 @@ class LynisLogDataExtracter():
 class LynisPlugin(PluginByExtension):
     """ Simple example plugin to parse lynis' lynis-report.dat file."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Lynis"
         self.name = "Lynis DAT Output Plugin"
         self.plugin_version = "0.4"
@@ -324,7 +324,7 @@ class LynisPlugin(PluginByExtension):
         self._parse_filename(file_path)
 
 
-def createPlugin():
-    return LynisPlugin()
+def createPlugin(ignore_info=False):
+    return LynisPlugin(ignore_info=ignore_info)
 
 

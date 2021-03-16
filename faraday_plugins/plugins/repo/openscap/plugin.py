@@ -126,8 +126,9 @@ class OpenScapParser:
 
 
 class OpenScapPlugin(PluginXMLFormat):
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "Benchmark"
         self.id = 'OpenScap'
         self.name = 'OpenScap XML Output Plugin'
@@ -210,5 +211,5 @@ class OpenScapPlugin(PluginXMLFormat):
                     run_date=vuln_run_date)
 
 
-def createPlugin():
-    return OpenScapPlugin()
+def createPlugin(ignore_info=False):
+    return OpenScapPlugin(ignore_info=ignore_info)

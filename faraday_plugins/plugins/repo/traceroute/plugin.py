@@ -16,8 +16,8 @@ __version__ = "1.0.0"
 
 class traceroutePlugin(PluginBase):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Traceroute"
         self.name = "Traceroute"
         self.plugin_version = "1.0.0"
@@ -56,7 +56,7 @@ class traceroutePlugin(PluginBase):
         return None
 
 
-def createPlugin():
-    return traceroutePlugin()
+def createPlugin(ignore_info=False):
+    return traceroutePlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

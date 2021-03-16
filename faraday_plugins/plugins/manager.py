@@ -151,7 +151,8 @@ class CommandAnalyzer:
 
 class PluginsManager:
 
-    def __init__(self, custom_plugins_folder=None):
+    def __init__(self, custom_plugins_folder=None, ignore_info = False):
+        self.ignore_info = ignore_info
         self.plugins = {}
         self.plugin_modules = {}
         self._load_plugins(custom_plugins_folder)
@@ -214,7 +215,7 @@ class PluginsManager:
         plugin = None
         plugin_id = plugin_id.lower()
         if plugin_id in self.plugin_modules:
-            plugin = self.plugin_modules[plugin_id].createPlugin()
+            plugin = self.plugin_modules[plugin_id].createPlugin(self.ignore_info)
         else:
             logger.debug("Unknown Plugin: %s", plugin_id)
         return plugin
@@ -222,4 +223,4 @@ class PluginsManager:
     def get_plugins(self):
         for plugin_id, plugin_module in self.plugin_modules.items():
             logger.debug("Instance Plugin: %s", plugin_id)
-            yield plugin_id, plugin_module.createPlugin()
+            yield plugin_id, plugin_module.createPlugin(self.ignore_info)

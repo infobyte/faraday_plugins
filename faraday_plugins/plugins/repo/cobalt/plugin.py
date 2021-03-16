@@ -51,8 +51,8 @@ class CobaltPlugin(PluginCSVFormat):
     Example plugin to parse Cobalt output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.csv_headers = [{'Token'}, {'Tag'}]
         self.id = "Cobalt"
         self.name = "Cobalt CSV Output Plugin"
@@ -102,5 +102,5 @@ class CobaltPlugin(PluginCSVFormat):
                                               data=row['StepsToReproduce'], external_id=row['Tag'], run_date=run_date)
 
 
-def createPlugin():
-    return CobaltPlugin()
+def createPlugin(ignore_info=False):
+    return CobaltPlugin(ignore_info=ignore_info)

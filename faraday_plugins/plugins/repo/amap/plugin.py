@@ -20,8 +20,8 @@ from faraday_plugins.plugins.plugins_utils import resolve_hostname
 class AmapPlugin(PluginBase):
     """ Example plugin to parse amap output."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Amap"
         self.name = "Amap Output Plugin"
         self.plugin_version = "0.0.3"
@@ -147,7 +147,7 @@ class AmapPlugin(PluginBase):
         return final
 
 
-def createPlugin():
-    return AmapPlugin()
+def createPlugin(ignore_info=False):
+    return AmapPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

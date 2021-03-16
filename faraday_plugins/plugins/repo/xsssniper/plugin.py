@@ -16,8 +16,8 @@ from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 class xsssniper(PluginBase):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "xsssniper"
         self.name = "xsssniper"
         self.plugin_version = "0.0.1"
@@ -55,7 +55,7 @@ class xsssniper(PluginBase):
                                               params=''.join(parametro), request='', response='')
 
 
-def createPlugin():
-    return xsssniper()
+def createPlugin(ignore_info=False):
+    return xsssniper(ignore_info=ignore_info)
 
-# I'm Py3
+

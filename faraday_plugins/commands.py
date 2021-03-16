@@ -52,11 +52,12 @@ def list_plugins(custom_plugins_folder):
 @click.option('-cpf', '--custom-plugins-folder', type=str)
 @click.option('--summary', is_flag=True)
 @click.option('-o', '--output-file', type=click.Path(exists=False))
-def process_report(report_file, plugin_id, custom_plugins_folder, summary, output_file):
+@click.option('--ignore-info', is_flag=True, help="Ignore information vulnerabilities")
+def process_report(report_file, plugin_id, custom_plugins_folder, summary, output_file, ignore_info):
     if not os.path.isfile(report_file):
         click.echo(click.style(f"File {report_file} Don't Exists", fg="red"), err=True)
     else:
-        plugins_manager = PluginsManager(custom_plugins_folder)
+        plugins_manager = PluginsManager(custom_plugins_folder, ignore_info=ignore_info)
         analyzer = ReportAnalyzer(plugins_manager)
         if plugin_id:
             plugin = plugins_manager.get_plugin(plugin_id)
@@ -87,8 +88,10 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary, outpu
 @click.option('--summary', is_flag=True)
 @click.option('-o', '--output-file', type=click.Path(exists=False))
 @click.option('-sh', '--show-output', is_flag=True)
-def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary, output_file, show_output):
-    plugins_manager = PluginsManager(custom_plugins_folder)
+@click.option('--ignore-info', is_flag=True, help="Ignore information vulnerabilities")
+def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary, output_file, show_output,
+                    ignore_info):
+    plugins_manager = PluginsManager(custom_plugins_folder, ignore_info=ignore_info)
     analyzer = CommandAnalyzer(plugins_manager)
     if plugin_id:
         plugin = plugins_manager.get_plugin(plugin_id)

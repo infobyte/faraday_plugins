@@ -335,8 +335,8 @@ class ArachniPlugin(PluginXMLFormat):
 
     # Plugin that parses Arachni's XML report files.
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = ["report", "arachni_report"]
         self.id = 'Arachni'
         self.name = 'Arachni XML Output Plugin'
@@ -491,7 +491,7 @@ class ArachniPlugin(PluginXMLFormat):
         return self.hostname
 
 
-def createPlugin():
-    return ArachniPlugin()
+def createPlugin(ignore_info=False):
+    return ArachniPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

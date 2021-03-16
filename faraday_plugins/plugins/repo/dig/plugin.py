@@ -25,12 +25,12 @@ class DigPlugin(PluginBase):
     Handle DiG (http://linux.die.net/man/1/dig) output
     """
 
-    def __init__(self):
-        super().__init__()
-        self.id = u"dig"
-        self.name = u"DiG"
-        self.plugin_version = u"0.0.1"
-        self.version = u"9.9.5-3"
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
+        self.id = "dig"
+        self.name = "DiG"
+        self.plugin_version = "0.0.1"
+        self.version = "9.9.5-3"
         self._command_regex = re.compile(r'^(dig)\s+.*?')
 
     def parseOutputString(self, output):
@@ -141,7 +141,7 @@ class DigPlugin(PluginBase):
         return True
 
 
-def createPlugin():
-    return DigPlugin()
+def createPlugin(ignore_info=False):
+    return DigPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

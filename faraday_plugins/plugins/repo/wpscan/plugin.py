@@ -49,8 +49,8 @@ class WPScanPlugin(PluginJsonFormat):
     and adds the information to Faraday.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "wpscan"
         self.name = "WPscan"
         self.plugin_version = "0.2"
@@ -91,5 +91,5 @@ class WPScanPlugin(PluginJsonFormat):
                                               severity='unclassified')
 
 
-def createPlugin():
-    return WPScanPlugin()
+def createPlugin(ignore_info=False):
+    return WPScanPlugin(ignore_info=ignore_info)

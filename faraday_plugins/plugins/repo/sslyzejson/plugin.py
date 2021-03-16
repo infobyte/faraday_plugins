@@ -162,8 +162,8 @@ class SslyzeJsonParser:
 
 class SslyzePlugin(PluginJsonFormat):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Sslyze_JSON"
         self.name = "Sslyze Json"
         self.plugin_version = "0.1"
@@ -244,6 +244,6 @@ class SslyzePlugin(PluginJsonFormat):
                           command_string)
 
 
-def createPlugin():
-    return SslyzePlugin()
+def createPlugin(ignore_info=False):
+    return SslyzePlugin(ignore_info=ignore_info)
 

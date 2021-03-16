@@ -45,8 +45,8 @@ class SourceclearPlugin(PluginJsonFormat):
     and adds the information to Faraday.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "sourceclear"
         self.name = "Sourceclear"
         self.plugin_version = "0.1"
@@ -82,5 +82,5 @@ class SourceclearPlugin(PluginJsonFormat):
                                                   website=v_website)
 
 
-def createPlugin():
-    return SourceclearPlugin()
+def createPlugin(ignore_info=False):
+    return SourceclearPlugin(ignore_info=ignore_info)

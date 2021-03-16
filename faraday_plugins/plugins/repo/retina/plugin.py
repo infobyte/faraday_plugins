@@ -172,8 +172,8 @@ class RetinaPlugin(PluginXMLFormat):
     Example plugin to parse retina output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "scanJob"
         self.id = "Retina"
         self.name = "Retina XML Output Plugin"
@@ -227,7 +227,7 @@ class RetinaPlugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return RetinaPlugin()
+def createPlugin(ignore_info=False):
+    return RetinaPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

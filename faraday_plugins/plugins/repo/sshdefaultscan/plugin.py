@@ -22,8 +22,8 @@ class SSHDefaultScanPlugin(PluginBase):
     using --batch and --batch-template; supports --username and --password
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "sshdefaultscan"
         self.name = "sshdefaultscan"
         self.plugin_version = "0.0.1"
@@ -66,7 +66,7 @@ class SSHDefaultScanPlugin(PluginBase):
             return None
 
 
-def createPlugin():
-    return SSHDefaultScanPlugin()
+def createPlugin(ignore_info=False):
+    return SSHDefaultScanPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+
