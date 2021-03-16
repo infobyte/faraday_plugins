@@ -49,8 +49,8 @@ class ReverseraiderPlugin(PluginBase):
     Example plugin to parse reverseraider output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Reverseraider"
         self.name = "Reverseraider XML Output Plugin"
         self.plugin_version = "0.0.1"
@@ -78,7 +78,7 @@ class ReverseraiderPlugin(PluginBase):
 
 
 
-def createPlugin():
-    return ReverseraiderPlugin()
+def createPlugin(ignore_info=False):
+    return ReverseraiderPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

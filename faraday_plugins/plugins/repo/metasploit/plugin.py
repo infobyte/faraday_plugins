@@ -325,8 +325,8 @@ class MetasploitPlugin(PluginXMLFormat):
     Example plugin to parse metasploit output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = ["MetasploitV4", "MetasploitV5"]
         self.id = "Metasploit"
         self.name = "Metasploit XML Output Plugin"
@@ -403,7 +403,7 @@ class MetasploitPlugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return MetasploitPlugin()
+def createPlugin(ignore_info=False):
+    return MetasploitPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

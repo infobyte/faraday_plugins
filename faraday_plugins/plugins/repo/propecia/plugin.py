@@ -24,8 +24,8 @@ class CmdPropeciaPlugin(PluginBase):
     Basically inserts into the tree the ouput of this tool
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "propecia"
         self.name = "propecia port scanner"
         self.plugin_version = "0.0.1"
@@ -61,7 +61,7 @@ class CmdPropeciaPlugin(PluginBase):
             self._port = count_args[2]
 
 
-def createPlugin():
-    return CmdPropeciaPlugin()
+def createPlugin(ignore_info=False):
+    return CmdPropeciaPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

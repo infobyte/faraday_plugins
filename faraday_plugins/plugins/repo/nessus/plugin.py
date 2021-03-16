@@ -180,8 +180,8 @@ class NessusPlugin(PluginXMLFormat):
     Example plugin to parse nessus output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.extension = ".nessus"
         self.identifier_tag = "NessusClientData_v2"
         self.id = "Nessus"
@@ -325,5 +325,5 @@ class NessusPlugin(PluginXMLFormat):
                                                            run_date=run_date)
 
 
-def createPlugin():
-    return NessusPlugin()
+def createPlugin(ignore_info=False):
+    return NessusPlugin(ignore_info=ignore_info)

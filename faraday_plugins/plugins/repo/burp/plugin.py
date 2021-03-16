@@ -210,8 +210,8 @@ class BurpPlugin(PluginXMLFormat):
     Example plugin to parse burp output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "issues"
         self.id = "Burp"
         self.name = "Burp XML Output Plugin"
@@ -289,7 +289,7 @@ class BurpPlugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return BurpPlugin()
+def createPlugin(ignore_info=False):
+    return BurpPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+
