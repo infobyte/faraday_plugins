@@ -128,8 +128,8 @@ class ReconngPlugin(PluginXMLFormat):
     Example plugin to parse qualysguard output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "reconng"
         self.id = 'Reconng'
         self.name = 'Reconng XML Output Plugin'
@@ -171,7 +171,7 @@ class ReconngPlugin(PluginXMLFormat):
 
 
 
-def createPlugin():
-    return ReconngPlugin()
+def createPlugin(ignore_info=False):
+    return ReconngPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

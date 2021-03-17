@@ -180,8 +180,8 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
     Example plugin to parse netsparkercloud output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "netsparker-cloud"
         self.id = "NetsparkerCloud"
         self.name = "NetsparkerCloud XML Output Plugin"
@@ -210,5 +210,5 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return NetsparkerCloudPlugin()
+def createPlugin(ignore_info=False):
+    return NetsparkerCloudPlugin(ignore_info=ignore_info)

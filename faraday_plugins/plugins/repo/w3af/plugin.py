@@ -208,8 +208,8 @@ class W3afPlugin(PluginXMLFormat):
     Example plugin to parse w3af output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = ["w3af-run", "w3afrun"]
         self.id = "W3af"
         self.name = "W3af XML Output Plugin"
@@ -241,7 +241,7 @@ class W3afPlugin(PluginXMLFormat):
 
 
 
-def createPlugin():
-    return W3afPlugin()
+def createPlugin(ignore_info=False):
+    return W3afPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

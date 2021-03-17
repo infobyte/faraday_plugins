@@ -16,8 +16,8 @@ __status__ = "Development"
 
 class NetdiscoverPlugin(PluginBase):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Netdiscover"
         self.name = "netdiscover"
         self.plugin_version = "0.0.1"
@@ -39,7 +39,7 @@ class NetdiscoverPlugin(PluginBase):
 
 
 
-def createPlugin():
-    return NetdiscoverPlugin()
+def createPlugin(ignore_info=False):
+    return NetdiscoverPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

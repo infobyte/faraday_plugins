@@ -7,8 +7,8 @@ from faraday_plugins.plugins.plugin import PluginBase
 
 class WfuzzPlugin(PluginBase):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Wfuzz"
         self.name = "Wfuzz Plugin"
         self.plugin_version = "0.0.1"
@@ -84,7 +84,7 @@ class WfuzzPlugin(PluginBase):
                                               path=path)
 
 
-def createPlugin():
-    return WfuzzPlugin()
+def createPlugin(ignore_info=False):
+    return WfuzzPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

@@ -25,8 +25,8 @@ class PeepingTomPlugin(PluginBase):
     Handle PeepingTom (https://bitbucket.org/LaNMaSteR53/peepingtom) output
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "peepingtom"
         self.name = "PeepingTom"
         self.plugin_version = "0.0.1"
@@ -71,7 +71,7 @@ class PeepingTomPlugin(PluginBase):
         self._path = current_path
 
 
-def createPlugin():
-    return PeepingTomPlugin()
+def createPlugin(ignore_info=False):
+    return PeepingTomPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

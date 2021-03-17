@@ -17,8 +17,8 @@ from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 class brutexss (PluginBase):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "brutexss"
         self.name = "brutexss"
         self.plugin_version = "0.0.2"
@@ -57,7 +57,7 @@ class brutexss (PluginBase):
 
 
 
-def createPlugin():
-    return brutexss()
+def createPlugin(ignore_info=False):
+    return brutexss(ignore_info=ignore_info)
 
-# I'm Py3
+

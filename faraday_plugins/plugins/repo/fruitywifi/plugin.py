@@ -24,8 +24,8 @@ class FruityWiFiPlugin(PluginBase):
     This plugin handles FruityWiFi clients.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "fruitywifi"
         self.name = "FruityWiFi"
         self.plugin_version = "0.0.1"
@@ -127,7 +127,7 @@ class FruityWiFiPlugin(PluginBase):
 
 
 
-def createPlugin():
-    return FruityWiFiPlugin()
+def createPlugin(ignore_info=False):
+    return FruityWiFiPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

@@ -155,8 +155,8 @@ class X1Plugin(PluginXMLFormat):
     Example plugin to parse x1 output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = ["session", "landscapePolicy"]
         self.id = "X1"
         self.name = "Onapsis X1 XML Output Plugin"
@@ -193,7 +193,7 @@ class X1Plugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return X1Plugin()
+def createPlugin(ignore_info=False):
+    return X1Plugin(ignore_info=ignore_info)
 
-# I'm Py3
+

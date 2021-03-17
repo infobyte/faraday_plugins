@@ -23,8 +23,8 @@ class CmdPingPlugin(PluginBase):
     Basically detects if user was able to connect to a device
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "ping"
         self.name = "Ping"
         self.plugin_version = "0.0.1"
@@ -49,8 +49,8 @@ class CmdPingPlugin(PluginBase):
 
 
 
-def createPlugin():
-    return CmdPingPlugin()
+def createPlugin(ignore_info=False):
+    return CmdPingPlugin(ignore_info=ignore_info)
 
 
-# I'm Py3
+

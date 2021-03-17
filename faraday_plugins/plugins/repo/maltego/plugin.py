@@ -370,8 +370,8 @@ class MaltegoParser():
 
 class MaltegoPlugin(PluginZipFormat):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "maltego"
         self.id = "Maltego"
         self.name = "Maltego MTGX & MTGL Output Plugin"
@@ -512,5 +512,5 @@ class MaltegoPlugin(PluginZipFormat):
 
 
 
-def createPlugin():
-    return MaltegoPlugin()
+def createPlugin(ignore_info=False):
+    return MaltegoPlugin(ignore_info=ignore_info)
