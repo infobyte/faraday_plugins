@@ -1,3 +1,7 @@
+1.4.3 [Mar 17th, 2021]:
+---
+ * Add Ignore information vulnerabilities option
+
 1.4.2 [Mar 10th, 2021]:
 ---
  * Fix bug with sslyze output file
