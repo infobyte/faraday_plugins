@@ -22,8 +22,9 @@ __status__ = "Development"
 
 
 class WhitesourcePlugin(PluginJsonFormat):
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "whitesource"
         self.name = "whitesource"
         self.plugin_version = "0.1"
@@ -93,8 +94,5 @@ class WhitesourcePlugin(PluginJsonFormat):
                     )
 
 
-
-
-
-def createPlugin():
-    return WhitesourcePlugin()
+def createPlugin(ignore_info=False):
+    return WhitesourcePlugin(ignore_info=ignore_info)

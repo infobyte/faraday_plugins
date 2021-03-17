@@ -262,8 +262,9 @@ class AppScanParser:
 
 
 class AppScanPlugin(PluginXMLFormat):
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "xml-report"
         self.id = 'Appscan'
         self.name = 'Appscan XML Plugin'
@@ -382,5 +383,5 @@ class AppScanPlugin(PluginXMLFormat):
                                             data=f'xfix: {vulnserv["xfid"]} cme: {vulnserv["cwe"]}', run_date=None)
 
 
-def createPlugin():
-    return AppScanPlugin()
+def createPlugin(ignore_info=False):
+    return AppScanPlugin(ignore_info=ignore_info)

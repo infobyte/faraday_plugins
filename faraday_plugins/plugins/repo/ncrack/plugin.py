@@ -92,8 +92,9 @@ class NcrackParser:
 
 
 class NcrackPlugin(PluginXMLFormat):
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = "ncrackrun"
         self.id = 'ncrack'
         self.name = 'ncrack XML Plugin'
@@ -121,5 +122,5 @@ class NcrackPlugin(PluginXMLFormat):
                                                password=service_vuln['passw'])
 
 
-def createPlugin():
-    return NcrackPlugin()
+def createPlugin(ignore_info=False):
+    return NcrackPlugin(ignore_info=ignore_info)

@@ -335,8 +335,8 @@ class QualysguardPlugin(PluginXMLFormat):
     Example plugin to parse qualysguard output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = ["ASSET_DATA_REPORT", "SCAN"]
         self.id = 'Qualysguard'
         self.name = 'Qualysguard XML Output Plugin'
@@ -419,7 +419,7 @@ class QualysguardPlugin(PluginXMLFormat):
         pass
 
 
-def createPlugin():
-    return QualysguardPlugin()
+def createPlugin(ignore_info=False):
+    return QualysguardPlugin(ignore_info=ignore_info)
 
 
