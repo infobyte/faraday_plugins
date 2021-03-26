@@ -353,4 +353,4 @@ class FaradayCSVPlugin(PluginCSVFormat):
 
 
 def createPlugin(ignore_info=False):
-    return FaradayCSVPlugin(ignore_info=ignore_info)
+    return FaradayCSVPlugin(ignore_info=False)
