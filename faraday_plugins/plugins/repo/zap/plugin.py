@@ -53,7 +53,8 @@ class ZapXmlParser:
         else:
             self.sites = []
 
-    def parse_xml(self, xml_output):
+    @staticmethod
+    def parse_xml(xml_output):
         """
         Open and parse an xml file.
 
@@ -169,11 +170,11 @@ class Item:
 
         if self.get_text_from_subnode('reference'):
             self.desc += '\nReference: ' + \
-                         self.get_text_from_subnode('reference')
+                self.get_text_from_subnode('reference')
 
         self.ref = []
         if self.get_text_from_subnode('cweid'):
-            self.ref.append("CWE-" + self.get_text_from_subnode('cweid'))
+            self.ref.append("CWE:" + self.get_text_from_subnode('cweid'))
 
         self.items = []
 
