@@ -5,18 +5,20 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 from urllib.parse import urlparse
+
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 try:
     import xml.etree.cElementTree as ET
+
     ETREE_VERSION = ET.VERSION
 except ImportError:
     import xml.etree.ElementTree as ET
+
     ETREE_VERSION = ET.VERSION
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -26,7 +28,6 @@ __version__ = "1.0.0"
 __maintainer__ = "Francisco Amato"
 __email__ = "famato@infobytesec.com"
 __status__ = "Development"
-
 
 
 class ZapXmlParser:
@@ -72,7 +73,8 @@ class ZapXmlParser:
 
         return tree
 
-    def get_items(self, tree):
+    @staticmethod
+    def get_items(tree):
         """
         @return items A list of Host instances
         """
@@ -144,7 +146,6 @@ class Site:
         return None
 
 
-
 class Item:
     """
     An abstract representation of a Item
@@ -168,7 +169,7 @@ class Item:
 
         if self.get_text_from_subnode('reference'):
             self.desc += '\nReference: ' + \
-                self.get_text_from_subnode('reference')
+                         self.get_text_from_subnode('reference')
 
         self.ref = []
         if self.get_text_from_subnode('cweid'):
@@ -183,11 +184,7 @@ class Item:
 
         for elem in arr:
             uri = elem.find('uri').text
-            method_element = elem.find('method')
-            if method_element:
-                method = elem.find('method').text
-            else:
-                method = ""
+            method = elem.findtext('method', "")
             self.parse_uri(uri, method)
 
     def parse_uri(self, uri, method):
@@ -244,7 +241,6 @@ class ZapPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
 
-
     def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
@@ -281,7 +277,6 @@ class ZapPlugin(PluginXMLFormat):
                     )
 
         del parser
-
 
     def setHost(self):
         pass
