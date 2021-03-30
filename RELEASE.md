@@ -1,3 +1,7 @@
+1.4.4 [Mar 30th, 2021]:
+---
+ * Faraday CSV Plugin do not consider ignore_info option
+
 1.4.3 [Mar 17th, 2021]:
 ---
  * Add Ignore information vulnerabilities option
