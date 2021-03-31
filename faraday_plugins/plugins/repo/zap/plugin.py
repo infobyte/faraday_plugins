@@ -186,22 +186,26 @@ class Item:
         for elem in arr:
             uri = elem.find('uri').text
             method = elem.findtext('method', "")
-            self.parse_uri(uri, method)
+            item = self.parse_uri(uri, method)
 
-    def parse_uri(self, uri, method):
+            param = elem.findtext("param", "")
+            attack = elem.findtext("attack", "")
+            if attack and param:
+                item["data"] = f"Payload:\n {param} = {attack}"
+
+            item["pname"] = elem.findtext("param", "")
+
+            self.items.append(item)
+
+    def parse_uri(self, uri, method) -> dict:
 
         parsed_url = urlparse(uri)
         protocol = parsed_url.scheme
         host = parsed_url.netloc
         port = parsed_url.port
+        params = self.extract_params_from_uri(uri)
 
-        try:
-            params = [i.split('=')[0]
-                      for i in uri.split('?')[1].split('&')]
-        except Exception as e:
-            params = ''
-
-        item = {
+        return {
             'uri': uri,
             'params': ', '.join(params),
             'host': host,
@@ -210,9 +214,14 @@ class Item:
             'port': port,
             'method': method,
             'path': parsed_url.path,
-            'query': parsed_url.query
+            'query': parsed_url.query,
+            'data': ""
         }
-        self.items.append(item)
+
+    @staticmethod
+    def extract_params_from_uri(uri):
+        params = re.findall("(\w+)=", uri)
+        return params if params else ''
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
@@ -262,6 +271,7 @@ class ZapPlugin(PluginXMLFormat):
 
             for item in site.items:
                 for instance in item.items:
+
                     self.createAndAddVulnWebToService(
                         h_id,
                         s_id,
@@ -274,7 +284,9 @@ class ZapPlugin(PluginXMLFormat):
                         params=instance['params'],
                         method=instance['method'],
                         ref=item.ref,
-                        resolution=item.resolution
+                        resolution=item.resolution,
+                        data=instance["data"],
+                        pname=instance["pname"]
                     )
 
         del parser
