@@ -19,6 +19,7 @@ except ImportError:
 from lxml import etree
 from lxml.etree import XMLParser
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 current_path = os.path.abspath(os.getcwd())
@@ -345,10 +346,54 @@ class Port:
         Expects to find a scripts in the node.
         """
         for s in self.node.findall('script'):
-            yield Script(s)
+            if s.get("id") == 'vulners':
+                for service_table in s.findall('table'):
+                    for vulnerability_table in service_table.findall('table'):
+                        yield ScriptVulners(s, service_table, vulnerability_table)
+            else:
+                yield Script(s)
 
     def __str__(self):
         return "%s, %s, Service: %s" % (self.number, self.state, self.service)
+
+
+class ScriptVulners:
+    """
+    An abstract representation of a script table when script is 'vulners'.
+    https://nmap.org/nsedoc/scripts/vulners.html
+
+    '<script id="vulners" output="&#xa;  cpe:/a:apache:http_server:2.4.6: ...">
+    <table key="cpe:/a:apache:http_server:2.4.6">
+    <table><elem key="cvss">7.5</elem>
+    <elem key="id">CVE-2017-7679</elem><elem key="type">cve</elem>
+    <elem key="is_exploit">false</elem></table>
+    ...
+    </table></script>'
+
+    @param script_node The reference to the node of the 'vulners' script
+    @param service_table The outer table taken from an nmap 'vulners' script xml tree
+    @param vulnerability_table The inner table taken from an nmap 'vulners' script xml tree
+    """
+
+    def __init__(self, script_node, service_table, vulnerability_table):
+        self.node = script_node
+        self.table = {}
+        for e in vulnerability_table.findall('elem'):
+            self.table[e.get("key")] = str(e.text)
+
+        self.name = self.table["id"]
+        
+        self.desc = script_node.get("id") + "-" + self.table["id"]
+        if self.table["is_exploit"] == 'true':
+            self.desc += " *EXPLOIT*"
+        
+        self.refs = ["https://vulners.com/" + self.table["type"] + "/" + self.table["id"]]
+        self.response = ""
+        self.web = ""
+        self.severity = get_severity_from_cvss(self.table["cvss"])
+
+    def __str__(self):
+        return "%s, %s, %s" % (self.name, self.product, self.version)
 
 
 class Script:
@@ -502,16 +547,21 @@ class NmapPlugin(PluginXMLFormat):
                     description=srvname)
 
                 for v in port.vulns:
-                    severity = "info"
+                    
                     desc = v.desc
                     refs = v.refs
 
-                    if re.search(r"(?<!NOT )VULNERABLE", desc):
-                        severity = "high"
-                    if re.search(r"ERROR", desc):
-                        severity = "unclassified"
-                    if re.search(r"Couldn't", desc):
-                        severity = "unclassified"
+                    if hasattr(v, 'severity'):
+                        severity = v.severity
+                    else:
+                        severity = "info"
+                        if re.search(r"(?<!NOT )VULNERABLE", desc):
+                            severity = "high"
+                        if re.search(r"ERROR", desc):
+                            severity = "unclassified"
+                        if re.search(r"Couldn't", desc):
+                            severity = "unclassified"
+                        
                     if v.web:
                         v_id = self.createAndAddVulnWebToService(
                             h_id,
