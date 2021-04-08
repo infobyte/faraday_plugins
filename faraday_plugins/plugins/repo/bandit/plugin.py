@@ -39,18 +39,6 @@ class BanditPlugin(PluginXMLFormat):
 
         return True
 
-    def _get_host_name(self):
-        try:
-            filename = self.vulns_data['command']['params'].split('/')[-1].lower()
-            if filename.endswith('_faraday_bandit.xml'):
-                return filename.lower().replace('_faraday_bandit.xml', '')
-
-            return filename
-        except:
-            pass
-
-        return 'bandit-report'
-
 
 class BanditParser:
     """
