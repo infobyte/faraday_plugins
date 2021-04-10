@@ -388,6 +388,7 @@ class ScriptVulners:
             self.desc += " *EXPLOIT*"
         
         self.refs = ["https://vulners.com/" + self.table["type"] + "/" + self.table["id"]]
+        self.refs.append("CVSS: " + self.table["cvss"])
         self.response = ""
         self.web = ""
         self.severity = get_severity_from_cvss(self.table["cvss"])
