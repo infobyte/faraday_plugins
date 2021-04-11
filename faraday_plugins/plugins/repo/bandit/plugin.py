@@ -7,8 +7,8 @@ class BanditPlugin(PluginXMLFormat):
     Example plugin to parse bandit output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = 'testsuite'
         self.extension = ".xml"
         self.id = "Bandit"
@@ -67,5 +67,6 @@ class BanditParser:
 
         return vulns
 
-def createPlugin():
-    return BanditPlugin()
+
+def createPlugin(ignore_info=False):
+    return BanditPlugin(ignore_info=ignore_info)
