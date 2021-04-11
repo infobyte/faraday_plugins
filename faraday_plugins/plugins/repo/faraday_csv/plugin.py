@@ -248,8 +248,9 @@ class CSVParser:
 
 
 class FaradayCSVPlugin(PluginCSVFormat):
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "faraday_csv"
         self.name = "Faraday CSV Plugin"
         self.plugin_version = "1.0"
@@ -351,5 +352,5 @@ class FaradayCSVPlugin(PluginCSVFormat):
                     )
 
 
-def createPlugin():
-    return FaradayCSVPlugin()
+def createPlugin(ignore_info=False):
+    return FaradayCSVPlugin(ignore_info=False)

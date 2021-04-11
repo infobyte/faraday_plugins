@@ -14,8 +14,8 @@ __version__ = "1.0.0"
 
 class hping3(PluginBase):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Hping3"
         self.name = "hping3"
         self.plugin_version = "0.0.1"
@@ -68,7 +68,7 @@ class hping3(PluginBase):
                         host_id, service, protocol="tcp", ports=port, status="open")
 
 
-def createPlugin():
-    return hping3()
+def createPlugin(ignore_info=False):
+    return hping3(ignore_info=ignore_info)
 
-# I'm Py3
+

@@ -1,4 +1,44 @@
-1.3.0:
+1.4.4 [Mar 30th, 2021]:
+---
+ * Faraday CSV Plugin do not consider ignore_info option
+
+1.4.3 [Mar 17th, 2021]:
+---
+ * Add Ignore information vulnerabilities option
+
+1.4.2 [Mar 10th, 2021]:
+---
+ * Fix bug with sslyze output file
+ * FIX change id sslyze for JSON/XML
+
+1.4.1 [Feb 26th, 2021]:
+---
+ * ADD microsoft baseline security analyzer plugin
+ * ADD nextnet plugin
+ * ADD openscap plugin 
+ * FIX old versions of Nessus plugins bugs
+
+1.4.0 [Dec 23rd, 2020]:
+---
+ * Update the fields of the nuclei output used to create a vuln
+
+1.4.0b2 [Dec 15th, 2020]:
+---
+ * Fix nuclei plugin bug when url is None
+
+1.4.0b1 [Dec 14th, 2020]:
+---
+ * Add new plugin base class, for multi line json
+ * New ncrack plugin 
+ * New nuclei plugin
+ * New sslyze json plugin
+ * New WhatWeb plugin
+ * Fix missing ip in some arachni reports
+ * Fix change name vuln in Netsparker plugin
+ * Fix whois plugin, command whois IP not parse data
+ * Change the way we detect json reports when they are lists of dictionaries
+
+1.3.0 [Sep 2nd, 2020]:
 ---
  * ADD plugin AppSpider
  * Add tests to faraday-plugins cli

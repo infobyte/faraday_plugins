@@ -67,25 +67,14 @@ class SslLabsPlugin(PluginJsonFormat):
     and adds the information to Faraday.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "ssllabs"
         self.name = "SSL Labs"
         self.plugin_version = "0.1"
         self.version = "3.4.5"
-        self.json_keys = set()
+        self.json_keys = {'engineVersion', 'criteriaVersion', 'endpoints'}
 
-    def report_belongs_to(self, **kwargs):
-        result = False
-        if super().report_belongs_to(**kwargs):
-            report_path = kwargs.get("report_path", "")
-            with open(report_path) as f:
-                output = f.readlines()
-            for line in output:
-                check = line.find('"criteriaVersion":')
-                if check > 0:
-                    result = True
-        return result
 
     def parseOutputString(self, output):
         parser = SslLabsJsonParser(output)
@@ -121,5 +110,5 @@ class SslLabsPlugin(PluginJsonFormat):
                                            data=vuln['data'])
 
 
-def createPlugin():
-    return SslLabsPlugin()
+def createPlugin(ignore_info=False):
+    return SslLabsPlugin(ignore_info=ignore_info)

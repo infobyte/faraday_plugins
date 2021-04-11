@@ -29,10 +29,11 @@ class PluginBase:
     # TODO: Add class generic identifier
     class_signature = "PluginBase"
 
-    def __init__(self):
+    def __init__(self, ignore_info=False):
         # Must be unique. Check that there is not
         # an existant plugin with the same id.
         # TODO: Make script that list current ids.
+        self.ignore_info = ignore_info
         self.id = None
         self.auto_load = True
         self._rid = id(self)
@@ -138,26 +139,32 @@ class PluginBase:
         return obj_uuid
 
     def save_service_vuln_cache(self, host_id, service_id, vuln):
-        cache_id = self.get_service_vuln_cache_id(host_id, service_id, vuln)
-        if cache_id not in self._vulns_cache:
-            obj_uuid = self.save_cache(vuln)
-            service = self.get_from_cache(service_id)
-            service["vulnerabilities"].append(vuln)
-            self._vulns_cache[cache_id] = obj_uuid
+        if self.ignore_info and vuln['severity'] == 'info':
+            return None
         else:
-            obj_uuid = self._vulns_cache[cache_id]
-        return obj_uuid
+            cache_id = self.get_service_vuln_cache_id(host_id, service_id, vuln)
+            if cache_id not in self._vulns_cache:
+                obj_uuid = self.save_cache(vuln)
+                service = self.get_from_cache(service_id)
+                service["vulnerabilities"].append(vuln)
+                self._vulns_cache[cache_id] = obj_uuid
+            else:
+                obj_uuid = self._vulns_cache[cache_id]
+            return obj_uuid
 
     def save_host_vuln_cache(self, host_id, vuln):
-        cache_id = self.get_host_vuln_cache_id(host_id, vuln)
-        if cache_id not in self._vulns_cache:
-            obj_uuid = self.save_cache(vuln)
-            host = self.get_from_cache(host_id)
-            host["vulnerabilities"].append(vuln)
-            self._vulns_cache[cache_id] = obj_uuid
+        if self.ignore_info and vuln['severity'] == 'info':
+            return None
         else:
-            obj_uuid = self._vulns_cache[cache_id]
-        return obj_uuid
+            cache_id = self.get_host_vuln_cache_id(host_id, vuln)
+            if cache_id not in self._vulns_cache:
+                obj_uuid = self.save_cache(vuln)
+                host = self.get_from_cache(host_id)
+                host["vulnerabilities"].append(vuln)
+                self._vulns_cache[cache_id] = obj_uuid
+            else:
+                obj_uuid = self._vulns_cache[cache_id]
+            return obj_uuid
 
     @staticmethod
     def _get_dict_hash(d, keys):
@@ -296,7 +303,7 @@ class PluginBase:
 
     def processReport(self, filepath, user="faraday"):
         if os.path.isfile(filepath):
-            self.vulns_data["command"]["params"] = filepath
+            self.vulns_data["command"]["params"] = filepath if not self.ignore_info else f"{filepath} (Info ignored)"
             self.vulns_data["command"]["user"] = user
             self.vulns_data["command"]["import_source"] = "report"
             self._parse_filename(filepath)
@@ -545,8 +552,8 @@ class PluginCustomOutput(PluginBase):
 
 
 class PluginByExtension(PluginBase):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, ignore_info=False):
+        super().__init__(ignore_info)
         self.extension = []
 
     def report_belongs_to(self, extension="", **kwargs):
@@ -561,8 +568,8 @@ class PluginByExtension(PluginBase):
 
 class PluginXMLFormat(PluginByExtension):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, ignore_info=False):
+        super().__init__(ignore_info)
         self.identifier_tag = []
         self.extension = ".xml"
         self.open_options = {"mode": "rb"}
@@ -580,8 +587,8 @@ class PluginXMLFormat(PluginByExtension):
 
 class PluginJsonFormat(PluginByExtension):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, ignore_info=False):
+        super().__init__(ignore_info)
         self.json_keys = set()
         self.extension = ".json"
 
@@ -595,10 +602,35 @@ class PluginJsonFormat(PluginByExtension):
         return match
 
 
+class PluginMultiLineJsonFormat(PluginByExtension):
+
+    def __init__(self, ignore_info=False):
+        super().__init__(ignore_info)
+        self.json_keys = set()
+        self.extension = ".json"
+
+    def report_belongs_to(self, file_json_keys=None, **kwargs):
+        match = False
+        report_path = kwargs.get("report_path", "")
+        if super().report_belongs_to(**kwargs):
+            with open(report_path) as f:
+                try:
+                    json_lines = list(map(lambda x: json.loads(x), f.readlines()))
+                    if len(json_lines) > 0:
+                        matched_lines = list(filter(lambda json_line: self.json_keys.issubset(json_line.keys()),
+                                                    json_lines))
+                        match = len(matched_lines) == len(json_lines)
+                        self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", json_lines[0].keys(), self.json_keys,
+                                          match)
+                except ValueError:
+                    return False
+        return match
+
+
 class PluginCSVFormat(PluginByExtension):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, ignore_info=False):
+        super().__init__(ignore_info)
         self.extension = ".csv"
         self.csv_headers = set()
 
@@ -617,8 +649,8 @@ class PluginCSVFormat(PluginByExtension):
 
 class PluginZipFormat(PluginByExtension):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, ignore_info=False):
+        super().__init__(ignore_info)
         self.extension = ".zip"
         self.files_list = set()
 

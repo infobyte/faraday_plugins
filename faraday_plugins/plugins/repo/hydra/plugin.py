@@ -50,8 +50,8 @@ class HydraPlugin(PluginBase):
     Example plugin to parse hydra output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Hydra"
         self.name = "Hydra XML Output Plugin"
         self.plugin_version = "0.0.1"
@@ -131,7 +131,7 @@ class HydraPlugin(PluginBase):
         pass
 
 
-def createPlugin():
-    return HydraPlugin()
+def createPlugin(ignore_info=False):
+    return HydraPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

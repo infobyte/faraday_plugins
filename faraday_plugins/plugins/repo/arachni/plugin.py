@@ -257,7 +257,7 @@ class Plugins():
             self.ip = plugins_node.find('resolver').find('results') \
                 .find('hostname').get('ipaddress')
         except Exception:
-            self.ip = '0.0.0.0'
+            self.ip = None
 
     def getHealthmap(self):
 
@@ -335,8 +335,8 @@ class ArachniPlugin(PluginXMLFormat):
 
     # Plugin that parses Arachni's XML report files.
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.identifier_tag = ["report", "arachni_report"]
         self.id = 'Arachni'
         self.name = 'Arachni XML Output Plugin'
@@ -394,7 +394,10 @@ class ArachniPlugin(PluginXMLFormat):
             return
 
         self.hostname = self.getHostname(parser.system.url)
-        self.address = resolve_hostname(parser.plugins.ip)
+        if parser.plugins.ip:
+            self.address = resolve_hostname(parser.plugins.ip)
+        else:
+            self.address = resolve_hostname(self.hostname)
 
         # Create host and interface
         host_id = self.createAndAddHost(self.address, hostnames=[self.hostname])
@@ -488,7 +491,7 @@ class ArachniPlugin(PluginXMLFormat):
         return self.hostname
 
 
-def createPlugin():
-    return ArachniPlugin()
+def createPlugin(ignore_info=False):
+    return ArachniPlugin(ignore_info=ignore_info)
 
-# I'm Py3
+

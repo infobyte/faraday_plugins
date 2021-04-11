@@ -81,7 +81,11 @@ class ReportAnalyzer:
         else:
             try:
                 for event, elem in ET.iterparse(report_file, ('start',)):
-                    main_tag = elem.tag
+                    prefix, has_namespace, postfix = elem.tag.partition("}")
+                    if has_namespace:
+                        main_tag = postfix
+                    else:
+                        main_tag = elem.tag
                     break
                 logger.debug("Found XML content on file: %s - Main tag: %s", report_path, main_tag)
             except Exception as e:
@@ -89,7 +93,11 @@ class ReportAnalyzer:
                 try:
                     report_file.seek(0)
                     json_data = json.load(report_file)
-                    file_json_keys = set(json_data.keys())
+                    if isinstance(json_data, list):
+                        if len(json_data) > 0:
+                            file_json_keys = set(json_data[0].keys())
+                    else:
+                        file_json_keys = set(json_data.keys())
                     logger.debug("Found JSON content on file: %s - Keys: %s", report_path, file_json_keys)
                 except Exception as e:
                     logger.debug("Non JSON content [%s] - %s", report_path, e)
@@ -98,9 +106,9 @@ class ReportAnalyzer:
                         reader_file_string = StringIO(report_file.read().decode('utf-8'))
                         reader = csv.DictReader(reader_file_string)
                         file_csv_headers = set(reader.fieldnames)
-                        logger.debug("Found JSON content on file: %s - Keys: %s", report_path, file_json_keys)
+                        logger.debug("Found CSV content on file: %s - Keys: %s", report_path, file_json_keys)
                     except Exception as e:
-                        logger.debug("Non JSON content [%s] - %s", report_path, e)
+                        logger.debug("Non CSV content [%s] - %s", report_path, e)
                         try:
                             file_zip = zipfile.ZipFile(report_path, "r")
                             files_in_zip = set(file_zip.namelist())
@@ -143,7 +151,8 @@ class CommandAnalyzer:
 
 class PluginsManager:
 
-    def __init__(self, custom_plugins_folder=None):
+    def __init__(self, custom_plugins_folder=None, ignore_info = False):
+        self.ignore_info = ignore_info
         self.plugins = {}
         self.plugin_modules = {}
         self._load_plugins(custom_plugins_folder)
@@ -206,7 +215,7 @@ class PluginsManager:
         plugin = None
         plugin_id = plugin_id.lower()
         if plugin_id in self.plugin_modules:
-            plugin = self.plugin_modules[plugin_id].createPlugin()
+            plugin = self.plugin_modules[plugin_id].createPlugin(self.ignore_info)
         else:
             logger.debug("Unknown Plugin: %s", plugin_id)
         return plugin
@@ -214,4 +223,4 @@ class PluginsManager:
     def get_plugins(self):
         for plugin_id, plugin_module in self.plugin_modules.items():
             logger.debug("Instance Plugin: %s", plugin_id)
-            yield plugin_id, plugin_module.createPlugin()
+            yield plugin_id, plugin_module.createPlugin(self.ignore_info)

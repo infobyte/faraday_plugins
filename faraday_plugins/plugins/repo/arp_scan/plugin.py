@@ -22,8 +22,8 @@ class CmdArpScanPlugin(PluginBase):
     Basically inserts into the tree the ouput of this tool
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "arp-scan"
         self.name = "arp-scan network scanner"
         self.plugin_version = "0.0.2"
@@ -60,6 +60,6 @@ class CmdArpScanPlugin(PluginBase):
 
 
 
-def createPlugin():
-    return CmdArpScanPlugin()
+def createPlugin(ignore_info=False):
+    return CmdArpScanPlugin(ignore_info=ignore_info)
 

@@ -14,8 +14,8 @@ class FortifyPlugin(PluginByExtension):
     Example plugin to parse nmap output.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
         self.id = "Fortify"
         self.name = "Fortify XML Output Plugin"
         self.plugin_version = "0.0.1"
@@ -392,6 +392,6 @@ class FortifyParser:
         return text
 
 
-def createPlugin():
-    return FortifyPlugin()
+def createPlugin(ignore_info=False):
+    return FortifyPlugin(ignore_info=ignore_info)
 
