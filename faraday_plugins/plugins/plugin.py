@@ -383,7 +383,8 @@ class PluginBase:
             tags = [tags]
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
-                         "custom_fields": custom_fields, "status": status, "impact": impact, "policyviolations": policyviolations,
+                         "custom_fields": custom_fields, "status": status, "impact": impact,
+                         "policyviolations": policyviolations,
                          "confirmed": confirmed, "easeofresolution": easeofresolution, "tags": tags
                          }
         if run_date:
