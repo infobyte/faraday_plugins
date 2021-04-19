@@ -236,10 +236,16 @@ class BurpPlugin(PluginXMLFormat):
                 ports=[str(item.port)],
                 status="open")
 
-            desc = "Detail\n" + item.detail
             if item.background:
-                desc += "\nBackground\n" + item.background
+                desc = item.background
+            else:
+                desc = ""
             desc = self.removeHtml(desc)
+            if item.detail:
+                data = item.detail
+            else:
+                data = ""
+            data = self.removeHtml(data)
             resolution = self.removeHtml(item.remediation) if item.remediation else ""
 
             v_id = self.createAndAddVulnWebToService(
@@ -247,6 +253,7 @@ class BurpPlugin(PluginXMLFormat):
                 s_id,
                 item.name,
                 desc=desc,
+                data=data,
                 severity=item.severity,
                 website=item.host,
                 path=item.path,
