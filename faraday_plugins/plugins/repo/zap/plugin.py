@@ -179,6 +179,7 @@ class Item:
         if self.get_text_from_subnode('reference'):
             links = self.get_text_from_subnode('reference')
             for link in links.split("</p>"):
+                link = link.strip().replace("\n", "")
                 if link != "":
                     self.ref.append(strip_tags(link))     
 
@@ -312,13 +313,10 @@ class ZapPlugin(PluginXMLFormat):
                         resolution=strip_tags(item.resolution),
                         data=instance["data"],
                         pname=instance["pname"],
-                        external_id=item.id
+                        external_id="ZAP-"+str(item.id)
                     )
 
         del parser
-
-    def setHost(self):
-        pass
 
 
 def createPlugin(ignore_info=False):
