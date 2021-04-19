@@ -21,4 +21,5 @@ ADD new function to strip html tags
 ADD included information in reference for WASC
 
 ADD ZAP pluginid into external_id
- 
+
+CHANGE external_id to the correct Structure ZAP-XXXX
