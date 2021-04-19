@@ -120,6 +120,13 @@ def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
 
     return None
 
+def strip_tags(data):
+    """
+    Remove html tags from a string
+    @return Stripped string
+    """
+    clean = re.compile('<.*?>')
+    return re.sub(clean, '', data)
 
 class Site:
 
@@ -130,6 +137,7 @@ class Site:
         self.host = self.node.get('host')
         self.ip = resolve_hostname(self.host)
         self.port = self.node.get('port')
+        self.ssl = self.node.get('ssl')
 
         self.items = []
         for alert in self.node.findall('alerts/alertitem'):
@@ -162,20 +170,24 @@ class Item:
         self.name = self.get_text_from_subnode('alert')
         self.severity = self.get_text_from_subnode('riskcode')
         self.desc = self.get_text_from_subnode('desc')
-
         if self.get_text_from_subnode('solution'):
             self.resolution = self.get_text_from_subnode('solution')
         else:
             self.resolution = ''
 
-        if self.get_text_from_subnode('reference'):
-            self.desc += '\nReference: ' + \
-                self.get_text_from_subnode('reference')
-
         self.ref = []
+        if self.get_text_from_subnode('reference'):
+            links = self.get_text_from_subnode('reference')
+            for link in links.split("</p>"):
+                if link != "":
+                    self.ref.append(strip_tags(link))     
+
         if self.get_text_from_subnode('cweid'):
             self.ref.append("CWE:" + self.get_text_from_subnode('cweid'))
 
+        if self.get_text_from_subnode('wascid'):
+            self.ref.append("WASC:" + self.get_text_from_subnode('wascid'))
+       
         self.items = []
 
         if item_node.find('instances'):
@@ -191,7 +203,15 @@ class Item:
             param = elem.findtext("param", "")
             attack = elem.findtext("attack", "")
             if attack and param:
-                item["data"] = f"Payload:\n {param} = {attack}"
+                item["data"] = f"URL:\n {uri}\n Payload:\n {param} = {attack}"
+            else:
+                item["data"] = f"URL:\n {uri}\n Parameter:\n {param}"
+
+            evidence = elem.findtext("evidence", "")
+            if evidence:
+                item["data"] = f"URL:\n {uri}\n Parameter:\n {param}\n Evidence:\n {evidence}"
+            else:
+                item["data"] = f"URL:\n {uri}\n"
 
             item["pname"] = elem.findtext("param", "")
 
@@ -246,8 +266,8 @@ class ZapPlugin(PluginXMLFormat):
         self.identifier_tag = "OWASPZAPReport"
         self.id = "Zap"
         self.name = "Zap XML Output Plugin"
-        self.plugin_version = "0.0.3"
-        self.version = "2.4.3"
+        self.plugin_version = "0.0.4"
+        self.version = "2.10.0"
         self.framework_version = "1.0.0"
         self.options = None
 
@@ -264,10 +284,15 @@ class ZapPlugin(PluginXMLFormat):
             host = []
             if site.host != site.ip:
                 host = [site.host]
+            
+            if site.ssl == "true":
+                service = "https"
+            else: 
+                service = "http"
 
             h_id = self.createAndAddHost(site.ip, hostnames=host)
 
-            s_id = self.createAndAddServiceToHost(h_id, "http", "tcp", ports=[site.port], status='open')
+            s_id = self.createAndAddServiceToHost(h_id, service, "tcp", ports=[site.port], status='open')
 
             for item in site.items:
                 for instance in item.items:
@@ -276,7 +301,7 @@ class ZapPlugin(PluginXMLFormat):
                         h_id,
                         s_id,
                         item.name,
-                        item.desc,
+                        strip_tags(item.desc),
                         website=instance['website'],
                         query=instance['query'],
                         severity=item.severity,
@@ -284,9 +309,10 @@ class ZapPlugin(PluginXMLFormat):
                         params=instance['params'],
                         method=instance['method'],
                         ref=item.ref,
-                        resolution=item.resolution,
+                        resolution=strip_tags(item.resolution),
                         data=instance["data"],
-                        pname=instance["pname"]
+                        pname=instance["pname"],
+                        external_id=item.id
                     )
 
         del parser
