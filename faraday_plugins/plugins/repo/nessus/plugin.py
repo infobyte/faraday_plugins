@@ -37,6 +37,15 @@ class NessusPlugin(PluginXMLFormat):
         self.framework_version = "1.0.1"
         self.options = None
 
+    @staticmethod
+    def parse_compliance_data(data: dict):
+        compliance_data = {}
+        for key, value in data.items():
+            if 'compliance-' in key:
+                compliance_name = key.split("}")[-1]
+                compliance_data[compliance_name] = value
+        return compliance_data
+
     def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
@@ -45,16 +54,35 @@ class NessusPlugin(PluginXMLFormat):
         NOTE: if 'debug' is true then it is being run from a test case and the
         output being sent is valid.
         """
+
         try:
             parser = NessusParser(output)
         except Exception as e:
             self.logger.error(str(e))
             return None
+        report_hosts = parser.report.report_hosts
 
-        if parser.report.report_json is not None:
-            run_date = parser.report.report_json.get('host_end')
+        if report_hosts:
+            run_date = report_hosts[-1].host_properties.host_end
             if run_date:
-                run_date = dateutil.paparser.prser.parse(run_date)
+                run_date = dateutil.parser.parse(run_date)
+
+            for host in report_hosts:
+                properties = host.host_properties
+                website = None
+                mac = properties.mac_address
+                os = properties.operating_system
+                ip_host = properties.host_ip
+                host_name = properties.host_fqdn
+                if host_name:
+                    website = host_name
+                host_id = self.createAndAddHost(ip_host, os=os, hostnames=host_name, mac=mac)
+
+                for items in host.report_items:
+                    import ipdb;
+                    ipdb.set_trace()
+
+
             for set_info, ip in enumerate(parser.report.report_json['ip'], start=1):
                 website = None
                 mac = parser.report.report_json['desc'][set_info - 1].get('mac-address', '')
