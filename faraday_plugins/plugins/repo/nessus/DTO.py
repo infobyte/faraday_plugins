@@ -40,7 +40,10 @@ class ReportItem:
 
     @property
     def plugin_id_attr(self):
-        return self.node.get("pluginID")
+        plugin_id = self.node.get("pluginID")
+        if plugin_id:
+            plugin_id = f'NESSUS-{plugin_id}'
+        return plugin_id
 
     @property
     def plugin_name_attr(self):
@@ -67,7 +70,11 @@ class ReportItem:
 
     @property
     def plugin_name(self):
-        return self.node.findtext("plugin_name")
+
+        plugin_name = self.node.findtext("plugin_name")
+        if not plugin_name:
+            plugin_name = self.plugin_name_attr
+        return plugin_name
 
     @property
     def plugin_publication_date(self):
@@ -79,7 +86,10 @@ class ReportItem:
 
     @property
     def risk_factor(self):
-        return self.node.findtext("risk_factor")
+        risk_factor = self.node.findtext("risk_factor")
+        if risk_factor == 'None' or risk_factor is None:
+            risk_factor = self.severity_attr  # I checked several external id and most of them were info
+        return risk_factor
 
     @property
     def script_version(self):
@@ -91,7 +101,7 @@ class ReportItem:
 
     @property
     def solution(self):
-        return self.node.findtext("solution")
+        return self.node.findtext("solution", '')
 
     @property
     def synopsis(self):
@@ -99,7 +109,7 @@ class ReportItem:
 
     @property
     def plugin_output(self):
-        return self.node.findtext("plugin_output", "Not Description")
+        return self.node.findtext("plugin_output", "")
 
     @property
     def always_run(self):
@@ -116,7 +126,10 @@ class ReportItem:
 
     @property
     def cvss3_base_score(self):
-        return self.node.findtext("cvss3_base_score")
+        cvss_base_score = self.node.findtext("cvss3_base_score")
+        if cvss_base_score:
+            cvss_base_score = f"CVSS3:{cvss_base_score}"
+        return cvss_base_score
 
     @property
     def cvss3_temporal_score(self):
@@ -136,7 +149,10 @@ class ReportItem:
 
     @property
     def cvss_base_score(self):
-        return self.node.findtext("cvss_base_score")
+        cvss_base_score = self.node.findtext("cvss_base_score")
+        if cvss_base_score:
+            cvss_base_score = f"CVSS:{cvss_base_score}"
+        return cvss_base_score
 
     @property
     def cvss_score_rationale(self):
@@ -156,11 +172,17 @@ class ReportItem:
 
     @property
     def cvss_vector(self):
-        return self.node.findtext("cvss_vector")
+        cvss_vector = self.node.findtext("cvss_vector")
+        if cvss_vector:
+            cvss_vector = f"CVSSVECTOR:{cvss_vector}"
+        return cvss_vector
 
     @property
     def exploit_available(self):
-        return self.node.findtext("exploit_available")
+        exploit_avalible = self.node.findtext("exploit_available", "")
+        if exploit_avalible:
+            exploit_avalible = f"Exploit available: {exploit_avalible.capitalize()}\n"
+        return exploit_avalible
 
     @property
     def exploit_framework_canvas(self):
@@ -258,11 +280,11 @@ class ReportItem:
 
     @property
     def cve(self) -> list:
-        return self.node.findall("cve")
+        return [i.text for i in self.node.findall("cve")]
 
     @property
     def cwe(self) -> list:
-        return self.node.findall("cwe")
+        return [i.text for i in self.node.findall("cwe")]
 
     @property
     def edb_id(self) -> list:
@@ -273,20 +295,19 @@ class ReportItem:
         return self.node.findall("mskb")
 
     @property
-    def xref(self) -> list:
-        return self.node.findall("xref")
+    def xref(self) -> str:
+        return self.node.findtext("xref")
 
     @property
     def attachment(self) -> Attachment:
         attachment = self.node.find("attachment")
         return Attachment(attachment) if attachment else None
 
-    # def getinfoitem(self):
-    #     item_tags = {}
-    #     for i in self.node:
-    #         item_tags.setdefault(i.tag, i.text)
-    #     return item_tags
-
+    def get_data(self):
+        item_tags = {}
+        for i in self.node:
+            item_tags.setdefault(i.tag, i.text)
+        return item_tags
 
 
 class Tag:
@@ -318,7 +339,7 @@ class HostProperties:
     @property
     def mac_address(self) -> str:
         _dict = self.dict_tags
-        return _dict.get("mac-address", None)
+        return _dict.get("mac-address", "")
 
     @property
     def operating_system(self) -> str:
@@ -328,6 +349,7 @@ class HostProperties:
     @property
     def host_ip(self) -> str:
         _dict = self.dict_tags
+
         return _dict.get("host-ip", None)
 
     @property
@@ -341,7 +363,6 @@ class HostProperties:
         for t in self.node:
             host_tags.setdefault(t.attrib.get('name'), t.text)
         return host_tags
-
 
 
 class ReportHost:

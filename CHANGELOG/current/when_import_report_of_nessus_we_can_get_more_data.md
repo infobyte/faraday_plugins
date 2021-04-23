@@ -1,0 +1,1 @@
+ADD cve, cvss3_base_score, cvss3_vector, exploit_available when import nessus and change the structure of external_id to NESSUS-XXX
