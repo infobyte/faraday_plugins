@@ -1,6 +1,13 @@
+1.4.5 [Apr 15th, 2021]:
+---
+ * Add Bandit plugin
+ * Use background for description and detail for data en Burp plugin.
+ * Rewrite Appscan Plugin
+ * Parse Nmap vulners script data
+
 1.4.4 [Mar 30th, 2021]:
 ---
- * Faraday CSV Plugin do not consider ignore_info option
+ * Faraday CSV Plugin do not consider ignore_info
 
 1.4.3 [Mar 17th, 2021]:
 ---
