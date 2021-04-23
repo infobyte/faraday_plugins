@@ -52,6 +52,7 @@ class ReportItem:
     @property
     def plugin_family_attr(self):
         return self.node.get("pluginFamily")
+
     @property
     def agent(self):
         return self.node.findtext("agent")
@@ -114,7 +115,6 @@ class ReportItem:
     @property
     def always_run(self):
         return self.node.findtext("always_run")
-
 
     @property
     def asset_inventory(self):
