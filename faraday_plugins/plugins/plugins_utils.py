@@ -110,3 +110,20 @@ def resolve_hostname(hostname):
         return hostname
     else:
         return ip_address
+
+def get_severity_from_cvss(cvss):
+    try:
+        if type(cvss) != float:
+            cvss = float(cvss)
+            
+        cvss_ranges = [(0.0, 0.1, 'info'), 
+                        (0.1, 4.0, 'low'), 
+                        (4.0, 7.0, 'med'), 
+                        (7.0, 9.0, 'high'), 
+                        (9.0, 10.1, 'critical')]
+        for (lower, upper, severity) in cvss_ranges:
+            if lower <= cvss < upper:
+                return severity
+    except ValueError:
+        return 'unclassified'
+
