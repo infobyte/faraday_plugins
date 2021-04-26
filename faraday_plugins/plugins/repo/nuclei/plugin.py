@@ -6,24 +6,20 @@ See the file 'doc/LICENSE' for the license information
 """
 import socket
 import json
+import dateutil
+from collections import defaultdict
 from urllib.parse import urlparse
 from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-__author__ = "Blas Moyano"
-__copyright__ = "Copyright (c) 2020, Infobyte LLC"
-__credits__ = ["Blas Moyano"]
+__author__ = "Nicolas Rebagliati"
+__copyright__ = "Copyright (c) 2021, Infobyte LLC"
+__credits__ = ["Nicolas Rebagliati"]
 __license__ = ""
 __version__ = "0.0.1"
-__maintainer__ = "Blas Moyano"
-__email__ = "bmoyano@infobytesec.com"
+__maintainer__ = "Nicolas Rebagliati"
+__email__ = "nrebagliati@infobytesec.com"
 __status__ = "Development"
-
-
-class NucleiJsonParser:
-
-    def __init__(self, json_output):
-        self.list_to_vulns = json_output.split("\n")
 
 
 class NucleiPlugin(PluginMultiLineJsonFormat):
@@ -36,68 +32,68 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
         self.id = "nuclei"
         self.name = "Nuclei"
         self.plugin_version = "0.1"
-        self.version = "0.0.1"
-        self.json_keys = {"matched", "template"}
+        self.version = "2.3.0"
+        self.json_keys = {"matched", "templateID", "host"}
 
     def parseOutputString(self, output, debug=False):
-        parser = NucleiJsonParser(output)
-        matched_list = []
-        matched_json = {}
-        for vuln in parser.list_to_vulns:
-            if vuln != '':
-                json_vuln = json.loads(vuln)
-                matched = json_vuln.get('matched', None)
-
-                if matched is not None:
-                    url_parser = urlparse(matched)
-                    url_scheme = f'{url_parser.scheme}://{url_parser.hostname}'
-
-                    if url_scheme in matched_list:
-                        matched_json[url_scheme].append(json_vuln)
-                    else:
-                        matched_list.append(url_scheme)
-                        matched_json[url_scheme] = [json_vuln]
-
-        for url in matched_list:
-            url_data = urlparse(url)
-            url_name = url_data.hostname
-            url_protocol = url_data.scheme
-            ip = resolve_hostname(url_name)
+        for vuln_json in filter(lambda x: x != '', output.split("\n")):
+            vuln_dict = json.loads(vuln_json)
+            host = vuln_dict.get('host')
+            url_data = urlparse(host)
+            ip = vuln_dict.get("ip", resolve_hostname(url_data.hostname))
             host_id = self.createAndAddHost(
                 name=ip,
-                hostnames=[url_name])
-            port = 80
-            if url_parser.scheme == 'https':
-                port = 443
-
+                hostnames=[url_data.hostname])
+            port = url_data.port
+            if not port:
+                if url_data.scheme == 'https':
+                    port = 443
+                else:
+                    port = 80
             service_id = self.createAndAddServiceToHost(
                 host_id,
-                name=url_parser.scheme,
+                name=url_data.scheme,
                 ports=port,
                 protocol="tcp",
                 status='open',
                 version='',
-                description='')
+                description='web server')
+            matched = vuln_dict.get('matched')
+            matched_data = urlparse(matched)
+            references = [f"author: {vuln_dict['info'].get('author', '')}"]
+            request = vuln_dict.get('request', '')
+            if request:
+                method = request.split(" ")[0]
+            else:
+                method = ""
+            data = [f"Matched: {vuln_dict.get('matched')}",
+                    f"Tags: {vuln_dict['info'].get('tags')}",
+                    f"Template ID: {vuln_dict['templateID']}"]
 
-            for info_vuln in matched_json[url]:
-                desc = f'{info_vuln.get("template", None)} - {info_vuln.get("author", None)}'
-                if info_vuln.get("author", None):
-                    ref = [f"author: {info_vuln.get('author', None)}"]
-                else:
-                    ref = None
-                self.createAndAddVulnWebToService(
-                    host_id,
-                    service_id,
-                    name=info_vuln.get('template', ""),
-                    desc=info_vuln.get('description', info_vuln.get('name', None)),
-                    ref=ref,
-                    severity=info_vuln.get('severity', ""),
-                    website=url,
-                    request=info_vuln.get('request', None),
-                    response=info_vuln.get('response', None),
-                    method=info_vuln.get('type', None),
-                    data=info_vuln.get('matcher_name', info_vuln.get('name', None)),
-                    external_id=info_vuln.get('template', ""))
+            name = vuln_dict["info"].get("name")
+            run_date = vuln_dict.get('timestamp')
+            if run_date:
+                run_date = dateutil.parser.parse(run_date)
+            self.createAndAddVulnWebToService(
+                host_id,
+                service_id,
+                name=name,
+                desc=vuln_dict["info"].get("description", name),
+                ref=references,
+                severity=vuln_dict["info"].get('severity'),
+                website=host,
+                request=request,
+                response=vuln_dict.get('response', ''),
+                method=method,
+                query=matched_data.query,
+                params=matched_data.params,
+                path=matched_data.path,
+                data="\n".join(data),
+                external_id=f"NUCLEI-{vuln_dict.get('templateID', '')}",
+                run_date=run_date
+            )
+
+
 
 
 def createPlugin(ignore_info=False):
