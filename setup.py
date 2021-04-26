@@ -23,7 +23,7 @@ setup(
     version=version,
     packages=find_packages(include=['faraday_plugins', 'faraday_plugins.*']),
     url='',
-    license='',
+    license="GNU General Public License v3",
     author='Faradaysec',
     author_email='devel@faradaysec.com',
     description='Faraday plugins package',
