@@ -1,23 +1,22 @@
+import os
+import re
+from io import BytesIO
+
 """
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-
-import re
-import os
-from io import BytesIO
-import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
 from lxml import etree
 from lxml.etree import XMLParser
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
+import xml.etree.ElementTree as ET
+ETREE_VERSION = ET.VERSION
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 current_path = os.path.abspath(os.getcwd())
-
 
 
 class NmapXmlParser:
@@ -55,7 +54,7 @@ class NmapXmlParser:
             magical_parser = XMLParser(recover=True)
             return etree.parse(BytesIO(xml_output), magical_parser)
         except SyntaxError as err:
-            #logger.error("SyntaxError: %s." % (err))
+            # logger.error("SyntaxError: %s." % (err))
             return None
 
     def get_hosts(self, tree):
@@ -237,7 +236,6 @@ class Host:
                 ostype = service.get("ostype", "unknown")
                 yield ("%s" % ostype, 0)
 
-
     def top_os_guess(self):
         """
         @return The most accurate os_guess_id or 'unknown'.
@@ -376,11 +374,11 @@ class ScriptVulners:
             self.table[e.get("key")] = str(e.text)
 
         self.name = self.table["id"]
-        
+
         self.desc = script_node.get("id") + "-" + self.table["id"]
         if self.table["is_exploit"] == 'true':
             self.desc += " *EXPLOIT*"
-        
+
         self.refs = ["https://vulners.com/" + self.table["type"] + "/" + self.table["id"]]
         self.refs.append("CVSS: " + self.table["cvss"])
         self.response = ""
@@ -417,7 +415,7 @@ class Script:
 
         self.name = script_node.get("id")
         self.desc = script_node.get("output")
-        self.refs =  self.parse_output(self.desc)
+        self.refs = self.parse_output(self.desc)
         self.response = ""
         for k in script_node.findall("elem"):
             self.response += "\n" + str(k.get('key')) + ": " + str(k.text)
@@ -542,7 +540,7 @@ class NmapPlugin(PluginXMLFormat):
                     description=srvname)
 
                 for v in port.vulns:
-                    
+
                     desc = v.desc
                     refs = v.refs
 
@@ -556,14 +554,14 @@ class NmapPlugin(PluginXMLFormat):
                             severity = "unclassified"
                         if re.search(r"Couldn't", desc):
                             severity = "unclassified"
-                        
+
                     if v.web:
                         v_id = self.createAndAddVulnWebToService(
                             h_id,
                             s_id,
                             v.name,
                             desc=desc,
-                            response = v.response if v.response else "",
+                            response=v.response if v.response else "",
                             ref=refs,
                             severity=severity,
                             website=minterfase,
@@ -595,7 +593,6 @@ class NmapPlugin(PluginXMLFormat):
                           r"-oX %s" % self._output_file_path,
                           command_string)
 
+
 def createPlugin(ignore_info=False):
     return NmapPlugin(ignore_info=ignore_info)
-
-
