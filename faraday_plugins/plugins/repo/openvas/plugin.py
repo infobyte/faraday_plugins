@@ -1,18 +1,18 @@
+import re
+from collections import defaultdict
+from copy import copy
 """
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-import re
-from collections import defaultdict
-from copy import copy
-import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import filter_services
 
+import xml.etree.ElementTree as ET
+ETREE_VERSION = ET.VERSION
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
 
