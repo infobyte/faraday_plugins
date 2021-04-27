@@ -3,16 +3,13 @@ Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-import re
-from urllib.parse import urlparse
 import os
+import re
+import xml.etree.ElementTree as ET
+from urllib.parse import urlparse
+
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
 
 __author__ = 'Ezequiel Tavella'
 __copyright__ = 'Copyright 2016, Faraday Project'
@@ -200,7 +197,6 @@ class System():
         else:
             options_string = None
 
-
         try:
             self.user_agent = self.node.find('user_agent').text
         except:
@@ -231,17 +227,16 @@ class System():
 
     def getNote(self):
         result = ('Scan url:\n {} \nUser Agent:\n {} \nVersion Arachni:\n {} \nStart time:\n {} \nFinish time:\n {}'
-                     '\nAudited Elements:\n {} \nModules:\n {} \nCookies:\n {}').format(self.url, self.user_agent,
-                                                                                        self.version, self.start_time,
-                                                                                        self.finish_time,
-                                                                                        self.audited_elements,
-                                                                                        self.modules, self.cookies)
+                  '\nAudited Elements:\n {} \nModules:\n {} \nCookies:\n {}').format(self.url, self.user_agent,
+                                                                                     self.version, self.start_time,
+                                                                                     self.finish_time,
+                                                                                     self.audited_elements,
+                                                                                     self.modules, self.cookies)
 
         return result
 
 
 class Plugins():
-
     """
     Support:
     WAF (Web Application Firewall) Detector (waf_detector)
@@ -493,5 +488,3 @@ class ArachniPlugin(PluginXMLFormat):
 
 def createPlugin(ignore_info=False):
     return ArachniPlugin(ignore_info=ignore_info)
-
-

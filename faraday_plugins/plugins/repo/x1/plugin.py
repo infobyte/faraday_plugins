@@ -4,18 +4,13 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-import re
 import os
-import sys
+import re
+import xml.etree.ElementTree as ET
 
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+
+ETREE_VERSION = ET.VERSION
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
@@ -134,7 +129,6 @@ class Results():
         self.resolution = self.get_text_from_subnode('solution')
         self.ref = []
         for r in issue_node.findall('refs/reference'):
-
             self.ref.append(r.get('type') + "-" + r.get('text'))
 
     def get_text_from_subnode(self, subnode_xpath_expr):
@@ -167,8 +161,6 @@ class X1Plugin(PluginXMLFormat):
         self._current_output = None
         self._command_regex = re.compile(r'^(sudo x1|\.\/x1)\s+.*?')
 
-
-
     def parseOutputString(self, output):
 
         parser = X1XmlParser(output)
@@ -189,11 +181,5 @@ class X1Plugin(PluginXMLFormat):
         del parser
 
 
-    def setHost(self):
-        pass
-
-
 def createPlugin(ignore_info=False):
     return X1Plugin(ignore_info=ignore_info)
-
-

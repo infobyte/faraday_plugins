@@ -4,17 +4,11 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import argparse
-import random
+import re
 import shlex
-import tempfile
+import socket
 
 from faraday_plugins.plugins.plugin import PluginBase
-import socket
-import re
-import os
-
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
-
 
 
 class AmapPlugin(PluginBase):
@@ -31,6 +25,7 @@ class AmapPlugin(PluginBase):
         self._command_regex = re.compile(r'^(amap|sudo amap)\s+.*?')
         self._use_temp_file = True
         self._hosts = []
+        self.args = None
 
     def parseOutputString(self, output):
         services = {}
@@ -107,9 +102,6 @@ class AmapPlugin(PluginBase):
 
         return ip6[0][4][0]
 
-    def setHost(self):
-        pass
-
     def processCommandString(self, username, current_path, command_string):
         """
         Adds the -m parameter to get machine readable output.
@@ -136,18 +128,14 @@ class AmapPlugin(PluginBase):
             cmd.remove("-6")
             cmd.insert(1, "-6")
 
-        args = None
         if len(cmd) > 4:
             try:
-                args, unknown = parser.parse_known_args(cmd)
+                self.args, unknown = parser.parse_known_args(cmd)
             except SystemExit:
                 pass
 
-        self.args = args
         return final
 
 
 def createPlugin(ignore_info=False):
     return AmapPlugin(ignore_info=ignore_info)
-
-

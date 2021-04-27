@@ -8,14 +8,8 @@ import re
 from urllib.parse import urlparse
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
+import xml.etree.ElementTree as ET
+ETREE_VERSION = ET.VERSION
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
@@ -341,9 +335,6 @@ class WapitiPlugin(PluginXMLFormat):
             self.port = 443
         self.logger.debug("host = %s, port = %s",self.host, self.port)
         return "%s -o %s -f xml \n" % (command_string, self._output_file_path)
-
-    def setHost(self):
-        pass
 
 
 def createPlugin(ignore_info=False):

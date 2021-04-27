@@ -3,23 +3,15 @@ Faraday Penetration Test IDE
 Copyright (C) 2015  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginZipFormat
-import re
-import os
+import xml.etree.ElementTree as ET
 import zipfile
 
+from faraday_plugins.plugins.plugin import PluginZipFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
+ETREE_VERSION = ET.VERSION
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 
 __author__ = "Ezequiel Tavella"
 __copyright__ = "Copyright (c) 2015, Infobyte LLC"
@@ -170,7 +162,6 @@ class MaltegoParser():
         entity = node.find(
             "{http://graphml.graphdrawing.org/xmlns}data/"
             "{http://maltego.paterva.com/xml/mtgx}MaltegoEntity")
-
 
         # Check if is IPv4Address
         if entity.get("type") not in ("maltego.IPv4Address", "maltego.Domain", "maltego.Website"):
@@ -419,7 +410,7 @@ class MaltegoPlugin(PluginZipFormat):
                         try:
                             text = f'Location:\n {host.location["name"]} \nArea:\n {host.location["area"]} ' \
                                    f'\nArea 2:\n {host.location["area_2"]} ' \
-                                   f'\nCountry_code:\n { host.location["country_code"]} ' \
+                                   f'\nCountry_code:\n {host.location["country_code"]} ' \
                                    f'\nLatitude:\n {host.location["latitude"]} \nLongitude:\n {host.location["longitude"]}'
                         except TypeError:
                             text = "unknown"
@@ -467,7 +458,6 @@ class MaltegoPlugin(PluginZipFormat):
                 host_ip = '0.0.0.0'
                 host_id = self.createAndAddHost(name=host_ip, hostnames=hostnames)
 
-
             if maltego_parser.xml.get('location'):
                 location_name = maltego_parser.getInfoMtgl(maltego_parser.xml['location'], 'location.name')
                 location_area = maltego_parser.getInfoMtgl(maltego_parser.xml['location'], 'location.area')
@@ -508,8 +498,6 @@ class MaltegoPlugin(PluginZipFormat):
                 ns_name = maltego_parser.getInfoMtgl(maltego_parser.xml['nsrecord'], 'fqdn')
                 self.createAndAddServiceToHost(host_id=host_id, name=ns_name, protocol="DNS", ports=[53],
                                                description="DNS Server")
-
-
 
 
 def createPlugin(ignore_info=False):

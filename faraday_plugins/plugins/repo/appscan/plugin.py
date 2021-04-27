@@ -1,12 +1,9 @@
+from urllib.parse import urlparse
+
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-import dateutil.parser
-from urllib.parse import urlparse
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
 
+import xml.etree.ElementTree as ET
 
 __author__ = "Nicolas Rebagliati"
 __copyright__ = "Copyright (c) 2021, Infobyte LLC"
@@ -33,9 +30,8 @@ class AppScanParser:
                 self.entities = self.get_entity_groups(tree.find('entity-group'))
                 self.issues = self.get_dast_issues(tree.find("issue-group"))
 
-
-
-    def parse_xml(self, xml_output):
+    @staticmethod
+    def parse_xml(xml_output):
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
@@ -43,7 +39,8 @@ class AppScanParser:
             return None
         return tree
 
-    def get_fixes(self, tree):
+    @staticmethod
+    def get_fixes(tree):
         fixes = {}
         for item in tree:
             fix_id = item.attrib['id']
@@ -52,7 +49,8 @@ class AppScanParser:
             fixes[fix_id] = {"library": library, "location": location}
         return fixes
 
-    def get_issue_types(self, tree):
+    @staticmethod
+    def get_issue_types(tree):
         issue_types = {}
         for item in tree:
             type_id = item.attrib['id']
@@ -60,7 +58,8 @@ class AppScanParser:
             issue_types[type_id] = name
         return issue_types
 
-    def get_remediations(self, tree):
+    @staticmethod
+    def get_remediations(tree):
         remediations = {}
         for item in tree:
             remediation_id = item.attrib['id']
@@ -68,7 +67,8 @@ class AppScanParser:
             remediations[remediation_id] = name
         return remediations
 
-    def get_hosts(self, tree):
+    @staticmethod
+    def get_hosts(tree):
         hosts = {}
         for item in tree:
             host = item.find("host").text
@@ -84,7 +84,8 @@ class AppScanParser:
                                "service_name": service_name}
         return hosts
 
-    def get_entity_groups(self, tree):
+    @staticmethod
+    def get_entity_groups(tree):
         entity_groups = {}
         for item in tree:
             entity_id = item.attrib['id']
@@ -238,7 +239,6 @@ class AppScanParser:
         return sast_issues
 
 
-
 class AppScanPlugin(PluginXMLFormat):
 
     def __init__(self, *arg, **kwargs):
@@ -250,17 +250,15 @@ class AppScanPlugin(PluginXMLFormat):
         self.version = '1.0.0'
         self.framework_version = '1.0.0'
 
-
     def parseOutputString(self, output):
         parser = AppScanParser(output)
         scan_type = parser.scan_type
-
 
         if scan_type == 'DAST':
             for issue in parser.issues:
                 host = issue.pop("host")
                 port = issue.pop("port")
-                host_os = issue.pop("os")
+                issue.pop("os")
                 service_name = issue.pop("service_name")
                 ip = resolve_hostname(host)
                 host_id = self.createAndAddHost(ip, hostnames=host)

@@ -95,9 +95,6 @@ class BeefPlugin(PluginBase):
                         severity=3)
 
 
-    def setHost(self):
-        pass
-
 
 def createPlugin(ignore_info=False):
     return BeefPlugin(ignore_info=ignore_info)

@@ -8,14 +8,8 @@ from html.parser import HTMLParser
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins import plugins_utils
 
-
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
+import xml.etree.ElementTree as ET
+ETREE_VERSION = ET.VERSION
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
@@ -46,7 +40,7 @@ class NiktoXmlParser:
         tree = self.parse_xml(xml_output)
 
         if tree:
-            self.hosts = [host for host in self.get_hosts(tree)]
+            self.hosts = self.get_hosts(tree)
         else:
             self.hosts = []
 
@@ -222,7 +216,7 @@ class Host:
         self.starttime = self.node.get('starttime')
         self.sitename = self.node.get('sitename')
         self.siteip = self.node.get('hostheader')
-        self.items = [item for item in self.get_items()]
+        self.items = self.get_items()
 
     def get_items(self):
         """
@@ -359,9 +353,6 @@ class NiktoPlugin(PluginXMLFormat):
         else:
             data = re.sub(" \-Format XML", "", command_string)
             return re.sub(arg_match.group(1), r"-output %s -Format XML" % self._output_file_path, data)
-
-    def setHost(self):
-        pass
 
 
 def createPlugin(ignore_info=False):

@@ -5,15 +5,12 @@ Faraday Penetration Test IDE
 Copyright (C) 2020  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-from datetime import datetime
-from lxml import etree
 import ipaddress
+from datetime import datetime
 
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
+from lxml import etree
+
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = 'Blas Moyano'
 __copyright__ = 'Copyright 2020, Faraday Project'
