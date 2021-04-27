@@ -326,7 +326,9 @@ class Port:
         state = self.get_attrib_from_subnode('state', 'state')
         reason = self.get_attrib_from_subnode('state', 'reason')
         reason_ttl = self.get_attrib_from_subnode('state', 'reason_ttl')
-
+        #Workaround for NMAP UDP Scans:
+        if state == "open|filtered" and reason == "no-response":
+            state = "closed"
         return (state if state else 'unknown',
                 reason if reason else 'unknown',
                 reason_ttl if reason_ttl else 'unknown')
