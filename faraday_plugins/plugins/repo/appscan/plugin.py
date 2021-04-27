@@ -258,10 +258,10 @@ class AppScanPlugin(PluginXMLFormat):
             for issue in parser.issues:
                 host = issue.pop("host")
                 port = issue.pop("port")
-                issue.pop("os")
                 service_name = issue.pop("service_name")
                 ip = resolve_hostname(host)
-                host_id = self.createAndAddHost(ip, hostnames=host)
+                host_os = issue.pop("os")
+                host_id = self.createAndAddHost(ip, hostnames=host, os=host_os)
                 service_id = self.createAndAddServiceToHost(host_id, service_name, ports=port)
                 self.createAndAddVulnWebToService(host_id=host_id, service_id=service_id, **issue)
 
