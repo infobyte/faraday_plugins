@@ -5,15 +5,12 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 from urllib.parse import urlparse
+
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-try:
-    import xml.etree.cElementTree as ET
-    ETREE_VERSION = ET.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
+import xml.etree.ElementTree as ET
+ETREE_VERSION = ET.VERSION
 
 ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
@@ -26,7 +23,6 @@ __version__ = "1.0.0"
 __maintainer__ = "Francisco Amato"
 __email__ = "famato@infobytesec.com"
 __status__ = "Development"
-
 
 
 class ZapXmlParser:
@@ -52,7 +48,8 @@ class ZapXmlParser:
         else:
             self.sites = []
 
-    def parse_xml(self, xml_output):
+    @staticmethod
+    def parse_xml(xml_output):
         """
         Open and parse an xml file.
 
@@ -72,7 +69,8 @@ class ZapXmlParser:
 
         return tree
 
-    def get_items(self, tree):
+    @staticmethod
+    def get_items(tree):
         """
         @return items A list of Host instances
         """
@@ -142,7 +140,6 @@ class Site:
         if sub_node is not None:
             return sub_node.text
         return None
-
 
 
 class Item:
@@ -244,7 +241,6 @@ class ZapPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
 
-
     def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
@@ -281,10 +277,6 @@ class ZapPlugin(PluginXMLFormat):
                     )
 
         del parser
-
-
-    def setHost(self):
-        pass
 
 
 def createPlugin(ignore_info=False):

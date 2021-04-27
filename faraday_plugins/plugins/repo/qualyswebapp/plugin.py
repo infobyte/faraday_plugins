@@ -5,17 +5,12 @@ Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-import re
+import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
 
 from dateutil.parser import parse
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
 
 __author__ = 'Blas Moyano'
 __copyright__ = 'Copyright 2020, Faraday Project'
@@ -80,7 +75,6 @@ class Appendix():
 class Glossary():
     def __init__(self, glossary_tags):
         self.lista_qid = self.get_qid_list(glossary_tags)
-
 
     def get_qid_list(self, qid_list_tags):
         self.dict_result_qid = {}

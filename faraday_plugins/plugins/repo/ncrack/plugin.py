@@ -5,12 +5,9 @@ See the file 'doc/LICENSE' for the license information
 
 """
 
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET
 
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = "Blas Moyano"
 __copyright__ = "Copyright (c) 2020, Infobyte LLC"

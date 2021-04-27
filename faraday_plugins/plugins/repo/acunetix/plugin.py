@@ -4,25 +4,18 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from urllib.parse import urlsplit
 import re
-import os
+import xml.etree.ElementTree as ET
+from urllib.parse import urlsplit
 
 from lxml import etree
-
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
+ETREE_VERSION = ET.VERSION
 
+ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -53,7 +46,8 @@ class AcunetixXmlParser:
         else:
             self.sites = []
 
-    def parse_xml(self, xml_output):
+    @staticmethod
+    def parse_xml(xml_output):
         """
         Open and parse an xml file.
 
@@ -71,7 +65,8 @@ class AcunetixXmlParser:
 
         return tree
 
-    def get_items(self, tree):
+    @staticmethod
+    def get_items(tree):
         """
         @return items A list of Host instances
         """
@@ -286,9 +281,6 @@ class AcunetixPlugin(PluginXMLFormat):
                         response=item.response,
                         ref=item.ref)
         del parser
-
-    def setHost(self):
-        pass
 
 
 def createPlugin(ignore_info=False):

@@ -7,14 +7,8 @@ See the file 'doc/LICENSE' for the license information
 import re
 from collections import defaultdict
 from copy import copy
-
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
+import xml.etree.ElementTree as ET
+ETREE_VERSION = ET.VERSION
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import filter_services
@@ -442,9 +436,6 @@ class OpenvasPlugin(PluginXMLFormat):
             return True
         else:
             return False
-
-    def setHost(self):
-        pass
 
 
 def createPlugin(ignore_info=False):

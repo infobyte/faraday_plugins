@@ -415,10 +415,6 @@ class QualysguardPlugin(PluginXMLFormat):
         del parser
 
 
-    def setHost(self):
-        pass
-
-
 def createPlugin(ignore_info=False):
     return QualysguardPlugin(ignore_info=ignore_info)
 

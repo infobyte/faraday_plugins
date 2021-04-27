@@ -4,26 +4,25 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+import hashlib
+import logging
 import os
+import re
 import shutil
 import tempfile
-
+import uuid
+import zipfile
 from collections import defaultdict
+from datetime import datetime
 
 import pytz
-import re
-import uuid
-import logging
 import simplejson as json
-import zipfile
-from datetime import datetime
-import hashlib
-
 
 logger = logging.getLogger("faraday").getChild(__name__)
 
 VALID_SERVICE_STATUS = ("open", "closed", "filtered")
 VULN_SKIP_FIELDS_TO_HASH = ['run_date']
+
 
 class PluginBase:
     # TODO: Add class generic identifier
@@ -102,6 +101,7 @@ class PluginBase:
                 if severity[0:3] in sev:
                     return sev
             return severity
+
         severity = align_string_based_vulns(severity)
         # Transform numeric severity into desc severity
         numeric_severities = {"0": "info",
@@ -170,7 +170,6 @@ class PluginBase:
     def _get_dict_hash(d, keys):
         return hash(frozenset(map(lambda x: (x, d.get(x, None)), keys)))
 
-
     @classmethod
     def get_host_cache_id(cls, host):
         cache_id = cls._get_dict_hash(host, ['ip'])
@@ -187,14 +186,17 @@ class PluginBase:
     def get_service_vuln_cache_id(cls, host_id, service_id, vuln):
         vuln_copy = vuln.copy()
         vuln_copy.update({"host_cache_id": host_id, "service_cache_id": service_id})
-        cache_id = cls._get_dict_hash(vuln_copy, ['host_cache_id', 'service_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
+        cache_id = cls._get_dict_hash(vuln_copy,
+                                      ['host_cache_id', 'service_cache_id', 'name', 'desc', 'website', 'path', 'pname',
+                                       'method'])
         return cache_id
 
     @classmethod
     def get_host_vuln_cache_id(cls, host_id, vuln):
         vuln_copy = vuln.copy()
         vuln_copy.update({"host_cache_id": host_id})
-        cache_id = cls._get_dict_hash(vuln_copy, ['host_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
+        cache_id = cls._get_dict_hash(vuln_copy,
+                                      ['host_cache_id', 'name', 'desc', 'website', 'path', 'pname', 'method'])
         return cache_id
 
     def save_cache(self, obj):
@@ -228,7 +230,7 @@ class PluginBase:
         for param, (param_type, value) in self._settings.items():
             yield param, value
 
-    def get_ws(self): # TODO Borrar
+    def get_ws(self):  # TODO Borrar
         return ""
 
     def getSetting(self, name):
@@ -334,15 +336,15 @@ class PluginBase:
             tags = []
         if isinstance(tags, str):
             tags = [tags]
-        host = {"ip": name, "os": os, "hostnames": hostnames, "description": description,  "mac": mac,
+        host = {"ip": name, "os": os, "hostnames": hostnames, "description": description, "mac": mac,
                 "credentials": [], "services": [], "vulnerabilities": [], "tags": tags}
         host_id = self.save_host_cache(host)
         return host_id
 
     def createAndAddServiceToHost(self, host_id, name,
-                                       protocol="tcp", ports=None,
-                                       status="open", version="unknown",
-                                       description="", tags=None):
+                                  protocol="tcp", ports=None,
+                                  status="open", version="unknown",
+                                  description="", tags=None):
         if ports:
             if isinstance(ports, list):
                 ports = int(ports[0])
@@ -412,7 +414,8 @@ class PluginBase:
             tags = [tags]
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
-                         "custom_fields": custom_fields, "status": status, "impact": impact, "policyviolations": policyviolations,
+                         "custom_fields": custom_fields, "status": status, "impact": impact,
+                         "policyviolations": policyviolations,
                          "easeofresolution": easeofresolution, "confirmed": confirmed, "tags": tags
                          }
         if run_date:
@@ -426,7 +429,8 @@ class PluginBase:
                                      response="", method="", pname="",
                                      params="", query="", category="", data="", external_id=None,
                                      confirmed=False, status="", easeofresolution=None, impact=None,
-                                     policyviolations=None, status_code=None, custom_fields=None, run_date=None, tags=None):
+                                     policyviolations=None, status_code=None, custom_fields=None, run_date=None,
+                                     tags=None):
         if params is None:
             params = ""
         if response is None:
@@ -475,7 +479,6 @@ class PluginBase:
 
     def createAndAddNoteToHost(self, host_id, name, text):
         return None
-
 
     def createAndAddNoteToService(self, host_id, service_id, name, text):
         return None
@@ -528,6 +531,7 @@ class PluginBase:
             dict_hash = hashlib.sha1(json.dumps(vuln_copy).encode()).hexdigest()
             summary['vuln_hashes'].append(dict_hash)
         return summary
+
 
 # TODO Borrar
 class PluginTerminalOutput(PluginBase):
@@ -667,5 +671,3 @@ class PluginZipFormat(PluginByExtension):
             match = bool(self.files_list & files_in_zip)
             self.logger.debug("Files List Match: [%s =/in %s] -> %s", files_in_zip, self.files_list, match)
         return match
-
-

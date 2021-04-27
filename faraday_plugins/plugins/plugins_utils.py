@@ -4,13 +4,10 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-import os
 import logging
+import os
 import socket
-from collections import defaultdict
-
 from urllib.parse import urlsplit
-
 
 SERVICE_MAPPER = None
 
@@ -24,7 +21,8 @@ def get_vulnweb_url_fields(url):
         "website": "{}://{}".format(parse.scheme, parse.netloc),
         "path": parse.path,
         "query": parse.query
-        }
+    }
+
 
 def filter_services():
     global SERVICE_MAPPER
@@ -111,19 +109,19 @@ def resolve_hostname(hostname):
     else:
         return ip_address
 
+
 def get_severity_from_cvss(cvss):
     try:
         if type(cvss) != float:
             cvss = float(cvss)
-            
-        cvss_ranges = [(0.0, 0.1, 'info'), 
-                        (0.1, 4.0, 'low'), 
-                        (4.0, 7.0, 'med'), 
-                        (7.0, 9.0, 'high'), 
-                        (9.0, 10.1, 'critical')]
+
+        cvss_ranges = [(0.0, 0.1, 'info'),
+                       (0.1, 4.0, 'low'),
+                       (4.0, 7.0, 'med'),
+                       (7.0, 9.0, 'high'),
+                       (9.0, 10.1, 'critical')]
         for (lower, upper, severity) in cvss_ranges:
             if lower <= cvss < upper:
                 return severity
     except ValueError:
         return 'unclassified'
-
