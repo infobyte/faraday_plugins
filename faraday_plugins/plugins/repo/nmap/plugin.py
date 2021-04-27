@@ -296,6 +296,7 @@ class Port:
     @param port_node A port_node taken from an nmap xml tree
     """
 
+    PORT_STATUS_FIX = {"filtered": "closed", "open|filtered": "closed" }
 
     def __init__(self, port_node):
         self.node = port_node
@@ -324,12 +325,11 @@ class Port:
 
         @return (state, reason, reason_ttl) or ('unknown','unknown','unknown')
         """
-        state = self.get_attrib_from_subnode('state', 'state')
+        state = self.PORT_STATUS_FIX.get(self.get_attrib_from_subnode('state', 'state'),
+                                    self.get_attrib_from_subnode('state', 'state'))
         reason = self.get_attrib_from_subnode('state', 'reason')
         reason_ttl = self.get_attrib_from_subnode('state', 'reason_ttl')
-        #Workaround for NMAP UDP Scans:
-        if state in ["open|filtered", "filtered"] and reason == "no-response":
-            state = "closed"
+
         return (state if state else 'unknown',
                 reason if reason else 'unknown',
                 reason_ttl if reason_ttl else 'unknown')
