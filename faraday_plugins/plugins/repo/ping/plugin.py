@@ -4,8 +4,9 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
+
+from faraday_plugins.plugins.plugin import PluginBase
 
 __author__ = "Facundo de Guzmán, Esteban Guillardoy"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -35,10 +36,9 @@ class CmdPingPlugin(PluginBase):
 
         reg = re.search(r"PING ([\w\.-:]+)( |)\(([\w\.:]+)\)", output)
         if re.search("0 received|unknown host", output) is None and reg is not None:
-
             ip_address = reg.group(3)
             hostname = reg.group(1)
-            h_id = self.createAndAddHost(ip_address, hostnames=[hostname])
+            self.createAndAddHost(ip_address, hostnames=[hostname])
         return True
 
     def _isIPV4(self, ip):
@@ -48,9 +48,5 @@ class CmdPingPlugin(PluginBase):
             return False
 
 
-
 def createPlugin(ignore_info=False):
     return CmdPingPlugin(ignore_info=ignore_info)
-
-
-

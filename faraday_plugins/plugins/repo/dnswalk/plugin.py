@@ -5,11 +5,9 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
-import os
 
 from faraday_plugins.plugins.plugin import PluginBase
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -42,7 +40,6 @@ class DnswalkParser:
         for line in lists:
             mregex = re.search("WARN: ([\w\.]+) ([\w]+) ([\w\.]+):", line)
             if mregex is not None:
-
                 item = {
                     'host': mregex.group(1),
                     'ip': mregex.group(3),
@@ -63,7 +60,6 @@ class DnswalkParser:
                 self.items.append(item)
 
 
-
 class DnswalkPlugin(PluginBase):
     """
     Example plugin to parse dnswalk output.
@@ -80,9 +76,9 @@ class DnswalkPlugin(PluginBase):
         self._command_regex = re.compile(
             r'^(sudo dnswalk|dnswalk|\.\/dnswalk)\s+.*?')
 
-
     def canParseCommandString(self, current_input):
         if self._command_regex.match(current_input.strip()):
+            self.command = self.get_command(current_input)
             return True
         else:
             return False
@@ -115,5 +111,3 @@ class DnswalkPlugin(PluginBase):
 
 def createPlugin(ignore_info=False):
     return DnswalkPlugin(ignore_info=ignore_info)
-
-
