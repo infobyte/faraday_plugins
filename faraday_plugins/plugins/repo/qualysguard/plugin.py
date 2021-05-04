@@ -4,13 +4,9 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-
 import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
 
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split('.')]
-
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = 'Francisco Amato'
 __copyright__ = 'Copyright (c) 2013, Infobyte LLC'
@@ -350,7 +346,6 @@ class QualysguardPlugin(PluginXMLFormat):
 
         parser = QualysguardXmlParser(output)
 
-
         for item in parser.items:
             h_id = self.createAndAddHost(
                 item.ip,
@@ -417,5 +412,3 @@ class QualysguardPlugin(PluginXMLFormat):
 
 def createPlugin(ignore_info=False):
     return QualysguardPlugin(ignore_info=ignore_info)
-
-

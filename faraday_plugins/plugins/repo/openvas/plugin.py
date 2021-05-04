@@ -1,6 +1,7 @@
 import re
 from collections import defaultdict
 from copy import copy
+
 """
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
@@ -12,9 +13,6 @@ from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import filter_services
 
 import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -130,28 +128,8 @@ def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
 
     @return An attribute value
     """
-    global ETREE_VERSION
-    node = None
 
-    if ETREE_VERSION[0] <= 1 and ETREE_VERSION[1] < 3:
-
-        match_obj = re.search(
-            "([^\@]+?)\[\@([^=]*?)=\'([^\']*?)\'",
-            subnode_xpath_expr)
-
-        if match_obj is not None:
-            node_to_find = match_obj.group(1)
-            xpath_attrib = match_obj.group(2)
-            xpath_value = match_obj.group(3)
-            for node_found in xml_node.findall(node_to_find):
-                if node_found.attrib[xpath_attrib] == xpath_value:
-                    node = node_found
-                    break
-        else:
-            node = xml_node.find(subnode_xpath_expr)
-
-    else:
-        node = xml_node.find(subnode_xpath_expr)
+    node = xml_node.find(subnode_xpath_expr)
 
     if node is not None:
         return node.get(attrib_name)
@@ -330,7 +308,7 @@ class OpenvasPlugin(PluginXMLFormat):
             with open(report_path) as f:
                 output = f.read()
             return re.search("OpenVAS", output) is not None \
-                   or re.search('<omp>', output) is not None\
+                   or re.search('<omp>', output) is not None \
                    or re.search('<owner>', output) is not None
         return False
 
@@ -440,5 +418,3 @@ class OpenvasPlugin(PluginXMLFormat):
 
 def createPlugin(ignore_info=False):
     return OpenvasPlugin(ignore_info=ignore_info)
-
-

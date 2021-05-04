@@ -4,14 +4,10 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-import re
+
+import xml.etree.ElementTree as ET
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -99,7 +95,6 @@ class Item:
             agentip = node.get('name').split("/")[1]
 
             if self.ip == agentip:
-
                 self.agentip = agentip
 
                 self.ipfrom = self.get_text_from_subnode(
@@ -223,7 +218,7 @@ class ImpactPlugin(PluginXMLFormat):
         mapped_services = {}
         mapped_ports = {}
         for item in parser.items:
-            os_string = f"{item.os} {item.arch }"
+            os_string = f"{item.os} {item.arch}"
             h_id = self.createAndAddHost(item.ip, os=os_string, hostnames=[item.host])
 
             for service in item.services:
@@ -277,10 +272,5 @@ class ImpactPlugin(PluginXMLFormat):
         del parser
 
 
-
-
-
 def createPlugin(ignore_info=False):
     return ImpactPlugin(ignore_info=ignore_info)
-
-
