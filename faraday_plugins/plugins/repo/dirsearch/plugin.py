@@ -59,14 +59,13 @@ class DirsearchPlugin(PluginBase):
         self.name = "dirsearch"
         self.plugin_version = "0.0.1"
         self.version = "0.0.1"
-        self._command_regex = re.compile(r'^(sudo )?(python[0-9\.]? )?dirsearch(\.py)\s+?')
+        self._command_regex = re.compile(r'^(sudo )?(python[0-9\.]? )?(dirsearch\.py)\s+?')
         self.addSetting("Ignore 403", str, "1")
         self._use_temp_file = True
         self._temp_file_extension = "json"
 
     def parseOutputString(self, output):
         self.parse_json(output)
-
 
     @property
     def should_ignore_403(self):
