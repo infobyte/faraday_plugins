@@ -20,7 +20,10 @@ def list_commands():
 def test_autodetected_on_commands(command_data):
     plugin_id = command_data["plugin_id"]
     command_string = command_data["command"]
+    command_result = command_data["command_result"]
+
     plugin: PluginBase = analyzer.get_plugin(command_string)
     assert plugin, command_string
     assert plugin.id.lower() == plugin_id.lower()
+    assert plugin.command.lower() == command_result.lower()
 

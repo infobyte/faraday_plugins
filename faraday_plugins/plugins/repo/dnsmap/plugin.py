@@ -3,10 +3,10 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
 from collections import defaultdict
 
+from faraday_plugins.plugins.plugin import PluginBase
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -104,9 +104,9 @@ class DnsmapPlugin(PluginBase):
         self._use_temp_file = True
         self._temp_file_extension = "txt"
 
-
     def canParseCommandString(self, current_input):
         if self._command_regex.match(current_input.strip()):
+            self.command = self.get_command(current_input)
             return True
         else:
             return False
@@ -139,5 +139,3 @@ class DnsmapPlugin(PluginBase):
 
 def createPlugin(ignore_info=False):
     return DnsmapPlugin(ignore_info=ignore_info)
-
-
