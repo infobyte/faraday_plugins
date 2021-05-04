@@ -211,7 +211,11 @@ class WebVuln:
         self.query = self.get_text_from_subnode('query')
         self.request = self.get_text_from_subnode('request')
         self.category = self.get_text_from_subnode('category-id')
-        self.service_id = services[self.get_text_from_subnode('web-site-id')]
+        web_id = self.get_text_from_subnode('web-site-id')
+        self.service_id = None
+        if web_id:
+            self.service_id = services[web_id]
+
         self.isWeb = True
 
     def get_text_from_subnode(self, subnode_xpath_expr):
@@ -220,6 +224,7 @@ class WebVuln:
 
         @return An attribute value
         """
+
         sub_node = self.node.find(subnode_xpath_expr)
         if sub_node is not None:
             if sub_node.text is not None:
