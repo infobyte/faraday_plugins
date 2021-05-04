@@ -12,10 +12,7 @@ from lxml import etree
 from lxml.etree import XMLParser
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
-import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
 
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 current_path = os.path.abspath(os.getcwd())
 
 
@@ -71,30 +68,8 @@ def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
 
     @return An attribute value
     """
-    global ETREE_VERSION
-    node = None
 
-    if ETREE_VERSION[0] <= 1 and ETREE_VERSION[1] < 3:
-
-        match_obj = re.search(
-            "([^\@]+?)\[\@([^=]*?)=\'([^\']*?)\'",
-            subnode_xpath_expr)
-
-        if match_obj is not None:
-
-            node_to_find = match_obj.group(1)
-            xpath_attrib = match_obj.group(2)
-            xpath_value = match_obj.group(3)
-
-            for node_found in xml_node.findall(node_to_find):
-                if node_found.attrib[xpath_attrib] == xpath_value:
-                    node = node_found
-                    break
-        else:
-            node = xml_node.find(subnode_xpath_expr)
-
-    else:
-        node = xml_node.find(subnode_xpath_expr)
+    node = xml_node.find(subnode_xpath_expr)
 
     if node is not None:
         return node.get(attrib_name)
@@ -288,7 +263,7 @@ class Port:
     @param port_node A port_node taken from an nmap xml tree
     """
 
-    PORT_STATUS_FIX = {"filtered": "closed", "open|filtered": "closed" }
+    PORT_STATUS_FIX = {"filtered": "closed", "open|filtered": "closed"}
 
     def __init__(self, port_node):
         self.node = port_node
@@ -318,7 +293,7 @@ class Port:
         @return (state, reason, reason_ttl) or ('unknown','unknown','unknown')
         """
         state = self.PORT_STATUS_FIX.get(self.get_attrib_from_subnode('state', 'state'),
-                                    self.get_attrib_from_subnode('state', 'state'))
+                                         self.get_attrib_from_subnode('state', 'state'))
         reason = self.get_attrib_from_subnode('state', 'reason')
         reason_ttl = self.get_attrib_from_subnode('state', 'reason_ttl')
 

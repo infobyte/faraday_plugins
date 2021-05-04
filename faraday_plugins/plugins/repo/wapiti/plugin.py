@@ -5,14 +5,11 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
+import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
+
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -67,31 +64,14 @@ class WapitiXmlParser:
         yield Item(tree)
 
 
-
 def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
     """
     Finds a subnode in the item node and the retrieves a value from it
 
     @return An attribute value
     """
-    global ETREE_VERSION
-    node = None
 
-    if ETREE_VERSION[0] <= 1 and ETREE_VERSION[1] < 3:
-        match_obj = re.search(
-            "([^\@]+?)\[\@([^=]*?)=\'([^\']*?)\'", subnode_xpath_expr)
-        if match_obj is not None:
-            node_to_find = match_obj.group(1)
-            xpath_attrib = match_obj.group(2)
-            xpath_value = match_obj.group(3)
-            for node_found in xml_node.findall(node_to_find):
-                if node_found.attrib[xpath_attrib] == xpath_value:
-                    node = node_found
-                    break
-        else:
-            node = xml_node.find(subnode_xpath_expr)
-    else:
-        node = xml_node.find(subnode_xpath_expr)
+    node = xml_node.find(subnode_xpath_expr)
     if node is not None:
         return node.get(attrib_name)
     return None
@@ -142,7 +122,7 @@ class Item:
         target = self.get_info(item_node, 'target')
         return urlparse(target)
 
-    def get_info(self, item_node,name):
+    def get_info(self, item_node, name):
         path = item_node.findall('report_infos/info')
 
         for item in path:
@@ -165,8 +145,8 @@ class Item:
         for vuln in vulns_node:
             vulns_dict = {}
             vulns_dict['id'] = vuln.attrib['name']
-            vulns_dict['description'] = self.get_text_from_subnode(vuln,'description')
-            vulns_dict['solution'] = self.get_text_from_subnode(vuln,'solution')
+            vulns_dict['description'] = self.get_text_from_subnode(vuln, 'description')
+            vulns_dict['solution'] = self.get_text_from_subnode(vuln, 'solution')
             vulns_dict['references'] = self.get_references(vuln)
             vulns_dict['entries'] = self.get_entries(vuln)
             vulns_list.append(vulns_dict)
@@ -177,22 +157,22 @@ class Item:
         refs = node.findall('references/reference')
         references_list = []
         for ref in refs:
-            references_list.append('Title: ' + self.get_text_from_subnode(ref,'title'))
-            references_list.append('URL: ' + self.get_text_from_subnode(ref,'url'))
+            references_list.append('Title: ' + self.get_text_from_subnode(ref, 'title'))
+            references_list.append('URL: ' + self.get_text_from_subnode(ref, 'url'))
 
         return references_list
 
-    def get_entries(self,node):
+    def get_entries(self, node):
         entries = node.findall('entries/entry')
         entries_list = []
         for entry in entries:
             entries_dict = {}
-            entries_dict['method'] = self.get_text_from_subnode(entry,'method')
-            entries_dict['path'] = self.get_text_from_subnode(entry,'path')
+            entries_dict['method'] = self.get_text_from_subnode(entry, 'method')
+            entries_dict['path'] = self.get_text_from_subnode(entry, 'path')
             entries_dict['level'] = self.severity_format(entry)
-            entries_dict['parameter'] = self.get_text_from_subnode(entry,'parameter')
-            entries_dict['http_request'] = self.get_text_from_subnode(entry,'http_request')
-            entries_dict['curl_command'] = self.get_text_from_subnode(entry,'curl_command')
+            entries_dict['parameter'] = self.get_text_from_subnode(entry, 'parameter')
+            entries_dict['http_request'] = self.get_text_from_subnode(entry, 'http_request')
+            entries_dict['curl_command'] = self.get_text_from_subnode(entry, 'curl_command')
             entries_list.append(entries_dict)
 
         return entries_list
@@ -283,13 +263,12 @@ class WapitiPlugin(PluginXMLFormat):
             return re.search("Wapiti", output) is not None
         return False
 
-
     def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.
         """
-    
+
         parser = WapitiXmlParser(output)
         for item in parser.items:
             host_id = self.createAndAddHost(item.ip, hostnames=[item.hostname])
@@ -301,17 +280,17 @@ class WapitiPlugin(PluginXMLFormat):
             for vuln in item.vulns:
                 for entry in vuln['entries']:
                     vuln_id = self.createAndAddVulnWebToService(host_id,
-                        service_id,
-                        vuln['id'],
-                        desc=vuln['description'], 
-                        ref=vuln['references'],
-                        resolution=vuln['solution'],
-                        severity=entry['level'], 
-                        website=entry['curl_command'], 
-                        path=entry['path'], 
-                        request=entry['http_request'],
-                        method=entry['method'], 
-                        params=entry['parameter'])
+                                                                service_id,
+                                                                vuln['id'],
+                                                                desc=vuln['description'],
+                                                                ref=vuln['references'],
+                                                                resolution=vuln['solution'],
+                                                                severity=entry['level'],
+                                                                website=entry['curl_command'],
+                                                                path=entry['path'],
+                                                                request=entry['http_request'],
+                                                                method=entry['method'],
+                                                                params=entry['parameter'])
 
     def processCommandString(self, username, current_path, command_string):
         """
@@ -333,11 +312,9 @@ class WapitiPlugin(PluginXMLFormat):
             self.port = host.group(11)
         if self.protocol == 'https':
             self.port = 443
-        self.logger.debug("host = %s, port = %s",self.host, self.port)
+        self.logger.debug("host = %s, port = %s", self.host, self.port)
         return "%s -o %s -f xml \n" % (command_string, self._output_file_path)
 
 
 def createPlugin(ignore_info=False):
     return WapitiPlugin(ignore_info=ignore_info)
-
-

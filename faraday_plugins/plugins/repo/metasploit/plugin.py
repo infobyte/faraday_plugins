@@ -3,13 +3,11 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-import re
-
 import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
 
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
+from faraday_plugins.plugins.plugin import PluginXMLFormat
+
+ETREE_VERSION = ET.VERSION
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -71,7 +69,6 @@ class MetasploitXmlParser:
         """
         @return items A list of Host instances
         """
-        bugtype = ""
 
         for node in tree.findall('hosts/host'):
             yield Host(node, webVulns)
@@ -80,7 +77,6 @@ class MetasploitXmlParser:
         """
         @return items A list of WebVuln instances
         """
-        bugtype = ""
         for node in tree.findall('web_vulns/web_vuln'):
             yield WebVuln(node, services)
 
@@ -91,26 +87,8 @@ def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
 
     @return An attribute value
     """
-    global ETREE_VERSION
-    node = None
 
-    if ETREE_VERSION[0] <= 1 and ETREE_VERSION[1] < 3:
-
-        match_obj = re.search(
-            "([^\@]+?)\[\@([^=]*?)=\'([^\']*?)\'", subnode_xpath_expr)
-        if match_obj is not None:
-            node_to_find = match_obj.group(1)
-            xpath_attrib = match_obj.group(2)
-            xpath_value = match_obj.group(3)
-            for node_found in xml_node.findall(node_to_find):
-                if node_found.attrib[xpath_attrib] == xpath_value:
-                    node = node_found
-                    break
-        else:
-            node = xml_node.find(subnode_xpath_expr)
-
-    else:
-        node = xml_node.find(subnode_xpath_expr)
+    node = xml_node.find(subnode_xpath_expr)
 
     if node is not None:
         return node.get(attrib_name)
@@ -330,7 +308,6 @@ class MetasploitPlugin(PluginXMLFormat):
         self.options = None
         self.target = None
 
-
     def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
@@ -343,7 +320,7 @@ class MetasploitPlugin(PluginXMLFormat):
             self.hostnames = []
             if item.host:
                 self.hostnames = [item.host]
-            
+
             h_id = self.createAndAddHost(item.ip, os=item.os, hostnames=self.hostnames)
 
             if item.id + "_" in item.notesByService:
@@ -351,15 +328,15 @@ class MetasploitPlugin(PluginXMLFormat):
                     self.createAndAddNoteToHost(h_id, n.ntype, n.data)
 
             for v in item.vulnsByHost:
-                v_id = self.createAndAddVulnToHost(
+                self.createAndAddVulnToHost(
                     h_id, v.name, v.desc, ref=v.refs)
 
             for s in item.services:
                 s_id = self.createAndAddServiceToHost(h_id, s['name'],
-                                                           protocol=s['proto'],
-                                                           ports=[s['port']],
-                                                           status=s['state'],
-                                                           description=s['info'])
+                                                      protocol=s['proto'],
+                                                      ports=[s['port']],
+                                                      status=s['state'],
+                                                      description=s['info'])
 
                 if item.id + "_" + s['id'] in item.notesByService:
                     for n in item.notesByService[item.id + "_" + s['id']]:
@@ -370,18 +347,19 @@ class MetasploitPlugin(PluginXMLFormat):
                     for c in item.credsByService[s['port']]:
                         self.createAndAddCredToService(
                             h_id, s_id, c.user, c.passwd)
-                        self.createAndAddVulnToService(h_id, s_id, "Weak Credentials", "[metasploit found the following credentials]\nuser:%s\npass:%s" % (
-                            c.user, c.passwd), severity="high")
+                        self.createAndAddVulnToService(h_id, s_id, "Weak Credentials",
+                                                       "[metasploit found the following credentials]\nuser:%s\npass:%s" % (
+                                                           c.user, c.passwd), severity="high")
 
                 for v in item.vulnsByService[s['id']]:
                     if v.isWeb:
-                        v_id = self.createAndAddVulnWebToService(h_id, s_id, v.name, v.desc,
+                        self.createAndAddVulnWebToService(h_id, s_id, v.name, v.desc,
                                                                  severity=v.risk, website=v.host,
                                                                  path=v.path, request=v.request, method=v.method,
                                                                  pname=v.pname, params=v.params, query=v.query,
                                                                  category=v.category)
                     else:
-                        v_id = self.createAndAddVulnToService(
+                        self.createAndAddVulnToService(
                             h_id, s_id, v.name, v.desc, ref=v.refs)
 
         del parser
@@ -395,5 +373,3 @@ class MetasploitPlugin(PluginXMLFormat):
 
 def createPlugin(ignore_info=False):
     return MetasploitPlugin(ignore_info=ignore_info)
-
-

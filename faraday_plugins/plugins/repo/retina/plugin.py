@@ -5,13 +5,9 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-
 import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
 
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -111,7 +107,7 @@ class Item:
         return None
 
 
-class Results():
+class Results:
 
     def __init__(self, issue_node):
         self.node = issue_node
@@ -176,13 +172,12 @@ class RetinaPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
 
-
     def parseOutputString(self, output):
 
         parser = RetinaXmlParser(output)
         for item in parser.items:
             hostname = item.hostname if item.hostname else None
-            h_id = self.createAndAddHost(item.ip, item.os,hostnames=[hostname])
+            h_id = self.createAndAddHost(item.ip, item.os, hostnames=[hostname])
 
             if not item.netbiosname == 'N/A':
                 self.createAndAddNoteToHost(
@@ -219,5 +214,3 @@ class RetinaPlugin(PluginXMLFormat):
 
 def createPlugin(ignore_info=False):
     return RetinaPlugin(ignore_info=ignore_info)
-
-

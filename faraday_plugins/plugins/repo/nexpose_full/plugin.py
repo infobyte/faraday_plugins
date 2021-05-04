@@ -9,10 +9,6 @@ import xml.etree.ElementTree as ET
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
-ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 __author__ = "Micaela Ranea Sanchez"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
 __credits__ = ["Francisco Amato", "Federico Kirschbaum",
@@ -116,7 +112,6 @@ class NexposeFullXmlParser:
 
         for tests in node.findall('tests'):
             for test in tests.iter('test'):
-                vuln = dict()
                 if test.get('id').lower() in vulnsDefinitions:
                     vuln = vulnsDefinitions[test.get('id').lower()].copy()
                     key = test.get('key', '')
@@ -312,8 +307,6 @@ class NexposeFullPlugin(PluginXMLFormat):
                         )
 
         del parser
-
-
 
 
 def createPlugin(ignore_info=False):
