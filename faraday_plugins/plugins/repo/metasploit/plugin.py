@@ -7,8 +7,6 @@ import xml.etree.ElementTree as ET
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
-ETREE_VERSION = ET.VERSION
-
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
 __credits__ = ["Francisco Amato"]
@@ -364,7 +362,8 @@ class MetasploitPlugin(PluginXMLFormat):
 
         del parser
 
-    def _isIPV4(self, ip):
+    @staticmethod
+    def _isIPV4(ip):
         if len(ip.split(".")) == 4:
             return True
         else:

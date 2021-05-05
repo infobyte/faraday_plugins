@@ -4,15 +4,11 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-from html.parser import HTMLParser
-from faraday_plugins.plugins.plugin import PluginXMLFormat
-from faraday_plugins.plugins import plugins_utils
-
 import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
+from html.parser import HTMLParser
 
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
+from faraday_plugins.plugins import plugins_utils
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -79,28 +75,8 @@ def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
 
     @return An attribute value
     """
-    global ETREE_VERSION
-    node = None
 
-    if ETREE_VERSION[0] <= 1 and ETREE_VERSION[1] < 3:
-
-        match_obj = re.search(
-            "([^\@]+?)\[\@([^=]*?)=\'([^\']*?)\'", subnode_xpath_expr)
-        if match_obj is not None:
-
-            node_to_find = match_obj.group(1)
-            xpath_attrib = match_obj.group(2)
-            xpath_value = match_obj.group(3)
-            for node_found in xml_node.findall(node_to_find):
-
-                if node_found.attrib[xpath_attrib] == xpath_value:
-                    node = node_found
-                    break
-        else:
-            node = xml_node.find(subnode_xpath_expr)
-
-    else:
-        node = xml_node.find(subnode_xpath_expr)
+    node = xml_node.find(subnode_xpath_expr)
 
     if node is not None:
         return node.get(attrib_name)
@@ -295,8 +271,6 @@ class NiktoPlugin(PluginXMLFormat):
             "-vhost+": "Virtual host (for Host header)",
         }
 
-
-
     def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
@@ -324,8 +298,7 @@ class NiktoPlugin(PluginXMLFormat):
             )
 
             for item in host.items:
-
-                v_id = self.createAndAddVulnWebToService(
+                self.createAndAddVulnWebToService(
                     h_id,
                     s_id,
                     name=item.desc,
@@ -336,8 +309,6 @@ class NiktoPlugin(PluginXMLFormat):
                 )
 
         del parser
-
-
 
     def processCommandString(self, username, current_path, command_string):
         """
@@ -357,5 +328,3 @@ class NiktoPlugin(PluginXMLFormat):
 
 def createPlugin(ignore_info=False):
     return NiktoPlugin(ignore_info=ignore_info)
-
-
