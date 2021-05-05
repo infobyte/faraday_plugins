@@ -40,6 +40,7 @@ class PluginBase:
         self.name = None
         self.description = ""
         self._command_regex = None
+        self.command = None
         self._output_file_path = None
         self._use_temp_file = False
         self._delete_temp_file = False
@@ -251,8 +252,17 @@ class PluginBase:
         This method can be overriden in the plugin implementation
         if a different kind of check is needed
         """
-        return (self._command_regex is not None and
-                self._command_regex.match(current_input.strip()) is not None)
+        if (self._command_regex is not None and
+                self._command_regex.match(current_input.strip()) is not None):
+            self.command = self.get_command(current_input)
+            return True
+
+    def get_command(self, current_input: str) -> str:
+        command = self._command_regex.findall(current_input)[0]
+        if isinstance(command, tuple):
+            return "".join(command).strip()
+
+        return command.strip()
 
     def processCommandString(self, username, current_path, command_string):
         """
@@ -495,7 +505,7 @@ class PluginBase:
 
     def get_data(self):
         self.vulns_data["command"]["tool"] = self.id
-        self.vulns_data["command"]["command"] = self.id
+        self.vulns_data["command"]["command"] = self.command if self.command else self.id
         self.vulns_data["command"]["duration"] = (datetime.now() - self.start_date).microseconds
         return self.vulns_data
 
