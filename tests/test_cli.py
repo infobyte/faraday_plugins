@@ -37,6 +37,15 @@ def test_process_command():
     assert summary['hosts'] == 1
 
 
+def test_process_command_ping():
+    runner = CliRunner()
+    result = runner.invoke(process_command, args=['ping -c 1 www.google.com'])
+    assert result.exit_code == 0
+    summary = json.loads(result.output.strip())
+
+    assert summary['command']["command"] == 'ping'
+
+
 def test_process_command_to_file():
     runner = CliRunner()
     with runner.isolated_filesystem() as file_system:

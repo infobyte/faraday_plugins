@@ -75,12 +75,7 @@ class Item:
     @param item_node A item_node taken from an netsparker xml tree
     """
 
-    def re_map_severity(self, severity):
-        if severity == "Important":
-            return "high"
-        return severity
-
-    def __init__(self, item_node, encoding="ascii"):
+    def __init__(self, item_node):
         self.node = item_node
         self.url = self.get_text_from_subnode("url")
 
@@ -110,7 +105,8 @@ class Item:
         self.param = self.get_text_from_subnode("vulnerableparameter")
         self.paramval = self.get_text_from_subnode("vulnerableparametervalue")
         self.reference = self.get_text_from_subnode("externalReferences")
-        self.resolution = self.get_text_from_subnode("actionsToTake")
+        remedy = self.get_text_from_subnode("remedy")
+        self.resolution = self.get_text_from_subnode("actionsToTake") + remedy if remedy else ""
         self.request = self.get_text_from_subnode("rawrequest")
         self.response = self.get_text_from_subnode("rawresponse")
         self.kvulns = []
@@ -159,6 +155,12 @@ class Item:
             repr(self.paramval) if self.paramval else ""
         self.data += "\nExtra: " + "\n".join(self.extra) if self.extra else ""
 
+    @staticmethod
+    def re_map_severity(severity):
+        if severity == "Important":
+            return "high"
+        return severity
+
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
         Finds a subnode in the host node and the retrieves a value from it.
@@ -200,6 +202,7 @@ class NetsparkerPlugin(PluginXMLFormat):
                                                            ports=[str(i.port)],
                                                            status="open")
                 first = False
+
             if i.resolution is not None:
                 resolution = BeautifulSoup(i.resolution, "lxml").text
             else:
@@ -213,7 +216,7 @@ class NetsparkerPlugin(PluginXMLFormat):
                 name = i.name
             else:
                 name = i.name_title
-            v_id = self.createAndAddVulnWebToService(h_id, s_id, name, ref=i.ref, website=i.hostname,
+            self.createAndAddVulnWebToService(h_id, s_id, name, ref=i.ref, website=i.hostname,
                                                      severity=i.severity, desc=desc, path=i.url, method=i.method,
                                                      request=i.request, response=i.response, resolution=resolution,
                                                      pname=i.param, data=i.data)
