@@ -9,10 +9,6 @@ import zipfile
 from faraday_plugins.plugins.plugin import PluginZipFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 __author__ = "Ezequiel Tavella"
 __copyright__ = "Copyright (c) 2015, Infobyte LLC"
 __credits__ = ["Ezequiel Tavella"]

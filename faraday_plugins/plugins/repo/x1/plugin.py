@@ -10,10 +10,6 @@ import xml.etree.ElementTree as ET
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
-ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 current_path = os.path.abspath(os.getcwd())
 
 __author__ = "Francisco Amato"

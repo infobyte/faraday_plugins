@@ -3,16 +3,10 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginBase
 import re
-import os
-import sys
-import random
 import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
 
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
+from faraday_plugins.plugins.plugin import PluginBase
 
 __author__ = "Morgan Lemarechal"
 __copyright__ = "Copyright 2014, Faraday Project"
@@ -86,7 +80,6 @@ class WcscanPlugin(PluginBase):
         self._temp_file_extension = "xml"
         self.xml_arg_re = re.compile(r"^.*(--xml\s*[^\s]+).*$")
 
-
     def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it from
@@ -109,9 +102,7 @@ class WcscanPlugin(PluginBase):
                 if parser.scaninfo[file]['type'] == "webconfig":
                     vuln_name = f"{parser.scaninfo[file]['file']}: {str(parser.result[file][vuln][3])}"
                     vuln_description = f"{str(parser.result[file][vuln][3])} : {str(parser.result[file][vuln][2])} = {str(parser.result[file][vuln][0])}\n{str(parser.result[file][vuln][1])}"
-                    v_id = self.createAndAddVulnToService(h_id, s_id, vuln_name, desc=vuln_description, severity=0)
-
-
+                    self.createAndAddVulnToService(h_id, s_id, vuln_name, desc=vuln_description, severity=0)
 
     def processCommandString(self, username, current_path, command_string):
         """
@@ -129,5 +120,3 @@ class WcscanPlugin(PluginBase):
 
 def createPlugin(ignore_info=False):
     return WcscanPlugin(ignore_info=ignore_info)
-
-
