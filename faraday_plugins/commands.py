@@ -8,7 +8,9 @@ import subprocess
 import sys
 
 import click
+from tabulate import tabulate
 
+from faraday_plugins import __version__
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer, CommandAnalyzer
 from faraday_plugins.plugins.plugin import PluginByExtension
 
@@ -22,8 +24,10 @@ if not root_logger.handlers:
         root_logger.addHandler(out_hdlr)
         root_logger.setLevel(logging.DEBUG)
 
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
-@click.group()
+@click.group(context_settings=CONTEXT_SETTINGS)
+@click.version_option(__version__, '-v', '--version')
 def cli():
     pass
 
@@ -32,8 +36,10 @@ def cli():
 @click.option('-cpf', '--custom-plugins-folder', type=str)
 def list_plugins(custom_plugins_folder):
     plugins_manager = PluginsManager(custom_plugins_folder)
-    click.echo(click.style("Available Plugins:", fg="cyan"))
+    click.echo(click.style(f"Faraday Plugins v{__version__}", fg="cyan"))
+    click.echo(click.style("Available Plugins :", fg="cyan"))
     loaded_plugins = 0
+    plugins_data = []
     for plugin_id, plugin in plugins_manager.get_plugins():
         console_enabled = plugin._command_regex is not None
         console_enabled_color = "green" if console_enabled else "red"
@@ -41,10 +47,14 @@ def list_plugins(custom_plugins_folder):
         report_enabled = isinstance(plugin, PluginByExtension)
         report_enabled_color = "green" if report_enabled else "red"
         report_enabled_text = click.style(f"{'Yes' if report_enabled else 'No'}", fg=report_enabled_color)
-        click.echo(f"{plugin.id:15}  - [Command: {console_enabled_text:>12} - Report: {report_enabled_text:>12}] - {plugin.name} ")
-
-        loaded_plugins += 1
-    click.echo(click.style(f"Loaded Plugins: {loaded_plugins}", fg="cyan"))
+        plugins_data.append({"Name": plugin.name, "ID": plugin.id, "Command": console_enabled_text,
+                             "Report": report_enabled_text})
+    click.echo(tabulate(
+        plugins_data,
+        headers="keys",
+        tablefmt="simple",
+    ))
+    click.echo(click.style(f"Loaded Plugins: {len(plugins_data)}", fg="cyan"))
 
 
 @cli.command()

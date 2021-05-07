@@ -126,6 +126,9 @@ class PluginBase:
             self._hosts_cache[cache_id] = obj_uuid
         else:
             obj_uuid = self._hosts_cache[cache_id]
+            if host['hostnames']:
+                chached_host = self.get_from_cache(obj_uuid)
+                chached_host['hostnames'] = list(set(chached_host['hostnames'] + host['hostnames']))
         return obj_uuid
 
     def save_service_cache(self, host_id, service):
