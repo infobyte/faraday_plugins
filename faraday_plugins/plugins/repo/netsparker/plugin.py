@@ -5,16 +5,12 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
+import xml.etree.ElementTree as ET
+
 from bs4 import BeautifulSoup
+
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-
-
-import xml.etree.ElementTree as ET
-ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"

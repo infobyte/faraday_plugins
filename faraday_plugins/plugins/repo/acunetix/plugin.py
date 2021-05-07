@@ -5,24 +5,11 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from urllib.parse import urlsplit
-import re
-import os
 
 from lxml import etree
 
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
-
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -53,7 +40,8 @@ class AcunetixXmlParser:
         else:
             self.sites = []
 
-    def parse_xml(self, xml_output):
+    @staticmethod
+    def parse_xml(xml_output):
         """
         Open and parse an xml file.
 
@@ -71,7 +59,8 @@ class AcunetixXmlParser:
 
         return tree
 
-    def get_items(self, tree):
+    @staticmethod
+    def get_items(tree):
         """
         @return items A list of Host instances
         """
@@ -86,26 +75,8 @@ def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
 
     @return An attribute value
     """
-    global ETREE_VERSION
-    node = None
 
-    if ETREE_VERSION[0] <= 1 and ETREE_VERSION[1] < 3:
-
-        match_obj = re.search("([^\@]+?)\[\@([^=]*?)=\'([^\']*?)\'", subnode_xpath_expr)
-
-        if match_obj is not None:
-            node_to_find = match_obj.group(1)
-            xpath_attrib = match_obj.group(2)
-            xpath_value = match_obj.group(3)
-            for node_found in xml_node.findall(node_to_find):
-                if node_found.attrib[xpath_attrib] == xpath_value:
-                    node = node_found
-                    break
-        else:
-            node = xml_node.find(subnode_xpath_expr)
-
-    else:
-        node = xml_node.find(subnode_xpath_expr)
+    node = xml_node.find(subnode_xpath_expr)
 
     if node is not None:
         return node.get(attrib_name)
@@ -286,9 +257,6 @@ class AcunetixPlugin(PluginXMLFormat):
                         response=item.response,
                         ref=item.ref)
         del parser
-
-    def setHost(self):
-        pass
 
 
 def createPlugin(ignore_info=False):

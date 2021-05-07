@@ -5,19 +5,10 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import os
+
 from lxml import etree
+
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-
-
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -67,7 +58,7 @@ class JunitXmlParser:
             self.items = [data for data in self.get_items(tree)]
         else:
             self.items = []
-    
+
     def parse_xml(self, xml_output):
         """
         Open and parse an xml file.
@@ -133,7 +124,6 @@ class JunitPlugin(PluginXMLFormat):
         self._current_output = None
 
     def parseOutputString(self, output):
-
         parser = JunitXmlParser(output)
         for item in parser.items:
             h_id = self.createAndAddHost(item.host, os="Linux")

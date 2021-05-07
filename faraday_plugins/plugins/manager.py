@@ -1,25 +1,20 @@
-import logging
-import traceback
-import re
-import os
-import sys
+import csv
 import json
+import logging
+import os
 import pkgutil
+import re
+import sys
+import traceback
+import xml.etree.ElementTree as ET
 import zipfile
 from importlib import import_module
 from importlib.machinery import SourceFileLoader
-import csv
 from io import StringIO
 
 from . import repo
 
 logger = logging.getLogger("faraday").getChild(__name__)
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    logger.warning("cElementTree could not be imported. Using ElementTree instead")
-    import xml.etree.ElementTree as ET
 
 
 class ReportAnalyzer:
@@ -35,7 +30,7 @@ class ReportAnalyzer:
         else:
             file_name = os.path.basename(report_path)
             plugin = self._get_plugin_by_name(file_name)
-            if not plugin:   # Was unable to detect plugin from report file name
+            if not plugin:  # Was unable to detect plugin from report file name
                 logger.debug("Plugin by name not found")
                 plugin = self._get_plugin_by_file_type(report_path)
                 if not plugin:
@@ -68,7 +63,6 @@ class ReportAnalyzer:
         file_name_base, file_extension = os.path.splitext(file_name)
         file_extension = file_extension.lower()
         main_tag = None
-        file_json_keys = {}
         file_csv_headers = set()
         file_json_keys = set()
         files_in_zip = set()
@@ -151,7 +145,7 @@ class CommandAnalyzer:
 
 class PluginsManager:
 
-    def __init__(self, custom_plugins_folder=None, ignore_info = False):
+    def __init__(self, custom_plugins_folder=None, ignore_info=False):
         self.ignore_info = ignore_info
         self.plugins = {}
         self.plugin_modules = {}

@@ -7,11 +7,7 @@ See the file 'doc/LICENSE' for the license information
 from faraday_plugins.plugins.plugin import PluginBase
 import re
 
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-except ImportError:
-    import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET
 
 __author__ = 'Ezequiel Tavella'
 __copyright__ = 'Copyright (c) 2016, Infobyte LLC'

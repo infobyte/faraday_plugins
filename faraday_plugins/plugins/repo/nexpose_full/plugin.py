@@ -4,21 +4,10 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
 import re
+import xml.etree.ElementTree as ET
 
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-
-    ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = "Micaela Ranea Sanchez"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -51,7 +40,8 @@ class NexposeFullXmlParser:
         else:
             self.items = []
 
-    def parse_xml(self, xml_output):
+    @staticmethod
+    def parse_xml(xml_output):
         """
         Open and parse an xml file.
 
@@ -122,7 +112,6 @@ class NexposeFullXmlParser:
 
         for tests in node.findall('tests'):
             for test in tests.iter('test'):
-                vuln = dict()
                 if test.get('id').lower() in vulnsDefinitions:
                     vuln = vulnsDefinitions[test.get('id').lower()].copy()
                     key = test.get('key', '')
@@ -275,7 +264,7 @@ class NexposeFullPlugin(PluginXMLFormat):
             h_id = self.createAndAddHost(item['name'], item['os'], hostnames=item['hostnames'], mac=mac)
             for v in item['vulns']:
                 v['data'] = {"vulnerable_since": v['vulnerable_since'], "scan_id": v['scan_id'], "PCI": v['pci']}
-                v_id = self.createAndAddVulnToHost(
+                self.createAndAddVulnToHost(
                     h_id,
                     v['name'],
                     v['desc'],
@@ -285,7 +274,6 @@ class NexposeFullPlugin(PluginXMLFormat):
                 )
 
             for s in item['services']:
-                web = False
                 version = s.get("version", "")
                 s_id = self.createAndAddServiceToHost(
                     h_id,
@@ -298,7 +286,7 @@ class NexposeFullPlugin(PluginXMLFormat):
                 for v in s['vulns']:
 
                     if v['is_web']:
-                        v_id = self.createAndAddVulnWebToService(
+                        self.createAndAddVulnWebToService(
                             h_id,
                             s_id,
                             v['name'],
@@ -308,7 +296,7 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['resolution'],
                             path=v.get('path', ''))
                     else:
-                        v_id = self.createAndAddVulnToService(
+                        self.createAndAddVulnToService(
                             h_id,
                             s_id,
                             v['name'],
@@ -321,11 +309,5 @@ class NexposeFullPlugin(PluginXMLFormat):
         del parser
 
 
-    def setHost(self):
-        pass
-
-
 def createPlugin(ignore_info=False):
     return NexposeFullPlugin(ignore_info=ignore_info)
-
-

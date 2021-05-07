@@ -127,8 +127,7 @@ class HydraPlugin(PluginBase):
         else:
             return False
 
-    def setHost(self):
-        pass
+
 
 
 def createPlugin(ignore_info=False):

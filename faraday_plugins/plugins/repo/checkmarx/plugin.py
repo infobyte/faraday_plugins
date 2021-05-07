@@ -3,16 +3,10 @@ Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-import re
+import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
 
 __author__ = 'Blas Moyano'
 __copyright__ = 'Copyright 2020, Faraday Project'
@@ -70,7 +64,8 @@ class Querys():
             for info_pn in pn:
                 if info_pn.tag == 'Snippet':
                     valor = (
-                    'Number', info_pn.find('Line').find('Number').text, 'Code', info_pn.find('Line').find('Code').text)
+                        'Number', info_pn.find('Line').find('Number').text, 'Code',
+                        info_pn.find('Line').find('Code').text)
                 else:
                     valor = (info_pn.tag, info_pn.text)
                 lista_v.append(valor)
@@ -89,7 +84,6 @@ class CheckmarxPlugin(PluginXMLFormat):
         self.version = '1.0.0'
         self.framework_version = '1.0.0'
         self.options = None
-
 
     def parseOutputString(self, output):
         parser = CheckmarxXmlParser(output)
@@ -140,4 +134,3 @@ class CheckmarxPlugin(PluginXMLFormat):
 
 def createPlugin(ignore_info=False):
     return CheckmarxPlugin(ignore_info=ignore_info)
-
