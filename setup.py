@@ -14,7 +14,8 @@ install_requires = [
     'beautifulsoup4',
     'pytz',
     'python-dateutil',
-    'colorama'
+    'colorama',
+    'tabulate'
 ]
 
 
