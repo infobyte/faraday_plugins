@@ -5,12 +5,10 @@ Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginXMLFormat
+import xml.etree.ElementTree as ET
 from datetime import datetime
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
+
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = 'Blas Moyano'
 __copyright__ = 'Copyright 2020, Faraday Project'
@@ -25,11 +23,12 @@ class AppSpiderParser:
         self.tree = self.parse_xml(xml_output)
         if self.tree:
             self.vuln_list = self.tree.find('VulnList')
-            self.name_scan = self.tree.find('ScanName').text
+            self.name_scan = self.tree.findtext('ScanName')
         else:
             self.tree = None
 
-    def parse_xml(self, xml_output):
+    @staticmethod
+    def parse_xml(xml_output):
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
@@ -72,22 +71,22 @@ class AppSpiderPlugin(PluginXMLFormat):
         data_info = []
 
         for vulns in parser.vuln_list:
-            vuln_name = vulns.find('VulnType').text
-            vuln_desc = vulns.find('Description').text
-            vuln_ref = vulns.find('VulnUrl').text
-            severity = vulns.find('AttackScore').text
-            vuln_resolution = vulns.find('Recommendation').text
-            vuln_external_id = vulns.find('DbId').text
-            vuln_run_date = vulns.find('ScanDate').text
-            data_info.append(vulns.find('AttackClass').text)
-            data_info.append(vulns.find('CweId').text)
-            data_info.append(vulns.find('CAPEC').text)
-            data_info.append(vulns.find('DISSA_ASC').text)
-            data_info.append(vulns.find('OWASP2007').text)
-            data_info.append(vulns.find('OWASP2010').text)
-            data_info.append(vulns.find('OWASP2013').text)
-            data_info.append(vulns.find('OVAL').text)
-            data_info.append(vulns.find('WASC').text)
+            vuln_name = vulns.findtext('VulnType')
+            vuln_desc = vulns.findtext('Description')
+            vuln_ref = vulns.findtext('VulnUrl')
+            severity = vulns.findtext('AttackScore')
+            vuln_resolution = vulns.findtext('Recommendation')
+            vuln_external_id = vulns.findtext('DbId')
+            vuln_run_date = vulns.findtext('ScanDate')
+            data_info.append(vulns.findtext('AttackClass'))
+            data_info.append(vulns.findtext('CweId'))
+            data_info.append(vulns.findtext('CAPEC'))
+            data_info.append(vulns.findtext('DISSA_ASC'))
+            data_info.append(vulns.findtext('OWASP2007'))
+            data_info.append(vulns.findtext('OWASP2010'))
+            data_info.append(vulns.findtext('OWASP2013'))
+            data_info.append(vulns.findtext('OVAL'))
+            data_info.append(vulns.findtext('WASC'))
 
             if severity == '1-Informational':
                 severity = 0

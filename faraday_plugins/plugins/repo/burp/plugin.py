@@ -4,25 +4,14 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-import re
-import os
 import base64
-from bs4 import BeautifulSoup, Comment
-from faraday_plugins.plugins.plugin import PluginXMLFormat
+import distutils.util  # pylint: disable=import-error
+import xml.etree.ElementTree as ET
 from urllib.parse import urlsplit
-import distutils.util #pylint: disable=import-error
 
+from bs4 import BeautifulSoup, Comment
 
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
+from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -78,7 +67,6 @@ class BurpXmlParser:
         """
         @return items A list of Host instances
         """
-        bugtype = ''
 
         for node in tree.findall('issue'):
             yield Item(node)
@@ -90,27 +78,7 @@ def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
 
     @return An attribute value
     """
-    global ETREE_VERSION
-    node = None
-
-    if ETREE_VERSION[0] <= 1 and ETREE_VERSION[1] < 3:
-
-        match_obj = re.search(
-            "([^\@]+?)\[\@([^=]*?)=\'([^\']*?)\'", subnode_xpath_expr)
-        if match_obj is not None:
-
-            node_to_find = match_obj.group(1)
-            xpath_attrib = match_obj.group(2)
-            xpath_value = match_obj.group(3)
-            for node_found in xml_node.findall(node_to_find):
-                if node_found.attrib[xpath_attrib] == xpath_value:
-                    node = node_found
-                    break
-        else:
-            node = xml_node.find(subnode_xpath_expr)
-
-    else:
-        node = xml_node.find(subnode_xpath_expr)
+    node = xml_node.find(subnode_xpath_expr)
 
     if node is not None:
         return node.get(attrib_name)
@@ -165,8 +133,8 @@ class Item:
         self.background = background
         self.external_id = external_id.text
 
-
-    def do_clean(self, value):
+    @staticmethod
+    def do_clean(value):
 
         myreturn = ""
         if value is not None:
@@ -222,7 +190,6 @@ class BurpPlugin(PluginXMLFormat):
         self._current_output = None
         self.target = None
 
-
     def parseOutputString(self, output):
 
         parser = BurpXmlParser(output)
@@ -248,7 +215,7 @@ class BurpPlugin(PluginXMLFormat):
             data = self.removeHtml(data)
             resolution = self.removeHtml(item.remediation) if item.remediation else ""
 
-            v_id = self.createAndAddVulnWebToService(
+            self.createAndAddVulnWebToService(
                 h_id,
                 s_id,
                 item.name,
@@ -263,7 +230,6 @@ class BurpPlugin(PluginXMLFormat):
                 external_id=item.external_id)
 
         del parser
-
 
     def removeHtml(self, markup):
         soup = BeautifulSoup(markup, "html.parser")
@@ -292,11 +258,6 @@ class BurpPlugin(PluginXMLFormat):
 
         return str(soup)
 
-    def setHost(self):
-        pass
-
 
 def createPlugin(ignore_info=False):
     return BurpPlugin(ignore_info=ignore_info)
-
-

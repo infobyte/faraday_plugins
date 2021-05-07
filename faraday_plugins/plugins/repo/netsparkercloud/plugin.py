@@ -5,20 +5,11 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
+import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
+
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -28,7 +19,6 @@ __version__ = "1.0.0"
 __maintainer__ = "Francisco Amato"
 __email__ = "famato@infobytesec.com"
 __status__ = "Development"
-
 
 
 def get_urls(string):
@@ -55,7 +45,7 @@ class NetsparkerCloudXmlParser:
         self.filepath = xml_output
         tree = self.parse_xml(xml_output)
         if tree:
-            self.items = [data for data in self.get_items(tree)]
+            self.items = self.get_items(tree)
         else:
             self.items = []
 
@@ -90,6 +80,7 @@ class Item:
 
     @param item_node A item_node taken from an netsparkercloud xml tree
     """
+
     def re_map_severity(self, severity):
         if severity == "Important":
             return "high"
@@ -120,7 +111,7 @@ class Item:
         self.response = self.get_text_from_subnode("content")
         self.extra = []
         for v in item_node.findall("extra-information/info"):
-            self.extra.append(v.get('name') + ":" + v.get('value') )
+            self.extra.append(v.get('name') + ":" + v.get('value'))
 
         self.node = item_node.find("classification")
         self.owasp = self.get_text_from_subnode("owasp")
@@ -204,10 +195,6 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
                                                      request=i.request, response=i.response, resolution=i.resolution,
                                                      pname=i.param)
         del parser
-
-
-    def setHost(self):
-        pass
 
 
 def createPlugin(ignore_info=False):

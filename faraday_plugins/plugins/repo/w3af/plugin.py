@@ -5,20 +5,11 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
+import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
+
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -73,7 +64,6 @@ class W3afXmlParser:
         """
         @return items A list of Host instances
         """
-        bugtype = ""
 
         if len(tree.findall('scan-info')) == 0:
             scaninfo = tree.findall('scaninfo')[0]
@@ -104,26 +94,7 @@ def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
 
     @return An attribute value
     """
-    global ETREE_VERSION
-    node = None
-
-    if ETREE_VERSION[0] <= 1 and ETREE_VERSION[1] < 3:
-
-        match_obj = re.search(
-            "([^\@]+?)\[\@([^=]*?)=\'([^\']*?)\'", subnode_xpath_expr)
-        if match_obj is not None:
-            node_to_find = match_obj.group(1)
-            xpath_attrib = match_obj.group(2)
-            xpath_value = match_obj.group(3)
-            for node_found in xml_node.findall(node_to_find):
-                if node_found.attrib[xpath_attrib] == xpath_value:
-                    node = node_found
-                    break
-        else:
-            node = xml_node.find(subnode_xpath_expr)
-
-    else:
-        node = xml_node.find(subnode_xpath_expr)
+    node = xml_node.find(subnode_xpath_expr)
 
     if node is not None:
         return node.get(attrib_name)
@@ -226,22 +197,18 @@ class W3afPlugin(PluginXMLFormat):
         }
 
     def parseOutputString(self, output):
-
         parser = W3afXmlParser(output)
         ip = resolve_hostname(parser.host)
         h_id = self.createAndAddHost(ip, hostnames=[parser.host])
         s_id = self.createAndAddServiceToHost(h_id, "http", "tcp", ports=[parser.port], status="open")
 
         for item in parser.items:
-            v_id = self.createAndAddVulnWebToService(h_id, s_id, item.name,
+            self.createAndAddVulnWebToService(h_id, s_id, item.name,
                                                      item.detail, pname=item.param, path=item.url, website=parser.host,
                                                      severity=item.severity, method=item.method, request=item.req,
                                                      resolution=item.resolution, ref=item.ref, response=item.resp)
         del parser
 
 
-
 def createPlugin(ignore_info=False):
     return W3afPlugin(ignore_info=ignore_info)
-
-

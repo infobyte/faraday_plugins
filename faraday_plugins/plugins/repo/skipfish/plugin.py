@@ -148,10 +148,7 @@ class SkipfishPlugin(PluginBase):
         p = SkipfishParser(self._output_file_path)
 
         hostc = {}
-        port = 80
         for issue in p.issues:
-            req = ""
-            res = ""
             for sample in issue["samples"]:
                 if not sample["url"] in hostc:
                     reg = re.search(
@@ -176,16 +173,6 @@ class SkipfishPlugin(PluginBase):
                         'host': host,
                         'protocol': protocol,
                         's_id': s_id}
-
-                try:
-                    req = open("%s/request.dat" % sample["dir"], "r").read()
-                except:
-                    pass
-
-                try:
-                    res = open("%s/request.dat" % sample["dir"], "r").read()
-                except Exception:
-                    pass
 
                 d = hostc[sample["url"]]
                 self.createAndAddVulnWebToService(
@@ -214,8 +201,7 @@ class SkipfishPlugin(PluginBase):
         else:
             return re.sub(arg_match.group(1), r"-o %s" % self._output_file_path, command_string, 1)
 
-    def setHost(self):
-        pass
+
 
 
 def createPlugin(ignore_info=False):

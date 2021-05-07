@@ -5,19 +5,9 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
+import xml.etree.ElementTree as ET
+
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-
-
-try:
-    import xml.etree.cElementTree as ET
-    import xml.etree.ElementTree as ET_ORIG
-    ETREE_VERSION = ET_ORIG.VERSION
-except ImportError:
-    import xml.etree.ElementTree as ET
-    ETREE_VERSION = ET.VERSION
-
-ETREE_VERSION = [int(i) for i in ETREE_VERSION.split(".")]
-
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -43,7 +33,7 @@ class RetinaXmlParser:
     def __init__(self, xml_output):
         tree = self.parse_xml(xml_output)
         if tree:
-            self.items = [data for data in self.get_items(tree)]
+            self.items = self.get_items(tree)
         else:
             self.items = []
 
@@ -117,7 +107,7 @@ class Item:
         return None
 
 
-class Results():
+class Results:
 
     def __init__(self, issue_node):
         self.node = issue_node
@@ -182,13 +172,12 @@ class RetinaPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
 
-
     def parseOutputString(self, output):
 
         parser = RetinaXmlParser(output)
         for item in parser.items:
             hostname = item.hostname if item.hostname else None
-            h_id = self.createAndAddHost(item.ip, item.os,hostnames=[hostname])
+            h_id = self.createAndAddHost(item.ip, item.os, hostnames=[hostname])
 
             if not item.netbiosname == 'N/A':
                 self.createAndAddNoteToHost(
@@ -223,11 +212,5 @@ class RetinaPlugin(PluginXMLFormat):
         del parser
 
 
-    def setHost(self):
-        pass
-
-
 def createPlugin(ignore_info=False):
     return RetinaPlugin(ignore_info=ignore_info)
-
-

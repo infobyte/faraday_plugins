@@ -1,12 +1,13 @@
+import getpass
 import io
+import json
 import logging
 import os
-import sys
-import json
-import click
-import subprocess
 import shlex
-import getpass
+import subprocess
+import sys
+
+import click
 from tabulate import tabulate
 
 from faraday_plugins import __version__
