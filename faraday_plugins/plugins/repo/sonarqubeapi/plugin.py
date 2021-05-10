@@ -7,6 +7,7 @@ See the file 'doc/LICENSE' for the license information
 import json
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 from datetime import datetime
+import dateutil
 
 VULNERABILITY = "VULNERABILITY"
 
@@ -36,22 +37,32 @@ class SonarQubeAPIParser:
 
     def _parse_vulns(self, json_data):
         vulns = []
-
+        components = {item['key']:
+                          {'name': item['name'], 'longName': item['longName']}
+                      for item in json_data['components'] }
         for issue in json_data['issues']:
             if issue['type'] != VULNERABILITY:
                 continue
 
-            name = issue['rule']
-            path = issue['component']
+            component = issue['component']
+            path = components[component]['longName']
+            vuln_description = f"Issue found in line {issue['line']} of {path}"
+            project = f"Project: {issue['project']}"
             severity = SEVERITIES[issue['severity']]
             message = issue['message']
             status = STATUSES[issue['status']]
             tags = issue['tags']
-            creation_date = datetime.strptime(issue['creationDate'], '%Y-%m-%dT%H:%M:%S%z')
-
+            external_id = issue['rule']
+            creation_date = dateutil.parser.parse(issue['creationDate'])
+            data = [] if not issue['flows'] else ["Flows:"]
+            for flow in issue['flows']:
+                for location in flow['locations']:
+                    location_message = f"\"{location['msg']}\" in line {location['textRange']['startLine']} " \
+                                       f"of {components[component]['longName']}"
+                    data.append(location_message)
             vulns.append(
-                {'name': name, 'path': path, 'message': message, 'severity': severity, "status": status, 'tags': tags,
-                 'creation_date': creation_date})
+                {'name': message, 'description': vuln_description, 'project': project, 'path': path, 'severity': severity, 'status': status, 'tags': tags,
+                 'creation_date': creation_date, 'data': "\n".join(data), 'external_id': external_id})
 
         return vulns
 
@@ -59,44 +70,27 @@ class SonarQubeAPIParser:
 class SonarQubeAPIPlugin(PluginJsonFormat):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
-        self.identifier_tag = "sonarqube-api"
-        self.id = "SonarQubeAPI"
+        self.json_keys = {'total', 'effortTotal', 'issues', 'components', 'facets'}
+        self.id = "sonarqubeAPI"
         self.name = "SonarQube API Plugin"
         self.plugin_version = "0.0.1"
 
-    def report_belongs_to(self, **kwargs):
-        if super().report_belongs_to(**kwargs):
-            report_path = kwargs.get("report_path", "")
-            with open(report_path) as f:
-                output = f.read()
-                json_data = json.loads(output)
-
-                has_total = json_data.get('total', None) is not None
-                has_p = json_data.get('p', None) is not None
-                has_ps = json_data.get('ps', None) is not None
-                has_paging = json_data.get('paging', None) is not None
-                has_effort_total = json_data.get('effortTotal', None) is not None
-                has_issues = json_data.get('issues', None) is not None
-                has_components = json_data.get('components', None) is not None
-                has_facets = json_data.get('facets', None) is not None
-
-                return has_total and has_p and has_ps and has_paging and has_effort_total and has_issues and has_components and has_facets
-
-        return False
 
     def parseOutputString(self, output, debug=False):
         parser = SonarQubeAPIParser(output)
         for vuln in parser.vulns:
-            host_id = self.createAndAddHost(vuln['path'])
+            host_id = self.createAndAddHost(vuln['path'], description=vuln['project'])
 
             self.createAndAddVulnToHost(
                 host_id=host_id,
                 name=vuln['name'],
-                desc=vuln['message'],
+                desc=vuln['description'],
                 status=vuln['status'],
                 run_date=vuln['creation_date'],
                 severity=vuln['severity'],
-                tags=vuln['tags']
+                tags=vuln['tags'],
+                data=vuln['data'],
+                external_id=vuln['external_id']
             )
 
 
