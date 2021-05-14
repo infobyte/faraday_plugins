@@ -7,6 +7,7 @@ See the file 'doc/LICENSE' for the license information
 import re
 import json
 from faraday_plugins.plugins.plugin import PluginJsonFormat
+from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Blas Moyano"
 __copyright__ = "Copyright (c) 2020, Infobyte LLC"
@@ -71,18 +72,15 @@ class SslyzeJsonParser:
 
     def get_host(self, server_location):
         port = server_location.get('port', None)
-        protocol = ''
-        if port is not None:
-            if port == 443:
-                protocol = 'https'
-            else:
-                protocol = 'http'
+        hostname = server_location.get('hostname', None)
+        ip = server_location.get('ip_address', resolve_hostname(hostname))
 
         json_host = {
-            "url": server_location.get('hostname', None),
-            "ip": server_location.get('ip_address', '0.0.0.0'),
+            "name": 'https',
+            "ip": ip,
+            "hostname": hostname,
             "port": port,
-            "protocol": protocol
+            "protocol": 'tcp'
         }
 
         return json_host
@@ -178,17 +176,17 @@ class SslyzePlugin(PluginJsonFormat):
         parser = SslyzeJsonParser(output)
 
         for info_sslyze in parser.list_vul:
-            info_sslyze['host_info'].get('url')
+            info_sslyze['host_info'].get('hostname')
             host_id = self.createAndAddHost(
                 info_sslyze['host_info'].get('ip'),
                 os="unknown",
                 hostnames=[
-                    info_sslyze['host_info'].get('url')
+                    info_sslyze['host_info'].get('hostname')
                 ]
             )
             service_id = self.createAndAddServiceToHost(
                 host_id,
-                name=info_sslyze['host_info'].get('protocol'),
+                name=info_sslyze['host_info'].get('name'),
                 protocol=info_sslyze['host_info'].get('protocol'),
                 ports=[
                     info_sslyze['host_info'].get('port')
