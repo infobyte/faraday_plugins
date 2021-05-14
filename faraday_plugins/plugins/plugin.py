@@ -356,7 +356,7 @@ class PluginBase:
 
     def createAndAddServiceToHost(self, host_id, name,
                                   protocol="tcp", ports=None,
-                                  status="open", version="unknown",
+                                  status="open", version="",
                                   description="", tags=None):
         if ports:
             if isinstance(ports, list):
