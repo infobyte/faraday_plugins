@@ -1,3 +1,19 @@
+1.4.6 [May 14th, 2021]:
+---
+ * [FIX] add hostnames if host is already cached
+ * Add Naabu plugin
+ * Add Sonarqube plugin
+ * Add version and change list_plugins style
+ * [FIX] unused import, innecesary list compression and unused variables
+ * [FIX] metasploit report when the web-site-id is null
+ * [FIX] port stats in nmap
+ * [FIX] ssylze
+sacar unknown de version=
+ * ADD remedy into resolution
+ * Support for nuclei 2.3.0
+ * ADD cve, cvss3_base_score, cvss3_vector, exploit_available when import nessus and change the structure of external_id to NESSUS-XXX
+ * ADD more data like attack, params, uri, method, WASC, CWE and format externail_id
+
 1.4.5 [Apr 15th, 2021]:
 ---
  * Add Bandit plugin
