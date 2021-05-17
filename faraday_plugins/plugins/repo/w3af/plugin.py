@@ -123,7 +123,9 @@ class Item:
             self.detail = self.node.text.strip('\n').strip()
         self.resolution = self.get_text_from_subnode('fix-guidance')
         self.fix_effort = self.get_text_from_subnode('fix-effort')
-        self.longdetail = self.get_text_from_subnode('description')
+        self.longdetail = self.get_text_from_subnode('long-description')
+        if self.longdetail:
+            self.detail = f"{self.detail}\n{self.longdetail}"
         self.severity = self.node.get('severity')
         self.method = self.node.get('method')
         self.ref = []
@@ -134,6 +136,8 @@ class Item:
 
         self.req = self.resp = ''
         for tx in self.node.findall('http-transactions/http-transaction'):
+            import ipdb;
+            ipdb.set_trace()
             if tx.find('http-request'):
                 hreq = tx.find('http-request')
             else:
