@@ -55,7 +55,7 @@ class PluginBase:
         self._hosts_cache = {}
         self._service_cache = {}
         self._vulns_cache = {}
-        self.start_date = datetime.now()
+        self.start_date = datetime.utcnow()
         self.logger = logger.getChild(self.__class__.__name__)
         self.open_options = {"mode": "r", "encoding": "utf-8"}
         self.plugin_version = "0.0"
@@ -509,7 +509,7 @@ class PluginBase:
     def get_data(self):
         self.vulns_data["command"]["tool"] = self.id
         self.vulns_data["command"]["command"] = self.command if self.command else self.id
-        self.vulns_data["command"]["duration"] = (datetime.now() - self.start_date).microseconds
+        self.vulns_data["command"]["duration"] = (datetime.utcnow() - self.start_date).microseconds
         return self.vulns_data
 
     def get_json(self):
