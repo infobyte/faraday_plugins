@@ -97,7 +97,6 @@ class Site:
             self.host = None
         # Use the port in the URL if it is defined, or 80 or 443 by default
         self.port = url_data.port or (443 if url_data.scheme == "https" else 80)
-
         self.ip = resolve_hostname(self.host)
         self.os = self.get_text_from_subnode('Os')
         self.banner = self.get_text_from_subnode('Banner')
@@ -119,6 +118,8 @@ class Site:
 
     def get_url(self, node):
         url = self.get_text_from_subnode('StartURL')
+        if not url.startswith('http'):
+            url = f'http://{url}'
         url_data = urlsplit(url)
         if not url_data.scheme:
             # Getting url from subnode 'Crawler'
