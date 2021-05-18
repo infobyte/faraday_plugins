@@ -213,6 +213,7 @@ class SslyzePlugin(PluginJsonFormat):
                     data=info_sslyze['certification'].get('data'),
                     impact=info_sslyze['certification'].get('impact'),
                     ref=info_sslyze['certification'].get('ref'),
+                    easeofresolution="trivial",
                     external_id=info_sslyze['certification'].get('external_id'),
                     severity=info_sslyze['certification'].get('severity'))
 
@@ -232,6 +233,7 @@ class SslyzePlugin(PluginJsonFormat):
                         data="\n".join(cipherlist),
                         impact={"confidentiality": True},
                         ref=["https://cwe.mitre.org/data/definitions/326.html"],
+                        easeofresolution="trivial",
                         external_id="CWE-326",
                         severity="low")
 
@@ -243,6 +245,7 @@ class SslyzePlugin(PluginJsonFormat):
                     desc=info_sslyze['heartbleed'].get('desc'),
                     impact=info_sslyze['heartbleed'].get('impact'),
                     ref=info_sslyze['heartbleed'].get('ref'),
+                    easeofresolution="trivial",
                     external_id=info_sslyze['heartbleed'].get('external_id'),
                     severity=info_sslyze['heartbleed'].get('severity'))
 
@@ -254,6 +257,7 @@ class SslyzePlugin(PluginJsonFormat):
                     desc=info_sslyze['openssl_ccs'].get('desc'),
                     impact=info_sslyze['openssl_ccs'].get('impact'),
                     ref=info_sslyze['openssl_ccs'].get('ref'),
+                    easeofresolution="trivial",
                     external_id=info_sslyze['openssl_ccs'].get('external_id'),
                     severity=info_sslyze['openssl_ccs'].get('severity'))
 
