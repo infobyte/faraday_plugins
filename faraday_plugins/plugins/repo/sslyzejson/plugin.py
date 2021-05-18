@@ -215,21 +215,24 @@ class SslyzePlugin(PluginJsonFormat):
                     external_id=info_sslyze['certification'].get('external_id'),
                     severity=info_sslyze['certification'].get('info'))
 
+            cipherlist = []
             if info_sslyze['ciphers']:
                 for k, v in info_sslyze['ciphers'].items():
                     if len(v) != 0:
                         for ciphers in v:
                             key = k.replace('_cipher_suites', '')
-                            self.createAndAddVulnToService(
-                                host_id,
-                                service_id,
-                                name=ciphers,
-                                desc="The software stores or transmits sensitive data using an encryption scheme that is theoretically sound, but is not strong enough for the level of protection required.",
-                                data=f"In protocol [{key}], weak cipher suite: {ciphers}",
-                                impact={"confidentiality": True},
-                                ref=["https://cwe.mitre.org/data/definitions/326.html"],
-                                external_id="CWE-326",
-                                severity="low")
+                            cipherlist.append(f"In protocol [{key}], weak cipher suite: {ciphers}")
+                if cipherlist:
+                    self.createAndAddVulnToService(
+                        host_id,
+                        service_id,
+                        name="SSL/TLS Weak Cipher Suites Supported",
+                        desc="The software stores or transmits sensitive data using an encryption scheme that is theoretically sound, but is not strong enough for the level of protection required.",
+                        data="\n".join(cipherlist),
+                        impact={"confidentiality": True},
+                        ref=["https://cwe.mitre.org/data/definitions/326.html"],
+                        external_id="CWE-326",
+                        severity="low")
 
             if info_sslyze['heartbleed']:
                 self.createAndAddVulnToService(
