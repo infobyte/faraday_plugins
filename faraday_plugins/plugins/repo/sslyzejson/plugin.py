@@ -146,8 +146,11 @@ class SslyzeJsonParser:
         if heartbleed.get('is_vulnerable_to_heartbleed', False):
             json_heartbleed = {
                 "name": "OpenSSL Heartbleed",
-                "desc": "OpenSSL Heartbleed is vulnerable",
-                "severity": "critical"
+                "desc": "OpenSSL versions 1.0.1 through 1.0.1f contain a flaw in its implementation of the TLS/DTLS heartbeat functionality. This flaw allows an attacker to retrieve private memory of an application that uses the vulnerable OpenSSL library in chunks of 64k at a time. Note that an attacker can repeatedly leverage the vulnerability to retrieve as many 64k chunks of memory as are necessary to retrieve the intended secrets. The sensitive information that may be retrieved using this vulnerability include:\n\n Primary key material (secret keys)\n Secondary key material (user names and passwords used by vulnerable services)\n Protected content (sensitive data used by vulnerable services)\n Collateral (memory addresses and content that can be leveraged to bypass exploit mitigations)\n Exploit code is publicly available for this vulnerability.  Additional details may be found in CERT/CC Vulnerability Note VU#720951.",
+                "impact": {"confidentiality": True},
+                "ref": ["https://nvd.nist.gov/vuln/detail/CVE-2014-0160", "https://heartbleed.com/", "https://us-cert.cisa.gov/ncas/alerts/TA14-098A"],
+                "external_id": "CVE-2014-0160",
+                "severity": "high"
             }
         return json_heartbleed
 
@@ -156,8 +159,11 @@ class SslyzeJsonParser:
         if openssl_ccs.get('is_vulnerable_to_ccs_injection', False):
             json_openssl_ccs = {
                 "name": "OpenSSL CCS Injection",
-                "desc": "OpenSSL CCS Injection is vulnerable",
-                "severity": "medium"
+                "desc": 'OpenSSL before 0.9.8za, 1.0.0 before 1.0.0m, and 1.0.1 before 1.0.1h does not properly restrict processing of ChangeCipherSpec messages, which allows man-in-the-middle attackers to trigger use of a zero-length master key in certain OpenSSL-to-OpenSSL communications, and consequently hijack sessions or obtain sensitive information, via a crafted TLS handshake, aka the "CCS Injection" vulnerability."',
+                "impact": {"confidentiality": True, "integrity": True},
+                "ref": ["http://ccsinjection.lepidum.co.jp/", "https://nvd.nist.gov/vuln/detail/CVE-2014-0224"],
+                "external_id": "CVE-2014-0224",
+                "severity": "high"
             }
         return json_openssl_ccs
 
@@ -218,7 +224,11 @@ class SslyzePlugin(PluginJsonFormat):
                                 host_id,
                                 service_id,
                                 name=ciphers,
-                                desc=f"In protocol [{key}], weak cipher suite: {ciphers}",
+                                desc="The software stores or transmits sensitive data using an encryption scheme that is theoretically sound, but is not strong enough for the level of protection required.",
+                                data=f"In protocol [{key}], weak cipher suite: {ciphers}",
+                                impact={"confidentiality": True},
+                                ref=["https://cwe.mitre.org/data/definitions/326.html"],
+                                external_id="CWE-326",
                                 severity="low")
 
             if info_sslyze['heartbleed']:
@@ -227,6 +237,9 @@ class SslyzePlugin(PluginJsonFormat):
                     service_id,
                     name=info_sslyze['heartbleed'].get('name'),
                     desc=info_sslyze['heartbleed'].get('desc'),
+                    impact=info_sslyze['heartbleed'].get('impact'),
+                    ref=info_sslyze['heartbleed'].get('ref'),
+                    external_id=info_sslyze['heartbleed'].get('external_id'),
                     severity=info_sslyze['heartbleed'].get('severity'))
 
             if info_sslyze['openssl_ccs']:
@@ -235,6 +248,9 @@ class SslyzePlugin(PluginJsonFormat):
                     service_id,
                     name=info_sslyze['openssl_ccs'].get('name'),
                     desc=info_sslyze['openssl_ccs'].get('desc'),
+                    impact=info_sslyze['openssl_ccs'].get('impact'),
+                    ref=info_sslyze['openssl_ccs'].get('ref'),
+                    external_id=info_sslyze['openssl_ccs'].get('external_id'),
                     severity=info_sslyze['openssl_ccs'].get('severity'))
 
     def processCommandString(self, username, current_path, command_string):
