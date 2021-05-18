@@ -74,13 +74,18 @@ class SslyzeJsonParser:
         port = server_location.get('port', None)
         hostname = server_location.get('hostname', None)
         ip = server_location.get('ip_address', resolve_hostname(hostname))
+        if port != 443:
+            url = 'https://' + hostname + ':' + port
+        else:
+            url = 'https://' + hostname
 
         json_host = {
             "name": 'https',
             "ip": ip,
             "hostname": hostname,
             "port": port,
-            "protocol": 'tcp'
+            "protocol": 'tcp',
+            "url": url
         }
 
         return json_host
@@ -215,6 +220,7 @@ class SslyzePlugin(PluginJsonFormat):
                     ref=info_sslyze['certification'].get('ref'),
                     easeofresolution="trivial",
                     external_id=info_sslyze['certification'].get('external_id'),
+                    target=info_sslyze['host_info'].get('url'),
                     severity=info_sslyze['certification'].get('severity'))
 
             cipherlist = []
@@ -235,6 +241,7 @@ class SslyzePlugin(PluginJsonFormat):
                         ref=["https://cwe.mitre.org/data/definitions/326.html"],
                         easeofresolution="trivial",
                         external_id="CWE-326",
+                        target=info_sslyze['host_info'].get('url'),
                         severity="low")
 
             if info_sslyze['heartbleed']:
@@ -247,6 +254,7 @@ class SslyzePlugin(PluginJsonFormat):
                     ref=info_sslyze['heartbleed'].get('ref'),
                     easeofresolution="trivial",
                     external_id=info_sslyze['heartbleed'].get('external_id'),
+                    target=info_sslyze['host_info'].get('url'),
                     severity=info_sslyze['heartbleed'].get('severity'))
 
             if info_sslyze['openssl_ccs']:
@@ -259,6 +267,7 @@ class SslyzePlugin(PluginJsonFormat):
                     ref=info_sslyze['openssl_ccs'].get('ref'),
                     easeofresolution="trivial",
                     external_id=info_sslyze['openssl_ccs'].get('external_id'),
+                    target=info_sslyze['host_info'].get('url'),
                     severity=info_sslyze['openssl_ccs'].get('severity'))
 
     def processCommandString(self, username, current_path, command_string):
