@@ -92,7 +92,11 @@ class SslyzeJsonParser:
         if not send_certif:
             json_certif = {
                 "name": "Certificate mismatch",
-                "desc": f"Certificate does not match server hostname {certificate.get('hostname_used_for_server_name_indication', 'Not hostname')}",
+                "desc": "The software communicates with a host that provides a certificate, but the software does not properly ensure that the certificate is actually associated with that host.\nEven if a certificate is well-formed, signed, and follows the chain of trust, it may simply be a valid certificate for a different site than the site that the software is interacting with. If the certificate's host-specific data is not properly checked - such as the Common Name (CN) in the Subject or the Subject Alternative Name (SAN) extension of an X.509 certificate - it may be possible for a redirection or spoofing attack to allow a malicious host with a valid certificate to provide data, impersonating a trusted host. In order to ensure data integrity, the certificate must be valid and it must pertain to the site that is being accessed.\nEven if the software attempts to check the hostname, it is still possible to incorrectly check the hostname. For example, attackers could create a certificate with a name that begins with a trusted name followed by a NUL byte, which could cause some string-based comparisons to only examine the portion that contains the trusted name.\nThis weakness can occur even when the software uses Certificate Pinning, if the software does not verify the hostname at the time a certificate is pinned",
+                "data": f"Certificate does not match server hostname {certificate.get('hostname_used_for_server_name_indication', 'Not hostname')}",
+                "impact": {"integrity": True},
+                "ref": ["https://cwe.mitre.org/data/definitions/297.html"],
+                "external_id": "CWE-297",
                 "severity": "info"
             }
         else:
@@ -199,6 +203,10 @@ class SslyzePlugin(PluginJsonFormat):
                     service_id,
                     name=info_sslyze['certification'].get('name'),
                     desc=info_sslyze['certification'].get('desc'),
+                    data=info_sslyze['certification'].get('data'),
+                    impact=info_sslyze['certification'].get('impact'),
+                    ref=info_sslyze['certification'].get('ref'),
+                    external_id=info_sslyze['certification'].get('external_id'),
                     severity=info_sslyze['certification'].get('info'))
 
             if info_sslyze['ciphers']:
