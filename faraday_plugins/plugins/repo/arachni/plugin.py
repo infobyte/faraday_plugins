@@ -21,12 +21,12 @@ __status__ = 'Development'
 
 class ArachniXmlParser:
     def __init__(self, xml_output):
+
         self.tree = self.parse_xml(xml_output)
         if self.tree:
             self.issues = self.getIssues(self.tree)
             self.plugins = self.getPlugins(self.tree)
             self.system = self.getSystem(self.tree)
-
         else:
             self.system = None
             self.issues = None
@@ -74,6 +74,21 @@ class Issue():
         self.parameters = self.getParameters()
         self.request = self.getRequest()
         self.response = self.getResponse()
+        self.data = self.getData()
+
+    def getData(self):
+        name = self.node.findtext('check/name', '')
+        description = self.node.findtext('check/description', '')
+        author = self.node.findtext('check/description', '')
+        data = ""
+        if name:
+            data += f'\nname: {name}'
+        if description:
+            data += f'\ndescription: {description}'
+        if author:
+            data += f'\nauthor: {author}'
+
+        return data
 
     def getDesc(self, tag):
 
@@ -136,23 +151,50 @@ class Issue():
 
         # Get data about request.
         try:
-
-            raw_data = self.node.find('page').find('request').find('raw')
+            request = self.node.find('page/request')
+            raw_data = request.find('raw')
             data = raw_data.text
+            if not data:
+                data = self.contruct_request(request)
             return data
-
         except:
             return 'None'
 
+    @staticmethod
+    def contruct_request(request):
+        data = request.findtext("method", "").upper()
+        data += f" {request.findtext('url', '')}"
+        for h in request.findall('headers/header'):
+            data += "\n%s: %s" % (h.get('name'), h.get('value'))
+        if request.findtext('body',""):
+            data += "\n%s" % request.findtext('body',"")
+        return data
+
+    @staticmethod
+    def construct_response(request):
+        data = ""
+        if request.findtext("code", ""):
+            data += f'\ncode: {request.findtext("code", "")}'
+        if request.findtext("ip_address", ""):
+            data += f'\nip_address: {request.findtext("ip_address", "")}'
+        if request.findtext("time", ""):
+            data += f'\ntime: {request.findtext("time", "")}'
+        if request.findtext("return_code", ""):
+            data += f'\nreturn_code: {request.findtext("return_code", "")}'
+        if request.findtext("return_message", ""):
+            data += f'\nreturn_message: {request.findtext("return_message", "")}'
+        return data
+
     def getResponse(self):
 
-        # Get data about response.
         try:
-
-            raw_data = self.node.find('page').find('response').find('raw_headers')
+            request = self.node.find('page/response')
+            raw_data = request.find('raw_headers')
             data = raw_data.text
+            if not data:
+                data = self.contruct_request(request)
+            data += self.construct_response(request)
             return data
-
         except:
             return 'None'
 
@@ -178,7 +220,6 @@ class System():
             self.version = self.getDesc('version')
             self.start_time = self.getDesc('start_datetime')
             self.finish_time = self.getDesc('finish_datetime')
-
             self.note = self.getNote()
 
     def getUrl(self):
@@ -254,6 +295,14 @@ class Plugins():
         except Exception:
             self.ip = None
 
+    @staticmethod
+    def get_value(name, node):
+        x = node.find(name)
+        if x:
+            return x.text
+        else:
+            return ""
+
     def getHealthmap(self):
 
         # Get info about healthmap
@@ -272,19 +321,10 @@ class Plugins():
             else:
                 list_urls.append(f"Without Issues: {url.text}")
 
-        def get_value(name, node=None):
-            if not node:
-                node = healthmap_tree
-            x = healthmap_tree.find(name)
-            if x:
-                return x.text
-            else:
-                return ""
-
         try:
-            plugin_name = get_value('name')
-            description = get_value('description')
-            results = get_value('results')
+            plugin_name = get_value('name', healthmap_tree)
+            description = get_value('description', healthmap_tree)
+            results = get_value('results', healthmap_tree)
             total = get_value('total', results)
             with_issues = get_value('with_issues', results)
             without_issues = get_value('without_issues', results)
@@ -303,19 +343,9 @@ class Plugins():
 
         # Get info about waf plugin.
         waf_tree = self.plugins_node.find('waf_detector')
-
-        def get_value(name, node=None):
-            if not node:
-                node = waf_tree
-            x = waf_tree.find(name)
-            if x:
-                return x.text
-            else:
-                return ""
-
         try:
-            plugin_name = get_value('name')
-            description = get_value('description')
+            plugin_name = get_value('name', waf_tree)
+            description = get_value('description', waf_tree)
             results = waf_tree.find('results')
             message = get_value('message', results)
             status = get_value('status', results)
@@ -424,6 +454,7 @@ class ArachniPlugin(PluginXMLFormat):
                 service_id,
                 name=issue.name,
                 desc=description,
+                data=issue.data,
                 resolution=resol,
                 ref=references,
                 severity=issue.severity,
