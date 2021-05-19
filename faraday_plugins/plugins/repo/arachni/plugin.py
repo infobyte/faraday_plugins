@@ -322,13 +322,13 @@ class Plugins():
                 list_urls.append(f"Without Issues: {url.text}")
 
         try:
-            plugin_name = get_value('name', healthmap_tree)
-            description = get_value('description', healthmap_tree)
-            results = get_value('results', healthmap_tree)
-            total = get_value('total', results)
-            with_issues = get_value('with_issues', results)
-            without_issues = get_value('without_issues', results)
-            issue_percentage = get_value('issue_percentage', results)
+            plugin_name = self.get_value('name', healthmap_tree)
+            description = self.get_value('description', healthmap_tree)
+            results = self.get_value('results', healthmap_tree)
+            total = self.get_value('total', results)
+            with_issues = self.get_value('with_issues', results)
+            without_issues = self.get_value('without_issues', results)
+            issue_percentage = self.get_value('issue_percentage', results)
 
             urls = '\n'.join(list_urls)
             result = (f"Plugin Name: {plugin_name}\nDescription: {description}\nStatistics:\nTotal: {total}"
@@ -344,11 +344,11 @@ class Plugins():
         # Get info about waf plugin.
         waf_tree = self.plugins_node.find('waf_detector')
         try:
-            plugin_name = get_value('name', waf_tree)
-            description = get_value('description', waf_tree)
+            plugin_name = self.get_value('name', waf_tree)
+            description = self.get_value('description', waf_tree)
             results = waf_tree.find('results')
-            message = get_value('message', results)
-            status = get_value('status', results)
+            message = self.get_value('message', results)
+            status = self.get_value('status', results)
             result = (f"Plugin Name: {plugin_name}\nDescription: {description}\nResults:"
                       f"\nMessage: {message}\nStatus: {status}")
             return result
