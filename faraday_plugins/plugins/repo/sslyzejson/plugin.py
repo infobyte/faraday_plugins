@@ -74,13 +74,18 @@ class SslyzeJsonParser:
         port = server_location.get('port', None)
         hostname = server_location.get('hostname', None)
         ip = server_location.get('ip_address', resolve_hostname(hostname))
+        if port != 443:
+            url = 'https://' + hostname + ':' + port
+        else:
+            url = 'https://' + hostname
 
         json_host = {
             "name": 'https',
             "ip": ip,
             "hostname": hostname,
             "port": port,
-            "protocol": 'tcp'
+            "protocol": 'tcp',
+            "url": url
         }
 
         return json_host
@@ -90,10 +95,15 @@ class SslyzeJsonParser:
         send_certif = certif_deploy[0].get('leaf_certificate_subject_matches_hostname', True)
 
         if not send_certif:
+            why = certif_deploy[0]['received_certificate_chain'][0]['subject']['rfc4514_string']
             json_certif = {
-                "name": "Certificate mismatch",
-                "desc": f"Certificate does not match server hostname {certificate.get('hostname_used_for_server_name_indication', 'Not hostname')}",
-                "severity": "info"
+                "name": "SSL/TLS Certificate Mismatch",
+                "desc": "The software communicates with a host that provides a certificate, but the software does not properly ensure that the certificate is actually associated with that host.",
+                "data": f"Certificate {why} does not match server hostname {certificate.get('hostname_used_for_server_name_indication', 'Not hostname')}",
+                "impact": {"integrity": True},
+                "ref": ["https://cwe.mitre.org/data/definitions/297.html"],
+                "external_id": "CWE-297",
+                "severity": "low"
             }
         else:
             json_certif = {}
@@ -142,8 +152,11 @@ class SslyzeJsonParser:
         if heartbleed.get('is_vulnerable_to_heartbleed', False):
             json_heartbleed = {
                 "name": "OpenSSL Heartbleed",
-                "desc": "OpenSSL Heartbleed is vulnerable",
-                "severity": "critical"
+                "desc": "OpenSSL versions 1.0.1 through 1.0.1f contain a flaw in its implementation of the TLS/DTLS heartbeat functionality. This flaw allows an attacker to retrieve private memory of an application that uses the vulnerable OpenSSL library in chunks of 64k at a time. Note that an attacker can repeatedly leverage the vulnerability to retrieve as many 64k chunks of memory as are necessary to retrieve the intended secrets. The sensitive information that may be retrieved using this vulnerability include:\n\n Primary key material (secret keys)\n Secondary key material (user names and passwords used by vulnerable services)\n Protected content (sensitive data used by vulnerable services)\n Collateral (memory addresses and content that can be leveraged to bypass exploit mitigations)\n Exploit code is publicly available for this vulnerability.  Additional details may be found in CERT/CC Vulnerability Note VU#720951.",
+                "impact": {"confidentiality": True},
+                "ref": ["https://nvd.nist.gov/vuln/detail/CVE-2014-0160", "https://heartbleed.com/", "https://us-cert.cisa.gov/ncas/alerts/TA14-098A"],
+                "external_id": "CVE-2014-0160",
+                "severity": "high"
             }
         return json_heartbleed
 
@@ -152,8 +165,11 @@ class SslyzeJsonParser:
         if openssl_ccs.get('is_vulnerable_to_ccs_injection', False):
             json_openssl_ccs = {
                 "name": "OpenSSL CCS Injection",
-                "desc": "OpenSSL CCS Injection is vulnerable",
-                "severity": "medium"
+                "desc": 'OpenSSL before 0.9.8za, 1.0.0 before 1.0.0m, and 1.0.1 before 1.0.1h does not properly restrict processing of ChangeCipherSpec messages, which allows man-in-the-middle attackers to trigger use of a zero-length master key in certain OpenSSL-to-OpenSSL communications, and consequently hijack sessions or obtain sensitive information, via a crafted TLS handshake, aka the "CCS Injection" vulnerability."',
+                "impact": {"confidentiality": True, "integrity": True},
+                "ref": ["http://ccsinjection.lepidum.co.jp/", "https://nvd.nist.gov/vuln/detail/CVE-2014-0224"],
+                "external_id": "CVE-2014-0224",
+                "severity": "high"
             }
         return json_openssl_ccs
 
@@ -194,39 +210,64 @@ class SslyzePlugin(PluginJsonFormat):
             )
 
             if info_sslyze['certification']:
-                self.createAndAddVulnToService(
+                self.createAndAddVulnWebToService(
                     host_id,
                     service_id,
                     name=info_sslyze['certification'].get('name'),
                     desc=info_sslyze['certification'].get('desc'),
-                    severity=info_sslyze['certification'].get('info'))
+                    data=info_sslyze['certification'].get('data'),
+                    impact=info_sslyze['certification'].get('impact'),
+                    ref=info_sslyze['certification'].get('ref'),
+                    easeofresolution="trivial",
+                    external_id=info_sslyze['certification'].get('external_id'),
+                    website=info_sslyze['host_info'].get('url'),
+                    severity=info_sslyze['certification'].get('severity'))
 
+            cipherlist = []
             if info_sslyze['ciphers']:
                 for k, v in info_sslyze['ciphers'].items():
                     if len(v) != 0:
                         for ciphers in v:
                             key = k.replace('_cipher_suites', '')
-                            self.createAndAddVulnToService(
-                                host_id,
-                                service_id,
-                                name=ciphers,
-                                desc=f"In protocol [{key}], weak cipher suite: {ciphers}",
-                                severity="low")
+                            cipherlist.append(f"In protocol [{key}], weak cipher suite: {ciphers}")
+                if cipherlist:
+                    self.createAndAddVulnWebToService(
+                        host_id,
+                        service_id,
+                        name="SSL/TLS Weak Cipher Suites Supported",
+                        desc="The software stores or transmits sensitive data using an encryption scheme that is theoretically sound, but is not strong enough for the level of protection required.",
+                        data="\n".join(cipherlist),
+                        impact={"confidentiality": True},
+                        ref=["https://cwe.mitre.org/data/definitions/326.html"],
+                        easeofresolution="trivial",
+                        external_id="CWE-326",
+                        website=info_sslyze['host_info'].get('url'),
+                        severity="low")
 
             if info_sslyze['heartbleed']:
-                self.createAndAddVulnToService(
+                self.createAndAddVulnWebToService(
                     host_id,
                     service_id,
                     name=info_sslyze['heartbleed'].get('name'),
                     desc=info_sslyze['heartbleed'].get('desc'),
+                    impact=info_sslyze['heartbleed'].get('impact'),
+                    ref=info_sslyze['heartbleed'].get('ref'),
+                    easeofresolution="trivial",
+                    external_id=info_sslyze['heartbleed'].get('external_id'),
+                    website=info_sslyze['host_info'].get('url'),
                     severity=info_sslyze['heartbleed'].get('severity'))
 
             if info_sslyze['openssl_ccs']:
-                self.createAndAddVulnToService(
+                self.createAndAddVulnWebToService(
                     host_id,
                     service_id,
                     name=info_sslyze['openssl_ccs'].get('name'),
                     desc=info_sslyze['openssl_ccs'].get('desc'),
+                    impact=info_sslyze['openssl_ccs'].get('impact'),
+                    ref=info_sslyze['openssl_ccs'].get('ref'),
+                    easeofresolution="trivial",
+                    external_id=info_sslyze['openssl_ccs'].get('external_id'),
+                    website=info_sslyze['host_info'].get('url'),
                     severity=info_sslyze['openssl_ccs'].get('severity'))
 
     def processCommandString(self, username, current_path, command_string):
