@@ -1,0 +1,1 @@
+ADD cvss_base, cpe, threat, severity into references

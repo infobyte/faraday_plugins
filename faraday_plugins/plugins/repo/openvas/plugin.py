@@ -1,7 +1,6 @@
 import re
 from collections import defaultdict
 from copy import copy
-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
@@ -146,13 +145,17 @@ class Item:
     def __init__(self, item_node, hosts):
         self.node = item_node
         self.host = self.get_text_from_subnode('host')
+        self.threat = self.get_text_from_subnode('threat')
         self.subnet = self.get_text_from_subnode('subnet')
         if self.subnet == '':
             self.subnet = self.host
         self.port = None
         self.severity = self.severity_mapper()
+        self.severity_nr = self.get_text_from_subnode("severity")
         self.service = "Unknown"
         self.protocol = ""
+        self.cpe = self.node.findall("detection/result/details/detail")
+        self.cpe = self.cpe[0].findtext("value") if self.cpe else None
         port_string = self.get_text_from_subnode('port')
         info = port_string.split("/")
         self.protocol = "".join(filter(lambda x: x.isalpha() or x in ("-", "_"), info[1]))
@@ -168,6 +171,7 @@ class Item:
         self.nvt = self.node.findall('nvt')[0]
         self.node = self.nvt
         self.id = self.node.get('oid')
+        self.cvss_base = self.get_text_from_subnode("cvss_base")
         self.name = self.get_text_from_subnode('name')
         self.cve = self.get_text_from_subnode('cve') if self.get_text_from_subnode('cve') != "NOCVE" else ""
         self.bid = self.get_text_from_subnode('bid') if self.get_text_from_subnode('bid') != "NOBID" else ""
@@ -345,6 +349,14 @@ class OpenvasPlugin(PluginXMLFormat):
                     ref.append(item.xref)
                 if item.tags and item.cvss_vector:
                     ref.append(item.cvss_vector)
+                if item.cvss_base:
+                    ref.append(f"CVSS_BASE: {item.cvss_base}")
+                if item.cpe:
+                    ref.append(f"{item.cpe}")
+                if item.threat:
+                    ref.append(f"THREAT: {item.threat}")
+                if item.severity_nr:
+                    ref.append(f"SEVERITY NUMBER: {item.severity_nr}")
 
                 if item.subnet in ids:
                     h_id = ids[item.host]
@@ -409,7 +421,8 @@ class OpenvasPlugin(PluginXMLFormat):
                             data=item.data)
         del parser
 
-    def _isIPV4(self, ip):
+    @staticmethod
+    def _isIPV4(ip):
         if len(ip.split(".")) == 4:
             return True
         else:
