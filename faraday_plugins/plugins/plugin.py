@@ -410,7 +410,7 @@ class PluginBase:
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
                                   custom_fields=None, policyviolations=None, impact=None, status="",
-                                  confirmed=False, easeofresolution=None, target=None, tags=None):
+                                  confirmed=False, easeofresolution=None, tags=None):
         if ref is None:
             ref = []
         if status == "":
@@ -429,7 +429,7 @@ class PluginBase:
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
                          "policyviolations": policyviolations,
-                         "easeofresolution": easeofresolution, "target": target, "confirmed": confirmed, "tags": tags
+                         "easeofresolution": easeofresolution, "confirmed": confirmed, "tags": tags
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
