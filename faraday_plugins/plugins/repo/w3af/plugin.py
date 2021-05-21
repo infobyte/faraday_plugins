@@ -123,7 +123,7 @@ class Item:
             self.detail = self.node.text.strip('\n').strip()
         self.resolution = self.get_text_from_subnode('fix-guidance')
         self.fix_effort = self.get_text_from_subnode('fix-effort')
-        self.longdetail = self.get_text_from_subnode('description')
+        self.longdetail = self.get_text_from_subnode('long-description')
         self.severity = self.node.get('severity')
         self.method = self.node.get('method')
         self.ref = []
@@ -134,6 +134,7 @@ class Item:
 
         self.req = self.resp = ''
         for tx in self.node.findall('http-transactions/http-transaction'):
+
             if tx.find('http-request'):
                 hreq = tx.find('http-request')
             else:
@@ -148,12 +149,15 @@ class Item:
             for h in hreq.findall('headers/header'):
                 self.req += "\n%s: %s" % (h.get('field'), h.get('content'))
 
+            if hreq.findtext('body',""):
+                self.req += "\n%s" % hreq.findtext('body',"")
+
             self.resp = hres.find('status').text
             for h in hres.findall('headers/header'):
                 self.resp += "\n%s: %s" % (h.get('field'), h.get('content'))
 
-            if hres.find('body'):
-                self.resp += "\n%s" % hres.find('body').text
+            if hres.findtext('body',""):
+                self.resp += "\n%s" % hres.findtext('body',"")
 
     def do_clean(self, value):
         myreturn = ""
@@ -204,7 +208,7 @@ class W3afPlugin(PluginXMLFormat):
 
         for item in parser.items:
             self.createAndAddVulnWebToService(h_id, s_id, item.name,
-                                                     item.detail, pname=item.param, path=item.url, website=parser.host,
+                                                     item.detail, pname=item.param,data=item.longdetail, path=item.url, website=parser.host,
                                                      severity=item.severity, method=item.method, request=item.req,
                                                      resolution=item.resolution, ref=item.ref, response=item.resp)
         del parser
