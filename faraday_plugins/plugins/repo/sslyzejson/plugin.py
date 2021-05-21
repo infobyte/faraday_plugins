@@ -210,7 +210,7 @@ class SslyzePlugin(PluginJsonFormat):
             )
 
             if info_sslyze['certification']:
-                self.createAndAddVulnToService(
+                self.createAndAddVulnWebToService(
                     host_id,
                     service_id,
                     name=info_sslyze['certification'].get('name'),
@@ -220,7 +220,7 @@ class SslyzePlugin(PluginJsonFormat):
                     ref=info_sslyze['certification'].get('ref'),
                     easeofresolution="trivial",
                     external_id=info_sslyze['certification'].get('external_id'),
-                    target=info_sslyze['host_info'].get('url'),
+                    website=info_sslyze['host_info'].get('url'),
                     severity=info_sslyze['certification'].get('severity'))
 
             cipherlist = []
@@ -231,7 +231,7 @@ class SslyzePlugin(PluginJsonFormat):
                             key = k.replace('_cipher_suites', '')
                             cipherlist.append(f"In protocol [{key}], weak cipher suite: {ciphers}")
                 if cipherlist:
-                    self.createAndAddVulnToService(
+                    self.createAndAddVulnWebToService(
                         host_id,
                         service_id,
                         name="SSL/TLS Weak Cipher Suites Supported",
@@ -241,11 +241,11 @@ class SslyzePlugin(PluginJsonFormat):
                         ref=["https://cwe.mitre.org/data/definitions/326.html"],
                         easeofresolution="trivial",
                         external_id="CWE-326",
-                        target=info_sslyze['host_info'].get('url'),
+                        website=info_sslyze['host_info'].get('url'),
                         severity="low")
 
             if info_sslyze['heartbleed']:
-                self.createAndAddVulnToService(
+                self.createAndAddVulnWebToService(
                     host_id,
                     service_id,
                     name=info_sslyze['heartbleed'].get('name'),
@@ -254,11 +254,11 @@ class SslyzePlugin(PluginJsonFormat):
                     ref=info_sslyze['heartbleed'].get('ref'),
                     easeofresolution="trivial",
                     external_id=info_sslyze['heartbleed'].get('external_id'),
-                    target=info_sslyze['host_info'].get('url'),
+                    website=info_sslyze['host_info'].get('url'),
                     severity=info_sslyze['heartbleed'].get('severity'))
 
             if info_sslyze['openssl_ccs']:
-                self.createAndAddVulnToService(
+                self.createAndAddVulnWebToService(
                     host_id,
                     service_id,
                     name=info_sslyze['openssl_ccs'].get('name'),
@@ -267,7 +267,7 @@ class SslyzePlugin(PluginJsonFormat):
                     ref=info_sslyze['openssl_ccs'].get('ref'),
                     easeofresolution="trivial",
                     external_id=info_sslyze['openssl_ccs'].get('external_id'),
-                    target=info_sslyze['host_info'].get('url'),
+                    website=info_sslyze['host_info'].get('url'),
                     severity=info_sslyze['openssl_ccs'].get('severity'))
 
     def processCommandString(self, username, current_path, command_string):
