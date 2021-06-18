@@ -5,9 +5,9 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from urllib.parse import urlsplit
-
+from xmltodto import GenerateDTO
 from lxml import etree
-
+from faraday_plugins.plugins.repo.acunetix.DTO import Acunetix
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
@@ -34,7 +34,13 @@ class AcunetixXmlParser:
     """
 
     def __init__(self, xml_output):
+
         tree = self.parse_xml(xml_output)
+        acunetix = Acunetix(tree)
+        import ipdb;
+        ipdb.set_trace()
+        x = GenerateDTO(xml_output)
+        x.make_all("acuentix3")
         if len(tree):
             self.sites = list(self.get_items(tree))
         else:
@@ -50,6 +56,7 @@ class AcunetixXmlParser:
 
         @return xml_tree An xml tree instance. None if error.
         """
+        
         try:
             parser = etree.XMLParser(recover=True)
             tree = etree.fromstring(xml_output, parser=parser)
@@ -118,6 +125,7 @@ class Site:
 
     def get_url(self, node):
         url = self.get_text_from_subnode('StartURL')
+
         if not url.startswith('http'):
             url = f'http://{url}'
         url_data = urlsplit(url)
