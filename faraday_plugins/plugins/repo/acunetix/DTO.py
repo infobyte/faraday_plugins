@@ -268,6 +268,14 @@ class Reportitems:
     def reportitem(self) -> List[Reportitem]:
         return [Reportitem(i) for i in self.node.findall('ReportItem', [])]
 
+class Crawler:
+    def __init__(self, node):
+        self.node = node
+
+    @property
+    def start_url_attr(self) -> str:
+        return self.node.get("StartUrl")
+
 
 class Scan:
     def __init__(self, node):
@@ -277,6 +285,13 @@ class Scan:
     def reportitems(self) -> Reportitems:
         return Reportitems(self.node.find('ReportItems'))
 
+    @property
+    def start_url(self) -> str:
+        return self.node.find("StartURL")
+
+    @property
+    def crawler(self) -> Crawler:
+        return Crawler(self.node.find('Crawler'))
 
 class Acunetix:
     def __init__(self, node):

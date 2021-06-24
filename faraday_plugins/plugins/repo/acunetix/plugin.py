@@ -5,9 +5,9 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from urllib.parse import urlsplit
-from xmltodto import GenerateDTO
+#from xmltodto import GenerateDTO
 from lxml import etree
-from faraday_plugins.plugins.repo.acunetix.DTO import Acunetix
+from faraday_plugins.plugins.repo.acunetix.DTO import Acunetix, Scan
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
@@ -36,15 +36,7 @@ class AcunetixXmlParser:
     def __init__(self, xml_output):
 
         tree = self.parse_xml(xml_output)
-        acunetix = Acunetix(tree)
-        import ipdb;
-        ipdb.set_trace()
-        x = GenerateDTO(xml_output)
-        x.make_all("acuentix3")
-        if len(tree):
-            self.sites = list(self.get_items(tree))
-        else:
-            self.sites = []
+        self.acunetix = Acunetix(tree)
 
     @staticmethod
     def parse_xml(xml_output):
@@ -66,14 +58,6 @@ class AcunetixXmlParser:
 
         return tree
 
-    @staticmethod
-    def get_items(tree):
-        """
-        @return items A list of Host instances
-        """
-
-        for node in tree.findall('Scan'):
-            yield Site(node)
 
 
 def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
@@ -219,8 +203,9 @@ class AcunetixPlugin(PluginXMLFormat):
         """
         parser = AcunetixXmlParser(output)
 
-        for site in parser.sites:
-            if site.ip is None:
+
+        for site in parser.acunetix.scan:
+            if self.get_ip(site) is None:
                 continue
 
             if site.host != site.ip and site.host is not None:
@@ -266,6 +251,21 @@ class AcunetixPlugin(PluginXMLFormat):
                         response=item.response,
                         ref=item.ref)
         del parser
+
+    def map_host(self, scan:Scan)-> dict:
+        return {
+            "name": self.get_ip(scan)
+        }
+
+    def get_ip(self, scan:Scan) -> str:
+        url = scan.start_url
+        if not url.startswith('http'):
+            url = f'http://{url}'
+        url_data = urlsplit(url)
+        if not url_data.scheme:
+            url_data = urlsplit(scan.crawler.start_url_attr)
+        return resolve_hostname(url_data.hostname)
+
 
 
 def createPlugin(ignore_info=False):
