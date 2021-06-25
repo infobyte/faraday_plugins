@@ -6,8 +6,15 @@ class Technicaldetails:
 
     @property
     def request(self) -> str:
-        return self.node.find('Request')
+        if not self.node:
+            return ''
+        return self.node.findtext('Request', '')
 
+    @property
+    def response(self) -> str:
+        if not self.node:
+            return ''
+        return self.node.findtext('Response', '')
 
 class Cwe:
     def __init__(self, node):
@@ -15,11 +22,11 @@ class Cwe:
 
     @property
     def id_attr(self) -> str:
-        return self.node.find('id')
+        return self.node.findtext('id', '')
 
     @property
     def text(self) -> str:
-        return self.node.find('#text')
+        return self.node.findtext('#text', '')
 
 
 class Cwelist:
@@ -37,35 +44,35 @@ class Cvss:
 
     @property
     def descriptor(self) -> str:
-        return self.node.find('Descriptor')
+        return self.node.findtext('Descriptor', '')
 
     @property
     def score(self) -> str:
-        return self.node.find('Score')
+        return self.node.findtext('Score', '')
 
     @property
     def av(self) -> str:
-        return self.node.find('AV')
+        return self.node.findtext('AV', '')
 
     @property
     def ac(self) -> str:
-        return self.node.find('AC')
+        return self.node.findtext('AC', '')
 
     @property
     def au(self) -> str:
-        return self.node.find('Au')
+        return self.node.findtext('Au', '')
 
     @property
     def c(self) -> str:
-        return self.node.find('C')
+        return self.node.findtext('C', '')
 
     @property
     def i(self) -> str:
-        return self.node.find('I')
+        return self.node.findtext('I', '')
 
     @property
     def a(self) -> str:
-        return self.node.find('A')
+        return self.node.findtext('A', '')
 
     @property
     def e(self):
@@ -86,11 +93,11 @@ class Cvss3:
 
     @property
     def descriptor(self) -> str:
-        return self.node.find('Descriptor')
+        return self.node.findtext('Descriptor', '')
 
     @property
     def score(self) -> str:
-        return self.node.find('Score')
+        return self.node.findtext('Score', '')
 
     @property
     def tempscore(self):
@@ -102,35 +109,35 @@ class Cvss3:
 
     @property
     def av(self) -> str:
-        return self.node.find('AV')
+        return self.node.find('AV', '')
 
     @property
     def ac(self) -> str:
-        return self.node.find('AC')
+        return self.node.find('AC', '')
 
     @property
     def pr(self) -> str:
-        return self.node.find('PR')
+        return self.node.find('PR', '')
 
     @property
     def ui(self) -> str:
-        return self.node.find('UI')
+        return self.node.find('UI', '')
 
     @property
     def s(self) -> str:
-        return self.node.find('S')
+        return self.node.find('S', '')
 
     @property
     def c(self) -> str:
-        return self.node.find('C')
+        return self.node.find('C', '')
 
     @property
     def i(self) -> str:
-        return self.node.find('I')
+        return self.node.findtext('I', '')
 
     @property
     def a(self) -> str:
-        return self.node.find('A')
+        return self.node.findtext('A', '')
 
     @property
     def e(self):
@@ -151,11 +158,11 @@ class Reference:
 
     @property
     def database(self) -> str:
-        return self.node.find('Database')
+        return self.node.findtext('Database', '')
 
     @property
     def url(self) -> str:
-        return self.node.find('URL')
+        return self.node.findtext('URL', '')
 
 
 class References:
@@ -173,31 +180,31 @@ class Reportitem:
 
     @property
     def id_attr(self) -> str:
-        return self.node.find('id')
+        return self.node.findtext('id', '')
 
     @property
     def color_attr(self) -> str:
-        return self.node.find('color')
+        return self.node.findtext('color', '')
 
     @property
     def name(self) -> str:
-        return self.node.find('Name')
+        return self.node.findtext('Name', '')
 
     @property
     def modulename(self) -> str:
-        return self.node.find('ModuleName')
+        return self.node.findtext('ModuleName', '')
 
     @property
     def details(self) -> str:
-        return self.node.find('Details')
+        return self.node.findtext('Details', '')
 
     @property
     def affects(self) -> str:
-        return self.node.find('Affects')
+        return self.node.findtext('Affects', '')
 
     @property
-    def parameter(self):
-        return self.node.find('Parameter')
+    def parameter(self) -> str:
+        return self.node.findtext('Parameter')
 
     @property
     def aop_sourcefile(self):
@@ -217,23 +224,23 @@ class Reportitem:
 
     @property
     def severity(self) -> str:
-        return self.node.find('Severity')
+        return self.node.findtext('Severity', '')
 
     @property
     def type(self) -> str:
-        return self.node.find('Type')
+        return self.node.findtext('Type', '')
 
     @property
     def impact(self) -> str:
-        return self.node.find('Impact')
+        return self.node.findtext('Impact', '')
 
     @property
     def description(self) -> str:
-        return self.node.find('Description')
+        return self.node.findtext('Description', '')
 
     @property
     def recommendation(self) -> str:
-        return self.node.find('Recommendation')
+        return self.node.findtext('Recommendation', '')
 
     @property
     def technicaldetails(self) -> Technicaldetails:
@@ -274,7 +281,7 @@ class Crawler:
 
     @property
     def start_url_attr(self) -> str:
-        return self.node.get("StartUrl")
+        return self.node.get('StartUrl', '')
 
 
 class Scan:
@@ -287,11 +294,23 @@ class Scan:
 
     @property
     def start_url(self) -> str:
-        return self.node.find("StartURL")
+        return self.node.findtext("StartURL", "")
 
     @property
     def crawler(self) -> Crawler:
         return Crawler(self.node.find('Crawler'))
+
+    @property
+    def os(self) -> str:
+        return self.node.findtext("Os", "")
+
+    @property
+    def banner(self) -> str:
+        return self.node.findtext("Banner", "")
+
+    @property
+    def start_url_new(self) -> str:
+        return self.node.findtext("", "")
 
 class Acunetix:
     def __init__(self, node):

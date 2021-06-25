@@ -5,11 +5,11 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from urllib.parse import urlsplit
-#from xmltodto import GenerateDTO
 from lxml import etree
 from faraday_plugins.plugins.repo.acunetix.DTO import Acunetix, Scan
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
+from re import findall
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -59,123 +59,6 @@ class AcunetixXmlParser:
         return tree
 
 
-
-def get_attrib_from_subnode(xml_node, subnode_xpath_expr, attrib_name):
-    """
-    Finds a subnode in the item node and the retrieves a value from it
-
-    @return An attribute value
-    """
-
-    node = xml_node.find(subnode_xpath_expr)
-
-    if node is not None:
-        return node.get(attrib_name)
-
-    return None
-
-
-class Site:
-
-    def __init__(self, item_node):
-        self.node = item_node
-        url_data = self.get_url(self.node)
-
-        self.protocol = url_data.scheme
-        if url_data.hostname:
-            self.host = url_data.hostname
-        else:
-            self.host = None
-        # Use the port in the URL if it is defined, or 80 or 443 by default
-        self.port = url_data.port or (443 if url_data.scheme == "https" else 80)
-        self.ip = resolve_hostname(self.host)
-        self.os = self.get_text_from_subnode('Os')
-        self.banner = self.get_text_from_subnode('Banner')
-        self.items = []
-        for alert in self.node.findall('ReportItems/ReportItem'):
-            self.items.append(Item(alert))
-
-    def get_text_from_subnode(self, subnode_xpath_expr):
-        """
-        Finds a subnode in the host node and the retrieves a value from it.
-
-        @return An attribute value
-        """
-        sub_node = self.node.find(subnode_xpath_expr)
-        if sub_node is not None:
-            return sub_node.text
-
-        return None
-
-    def get_url(self, node):
-        url = self.get_text_from_subnode('StartURL')
-
-        if not url.startswith('http'):
-            url = f'http://{url}'
-        url_data = urlsplit(url)
-        if not url_data.scheme:
-            # Getting url from subnode 'Crawler'
-            url_aux = get_attrib_from_subnode(node, 'Crawler', 'StartUrl')
-            url_data = urlsplit(url_aux)
-
-        return url_data
-
-
-class Item:
-    """
-    An abstract representation of a Item
-
-
-    @param item_node A item_node taken from an acunetix xml tree
-    """
-
-    def __init__(self, item_node):
-        self.node = item_node
-        self.name = self.get_text_from_subnode('Name')
-        self.severity = self.get_text_from_subnode('Severity')
-        self.request = self.get_text_from_subnode('TechnicalDetails/Request')
-        self.response = self.get_text_from_subnode('TechnicalDetails/Response')
-        self.parameter = self.get_text_from_subnode('Parameter')
-        self.uri = self.get_text_from_subnode('Affects')
-
-        if self.get_text_from_subnode('Description'):
-            self.desc = self.get_text_from_subnode('Description')
-        else:
-            self.desc = ""
-
-        if self.get_text_from_subnode('Recommendation'):
-            self.resolution = self.get_text_from_subnode('Recommendation')
-        else:
-            self.resolution = ""
-
-        if self.get_text_from_subnode('reference'):
-            self.desc += "\nDetails: " + self.get_text_from_subnode('Details')
-
-        # Add path and params to the description to create different IDs if at
-        # least one of this fields is different
-        if self.uri:
-            self.desc += '\nPath: ' + self.uri
-        if self.parameter:
-            self.desc += '\nParameter: ' + self.parameter
-
-        self.ref = []
-        for n in item_node.findall('References/Reference'):
-            n2 = n.find('URL')
-            self.ref.append(n2.text)
-
-    def get_text_from_subnode(self, subnode_xpath_expr):
-        """
-        Finds a subnode in the host node and the retrieves a value from it.
-
-        @return An attribute value
-        """
-        sub_node = self.node.find(subnode_xpath_expr)
-        if sub_node is not None:
-            return sub_node.text
-
-        return None
-
-
 class AcunetixPlugin(PluginXMLFormat):
     """
     Example plugin to parse acunetix output.
@@ -203,69 +86,76 @@ class AcunetixPlugin(PluginXMLFormat):
         """
         parser = AcunetixXmlParser(output)
 
-
         for site in parser.acunetix.scan:
-            if self.get_ip(site) is None:
+            url_data = self.get_domain(site)
+            if not url_data:
                 continue
-
-            if site.host != site.ip and site.host is not None:
-                hostnames = [site.host]
+            if url_data.hostname:
+                self.old_structure(url_data, site)
             else:
-                hostnames = None
-            h_id = self.createAndAddHost(site.ip, site.os, hostnames=hostnames)
-            s_id = self.createAndAddServiceToHost(
+                self.new_structure(site)
+
+    def new_structure(self, site):
+        for item in site.reportitems.reportitem:
+            host = item.technicaldetails.request
+            host = findall('Host: (.*)', host[0])
+
+        h_id = self.createAndAddHost(site_ip, site.os, hostnames=hostnames)
+        s_id = self.createAndAddServiceToHost(
+            h_id,
+            "http",
+            "tcp",
+            ports=[port],
+            version=site.banner,
+            status='open')
+
+
+    def old_structure(self, url_data, site: Scan):
+        site_ip = resolve_hostname(url_data.hostname)
+        if url_data.hostname:
+            hostnames = [url_data.hostname]
+        else:
+            hostnames = None
+        port = url_data.port or (443 if url_data.scheme == "https" else 80)
+
+        h_id = self.createAndAddHost(site_ip, site.os, hostnames=hostnames)
+        s_id = self.createAndAddServiceToHost(
+            h_id,
+            "http",
+            "tcp",
+            ports=[port],
+            version=site.banner,
+            status='open')
+
+        for item in site.reportitems.reportitem:
+            description = item.description
+            if item.affects:
+                description += f'\nPath: {item.affects}'
+            if item.parameter:
+                description += f'\nParameter: {item.parameter}'
+            self.createAndAddVulnWebToService(
                 h_id,
-                "http",
-                "tcp",
-                ports=[site.port],
-                version=site.banner,
-                status='open')
-            for item in site.items:
+                s_id,
+                item.name,
+                description,
+                website=url_data.hostname,
+                severity=item.severity,
+                resolution=item.recommendation,
+                path=item.affects,
+                params=item.parameter,
+                request=item.technicaldetails.request,
+                response=item.technicaldetails.response,
+                ref=[i.url for i in item.references.reference])
 
-                if item.desc is None:
-                    self.createAndAddVulnWebToService(
-                        h_id,
-                        s_id,
-                        item.name,
-                        desc="",
-                        website=site.host,
-                        severity=item.severity,
-                        resolution=item.resolution,
-                        path=item.uri,
-                        params=item.parameter,
-                        request=item.request,
-                        response=item.response,
-                        ref=item.ref)
-                else:
-                    self.createAndAddVulnWebToService(
-                        h_id,
-                        s_id,
-                        item.name,
-                        item.desc,
-                        website=site.host,
-                        severity=item.severity,
-                        resolution=item.resolution,
-                        path=item.uri,
-                        params=item.parameter,
-                        request=item.request,
-                        response=item.response,
-                        ref=item.ref)
-        del parser
-
-    def map_host(self, scan:Scan)-> dict:
-        return {
-            "name": self.get_ip(scan)
-        }
-
-    def get_ip(self, scan:Scan) -> str:
+    @staticmethod
+    def get_domain(scan: Scan):
         url = scan.start_url
         if not url.startswith('http'):
             url = f'http://{url}'
         url_data = urlsplit(url)
         if not url_data.scheme:
             url_data = urlsplit(scan.crawler.start_url_attr)
-        return resolve_hostname(url_data.hostname)
-
+        return url_data
 
 
 def createPlugin(ignore_info=False):
