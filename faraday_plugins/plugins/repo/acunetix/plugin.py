@@ -4,12 +4,14 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+from re import findall
 from urllib.parse import urlsplit
+
 from lxml import etree
-from faraday_plugins.plugins.repo.acunetix.DTO import Acunetix, Scan
+
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
-from re import findall
+from faraday_plugins.plugins.repo.acunetix.DTO import Acunetix, Scan
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -48,7 +50,7 @@ class AcunetixXmlParser:
 
         @return xml_tree An xml tree instance. None if error.
         """
-        
+
         try:
             parser = etree.XMLParser(recover=True)
             tree = etree.fromstring(xml_output, parser=parser)
@@ -103,8 +105,6 @@ class AcunetixPlugin(PluginXMLFormat):
             url_data = urlsplit(url)
             site_ip = resolve_hostname(host)
             h_id = self.createAndAddHost(site_ip, site.os, hostnames=[host])
-            # import ipdb;
-            # ipdb.set_trace()
             s_id = self.createAndAddServiceToHost(
                 h_id,
                 "http",

@@ -1,5 +1,6 @@
 from typing import List
 
+
 class Technicaldetails:
     def __init__(self, node):
         self.node = node
@@ -15,6 +16,7 @@ class Technicaldetails:
         if not self.node:
             return ''
         return self.node.findtext('Response', '')
+
 
 class Cwe:
     def __init__(self, node):
@@ -275,6 +277,7 @@ class Reportitems:
     def reportitem(self) -> List[Reportitem]:
         return [Reportitem(i) for i in self.node.findall('ReportItem', [])]
 
+
 class Crawler:
     def __init__(self, node):
         self.node = node
@@ -302,15 +305,20 @@ class Scan:
 
     @property
     def os(self) -> str:
-        return self.node.findtext("Os", "")
+        if not self.node.findtext("Os", "unknown"):
+            return "unknown"
+        return self.node.findtext("Os", "unknown")
 
     @property
     def banner(self) -> str:
-        return self.node.findtext("Banner", "")
+        if not self.node.findtext('Banner'):
+            return None
+        return self.node.findtext("Banner")
 
     @property
     def start_url_new(self) -> str:
         return self.node.findtext("", "")
+
 
 class Acunetix:
     def __init__(self, node):
