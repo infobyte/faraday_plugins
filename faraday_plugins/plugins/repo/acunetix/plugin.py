@@ -98,17 +98,21 @@ class AcunetixPlugin(PluginXMLFormat):
     def new_structure(self, site):
         for item in site.reportitems.reportitem:
             host = item.technicaldetails.request
-            host = findall('Host: (.*)', host[0])
-
-        h_id = self.createAndAddHost(site_ip, site.os, hostnames=hostnames)
-        s_id = self.createAndAddServiceToHost(
-            h_id,
-            "http",
-            "tcp",
-            ports=[port],
-            version=site.banner,
-            status='open')
-
+            host = findall('Host: (.*)', host)[0]
+            url = f'http://{host}'
+            url_data = urlsplit(url)
+            site_ip = resolve_hostname(host)
+            h_id = self.createAndAddHost(site_ip, site.os, hostnames=[host])
+            # import ipdb;
+            # ipdb.set_trace()
+            s_id = self.createAndAddServiceToHost(
+                h_id,
+                "http",
+                "tcp",
+                ports=['443'],
+                version=site.banner,
+                status='open')
+            self.create_vul(item, h_id, s_id, url_data)
 
     def old_structure(self, url_data, site: Scan):
         site_ip = resolve_hostname(url_data.hostname)
@@ -126,26 +130,28 @@ class AcunetixPlugin(PluginXMLFormat):
             ports=[port],
             version=site.banner,
             status='open')
-
         for item in site.reportitems.reportitem:
-            description = item.description
-            if item.affects:
-                description += f'\nPath: {item.affects}'
-            if item.parameter:
-                description += f'\nParameter: {item.parameter}'
-            self.createAndAddVulnWebToService(
-                h_id,
-                s_id,
-                item.name,
-                description,
-                website=url_data.hostname,
-                severity=item.severity,
-                resolution=item.recommendation,
-                path=item.affects,
-                params=item.parameter,
-                request=item.technicaldetails.request,
-                response=item.technicaldetails.response,
-                ref=[i.url for i in item.references.reference])
+            self.create_vul(item, h_id, s_id, url_data)
+
+    def create_vul(self, item, h_id, s_id, url_data):
+        description = item.description
+        if item.affects:
+            description += f'\nPath: {item.affects}'
+        if item.parameter:
+            description += f'\nParameter: {item.parameter}'
+        self.createAndAddVulnWebToService(
+            h_id,
+            s_id,
+            item.name,
+            description,
+            website=url_data.hostname,
+            severity=item.severity,
+            resolution=item.recommendation,
+            path=item.affects,
+            params=item.parameter,
+            request=item.technicaldetails.request,
+            response=item.technicaldetails.response,
+            ref=[i.url for i in item.references.reference])
 
     @staticmethod
     def get_domain(scan: Scan):
