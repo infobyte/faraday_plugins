@@ -1,13 +1,27 @@
+1.5.0 [Jun 28th, 2021]:
+---
+ * Add Nipper Plugin
+ * add shodan plugin
+ * fix acunetix url parser
+ * FIX netsparker multi-host
+ * Add vuln details for Certificate Mismatch and move unique details to data, now vulns can be grupped
+ * ADD more data to plugins arachni and w3af
+ * Use run_date in UTC
+ * ADD cvss_base, cpe, threat, severity into references
+
 1.4.6 [May 14th, 2021]:
 ---
+ * - add attribute "command" for the pluggins of each command
+- adding test in test_command
+- change some regex in self._command_regex
  * [FIX] add hostnames if host is already cached
  * Add Naabu plugin
  * Add Sonarqube plugin
  * Add version and change list_plugins style
- * [FIX] unused import, innecesary list compression and unused variables
- * [FIX] metasploit report when the web-site-id is null
- * [FIX] port stats in nmap
- * [FIX] ssylze
+ * FIX unused import, innecesary list compression and unused variables
+ * FIX metasploit report when the web-site-id is null
+ * Fix port stats in nmap
+ * fixup ssylze
 sacar unknown de version=
  * ADD remedy into resolution
  * Support for nuclei 2.3.0
