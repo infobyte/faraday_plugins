@@ -589,16 +589,19 @@ class PluginXMLFormat(PluginByExtension):
     def __init__(self, ignore_info=False):
         super().__init__(ignore_info)
         self.identifier_tag = []
+        self.identifier_tag_attributes = {}
         self.extension = ".xml"
         self.open_options = {"mode": "rb"}
 
-    def report_belongs_to(self, main_tag="", **kwargs):
+    def report_belongs_to(self, main_tag="", main_tag_attributes={}, **kwargs):
         match = False
         if super().report_belongs_to(**kwargs):
             if type(self.identifier_tag) == str:
                 match = (main_tag == self.identifier_tag)
             elif type(self.identifier_tag) == list:
                 match = (main_tag in self.identifier_tag)
+            if self.identifier_tag_attributes:
+                match = self.identifier_tag_attributes.issubset(main_tag_attributes)
             self.logger.debug("Tag Match: [%s =/in %s] -> %s", main_tag, self.identifier_tag, match)
         return match
 
