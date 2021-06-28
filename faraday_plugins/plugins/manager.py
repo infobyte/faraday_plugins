@@ -63,6 +63,7 @@ class ReportAnalyzer:
         file_name_base, file_extension = os.path.splitext(file_name)
         file_extension = file_extension.lower()
         main_tag = None
+        main_tag_attributes = {}
         file_csv_headers = set()
         file_json_keys = set()
         files_in_zip = set()
@@ -80,8 +81,13 @@ class ReportAnalyzer:
                         main_tag = postfix
                     else:
                         main_tag = elem.tag
+                        try:
+                            main_tag_attributes = elem.attrib
+                        except:
+                            pass
                     break
-                logger.debug("Found XML content on file: %s - Main tag: %s", report_path, main_tag)
+                logger.debug("Found XML content on file: %s - Main tag: %s Attributes: %s", report_path, main_tag,
+                             main_tag_attributes)
             except Exception as e:
                 logger.debug("Non XML content [%s] - %s", report_path, e)
                 try:
@@ -114,9 +120,10 @@ class ReportAnalyzer:
                 for _plugin_id, _plugin in self.plugin_manager.get_plugins():
                     logger.debug("Try plugin: %s", _plugin_id)
                     try:
-                        if _plugin.report_belongs_to(main_tag=main_tag, report_path=report_path,
-                                                     extension=file_extension, file_json_keys=file_json_keys,
-                                                     file_csv_headers=file_csv_headers, files_in_zip=files_in_zip):
+                        if _plugin.report_belongs_to(main_tag=main_tag, main_tag_attributes=main_tag_attributes,
+                                                     report_path=report_path, extension=file_extension,
+                                                     file_json_keys=file_json_keys, file_csv_headers=file_csv_headers,
+                                                     files_in_zip=files_in_zip):
                             plugin = _plugin
                             logger.debug("Plugin by File Found: %s", plugin.id)
                             break
