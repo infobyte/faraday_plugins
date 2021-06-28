@@ -191,17 +191,20 @@ class NetsparkerPlugin(PluginXMLFormat):
 
     def parseOutputString(self, output):
         parser = NetsparkerXmlParser(output)
-        first = True
+        host_names_resolve = {}
         for i in parser.items:
-            if first:
+
+            if (i.hostname not in host_names_resolve):
                 ip = resolve_hostname(i.hostname)
-                h_id = self.createAndAddHost(ip, hostnames=[ip])
-                
-                s_id = self.createAndAddServiceToHost(h_id, str(i.port),
-                                                           protocol = str(i.protocol),
-                                                           ports=[str(i.port)],
-                                                           status="open")
-                first = False
+                host_names_resolve[i.hostname] = ip
+            else:
+                ip = host_names_resolve[i.hostname]
+            h_id = self.createAndAddHost(ip, hostnames=[i.hostname])
+            
+            s_id = self.createAndAddServiceToHost(h_id, str(i.port),
+                                                       protocol = str(i.protocol),
+                                                       ports=[str(i.port)],
+                                                       status="open")
 
             if i.resolution is not None:
                 resolution = BeautifulSoup(i.resolution, "lxml").text
