@@ -22,7 +22,8 @@ __maintainer__ = "Francisco Amato"
 __email__ = "famato@infobytesec.com"
 __status__ = "Development"
 
-from faraday_plugins.plugins.repo.acunetix_json.DTO import Export, AcunetixJsonParser
+from faraday_plugins.plugins.repo.acunetix_json.DTO import Export, AcunetixJsonParser, Vulnerabilities, \
+    VulnerabilityTypes
 
 
 class AcunetixXmlParser:
@@ -102,8 +103,9 @@ class AcunetixJsonPlugin(PluginJsonFormat):
         output being sent is valid.
         """
         parser = AcunetixJsonParser(loads(output))
-        import ipdb;
-        ipdb.set_trace()
+        for site in parser.export.scans:
+            self.new_structure(site)
+
         # for site in parser.acunetix.scan:
         #     url_data = self.get_domain(site)
         #     if not url_data:
@@ -114,21 +116,40 @@ class AcunetixJsonPlugin(PluginJsonFormat):
         #         self.new_structure(site)
 
     def new_structure(self, site):
-        for item in site.reportitems.reportitem:
-            host = item.technicaldetails.request
-            host = findall('Host: (.*)', host)[0]
-            url = f'http://{host}'
-            url_data = urlsplit(url)
-            site_ip = resolve_hostname(host)
-            h_id = self.createAndAddHost(site_ip, site.os, hostnames=[host])
-            s_id = self.createAndAddServiceToHost(
-                h_id,
-                "http",
-                "tcp",
-                ports=['443'],
-                version=site.banner,
-                status='open')
-            self.create_vul(item, h_id, s_id, url_data)
+        start_url = site.info.host
+        url_data = urlsplit(start_url)
+        site_ip = resolve_hostname(url_data.hostname)
+        ports = '443' if (url_data.scheme == 'https') else '80'
+        vulnerability_type = {i.vt_id: i for i in site.vul_types}
+        h_id = self.createAndAddHost(site_ip, None, hostnames=[url_data.hostname])
+        s_id = self.createAndAddServiceToHost(
+            h_id,
+            "http",
+            "tcp",
+            ports=[ports],
+            version=None,
+            status='open')
+        for i in site.vulnerabilities:
+            vul_type = vulnerability_type[i.info.vt_id]
+            self.create_vul(i, vul_type, h_id, s_id, url_data)
+
+
+        # host = findall('([a-zA-Z]+(\.[a-zA-Z]+)+)', start_url)[0]
+        # for item in site.reportitems.reportitem:
+        #     host = item.technicaldetails.request
+        #     host = findall('Host: (.*)', host)[0]
+        #     url = f'http://{host}'
+        #     url_data = urlsplit(url)
+        #     site_ip = resolve_hostname(host)
+        #     h_id = self.createAndAddHost(site_ip, site.os, hostnames=[host])
+        #     s_id = self.createAndAddServiceToHost(
+        #         h_id,
+        #         "http",
+        #         "tcp",
+        #         ports=['443'],
+        #         version=site.banner,
+        #         status='open')
+        #     self.create_vul(item, h_id, s_id, url_data)
 
     def old_structure(self, url_data, site: Scan):
         site_ip = resolve_hostname(url_data.hostname)
@@ -149,25 +170,20 @@ class AcunetixJsonPlugin(PluginJsonFormat):
         for item in site.reportitems.reportitem:
             self.create_vul(item, h_id, s_id, url_data)
 
-    def create_vul(self, item, h_id, s_id, url_data):
-        description = item.description
-        if item.affects:
-            description += f'\nPath: {item.affects}'
-        if item.parameter:
-            description += f'\nParameter: {item.parameter}'
+    def create_vul(self, vul:Vulnerabilities, vul_type:VulnerabilityTypes, h_id, s_id, url_data):
         self.createAndAddVulnWebToService(
             h_id,
             s_id,
-            item.name,
-            description,
+            vul_type.name,
+            vul_type.description,
             website=url_data.hostname,
-            severity=item.severity,
-            resolution=item.recommendation,
-            path=item.affects,
-            params=item.parameter,
-            request=item.technicaldetails.request,
-            response=item.technicaldetails.response,
-            ref=[i.url for i in item.references.reference])
+            severity=vul_type.severity,
+            resolution=vul_type.recommendation,
+            # path=.affects,
+            # params=item.parameter,
+            request=vul.info.request,
+            response=vul.response)
+            # ref=[i.url for i in item.references.reference])
 
     @staticmethod
     def get_domain(scan: Scan):
