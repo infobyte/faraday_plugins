@@ -4,7 +4,6 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from re import findall
 from urllib.parse import urlsplit
 
 from lxml import etree
@@ -22,7 +21,7 @@ __maintainer__ = "Francisco Amato"
 __email__ = "famato@infobytesec.com"
 __status__ = "Development"
 
-from faraday_plugins.plugins.repo.acunetix_json.DTO import Export, AcunetixJsonParser, Vulnerabilities, \
+from faraday_plugins.plugins.repo.acunetix_json.DTO import AcunetixJsonParser, Vulnerabilities, \
     VulnerabilityTypes
 
 
@@ -68,8 +67,6 @@ class AcunetixXmlParser:
 class AcunetixJsonPlugin(PluginJsonFormat):
 
     def __init__(self, *arg, **kwargs):
-        # import ipdb;
-        # ipdb.set_trace()
         super().__init__(*arg, **kwargs)
         self.id = "Acunetix_Json"
         self.name = "Acunetix JSON Output Plugin"
@@ -81,18 +78,6 @@ class AcunetixJsonPlugin(PluginJsonFormat):
     """
     Example plugin to parse acunetix output.
     """
-
-    # def __init__(self, *arg, **kwargs):
-    #     super().__init__(*arg, **kwargs)
-    #     self.identifier_tag = "ScanGroup"
-    #     self.id = "Acunetix"
-    #     self.name = "Acunetix XML Output Plugin"
-    #     self.plugin_version = "0.0.1"
-    #     self.version = "9"
-    #     self.framework_version = "1.0.0"
-    #     self.options = None
-    #     self._current_output = None
-    #     self.target = None
 
     def parseOutputString(self, output):
         """
@@ -106,16 +91,7 @@ class AcunetixJsonPlugin(PluginJsonFormat):
         for site in parser.export.scans:
             self.new_structure(site)
 
-        # for site in parser.acunetix.scan:
-        #     url_data = self.get_domain(site)
-        #     if not url_data:
-        #         continue
-        #     if url_data.hostname:
-        #         self.old_structure(url_data, site)
-        #     else:
-        #         self.new_structure(site)
-
-    def new_structure(self, site):
+    def new_structure(self, site: Scan):
         start_url = site.info.host
         url_data = urlsplit(start_url)
         site_ip = resolve_hostname(url_data.hostname)
@@ -133,44 +109,7 @@ class AcunetixJsonPlugin(PluginJsonFormat):
             vul_type = vulnerability_type[i.info.vt_id]
             self.create_vul(i, vul_type, h_id, s_id, url_data)
 
-
-        # host = findall('([a-zA-Z]+(\.[a-zA-Z]+)+)', start_url)[0]
-        # for item in site.reportitems.reportitem:
-        #     host = item.technicaldetails.request
-        #     host = findall('Host: (.*)', host)[0]
-        #     url = f'http://{host}'
-        #     url_data = urlsplit(url)
-        #     site_ip = resolve_hostname(host)
-        #     h_id = self.createAndAddHost(site_ip, site.os, hostnames=[host])
-        #     s_id = self.createAndAddServiceToHost(
-        #         h_id,
-        #         "http",
-        #         "tcp",
-        #         ports=['443'],
-        #         version=site.banner,
-        #         status='open')
-        #     self.create_vul(item, h_id, s_id, url_data)
-
-    def old_structure(self, url_data, site: Scan):
-        site_ip = resolve_hostname(url_data.hostname)
-        if url_data.hostname:
-            hostnames = [url_data.hostname]
-        else:
-            hostnames = None
-        port = url_data.port or (443 if url_data.scheme == "https" else 80)
-
-        h_id = self.createAndAddHost(site_ip, site.os, hostnames=hostnames)
-        s_id = self.createAndAddServiceToHost(
-            h_id,
-            "http",
-            "tcp",
-            ports=[port],
-            version=site.banner,
-            status='open')
-        for item in site.reportitems.reportitem:
-            self.create_vul(item, h_id, s_id, url_data)
-
-    def create_vul(self, vul:Vulnerabilities, vul_type:VulnerabilityTypes, h_id, s_id, url_data):
+    def create_vul(self, vul: Vulnerabilities, vul_type: VulnerabilityTypes, h_id, s_id, url_data):
         self.createAndAddVulnWebToService(
             h_id,
             s_id,
@@ -179,11 +118,8 @@ class AcunetixJsonPlugin(PluginJsonFormat):
             website=url_data.hostname,
             severity=vul_type.severity,
             resolution=vul_type.recommendation,
-            # path=.affects,
-            # params=item.parameter,
             request=vul.info.request,
             response=vul.response)
-            # ref=[i.url for i in item.references.reference])
 
     @staticmethod
     def get_domain(scan: Scan):
