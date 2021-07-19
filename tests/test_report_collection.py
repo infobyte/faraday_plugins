@@ -2,6 +2,7 @@ import os
 import socket
 import json
 import pytest
+from pathlib import Path
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 from faraday_plugins.plugins.plugin import PluginBase
 from faraday.server.api.modules.bulk_create import BulkCreateSchema
@@ -45,7 +46,7 @@ def get_report_json_from_cache(report_file):
     if not plugin_json:
         plugin = get_plugin_from_cache(report_file)
         if plugin:
-            plugin.processReport(report_file)
+            plugin.processReport(Path(report_file))
             plugin_json = json.loads(plugin.get_json())
             REPORTS_JSON_CACHE[report_file] = plugin_json
     else:
