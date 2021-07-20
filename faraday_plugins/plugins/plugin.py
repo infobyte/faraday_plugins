@@ -318,6 +318,8 @@ class PluginBase:
                 self.logger.error("Error on delete file: (%s) [%s]", filename, e)
 
     def processReport(self, filepath: Path, user="faraday"):
+        if type(filepath) == str:  # TODO workaround for compatibility, remove in the future
+            filepath = Path(filepath)
         if filepath.is_file():
             self.vulns_data["command"]["params"] = filepath.name if not self.ignore_info else f"{filepath.name} (Info ignored)"
             self.vulns_data["command"]["user"] = user
