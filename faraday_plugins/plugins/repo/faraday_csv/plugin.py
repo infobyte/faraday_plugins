@@ -3,6 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
+import sys
 import re
 import csv
 from ast import literal_eval
@@ -60,6 +61,7 @@ class CSVParser:
 
     def parse_csv(self, output):
         items = []
+        csv.field_size_limit(sys.maxsize)
         reader = csv.DictReader(output, delimiter=',')
         obj_to_import = self.check_objects_to_import(reader.fieldnames)
         if not obj_to_import:
