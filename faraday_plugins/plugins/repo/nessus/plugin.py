@@ -20,7 +20,7 @@ __email__ = "bmoyano@infobytesec.com"
 __status__ = "Development"
 
 from faraday_plugins.plugins.repo.nessus.DTO import ReportHost, Report, ReportItem
-
+from faraday_plugins.plugins.repo.nessus import checksvc
 
 class NessusParser:
     """
@@ -154,7 +154,14 @@ class NessusPlugin(PluginXMLFormat):
                     if not vulnerability_name:
                         continue
                     item_name = item.svc_name_attr
-
+                    #check if service is http or https:
+                    if not item_name == 'general' and item.protocol_attr == 'tcp':
+                        target = host.name + ":" + item.port_attr
+                        if checksvc.is_https(target):
+                            item_name = 'https'
+                        elif checksvc.is_http(target):
+                            item_name = 'http'
+                    #End check
                     _main_data = self.map_item(
                         host_id, run_date, vulnerability_name, item)
 
@@ -166,7 +173,7 @@ class NessusPlugin(PluginXMLFormat):
                         _main_data["service_id"] = self.createAndAddServiceToHost(
                             host_id, name=item_name, protocol=item.protocol_attr,
                             ports=item.port_attr)
-                        if item_name == 'www' or item_name == 'http':
+                        if item_name == 'www' or item_name == 'http' or item_name == 'https':
                             _main_data.update({"website": website})
                             self.createAndAddVulnWebToService(**_main_data)
                         else:
