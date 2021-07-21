@@ -74,6 +74,10 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             run_date = vuln_dict.get('timestamp')
             if run_date:
                 run_date = dateutil.parser.parse(run_date)
+            if vuln_dict["info"].get('resolution'):
+                vuln_resolution = vuln_dict["info"].get('resolution')
+            else:
+                vuln_resolution = ""
             self.createAndAddVulnWebToService(
                 host_id,
                 service_id,
@@ -81,6 +85,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 desc=vuln_dict["info"].get("description", name),
                 ref=references,
                 severity=vuln_dict["info"].get('severity'),
+                resolution=vuln_resolution,
                 website=host,
                 request=request,
                 response=vuln_dict.get('response', ''),
@@ -98,5 +103,4 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
 
 def createPlugin(ignore_info=False):
     return NucleiPlugin(ignore_info=ignore_info)
-
 
