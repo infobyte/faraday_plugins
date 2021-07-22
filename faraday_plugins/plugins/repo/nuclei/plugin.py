@@ -38,26 +38,34 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
     def parseOutputString(self, output, debug=False):
         for vuln_json in filter(lambda x: x != '', output.split("\n")):
             vuln_dict = json.loads(vuln_json)
-            host = vuln_dict.get('host')
-            url_data = urlparse(host)
-            ip = vuln_dict.get("ip", resolve_hostname(url_data.hostname))
+            if vuln_dict.get('type') == "dns":
+                #sepcial handling if only a domain was provided
+                hostname = vuln_dict.get('host')
+                ip = resolve_hostname(hostname)
+                url_data = False
+            else:
+                host = vuln_dict.get('host')
+                url_data = urlparse(host)
+                hostname = url_data.hostname
+                ip = vuln_dict.get("ip", resolve_hostname(url_data.hostname))
             host_id = self.createAndAddHost(
                 name=ip,
-                hostnames=[url_data.hostname])
-            port = url_data.port
-            if not port:
-                if url_data.scheme == 'https':
-                    port = 443
-                else:
-                    port = 80
-            service_id = self.createAndAddServiceToHost(
-                host_id,
-                name=url_data.scheme,
-                ports=port,
-                protocol="tcp",
-                status='open',
-                version='',
-                description='web server')
+                hostnames=[hostname])
+            if url_data:
+                port = url_data.port
+                if not port:
+                    if url_data.scheme == 'https':
+                        port = 443
+                    else:
+                        port = 80
+                service_id = self.createAndAddServiceToHost(
+                    host_id,
+                    name=url_data.scheme,
+                    ports=port,
+                    protocol="tcp",
+                    status='open',
+                    version='',
+                    description='web server')
             matched = vuln_dict.get('matched')
             matched_data = urlparse(matched)
             references = [f"author: {vuln_dict['info'].get('author', '')}"]
@@ -74,24 +82,42 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             run_date = vuln_dict.get('timestamp')
             if run_date:
                 run_date = dateutil.parser.parse(run_date)
-            self.createAndAddVulnWebToService(
-                host_id,
-                service_id,
-                name=name,
-                desc=vuln_dict["info"].get("description", name),
-                ref=references,
-                severity=vuln_dict["info"].get('severity'),
-                website=host,
-                request=request,
-                response=vuln_dict.get('response', ''),
-                method=method,
-                query=matched_data.query,
-                params=matched_data.params,
-                path=matched_data.path,
-                data="\n".join(data),
-                external_id=f"NUCLEI-{vuln_dict.get('templateID', '')}",
-                run_date=run_date
-            )
+            if vuln_dict["info"].get('resolution'):
+                vuln_resolution = vuln_dict["info"].get('resolution')
+            else:
+                vuln_resolution = ""
+            if url_data:
+                self.createAndAddVulnWebToService(
+                    host_id,
+                    service_id,
+                    name=name,
+                    desc=vuln_dict["info"].get("description", name),
+                    ref=references,
+                    severity=vuln_dict["info"].get('severity'),
+                    resolution=vuln_resolution,
+                    website=host,
+                    request=request,
+                    response=vuln_dict.get('response', ''),
+                    method=method,
+                    query=matched_data.query,
+                    params=matched_data.params,
+                    path=matched_data.path,
+                    data="\n".join(data),
+                    external_id=f"NUCLEI-{vuln_dict.get('templateID', '')}",
+                    run_date=run_date
+                )
+            else:
+                self.createAndAddVulnToHost(
+                    host_id,
+                    name=name,
+                    desc=vuln_dict["info"].get("description", name),
+                    ref=references,
+                    severity=vuln_dict["info"].get('severity'),
+                    resolution=vuln_resolution,
+                    data="\n".join(data),
+                    external_id=f"NUCLEI-{vuln_dict.get('templateID', '')}",
+                    run_date=run_date
+                )
 
 
 
