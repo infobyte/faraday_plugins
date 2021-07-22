@@ -322,14 +322,15 @@ class OpenvasPlugin(PluginXMLFormat):
         from the xml where it expects it to be present.
         """
         parser = OpenvasXmlParser(output, self.logger)
-        web = False
         ids = {}
         # The following threats values will not be taken as vulns
         self.ignored_severities = ['Log', 'Debug']
         for ip, values in parser.hosts.items():
             # values contains: ip details and ip hostnames
+            os_report = values['details'].get('best_os_txt')
             h_id = self.createAndAddHost(
                 ip,
+                os_report[0] if os_report else '',
                 hostnames=values['hostnames']
             )
             ids[ip] = h_id
