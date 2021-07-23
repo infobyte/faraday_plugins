@@ -6,6 +6,7 @@ import os
 import shlex
 import subprocess
 import sys
+from pathlib import Path
 
 import click
 from tabulate import tabulate
@@ -80,7 +81,7 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary, outpu
             if not plugin:
                 click.echo(click.style(f"Failed to detect report: {report_file}", fg="red"), err=True)
                 return
-        plugin.processReport(report_file, getpass.getuser())
+        plugin.processReport(Path(report_file), getpass.getuser())
         if summary:
             click.echo(json.dumps(plugin.get_summary(), indent=4))
         else:

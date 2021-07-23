@@ -14,6 +14,7 @@ import uuid
 import zipfile
 from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
 
 import pytz
 import simplejson as json
@@ -277,7 +278,7 @@ class PluginBase:
             params = " ".join(command_string.split()[2:])
         else:
             params = " ".join(command_string.split()[1:])
-        self.vulns_data["command"]["params"] = params
+        self.vulns_data["command"]["params"] = params if not self.ignore_info else f"{params} (Info ignored)"
         self.vulns_data["command"]["user"] = username
         self.vulns_data["command"]["import_source"] = "shell"
         if self._use_temp_file:
@@ -300,25 +301,27 @@ class PluginBase:
 
     def processOutput(self, command_output):
         if self.has_custom_output():
-            self._parse_filename(self.get_custom_file_path())
+            self._parse_filename(Path(self.get_custom_file_path()))
         else:
             self.parseOutputString(command_output)
 
-    def _parse_filename(self, filename):
-        with open(filename, **self.open_options) as output:
+    def _parse_filename(self, filename: Path):
+        with filename.open(**self.open_options) as output:
             self.parseOutputString(output.read())
         if self._delete_temp_file:
             try:
-                if os.path.isfile(filename):
+                if filename.is_file():
                     os.remove(filename)
-                elif os.path.isdir(filename):
+                elif filename.is_dir():
                     shutil.rmtree(filename)
             except Exception as e:
                 self.logger.error("Error on delete file: (%s) [%s]", filename, e)
 
-    def processReport(self, filepath, user="faraday"):
-        if os.path.isfile(filepath):
-            self.vulns_data["command"]["params"] = filepath if not self.ignore_info else f"{filepath} (Info ignored)"
+    def processReport(self, filepath: Path, user="faraday"):
+        if type(filepath) == str:  # TODO workaround for compatibility, remove in the future
+            filepath = Path(filepath)
+        if filepath.is_file():
+            self.vulns_data["command"]["params"] = filepath.name if not self.ignore_info else f"{filepath.name} (Info ignored)"
             self.vulns_data["command"]["user"] = user
             self.vulns_data["command"]["import_source"] = "report"
             self._parse_filename(filepath)
@@ -566,7 +569,7 @@ class PluginCustomOutput(PluginBase):
     def processOutput(self, term_output):
         # we discard the term_output since it's not necessary
         # for this type of plugins
-        self.processReport(self._output_file_path)
+        self.processReport(Path(self._output_file_path))
 
 
 class PluginByExtension(PluginBase):
