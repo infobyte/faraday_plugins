@@ -5,6 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import socket
+import re
 import json
 import dateutil
 from collections import defaultdict
@@ -16,7 +17,7 @@ __author__ = "Nicolas Rebagliati"
 __copyright__ = "Copyright (c) 2021, Infobyte LLC"
 __credits__ = ["Nicolas Rebagliati"]
 __license__ = ""
-__version__ = "0.0.1"
+__version__ = "1.0.0"
 __maintainer__ = "Nicolas Rebagliati"
 __email__ = "nrebagliati@infobytesec.com"
 __status__ = "Development"
@@ -31,8 +32,8 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
         super().__init__(*arg, **kwargs)
         self.id = "nuclei"
         self.name = "Nuclei"
-        self.plugin_version = "0.1"
-        self.version = "2.3.0"
+        self.plugin_version = "1.0.0"
+        self.version = "2.3.8"
         self.json_keys = {"matched", "templateID", "host"}
 
     def parseOutputString(self, output, debug=False):
@@ -60,7 +61,27 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 description='web server')
             matched = vuln_dict.get('matched')
             matched_data = urlparse(matched)
-            references = [f"author: {vuln_dict['info'].get('author', '')}"]
+            reference = vuln_dict["info"].get('reference', [])
+            if reference:
+                if isinstance(reference, str):
+                    if re.match('^- ', reference):
+                        reference = list(filter(None, [re.sub('^- ','', elem) for elem in reference.split('\n')]))
+                    else:
+                        reference = [reference]
+            references = vuln_dict["info"].get('references', [])
+            if references:
+                if isinstance(references, str):
+                    if re.match('^- ', references):
+                        references = list(filter(None, [re.sub('^- ','', elem) for elem in references.split('\n')]))
+                    else:
+                        references = [references]
+            cwe = vuln_dict['info'].get('cwe', [])
+            capec = vuln_dict['info'].get('capec', [])
+            refs = list(set(reference + references + cwe + capec)).sort()
+            tags = vuln_dict['info'].get('tags', '').split(',')
+            impact = vuln_dict['info'].get('impact')
+            resolution = vuln_dict['info'].get('resolution', '')
+            easeofresolution = vuln_dict['info'].get('easeofresolution')
             request = vuln_dict.get('request', '')
             if request:
                 method = request.split(" ")[0]
@@ -79,8 +100,12 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 service_id,
                 name=name,
                 desc=vuln_dict["info"].get("description", name),
-                ref=references,
+                ref=refs,
                 severity=vuln_dict["info"].get('severity'),
+                tags=tags,
+                impact=impact,
+                resolution=resolution,
+                easeofresolution=easeofresolution,
                 website=host,
                 request=request,
                 response=vuln_dict.get('response', ''),
