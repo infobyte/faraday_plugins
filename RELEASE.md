@@ -1,3 +1,11 @@
+1.5.1 [Jul 27th, 2021]:
+---
+ * cwe, capec, references, tags, impact, resolution, easeofresolution
+ * add os openvas
+ * [FIX] Fix improt of CSV with big fields
+ * Fix sslyze json bug with port
+ * Only show report name in command data
+
 1.5.0 [Jun 28th, 2021]:
 ---
  * Add Nipper Plugin
