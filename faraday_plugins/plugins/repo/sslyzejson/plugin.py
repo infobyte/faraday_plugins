@@ -75,9 +75,9 @@ class SslyzeJsonParser:
         hostname = server_location.get('hostname', None)
         ip = server_location.get('ip_address', resolve_hostname(hostname))
         if port != 443:
-            url = 'https://' + hostname + ':' + port
+            url = f"https://{hostname}:{port}"
         else:
-            url = 'https://' + hostname
+            url = f"https://{hostname}"
 
         json_host = {
             "name": 'https',
