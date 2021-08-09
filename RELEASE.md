@@ -1,3 +1,7 @@
+1.5.2 [Aug 9th, 2021]:
+---
+ * add new structure acunetix 
+
 1.5.1 [Jul 27th, 2021]:
 ---
  * cwe, capec, references, tags, impact, resolution, easeofresolution
