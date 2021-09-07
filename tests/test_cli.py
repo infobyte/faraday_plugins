@@ -49,6 +49,7 @@ def test_process_command_ping():
     assert summary['command']["command"] == 'ping'
 
 
+@pytest.mark.skip(reason="issue with docker image")
 def test_process_command_to_file():
     runner = CliRunner()
     with runner.isolated_filesystem() as file_system:
