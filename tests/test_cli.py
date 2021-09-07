@@ -34,7 +34,7 @@ def test_detect_command():
 def test_process_command():
     runner = CliRunner()
     result = runner.invoke(process_command, args=['ping -c 1 www.google.com', '--summary'])
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
     summary = json.loads(result.output.strip())
     assert summary['hosts'] == 1
 
@@ -43,7 +43,7 @@ def test_process_command():
 def test_process_command_ping():
     runner = CliRunner()
     result = runner.invoke(process_command, args=['ping -c 1 www.google.com'])
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
     summary = json.loads(result.output.strip())
 
     assert summary['command']["command"] == 'ping'
@@ -55,7 +55,7 @@ def test_process_command_to_file():
     with runner.isolated_filesystem() as file_system:
         output_file = os.path.join(file_system, "test.json")
         result = runner.invoke(process_command, args=['ping -c 1 www.google.com',  '-o', output_file])
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert os.path.isfile(output_file)
         with open(output_file) as f:
             vuln_json = json.load(f)
