@@ -32,9 +32,13 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
         super().__init__(*arg, **kwargs)
         self.id = "nuclei"
         self.name = "Nuclei"
-        self.plugin_version = "1.0.0"
+        self.plugin_version = "1.0.1"
         self.version = "2.3.8"
         self.json_keys = {"matched", "templateID", "host"}
+        self._command_regex = re.compile(r'^(sudo nuclei|nuclei|\.\/nuclei|^.*?nuclei)\s+.*?')
+        self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
+        self._use_temp_file = True
+        self._temp_file_extension = "json"
 
     def parseOutputString(self, output, debug=False):
         for vuln_json in filter(lambda x: x != '', output.split("\n")):
@@ -117,6 +121,22 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 external_id=f"NUCLEI-{vuln_dict.get('templateID', '')}",
                 run_date=run_date
             )
+    
+    def processCommandString(self, username, current_path, command_string):
+        """
+        Adds the -oX parameter to get xml output to the command string that the
+        user has set.
+        """
+        super().processCommandString(username, current_path, command_string)
+        arg_match = self.xml_arg_re.match(command_string)
+        if arg_match is None:
+            return re.sub(r"(^.*?nuclei)",
+                          r"\1 --json -irr -o %s" % self._output_file_path,
+                          command_string)
+        else:
+            return re.sub(arg_match.group(1),
+                          r"--json -irr -o %s" % self._output_file_path,
+                          command_string)            
 
 
 
