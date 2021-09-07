@@ -1,3 +1,8 @@
+1.5.3 [Sep 7th, 2021]:
+---
+ * Adding support for running nuclei through command / faraday-cli 
+ * Fix missing references in nuclei
+
 1.5.2 [Aug 9th, 2021]:
 ---
  * add new structure acunetix 
