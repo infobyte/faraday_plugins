@@ -82,7 +82,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             cwe = vuln_dict['info'].get('cwe', [])
             capec = vuln_dict['info'].get('capec', [])
             refs = sorted(list(set(reference + references + cwe + capec)))
-            tags = vuln_dict['info'].get('tags', '').split(',')
+            tags = vuln_dict['info'].get('tags', [])
             impact = vuln_dict['info'].get('impact')
             resolution = vuln_dict['info'].get('resolution', '')
             easeofresolution = vuln_dict['info'].get('easeofresolution')
