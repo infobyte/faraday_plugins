@@ -6,7 +6,7 @@ pip install faraday-plugins
 
 ## Commands
 
-> List Plugins
+### List Plugins
 
 List all plugins and if its compatible with command or/and report
 
@@ -18,7 +18,7 @@ Optional params:
 faraday-plugins list-plugins
 ```
 
-> Test autodetect plugin from command
+### Test autodetect plugin from command
 
 ```shell script
 faraday-plugins detect-command "ping -c 4 www.google.com"
@@ -26,7 +26,7 @@ faraday-plugins detect-command "ping -c 4 www.google.com"
 Faraday Plugin: ping
 ```
 
-> Test process command with plugin
+### Test process command with plugin
 
 Optional params:
 
@@ -67,7 +67,7 @@ faraday-plugins process-command "ping -c4 www.google.com"
 }
 ```
 
-> Test autodetect plugin from report
+### Test autodetect plugin from report
 
 ```shell script
 faraday-plugins detect-report /path/to/report.xml
@@ -75,8 +75,7 @@ faraday-plugins detect-report /path/to/report.xml
 Faraday Plugin: Nmap
 ```
 
-
-> Test report with plugin
+### Test report with plugin
 
 Optional params:
 
@@ -136,9 +135,9 @@ faraday-plugins process-report /path/to/nmap_report.xml
 }
 ```
 
-> Plugin Logger
+## Plugin Logger
 
-To use it you must call ```self.logger.debug("some message")```
+To use it you must call `self.logger.debug("some message")`
 
 ```shell script
 export PLUGIN_DEBUG=1
@@ -156,5 +155,4 @@ faraday-plugins proces-report /path/to/report.xml
 ...
 ```
 
-
-> More documentation here https://github.com/infobyte/faraday/wiki/Basic-plugin-development
+More documentation here https://github.com/infobyte/faraday/wiki/Basic-plugin-development
