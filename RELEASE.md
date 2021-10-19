@@ -1,3 +1,7 @@
+1.5.4 [Oct 19th, 2021]:
+---
+ * Update nuclei parser
+
 1.5.3 [Sep 7th, 2021]:
 ---
  * Adding support for running nuclei through command / faraday-cli 
