@@ -66,23 +66,29 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             matched = vuln_dict.get('matched')
             matched_data = urlparse(matched)
             reference = vuln_dict["info"].get('reference', [])
-            if reference:
+            if not reference:
+                reference = []
+            else:
                 if isinstance(reference, str):
                     if re.match('^- ', reference):
-                        reference = list(filter(None, [re.sub('^- ','', elem) for elem in reference.split('\n')]))
+                        reference = list(filter(None, [re.sub('^- ', '', elem) for elem in reference.split('\n')]))
                     else:
                         reference = [reference]
             references = vuln_dict["info"].get('references', [])
             if references:
                 if isinstance(references, str):
                     if re.match('^- ', references):
-                        references = list(filter(None, [re.sub('^- ','', elem) for elem in references.split('\n')]))
+                        references = list(filter(None, [re.sub('^- ', '', elem) for elem in references.split('\n')]))
                     else:
                         references = [references]
+            else:
+                references = []
             cwe = vuln_dict['info'].get('cwe', [])
             capec = vuln_dict['info'].get('capec', [])
             refs = sorted(list(set(reference + references + cwe + capec)))
-            tags = vuln_dict['info'].get('tags', '').split(',')
+            tags = vuln_dict['info'].get('tags', [])
+            if isinstance(tags, str):
+                tags = tags.split(',')
             impact = vuln_dict['info'].get('impact')
             resolution = vuln_dict['info'].get('resolution', '')
             easeofresolution = vuln_dict['info'].get('easeofresolution')
@@ -92,7 +98,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             else:
                 method = ""
             data = [f"Matched: {vuln_dict.get('matched')}",
-                    f"Tags: {vuln_dict['info'].get('tags')}",
+                    f"Tags: {vuln_dict['info'].get('tags', '')}",
                     f"Template ID: {vuln_dict['templateID']}"]
 
             name = vuln_dict["info"].get("name")
@@ -137,8 +143,6 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             return re.sub(arg_match.group(1),
                           r"--json -irr -o %s" % self._output_file_path,
                           command_string)            
-
-
 
 
 def createPlugin(ignore_info=False):
