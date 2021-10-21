@@ -274,7 +274,7 @@ class PluginBase:
         command that it's going to be executed.
         """
         self._current_path = current_path
-        if command_string.startswith("sudo"):
+        if command_string.startswith(("sudo","python","python3")):
             params = " ".join(command_string.split()[2:])
         else:
             params = " ".join(command_string.split()[1:])
