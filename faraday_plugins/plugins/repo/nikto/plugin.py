@@ -228,7 +228,7 @@ class NiktoPlugin(PluginXMLFormat):
         self.parent = None
         self._use_temp_file = True
         self._temp_file_extension = "xml"
-        self.xml_alrg_re = re.compile(r"^.*(-output\s*[^\s]+).*$")
+        self.xml_arg_re = re.compile(r"^.*(-output\s*[^\s]+).*$")
         self._command_regex = re.compile(
             r'^(sudo nikto|nikto|sudo nikto\.pl|nikto\.pl|perl nikto\.pl|\.\/nikto\.pl|\.\/nikto)\s+.*?')
         self._completition = {
