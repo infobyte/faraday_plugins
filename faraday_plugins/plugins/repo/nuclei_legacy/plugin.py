@@ -27,8 +27,6 @@ class NucleiLegacyPlugin(PluginMultiLineJsonFormat):
         self.plugin_version = "1.0.0"
         self.version = "2.5.2"
         self.json_keys = {"matched", "templateID", "host"}
-        self._use_temp_file = True
-        self._temp_file_extension = "json"
 
     def parseOutputString(self, output, debug=False):
         for vuln_json in filter(lambda x: x != '', output.split("\n")):
