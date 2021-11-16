@@ -384,7 +384,7 @@ class PluginBase:
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
                                severity="", resolution="", data="", external_id=None, run_date=None,
                                impact=None, custom_fields=None, status="", policyviolations=None,
-                               easeofresolution=None, confirmed=False, tags=None):
+                               easeofresolution=None, confirmed=False, tags=None, cve=""):
         if ref is None:
             ref = []
         if status == "":
@@ -402,7 +402,7 @@ class PluginBase:
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
-                         "policyviolations": policyviolations,
+                         "policyviolations": policyviolations, "cve":  cve,
                          "confirmed": confirmed, "easeofresolution": easeofresolution, "tags": tags
                          }
         if run_date:
@@ -413,7 +413,7 @@ class PluginBase:
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
                                   custom_fields=None, policyviolations=None, impact=None, status="",
-                                  confirmed=False, easeofresolution=None, tags=None):
+                                  confirmed=False, easeofresolution=None, tags=None, cve=""):
         if ref is None:
             ref = []
         if status == "":
@@ -431,7 +431,7 @@ class PluginBase:
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
-                         "policyviolations": policyviolations,
+                         "policyviolations": policyviolations, "cve": cve,
                          "easeofresolution": easeofresolution, "confirmed": confirmed, "tags": tags
                          }
         if run_date:
@@ -446,7 +446,7 @@ class PluginBase:
                                      params="", query="", category="", data="", external_id=None,
                                      confirmed=False, status="", easeofresolution=None, impact=None,
                                      policyviolations=None, status_code=None, custom_fields=None, run_date=None,
-                                     tags=None):
+                                     tags=None, cve=""):
         if params is None:
             params = ""
         if response is None:
@@ -486,7 +486,7 @@ class PluginBase:
                          "data": data, "website": website, "path": path, "request": request, "response": response,
                          "method": method, "pname": pname, "params": params, "query": query, "category": category,
                          "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
-                         "impact": impact, "policyviolations": policyviolations,
+                         "impact": impact, "policyviolations": policyviolations, "cve": cve,
                          "status_code": status_code, "custom_fields": custom_fields, "tags": tags}
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
