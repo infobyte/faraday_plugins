@@ -6,6 +6,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import socket
 import re
+import sys
 import json
 import dateutil
 from collections import defaultdict
@@ -63,8 +64,12 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 status='open',
                 version='',
                 description='web server')
-            matched = vuln_dict.get('matched-at')
-            matched_data = urlparse(matched)
+            matched = vuln_dict.get('matched-at', '')
+            if matched:
+                matched_data = urlparse(matched)
+            else:
+                print('Version not supported, use nuclei 2.5.3 or higher')
+                sys.exit(1)
             reference = vuln_dict["info"].get('reference', [])
             if not reference:
                 reference = []
