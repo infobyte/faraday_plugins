@@ -99,20 +99,26 @@ class AcunetixPlugin(PluginXMLFormat):
 
     def new_structure(self, site):
         for item in site.reportitems.reportitem:
-            host = item.technicaldetails.request
-            host = findall('Host: (.*)', host)[0]
-            url = f'http://{host}'
-            url_data = urlsplit(url)
-            site_ip = resolve_hostname(host)
-            h_id = self.createAndAddHost(site_ip, site.os, hostnames=[host])
-            s_id = self.createAndAddServiceToHost(
-                h_id,
-                "http",
-                "tcp",
-                ports=['443'],
-                version=site.banner,
-                status='open')
-            self.create_vul(item, h_id, s_id, url_data)
+            if not item.technicaldetails.request:
+                self.logger.warning("No request data")
+                continue
+            request_host = findall('Host: (.*)', item.technicaldetails.request)
+            if request_host:
+                host = request_host[0]
+                url = f'http://{host}'
+                url_data = urlsplit(url)
+                site_ip = resolve_hostname(host)
+                h_id = self.createAndAddHost(site_ip, site.os, hostnames=[host])
+                s_id = self.createAndAddServiceToHost(
+                    h_id,
+                    "http",
+                    "tcp",
+                    ports=['443'],
+                    version=site.banner,
+                    status='open')
+                self.create_vul(item, h_id, s_id, url_data)
+            else:
+                self.logger.warning("No host in request")
 
     def old_structure(self, url_data, site: Scan):
         site_ip = resolve_hostname(url_data.hostname)
