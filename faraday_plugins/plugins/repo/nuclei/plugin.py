@@ -4,13 +4,13 @@ Copyright (C) 2020  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-import socket
+import subprocess
 import re
 import sys
 import json
 import dateutil
-from collections import defaultdict
 from urllib.parse import urlparse
+from packaging import version
 from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
@@ -135,10 +135,6 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             )
 
     def processCommandString(self, username, current_path, command_string):
-        """
-        Adds the -oX parameter to get xml output to the command string that the
-        user has set.
-        """
         super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
         if arg_match is None:
@@ -149,6 +145,21 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             return re.sub(arg_match.group(1),
                           r"--json -irr -o %s" % self._output_file_path,
                           command_string)
+
+    def canParseCommandString(self, current_input):
+        can_parse = super().canParseCommandString(current_input)
+        if can_parse:
+            try:
+                proc = subprocess.Popen([self.command, '-version'], stderr=subprocess.PIPE)
+                output = proc.stderr.read()
+                match = re.search(r"Current Version: ([0-9.]+)", output.decode('UTF-8'))
+                if match:
+                    nuclei_version = match.groups()[0]
+                    return version.parse(nuclei_version) >= version.parse("2.5.3")
+                else:
+                    return False
+            except Exception as e:
+                return False
 
 
 def createPlugin(ignore_info=False):
