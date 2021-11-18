@@ -1,6 +1,8 @@
+import subprocess
 import re
 import json
 import dateutil
+from packaging import version
 from urllib.parse import urlparse
 from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
@@ -23,9 +25,13 @@ class NucleiLegacyPlugin(PluginMultiLineJsonFormat):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self.id = "nuclei_legacy"
-        self.name = "Nuclei < 2.5.3"
+        self.name = "Nuclei"
         self.plugin_version = "1.0.0"
         self.version = "2.5.2"
+        self._command_regex = re.compile(r'^(sudo nuclei|nuclei|\.\/nuclei|^.*?nuclei)\s+.*?')
+        self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
+        self._use_temp_file = True
+        self._temp_file_extension = "json"
         self.json_keys = {"matched", "templateID", "host"}
 
     def parseOutputString(self, output, debug=False):
@@ -115,6 +121,33 @@ class NucleiLegacyPlugin(PluginMultiLineJsonFormat):
                 external_id=f"NUCLEI-{vuln_dict.get('templateID', '')}",
                 run_date=run_date
             )
+
+    def processCommandString(self, username, current_path, command_string):
+        super().processCommandString(username, current_path, command_string)
+        arg_match = self.xml_arg_re.match(command_string)
+        if arg_match is None:
+            return re.sub(r"(^.*?nuclei)",
+                          r"\1 --json -irr -o %s" % self._output_file_path,
+                          command_string)
+        else:
+            return re.sub(arg_match.group(1),
+                          r"--json -irr -o %s" % self._output_file_path,
+                          command_string)
+
+    def canParseCommandString(self, current_input):
+        can_parse = super().canParseCommandString(current_input)
+        if can_parse:
+            try:
+                proc = subprocess.Popen([self.command, '-version'], stderr=subprocess.PIPE)
+                output = proc.stderr.read()
+                match = re.search(r"Current Version: ([0-9.]+)", output.decode('UTF-8'))
+                if match:
+                    nuclei_version = match.groups()[0]
+                    return version.parse(nuclei_version) <= version.parse("2.5.2")
+                else:
+                    return False
+            except Exception as e:
+                return False
 
 def createPlugin(ignore_info=False):
     return NucleiLegacyPlugin(ignore_info=ignore_info)
