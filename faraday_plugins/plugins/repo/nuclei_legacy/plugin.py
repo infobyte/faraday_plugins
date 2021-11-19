@@ -1,45 +1,38 @@
-"""
-Faraday Penetration Test IDE
-Copyright (C) 2020  Infobyte LLC (http://www.infobytesec.com/)
-See the file 'doc/LICENSE' for the license information
-
-"""
 import subprocess
 import re
-import sys
 import json
 import dateutil
-from urllib.parse import urlparse
 from packaging import version
+from urllib.parse import urlparse
 from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
 from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
-__author__ = "Nicolas Rebagliati"
-__copyright__ = "Copyright (c) 2021, Infobyte LLC"
-__credits__ = ["Nicolas Rebagliati"]
+__author__ = "Emilio Couto"
+__copyright__ = "Copyright (c) 2021, Faraday Security"
+__credits__ = ["Emilio Couto"]
 __license__ = ""
 __version__ = "1.0.0"
-__maintainer__ = "Nicolas Rebagliati"
-__email__ = "nrebagliati@infobytesec.com"
+__maintainer__ = "Emilio Couto"
+__email__ = "ecouto@infobytesec.com"
 __status__ = "Development"
 
 
-class NucleiPlugin(PluginMultiLineJsonFormat):
+class NucleiLegacyPlugin(PluginMultiLineJsonFormat):
     """ Handle the Nuclei tool. Detects the output of the tool
     and adds the information to Faraday.
     """
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
-        self.id = "nuclei"
+        self.id = "nuclei_legacy"
         self.name = "Nuclei"
-        self.plugin_version = "1.0.2"
-        self.version = "2.5.3"
-        self.json_keys = {"matched-at", "template-id", "host"}
+        self.plugin_version = "1.0.0"
+        self.version = "2.5.2"
         self._command_regex = re.compile(r'^(sudo nuclei|nuclei|\.\/nuclei|^.*?nuclei)\s+.*?')
         self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
         self._use_temp_file = True
         self._temp_file_extension = "json"
+        self.json_keys = {"matched", "templateID", "host"}
 
     def parseOutputString(self, output, debug=False):
         for vuln_json in filter(lambda x: x != '', output.split("\n")):
@@ -64,12 +57,8 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 status='open',
                 version='',
                 description='web server')
-            matched = vuln_dict.get('matched-at', '')
-            if matched:
-                matched_data = urlparse(matched)
-            else:
-                print('Version not supported, use nuclei 2.5.3 or higher')
-                sys.exit(1)
+            matched = vuln_dict.get('matched')
+            matched_data = urlparse(matched)
             reference = vuln_dict["info"].get('reference', [])
             if not reference:
                 reference = []
@@ -102,10 +91,9 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 method = request.split(" ")[0]
             else:
                 method = ""
-
-            data = [f"Matched: {vuln_dict.get('matched-at')}",
+            data = [f"Matched: {vuln_dict.get('matched', '')}",
                     f"Tags: {vuln_dict['info'].get('tags', '')}",
-                    f"Template ID: {vuln_dict.get('template-id', '')}"]
+                    f"Template ID: {vuln_dict.get('templateID', '')}"]
 
             name = vuln_dict["info"].get("name")
             run_date = vuln_dict.get('timestamp')
@@ -130,7 +118,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 params=matched_data.params,
                 path=matched_data.path,
                 data="\n".join(data),
-                external_id=f"NUCLEI-{vuln_dict.get('template-id', '')}",
+                external_id=f"NUCLEI-{vuln_dict.get('templateID', '')}",
                 run_date=run_date
             )
 
@@ -155,14 +143,11 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 match = re.search(r"Current Version: ([0-9.]+)", output.decode('UTF-8'))
                 if match:
                     nuclei_version = match.groups()[0]
-                    return version.parse(nuclei_version) >= version.parse("2.5.3")
+                    return version.parse(nuclei_version) <= version.parse("2.5.2")
                 else:
                     return False
             except Exception as e:
                 return False
 
-
 def createPlugin(ignore_info=False):
-    return NucleiPlugin(ignore_info=ignore_info)
-
-
+    return NucleiLegacyPlugin(ignore_info=ignore_info)
