@@ -113,9 +113,9 @@ class Item:
         if background:
             cve = re.search(CVE_regex, background)
             if cve:
-                cve = cve.group()
+                cve = [cve.group()]
         else:
-            cve = ''
+            cve = []
 
         self.url = host_node.text
 
