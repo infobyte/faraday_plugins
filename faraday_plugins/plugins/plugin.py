@@ -520,7 +520,6 @@ class PluginBase:
 
     def get_json(self):
         self.logger.debug("Generate Json")
-        print(self.get_data())
         return json.dumps(self.get_data())
 
     def get_summary(self):

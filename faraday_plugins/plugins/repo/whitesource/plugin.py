@@ -82,7 +82,6 @@ class WhitesourcePlugin(PluginJsonFormat):
                         cve=[vulnerability['vuln']]
                     )
                 elif 'package' in vulnerability:
-                    print(vulnerability['vuln'])
                     host_id = self.createAndAddHost(vulnerability['feed_group'])
                     service_id = self.createAndAddServiceToHost(
                         host_id,
