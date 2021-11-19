@@ -55,14 +55,16 @@ class WhitesourcePlugin(PluginJsonFormat):
                                                     data=data,
                                                     resolution=vulnerability['topFix']['fixResolution'],
                                                     ref=refs,
-                                                    severity=vulnerability['severity'])
+                                                    severity=vulnerability['severity'],
+                                                    cve=[vulnerability['vuln']])
                     else:
                         self.createAndAddVulnToHost(host_id,
                                                     name=vulnerability['name'],
                                                     desc=vulnerability['description'],
                                                     data=data,
                                                     ref=refs,
-                                                    severity=vulnerability['severity'])
+                                                    severity=vulnerability['severity'],
+                                                    cve=[vulnerability['vuln']])
                 elif 'namespace' in vulnerability:
                     host_id = self.createAndAddHost(vulnerability['namespace'])
                     service_id = self.createAndAddServiceToHost(
@@ -76,9 +78,11 @@ class WhitesourcePlugin(PluginJsonFormat):
                         name=vulnerability['vulnerability'],
                         desc=vulnerability['description'],
                         ref=[vulnerability['link']],
-                        severity=vulnerability['severity']
+                        severity=vulnerability['severity'],
+                        cve=[vulnerability['vuln']]
                     )
                 elif 'package' in vulnerability:
+                    print(vulnerability['vuln'])
                     host_id = self.createAndAddHost(vulnerability['feed_group'])
                     service_id = self.createAndAddServiceToHost(
                         host_id,
@@ -90,7 +94,8 @@ class WhitesourcePlugin(PluginJsonFormat):
                         service_id,
                         name=f'{vulnerability["vuln"]} {vulnerability["package_name"]}',
                         ref=[vulnerability['url']],
-                        severity=vulnerability['severity']
+                        severity=vulnerability['severity'],
+                        cve=[vulnerability['vuln']]
                     )
 
 

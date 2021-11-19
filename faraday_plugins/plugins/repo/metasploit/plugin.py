@@ -277,6 +277,7 @@ class HostVuln:
         self.name = self.get_text_from_subnode('name')
         self.desc = self.get_text_from_subnode('info')
         self.refs = [r.text for r in self.node.findall('refs/ref')]
+        self.cve = [r.text for r in self.node.findall('refs/ref') if r.text.startswith('CVE')]
         self.exploited_date = self.get_text_from_subnode('exploited-at')
         self.exploited = (self.exploited_date is not None)
         self.isWeb = False
@@ -332,7 +333,7 @@ class MetasploitPlugin(PluginXMLFormat):
 
             for v in item.vulnsByHost:
                 self.createAndAddVulnToHost(
-                    h_id, v.name, v.desc, ref=v.refs)
+                    h_id, v.name, v.desc, ref=v.refs, cve=v.cve)
 
             for s in item.services:
                 s_id = self.createAndAddServiceToHost(h_id, s['name'],
@@ -345,7 +346,6 @@ class MetasploitPlugin(PluginXMLFormat):
                     for n in item.notesByService[item.id + "_" + s['id']]:
                         self.createAndAddNoteToService(
                             h_id, s_id, n.ntype, n.data)
-
                 if s['port'] in item.credsByService:
                     for c in item.credsByService[s['port']]:
                         self.createAndAddCredToService(
@@ -363,7 +363,7 @@ class MetasploitPlugin(PluginXMLFormat):
                                                                  category=v.category)
                     else:
                         self.createAndAddVulnToService(
-                            h_id, s_id, v.name, v.desc, ref=v.refs)
+                            h_id, s_id, v.name, v.desc, ref=v.refs, cve=v.cve)
 
         del parser
 

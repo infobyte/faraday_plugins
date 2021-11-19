@@ -72,7 +72,7 @@ class ShodanPlugin(PluginMultiLineJsonFormat):
                 for name, vuln_info in vulns.items():
                     description = vuln_info.get('summary')
                     references = vuln_info.get('references')
-                    self.createAndAddVulnToService(h_id, s_id, name, desc=description, severity=0, ref=references)
+                    self.createAndAddVulnToService(h_id, s_id, name, desc=description, severity=0, ref=references, cve=name)
 
 
     def processCommandString(self, username, current_path, command_string):

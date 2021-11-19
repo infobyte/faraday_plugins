@@ -251,7 +251,8 @@ class ImpactPlugin(PluginXMLFormat):
                         v.name,
                         desc=v.desc,
                         severity=v.severity,
-                        ref=v.ref)
+                        ref=v.ref,
+                        cve=v.ref[0] if isinstance(v.ref,list) else "")
                 else:
                     s_id = mapped_services.get(v.service_name) or mapped_ports.get(v.port)
                     self.createAndAddVulnToService(
@@ -260,7 +261,8 @@ class ImpactPlugin(PluginXMLFormat):
                         v.name,
                         desc=v.desc,
                         severity=v.severity,
-                        ref=v.ref)
+                        ref=v.ref,
+                        cve=v.ref[0] if isinstance(v.ref, list) else "")
 
             for p in item.ports:
                 s_id = self.createAndAddServiceToHost(
