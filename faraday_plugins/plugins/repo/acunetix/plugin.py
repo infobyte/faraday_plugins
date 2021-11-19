@@ -158,7 +158,7 @@ class AcunetixPlugin(PluginXMLFormat):
             request=item.technicaldetails.request,
             response=item.technicaldetails.response,
             ref=[i.url for i in item.references.reference],
-            cve=item.cvelist.cve.text)
+            cve=[item.cvelist.cve.text])
 
     @staticmethod
     def get_domain(scan: Scan):

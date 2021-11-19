@@ -11,7 +11,7 @@ import re
 from urllib.parse import urlsplit
 
 SERVICE_MAPPER = None
-CVE_regex = r'CVE-\d{4}-\d{4,7}'
+CVE_regex = re.compile(r'CVE-\d{4}-\d{4,7}')
 logger = logging.getLogger(__name__)
 
 
