@@ -7,10 +7,11 @@ See the file 'doc/LICENSE' for the license information
 import logging
 import os
 import socket
+import re
 from urllib.parse import urlsplit
 
 SERVICE_MAPPER = None
-
+CVE_regex = r'CVE-\d{4}-\d{4,7}'
 logger = logging.getLogger(__name__)
 
 
@@ -125,3 +126,8 @@ def get_severity_from_cvss(cvss):
                 return severity
     except ValueError:
         return 'unclassified'
+
+
+def its_cve(cves:list):
+    r = [cve for cve in cves if re.match(CVE_regex, cve)]
+    return r

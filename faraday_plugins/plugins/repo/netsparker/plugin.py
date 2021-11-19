@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
+from faraday_plugins.plugins.plugins_utils import resolve_hostname, CVE_regex
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -110,8 +110,11 @@ class Item:
         self.request = self.get_text_from_subnode("rawrequest")
         self.response = self.get_text_from_subnode("rawresponse")
         self.kvulns = []
+        self.cve = []
         for v in self.node.findall("knownvulnerabilities/knownvulnerability"):
             self.node = v
+            if re.search(CVE_regex, v.find('title').text):
+                self.cve.append(re.search(CVE_regex, v.find('title').text).group())
             self.kvulns.append(self.get_text_from_subnode(
                 "severity") + "-" + self.get_text_from_subnode("title"))
 
@@ -222,7 +225,7 @@ class NetsparkerPlugin(PluginXMLFormat):
             self.createAndAddVulnWebToService(h_id, s_id, name, ref=i.ref, website=i.hostname,
                                                      severity=i.severity, desc=desc, path=i.url, method=i.method,
                                                      request=i.request, response=i.response, resolution=resolution,
-                                                     pname=i.param, data=i.data)
+                                                     pname=i.param, data=i.data, cve=i.cve)
 
         del parser
 

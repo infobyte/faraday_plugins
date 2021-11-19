@@ -112,6 +112,7 @@ class Item:
         self.uri = self.get_uri()
         self.desc = self.get_desc()
         self.params = self.get_params(self.uri)
+        self.CVE = self.get_cve(self.desc)
 
     def get_uri(self):
 
@@ -164,15 +165,11 @@ class Item:
 
         return None
 
-    def __str__(self):
-        ports = []
-        for port in self.ports:
-            var = "    %s" % port
-            ports.append(var)
-        ports = "\n".join(ports)
-
-        return "%s, %s, %s [%s], %s\n%s" % (self.hostnames, self.status,
-                                            self.ipv4_address, self.mac_address, self.os, ports)
+    def get_cve(self, desc):
+        match = re.search(plugins_utils.CVE_regex, desc)
+        if match:
+            return [match.group()]
+        return []
 
 
 class Host:
@@ -201,15 +198,6 @@ class Host:
         for item_node in self.node.findall('item'):
             yield Item(item_node)
 
-    def __str__(self):
-        ports = []
-        for port in self.ports:
-            var = "    %s" % port
-            ports.append(var)
-        ports = "\n".join(ports)
-
-        return "%s, %s, %s [%s], %s\n%s" % (self.hostnames, self.status,
-                                            self.ipv4_address, self.mac_address, self.os, ports)
 
 
 class NiktoPlugin(PluginXMLFormat):
@@ -305,6 +293,7 @@ class NiktoPlugin(PluginXMLFormat):
                     ref=item.osvdbid,
                     method=item.method,
                     params=', '.join(item.params),
+                    cve=item.CVE,
                     **plugins_utils.get_vulnweb_url_fields(item.namelink)
                 )
 

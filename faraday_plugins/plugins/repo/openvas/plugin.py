@@ -377,7 +377,8 @@ class OpenvasPlugin(PluginXMLFormat):
                             resolution=item.resolution,
                             ref=ref,
                             external_id=item.id,
-                            data=item.data)
+                            data=item.data,
+                            cve=ref)
                 else:
                     if item.service:
                         web = re.search(
@@ -408,7 +409,8 @@ class OpenvasPlugin(PluginXMLFormat):
                                 ref=ref,
                                 resolution=item.resolution,
                                 external_id=item.id,
-                                data=item.data)
+                                data=item.data,
+                                cve=ref)
                     elif item.severity not in self.ignored_severities:
                         self.createAndAddVulnToService(
                             h_id,
@@ -419,7 +421,8 @@ class OpenvasPlugin(PluginXMLFormat):
                             ref=ref,
                             resolution=item.resolution,
                             external_id=item.id,
-                            data=item.data)
+                            data=item.data,
+                            cve=ref)
         del parser
 
     @staticmethod

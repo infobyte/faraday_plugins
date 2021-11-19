@@ -205,7 +205,8 @@ class OpenScapPlugin(PluginXMLFormat):
                     severity=severity,
                     data=vuln_data,
                     external_id=rule['id'],
-                    run_date=vuln_run_date)
+                    run_date=vuln_run_date,
+                    cve=[vuln_ref])
 
 
 def createPlugin(ignore_info=False):

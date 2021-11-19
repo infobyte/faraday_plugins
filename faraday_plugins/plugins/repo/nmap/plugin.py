@@ -497,7 +497,9 @@ class NmapPlugin(PluginXMLFormat):
                     desc=v.desc,
                     ref=v.refs,
                     severity=0,
-                    external_id=v.name)
+                    external_id=v.name,
+                    cve=[v.name]
+                )
 
             for port in host.ports:
 
@@ -543,7 +545,8 @@ class NmapPlugin(PluginXMLFormat):
                             ref=refs,
                             severity=severity,
                             website=minterfase,
-                            external_id=v.name)
+                            external_id=v.name,
+                            cve=[v.name])
                     else:
                         v_id = self.createAndAddVulnToService(
                             h_id,
@@ -552,7 +555,9 @@ class NmapPlugin(PluginXMLFormat):
                             desc=v.desc,
                             ref=refs,
                             severity=severity,
-                            external_id=v.name)
+                            external_id=v.name,
+                            cve=[v.name]
+                        )
         del parser
 
     def processCommandString(self, username, current_path, command_string):
