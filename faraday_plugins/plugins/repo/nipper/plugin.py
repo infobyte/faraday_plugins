@@ -150,7 +150,6 @@ class NipperPlugin(PluginXMLFormat):
             if vuln.data:
                 ip = resolve_hostname(device)
                 h_id = self.createAndAddHost(ip, hostnames=vuln.device)
-                print(vuln.name)
                 self.createAndAddVulnToHost(h_id,
                                             name=vuln.name,
                                             desc=vuln.data,
