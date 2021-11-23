@@ -145,6 +145,7 @@ class AcunetixPlugin(PluginXMLFormat):
             description += f'\nPath: {item.affects}'
         if item.parameter:
             description += f'\nParameter: {item.parameter}'
+        cve = [item.cvelist.cve.text if item.cvelist.cve else ""]
         self.createAndAddVulnWebToService(
             h_id,
             s_id,
@@ -158,7 +159,7 @@ class AcunetixPlugin(PluginXMLFormat):
             request=item.technicaldetails.request,
             response=item.technicaldetails.response,
             ref=[i.url for i in item.references.reference],
-            cve=[item.cvelist.cve.text])
+            cve=cve)
 
     @staticmethod
     def get_domain(scan: Scan):
