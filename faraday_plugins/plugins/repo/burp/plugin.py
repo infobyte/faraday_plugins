@@ -111,7 +111,7 @@ class Item:
         background = self.do_clean(item_node.findall('issueBackground'))
 
         if background:
-            cve = re.search(CVE_regex, background)
+            cve = CVE_regex.search(background)
             if cve:
                 cve = [cve.group()]
         else:

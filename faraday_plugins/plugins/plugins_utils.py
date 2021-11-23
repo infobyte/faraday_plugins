@@ -129,5 +129,5 @@ def get_severity_from_cvss(cvss):
 
 
 def its_cve(cves:list):
-    r = [cve for cve in cves if re.match(CVE_regex, cve)]
+    r = [cve for cve in cves if CVE_regex.match(cve)]
     return r

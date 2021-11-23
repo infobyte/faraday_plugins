@@ -166,7 +166,7 @@ class Item:
         return None
 
     def get_cve(self, desc):
-        match = re.search(plugins_utils.CVE_regex, desc)
+        match = plugins_utils.CVE_regex.search(desc)
         if match:
             return [match.group()]
         return []
