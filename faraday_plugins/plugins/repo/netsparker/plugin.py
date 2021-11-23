@@ -113,8 +113,9 @@ class Item:
         self.cve = []
         for v in self.node.findall("knownvulnerabilities/knownvulnerability"):
             self.node = v
-            if re.search(CVE_regex, v.find('title').text):
-                self.cve.append(re.search(CVE_regex, v.find('title').text).group())
+            recheck = CVE_regex.search(v.find('title').text)
+            if recheck:
+                self.cve.append(recheck.group())
             self.kvulns.append(self.get_text_from_subnode(
                 "severity") + "-" + self.get_text_from_subnode("title"))
 

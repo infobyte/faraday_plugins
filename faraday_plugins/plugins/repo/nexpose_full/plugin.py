@@ -179,7 +179,7 @@ class NexposeFullXmlParser:
                         for htmlType in list(item):
                             vuln['resolution'] += self.parse_html_type(htmlType)
                 for ref in vuln["refs"]:
-                    check = re.search(CVE_regex, ref.upper())
+                    check = CVE_regex.search(ref.upper())
                     if check:
                         vuln["CVE"].append(check.group())
 
