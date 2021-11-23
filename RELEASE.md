@@ -1,6 +1,12 @@
+1.5.7 [Nov 19th, 2021]:
+---
+ * FIX extrainfo of netsparker plugin
+ * Add nuclei_legacy plugin
+
 1.5.6 [Nov 10th, 2021]:
 ---
  * FIX issue with acunetix plugin
+
  * FIX typo in nikto plugin
 
 1.5.5 [Oct 21st, 2021]:
