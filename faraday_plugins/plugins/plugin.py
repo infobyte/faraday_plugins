@@ -402,9 +402,8 @@ class PluginBase:
         if cve is None:
             cve = []
         elif type(cve) is str:
-            cve = its_cve([cve])
-        else:
-            cve = its_cve(cve)
+            cve = [cve]
+        cve = its_cve(cve)
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
@@ -437,9 +436,8 @@ class PluginBase:
         if cve is None:
             cve = []
         elif type(cve) is str:
-            cve = its_cve([cve])
-        else:
-            cve = its_cve(cve)
+            cve = [cve]
+        cve = its_cve(cve)
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
@@ -496,9 +494,8 @@ class PluginBase:
         if cve is None:
             cve = []
         elif type(cve) is str:
-            cve = its_cve([cve])
-        else:
-            cve = its_cve(cve)
+            cve = [cve]
+        cve = its_cve(cve)
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
                          "data": data, "website": website, "path": path, "request": request, "response": response,
