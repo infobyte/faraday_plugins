@@ -145,7 +145,10 @@ class AcunetixPlugin(PluginXMLFormat):
             description += f'\nPath: {item.affects}'
         if item.parameter:
             description += f'\nParameter: {item.parameter}'
-        cve = [item.cvelist.cve.text if item.cvelist.cve else ""]
+        try:
+            cve = [item.cvelist.cve.text if item.cvelist.cve else ""]
+        except Exception:
+            cve = []
         self.createAndAddVulnWebToService(
             h_id,
             s_id,
