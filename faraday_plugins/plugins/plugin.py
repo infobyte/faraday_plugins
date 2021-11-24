@@ -401,6 +401,8 @@ class PluginBase:
             tags = [tags]
         if cve is None:
             cve = []
+        elif cve is str:
+            cve = its_cve([cve])
         else:
             cve = its_cve(cve)
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
@@ -434,6 +436,8 @@ class PluginBase:
             tags = [tags]
         if cve is None:
             cve = []
+        elif cve is str:
+            cve = its_cve([cve])
         else:
             cve = its_cve(cve)
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
@@ -491,6 +495,8 @@ class PluginBase:
             tags = [tags]
         if cve is None:
             cve = []
+        elif cve is str:
+            cve = its_cve([cve])
         else:
             cve = its_cve(cve)
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
