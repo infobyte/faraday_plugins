@@ -401,7 +401,7 @@ class PluginBase:
             tags = [tags]
         if cve is None:
             cve = []
-        elif cve is str:
+        elif type(cve) is str:
             cve = its_cve([cve])
         else:
             cve = its_cve(cve)
@@ -436,7 +436,7 @@ class PluginBase:
             tags = [tags]
         if cve is None:
             cve = []
-        elif cve is str:
+        elif type(cve) is str:
             cve = its_cve([cve])
         else:
             cve = its_cve(cve)
@@ -495,7 +495,7 @@ class PluginBase:
             tags = [tags]
         if cve is None:
             cve = []
-        elif cve is str:
+        elif type(cve) is str:
             cve = its_cve([cve])
         else:
             cve = its_cve(cve)
