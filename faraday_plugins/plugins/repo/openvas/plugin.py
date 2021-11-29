@@ -183,13 +183,14 @@ class Item:
         self.cvss_vector = ''
         self.tags = self.get_text_from_subnode('tags')
         self.data = self.get_text_from_subnode('description')
+        self.data += f'\n\nid {item_node.attrib.get("id")}'
         if self.tags:
             tags_data = self.get_data_from_tags(self.tags)
             self.description = tags_data['description']
             self.resolution = tags_data['solution']
             self.cvss_vector = tags_data['cvss_base_vector']
             if tags_data['impact']:
-                self.data += '\n\nImpact: {}'.format(tags_data['impact'])
+                self.data += f'\n\nImpact: {tags_data["impact"]}'
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
