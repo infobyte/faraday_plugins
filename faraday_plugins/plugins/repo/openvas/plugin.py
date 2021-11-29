@@ -81,10 +81,10 @@ class OpenvasXmlParser:
                 try:
                     yield Item(node, hosts)
                 except Exception as e:
-                    self.logger.error("Error generating Iteem from %s [%s]", node.attrib, e)
+                    self.logger.error(f"Error generating Iteem from {node.attrib} [{e}]")
 
         except Exception as e:
-            self.logger.error("Tag not found: %s", e)
+            self.logger.error(f"Tag not found: {e}")
 
     def get_hosts(self, tree):
         # Hosts are located in: /report/report/host
@@ -154,10 +154,12 @@ class Item:
         self.severity_nr = self.get_text_from_subnode("severity")
         self.service = "Unknown"
         self.protocol = ""
-        self.cpe = self.node.findall("detection/result/details/detail")
-        self.cpe = self.cpe[0].findtext("value") if self.cpe else None
+        details = self.node.findall("detection/result/details/detail")
+        self.cpe = details[0].findtext("value") if details else None
         port_string = self.get_text_from_subnode('port')
         info = port_string.split("/")
+        if len(info) < 2:
+            info = details[1].findtext("value").split("/") if details else ["", ""]
         self.protocol = "".join(filter(lambda x: x.isalpha() or x in ("-", "_"), info[1]))
         self.port = "".join(filter(lambda x: x.isdigit(), info[0])) or None
         if not self.port:
