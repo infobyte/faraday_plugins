@@ -195,18 +195,17 @@ class OpenScapPlugin(PluginXMLFormat):
                     if rule['id'] == info['rule_id']:
                         vuln_name = info['rule_title']
                         vuln_data = info['rule_check']
-                        vuln_ref = info['rule_ident']
+                        vuln_cve = info['rule_ident']
 
                 self.createAndAddVulnToHost(
                     host_id,
                     vuln_name,
                     desc=desc,
-                    ref=[vuln_ref],
                     severity=severity,
                     data=vuln_data,
                     external_id=rule['id'],
                     run_date=vuln_run_date,
-                    cve=[vuln_ref])
+                    cve=[vuln_cve])
 
 
 def createPlugin(ignore_info=False):

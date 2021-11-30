@@ -56,7 +56,7 @@ class ShodanPlugin(PluginMultiLineJsonFormat):
                 elif os.path.isdir(filename):
                     shutil.rmtree(filename)
             except Exception as e:
-                self.logger.error("Error on delete file: (%s) [%s]", filename, e)
+                self.logger.error(f"Error on delete file: ({filename}) [{e}]")
 
     def parseOutputString(self, output):
         for vuln_json in filter(lambda x: x != '', output.split("\n")):

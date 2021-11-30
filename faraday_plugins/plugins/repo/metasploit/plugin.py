@@ -58,7 +58,7 @@ class MetasploitXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print("SyntaxError: %s. %s" % (err, xml_output))
+            print(f"SyntaxError: {err}. {xml_output}")
             return None
 
         return tree
@@ -276,7 +276,7 @@ class HostVuln:
         self.service_id = self.get_text_from_subnode('service-id')
         self.name = self.get_text_from_subnode('name')
         self.desc = self.get_text_from_subnode('info')
-        self.refs = [r.text for r in self.node.findall('refs/ref')]
+        self.refs = [r.text for r in self.node.findall('refs/ref') if not r.text.startswith('CVE')]
         self.cve = [r.text for r in self.node.findall('refs/ref') if r.text.startswith('CVE')]
         self.exploited_date = self.get_text_from_subnode('exploited-at')
         self.exploited = (self.exploited_date is not None)

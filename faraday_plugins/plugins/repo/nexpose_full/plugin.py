@@ -174,14 +174,14 @@ class NexposeFullXmlParser:
                         for ref in list(item):
                             if ref.text:
                                 rf = ref.text.strip()
-                                vuln['refs'].append(rf)
+                                check = CVE_regex.search(rf.upper())
+                                if check:
+                                    vuln["CVE"].append(check.group())
+                                else:
+                                    vuln['refs'].append(rf)
                     if item.tag == 'solution':
                         for htmlType in list(item):
                             vuln['resolution'] += self.parse_html_type(htmlType)
-                for ref in vuln["refs"]:
-                    check = CVE_regex.search(ref.upper())
-                    if check:
-                        vuln["CVE"].append(check.group())
 
                 """
                 # there is currently no method to register tags in vulns
@@ -278,7 +278,7 @@ class NexposeFullPlugin(PluginXMLFormat):
                     v['refs'],
                     v['severity'],
                     v['resolution'],
-                    cve=v['CVE']
+                    cve=v.get('CVE')
                 )
 
             for s in item['services']:
@@ -302,7 +302,7 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['refs'],
                             v['severity'],
                             v['resolution'],
-                            cve=v['CVE'],
+                            cve=v.get('CVE'),
                             path=v.get('path', '')
                         )
                     else:
@@ -314,7 +314,7 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['refs'],
                             v['severity'],
                             v['resolution'],
-                            cve=v['CVE']
+                            cve=v.get('CVE')
                         )
 
         del parser

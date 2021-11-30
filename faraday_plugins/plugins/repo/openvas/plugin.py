@@ -338,10 +338,11 @@ class OpenvasPlugin(PluginXMLFormat):
 
             if item.name is not None:
                 ref = []
+                cve = []
                 if item.cve:
                     cves = item.cve.split(',')
-                    for cve in cves:
-                        ref.append(cve.strip())
+                    for i in cves:
+                        cve.append(i.strip())
                 if item.bid:
                     bids = item.bid.split(',')
                     for bid in bids:
@@ -378,7 +379,7 @@ class OpenvasPlugin(PluginXMLFormat):
                             ref=ref,
                             external_id=item.id,
                             data=item.data,
-                            cve=ref)
+                            cve=cve)
                 else:
                     if item.service:
                         web = re.search(
@@ -410,7 +411,7 @@ class OpenvasPlugin(PluginXMLFormat):
                                 resolution=item.resolution,
                                 external_id=item.id,
                                 data=item.data,
-                                cve=ref)
+                                cve=cve)
                     elif item.severity not in self.ignored_severities:
                         self.createAndAddVulnToService(
                             h_id,
@@ -422,7 +423,7 @@ class OpenvasPlugin(PluginXMLFormat):
                             resolution=item.resolution,
                             external_id=item.id,
                             data=item.data,
-                            cve=ref)
+                            cve=cve)
         del parser
 
     @staticmethod

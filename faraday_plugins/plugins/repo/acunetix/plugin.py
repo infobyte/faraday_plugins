@@ -55,7 +55,7 @@ class AcunetixXmlParser:
             parser = etree.XMLParser(recover=True)
             tree = etree.fromstring(xml_output, parser=parser)
         except SyntaxError as err:
-            print("SyntaxError: %s. %s", err, xml_output)
+            print(f"SyntaxError: {err}. {xml_output}")
             return None
 
         return tree
@@ -148,7 +148,7 @@ class AcunetixPlugin(PluginXMLFormat):
         try:
             cve = [item.cvelist.cve.text if item.cvelist.cve else ""]
         except Exception:
-            cve = []
+            cve = [""]
         self.createAndAddVulnWebToService(
             h_id,
             s_id,

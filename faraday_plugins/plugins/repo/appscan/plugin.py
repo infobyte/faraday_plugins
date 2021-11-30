@@ -159,11 +159,9 @@ class AppScanParser:
                 "response": response,
                 "website": entity['website'],
                 "path": entity['path'],
-                "external_id": cve,
                 "cve": []
             }
             if cve:
-                issue_data["ref"].append(cve)
                 issue_data["cve"].append(cve)
             if cve_url:
                 issue_data["ref"].append(cve_url)
@@ -217,11 +215,9 @@ class AppScanParser:
                 "desc": description,
                 "ref": [],
                 "resolution": resolution,
-                "external_id": cve,
                 "cve": []
             }
             if cve:
-                issue_data["ref"].append(cve)
                 issue_data["cve"].append(cve)
             if cve_url:
                 issue_data["ref"].append(cve_url)
