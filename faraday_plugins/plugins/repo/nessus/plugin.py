@@ -184,14 +184,11 @@ class NessusPlugin(PluginXMLFormat):
         if item.xref:
             kwargs["ref"].append(item.xref)
         if item.cve:
-            kwargs["ref"] = kwargs["ref"] + item.cve
+            kwargs["cve"] = item.cve
         if item.cvss3_base_score:
             kwargs["ref"].append(item.cvss3_base_score)
         if item.cvss3_vector:
             kwargs["ref"].append(item.cvss3_vector)
-        if item.cve:
-            kwargs["cve"] = item.cve
-
         return kwargs
 
 

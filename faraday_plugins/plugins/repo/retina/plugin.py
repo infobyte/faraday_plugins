@@ -141,8 +141,6 @@ class Results:
         self.desc += "\nContext: " + self.context if self.context else ""
 
         self.ref = []
-        if self.cve:
-            self.ref = self.cve.split(",")
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """

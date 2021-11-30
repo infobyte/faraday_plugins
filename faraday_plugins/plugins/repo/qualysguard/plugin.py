@@ -177,7 +177,6 @@ class ResultsAssetReport():
 
         cve_id = self.get_text_from_glossary('CVE_ID_LIST/CVE_ID/ID')
         if cve_id:
-            self.ref.append(cve_id)
             self.cve.append(cve_id)
 
         if self.cvss:
@@ -309,7 +308,6 @@ class ResultsScanReport():
         self.cve = []
         for r in issue_node.findall('CVE_ID_LIST/CVE_ID'):
             self.node = r
-            self.ref.append(self.get_text_from_subnode('ID'))
             self.cve.append(self.get_text_from_subnode('ID'))
         for r in issue_node.findall('BUGTRAQ_ID_LIST/BUGTRAQ_ID'):
             self.node = r

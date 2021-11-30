@@ -109,13 +109,11 @@ class Item:
         detail = self.do_clean(item_node.findall('issueDetail'))
         remediation = self.do_clean(item_node.findall('remediationBackground'))
         background = self.do_clean(item_node.findall('issueBackground'))
-
+        self.cve = []
         if background:
             cve = CVE_regex.search(background)
             if cve:
-                cve = [cve.group()]
-        else:
-            cve = []
+                self.cve = [cve.group()]
 
         self.url = host_node.text
 
@@ -141,7 +139,6 @@ class Item:
         self.remediation = remediation
         self.background = background
         self.external_id = external_id.text
-        self.cve = cve
 
     @staticmethod
     def do_clean(value):

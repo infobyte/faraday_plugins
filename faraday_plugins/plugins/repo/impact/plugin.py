@@ -8,6 +8,7 @@ See the file 'doc/LICENSE' for the license information
 import xml.etree.ElementTree as ET
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import CVE_regex
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -160,11 +161,17 @@ class Item:
         return None
 
 
-class Results():
+class Results:
 
     def __init__(self, issue_node):
         self.node = issue_node
-        self.ref = [issue_node.get("key")]
+        match = CVE_regex.match(issue_node.get("key", ""))
+        if match:
+            self.ref = []
+            self.cve = [match.group()]
+        else:
+            self.ref = [issue_node.get("key")]
+            self.cve = []
         self.severity = ""
         self.port = "Unknown"
         self.service_name = "n/a"
@@ -252,7 +259,7 @@ class ImpactPlugin(PluginXMLFormat):
                         desc=v.desc,
                         severity=v.severity,
                         ref=v.ref,
-                        cve=v.ref[0] if isinstance(v.ref,list) else "")
+                        cve=v.cve)
                 else:
                     s_id = mapped_services.get(v.service_name) or mapped_ports.get(v.port)
                     self.createAndAddVulnToService(
@@ -262,7 +269,7 @@ class ImpactPlugin(PluginXMLFormat):
                         desc=v.desc,
                         severity=v.severity,
                         ref=v.ref,
-                        cve=v.ref[0] if isinstance(v.ref, list) else "")
+                        cve=v.cve)
 
             for p in item.ports:
                 s_id = self.createAndAddServiceToHost(
