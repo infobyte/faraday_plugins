@@ -7,15 +7,37 @@ class Technicaldetails:
 
     @property
     def request(self) -> str:
-        if not self.node:
+        if self.node in ('', None):
             return ''
         return self.node.findtext('Request', '')
 
     @property
     def response(self) -> str:
-        if not self.node:
+        if self.node in ('', None):
             return ''
         return self.node.findtext('Response', '')
+
+
+class Cve:
+    def __init__(self, node):
+        self.node = node
+
+    @property
+    def text(self) -> str:
+        if self.node in ('', None):
+            return ''
+        return self.node.text
+
+
+class CVEList:
+    def __init__(self, node):
+        self.node = node
+
+    @property
+    def cve(self) -> Cve:
+        if self.node is None:
+            return ''
+        return Cve(self.node.find('CVE'))
 
 
 class Cwe:
@@ -254,7 +276,7 @@ class Reportitem:
 
     @property
     def cvelist(self):
-        return self.node.find('CVEList')
+        return CVEList(self.node.find('CVEList'))
 
     @property
     def cvss(self) -> Cvss:
