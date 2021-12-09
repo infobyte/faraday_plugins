@@ -457,7 +457,7 @@ class NmapPlugin(PluginXMLFormat):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = re.compile(r'^(sudo nmap|nmap|\.\/nmap)\s+.*?')
+        self._command_regex = re.compile(r'^(sudo nmap|nmap|\.\/nmap|sudo masscan|masscan)\s+.*?')
         self._use_temp_file = True
         self._temp_file_extension = "xml"
         self.xml_arg_re = re.compile(r"^.*(-oX\s*[^\s]+).*$")
@@ -565,9 +565,14 @@ class NmapPlugin(PluginXMLFormat):
         super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
         if arg_match is None:
-            return re.sub(r"(^.*?nmap)",
-                          r"\1 -oX %s" % self._output_file_path,
-                          command_string)
+            if "masscan" in command_string:
+                return re.sub(r"(^.*?masscan)",
+                              r"\1 -oX %s" % self._output_file_path,
+                              command_string)
+            else:
+                return re.sub(r"(^.*?nmap)",
+                              r"\1 -oX %s" % self._output_file_path,
+                              command_string)
         else:
             return re.sub(arg_match.group(1),
                           r"-oX %s" % self._output_file_path,
