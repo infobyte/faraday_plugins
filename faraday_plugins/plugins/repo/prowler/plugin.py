@@ -102,12 +102,11 @@ class ProwlerPlugin(PluginMultiLineJsonFormat):
                                                         f" - Region: {issue.region}")
 
             vuln_desc = f"{issue.risk}\nCompliance: {issue.compliance}\nMessage: {issue.message}"
-            if issue.resource_id:
-                vuln_desc = f"Resource ID: {issue.resource_id}\n{vuln_desc}"
             self.createAndAddVulnToHost(host_id=host_id, name=issue.control, desc=vuln_desc,
+                                        data=f"Resource ID: {issue.resource_id}",
                                         severity=self.normalize_severity(issue.severity), resolution=issue.remediation,
                                         run_date=issue.timestamp, external_id=f"{self.name.upper()}-{issue.control_id}",
-                                        ref=[issue.doc_link], confirmed=True)
+                                        ref=[issue.doc_link])
 
 
 def createPlugin(ignore_info=False):
