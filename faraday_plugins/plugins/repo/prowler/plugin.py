@@ -94,7 +94,6 @@ class ProwlerPlugin(PluginMultiLineJsonFormat):
 
     def parseOutputString(self, output, debug=False):
         parser = ProwlerJsonParser(output)
-        region_list = []
         for issue in parser.issues:
             host_name = f"{issue.service}-{issue.account}-{issue.region}"
             host_id = self.createAndAddHost(name=host_name,
