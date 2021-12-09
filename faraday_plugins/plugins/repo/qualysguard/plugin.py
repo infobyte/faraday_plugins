@@ -173,10 +173,11 @@ class ResultsAssetReport():
 
         # References
         self.ref = []
+        self.cve = []
 
         cve_id = self.get_text_from_glossary('CVE_ID_LIST/CVE_ID/ID')
         if cve_id:
-            self.ref.append(cve_id)
+            self.cve.append(cve_id)
 
         if self.cvss:
             self.ref.append('CVSS SCORE: {}'.format(self.cvss))
@@ -304,9 +305,10 @@ class ResultsScanReport():
             self.desc += ''
 
         self.ref = []
+        self.cve = []
         for r in issue_node.findall('CVE_ID_LIST/CVE_ID'):
             self.node = r
-            self.ref.append(self.get_text_from_subnode('ID'))
+            self.cve.append(self.get_text_from_subnode('ID'))
         for r in issue_node.findall('BUGTRAQ_ID_LIST/BUGTRAQ_ID'):
             self.node = r
             self.ref.append('bid-' + self.get_text_from_subnode('ID'))
@@ -361,7 +363,8 @@ class QualysguardPlugin(PluginXMLFormat):
                         severity=v.severity,
                         resolution=v.solution if v.solution else '',
                         desc=v.desc,
-                        external_id=v.external_id)
+                        external_id=v.external_id,
+                        cve=v.cve)
 
                 else:
                     web = False
@@ -394,7 +397,8 @@ class QualysguardPlugin(PluginXMLFormat):
                             severity=v.severity,
                             desc=v.desc,
                             resolution=v.solution if v.solution else '',
-                            external_id=v.external_id)
+                            external_id=v.external_id,
+                            cve=v.cve)
 
                     else:
                         self.createAndAddVulnToService(
@@ -405,7 +409,8 @@ class QualysguardPlugin(PluginXMLFormat):
                             severity=v.severity,
                             desc=v.desc,
                             resolution=v.solution if v.solution else '',
-                            external_id=v.external_id)
+                            external_id=v.external_id,
+                            cve=v.cve)
 
         del parser
 

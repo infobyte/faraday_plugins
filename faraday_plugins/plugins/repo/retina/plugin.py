@@ -141,8 +141,6 @@ class Results:
         self.desc += "\nContext: " + self.context if self.context else ""
 
         self.ref = []
-        if self.cve:
-            self.ref = self.cve.split(",")
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
@@ -190,6 +188,7 @@ class RetinaPlugin(PluginXMLFormat):
             for k, vulns in item.ports.items():
                 if k:
                     for v in vulns:
+                        cve = v.cve.split(",") if v.cve else []
                         web = False
                         s_id = self.createAndAddServiceToHost(h_id, 'unknown', v.protocol.lower(), ports=[str(v.port)],
                                                               status="open")
@@ -200,15 +199,16 @@ class RetinaPlugin(PluginXMLFormat):
                         if web:
                             v_id = self.createAndAddVulnWebToService(h_id, s_id, v.name, ref=v.ref,
                                                                      website=hostname, severity=v.severity,
-                                                                     resolution=v.solution, desc=v.desc)
+                                                                     resolution=v.solution, desc=v.desc, cve=cve)
                         else:
                             v_id = self.createAndAddVulnToService(h_id, s_id, v.name, ref=v.ref,
                                                                   severity=v.severity, resolution=v.solution,
-                                                                  desc=v.desc)
+                                                                  desc=v.desc, cve=cve)
                 else:
                     for v in vulns:
+                        cve = v.cve.split(",") if v.cve else []
                         v_id = self.createAndAddVulnToHost(h_id, v.name, ref=v.ref, severity=v.severity,
-                                                           resolution=v.solution, desc=v.desc)
+                                                           resolution=v.solution, desc=v.desc, cve=cve)
         del parser
 
 
