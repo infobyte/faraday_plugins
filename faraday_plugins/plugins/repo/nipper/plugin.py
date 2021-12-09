@@ -12,12 +12,14 @@ __version__ = "0.8"
 __mantainer__ = "@rfocke"
 __status__ = "Development"
 
+
 class VulnSoftNipper:
     def __init__(self, **kwargs):
         self.name = ''
         self.data = ''
         self.device = ''
         self.refs = []
+
 
 class VulnerabilityNipper:
     def __init__(self, **kwargs):
@@ -30,6 +32,7 @@ class VulnerabilityNipper:
         self.data = ''
         self.recommendation2 = ''
 
+
 class NipperParser:
     def __init__(self, output, debug=False):
         self.vulns_first = []
@@ -38,7 +41,8 @@ class NipperParser:
         self.debug = debug
 
         self.tree = ET.fromstring(output)
-        self.report_tree = self.tree.find("report/part/[@index='2']/section/[@title='Recommendations']/table/[@title='Security Audit recommendations list']/tablebody")
+        self.report_tree = self.tree.find(
+            "report/part/[@index='2']/section/[@title='Recommendations']/table/[@title='Security Audit recommendations list']/tablebody")
         self.process_xml()
 
     def process_xml(self):
@@ -48,17 +52,17 @@ class NipperParser:
         for tablerow in self.report_tree:
             for i, tablecell in enumerate(tablerow.findall('tablecell')):
                 if len(tablecell.findall('item')) == 1:
-                    if i == 0: #Item
+                    if i == 0:  # Item
                         vuln = VulnerabilityNipper()
                         vuln.name = tablecell.find('item').text
-                    elif i == 1: #Rating
+                    elif i == 1:  # Rating
                         vuln.rating = tablecell.find('item').text
-                    elif i == 2: #Recommendations
+                    elif i == 2:  # Recommendations
                         vuln.recommendation = tablecell.find('item').text
-                    elif i == 3: #Affected devices (with 1 element only)
+                    elif i == 3:  # Affected devices (with 1 element only)
                         vuln.affected_devices = []
                         vuln.affected_devices.append(tablecell.find('item').text)
-                    elif i == 4: #Section
+                    elif i == 4:  # Section
                         subdetail = tablecell.find('item').text
                         vuln.section = subdetail
 
@@ -80,7 +84,7 @@ class NipperParser:
                             # recomendacion de la vuln
                             vuln.recommendation2 = detail.find('text').text
 
-                        self.vulns_first.append(vuln) # <- GUARDADO
+                        self.vulns_first.append(vuln)  # <- GUARDADO
                 elif len(tablecell.findall('item')) > 1 and i == 3:
                     # affected devices
                     vuln.affected_devices = []
@@ -112,6 +116,7 @@ class NipperParser:
 
             self.vulns_audit.append(vuln_soft)
 
+
 class NipperPlugin(PluginXMLFormat):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
@@ -130,30 +135,31 @@ class NipperPlugin(PluginXMLFormat):
         for vuln in parser.vulns_first:
             for device in vuln.affected_devices:
                 ip = resolve_hostname(device)
-                h_id = self.createAndAddHost(ip, hostnames = device)
+                h_id = self.createAndAddHost(ip, hostnames=device)
                 self.createAndAddVulnToHost(h_id,
-                                            name = vuln.name,
-                                            desc = vuln.data,
-                                            severity = vuln.rating,
-                                            resolution = vuln.recommendation,
-                                            data = vuln.data,
-                                            ref = [],
-                                            policyviolations = []
+                                            name=vuln.name,
+                                            desc=vuln.data,
+                                            severity=vuln.rating,
+                                            resolution=vuln.recommendation,
+                                            data=vuln.data,
+                                            ref=[],
+                                            policyviolations=[],
+                                            cve=[vuln.name]
                                             )
         for vuln in parser.vulns_audit:
             if vuln.data:
                 ip = resolve_hostname(device)
-                h_id = self.createAndAddHost(ip, hostnames = vuln.device)
+                h_id = self.createAndAddHost(ip, hostnames=vuln.device)
                 self.createAndAddVulnToHost(h_id,
-                                            name = vuln.name,
-                                            desc = vuln.data,
-                                            severity = '',
-                                            resolution = '',
-                                            data = vuln.data,
-                                            ref = vuln.refs
+                                            name=vuln.name,
+                                            desc=vuln.data,
+                                            severity='',
+                                            resolution='',
+                                            data=vuln.data,
+                                            ref=vuln.refs,
+                                            cve=[vuln.name]
                                             )
 
 
 def createPlugin(ignore_info=False):
     return NipperPlugin(ignore_info=ignore_info)
-
