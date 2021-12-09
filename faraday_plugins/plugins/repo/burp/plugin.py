@@ -6,12 +6,14 @@ See the file 'doc/LICENSE' for the license information
 """
 import base64
 import distutils.util  # pylint: disable=import-error
+import re
 import xml.etree.ElementTree as ET
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup, Comment
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import CVE_regex
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -107,6 +109,11 @@ class Item:
         detail = self.do_clean(item_node.findall('issueDetail'))
         remediation = self.do_clean(item_node.findall('remediationBackground'))
         background = self.do_clean(item_node.findall('issueBackground'))
+        self.cve = []
+        if background:
+            cve = CVE_regex.search(background)
+            if cve:
+                self.cve = [cve.group()]
 
         self.url = host_node.text
 
@@ -227,7 +234,9 @@ class BurpPlugin(PluginXMLFormat):
                 request=item.request,
                 response=item.response,
                 resolution=resolution,
-                external_id=item.external_id)
+                external_id=item.external_id,
+                cve=item.cve
+            )
 
         del parser
 
