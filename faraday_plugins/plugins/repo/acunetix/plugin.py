@@ -55,7 +55,7 @@ class AcunetixXmlParser:
             parser = etree.XMLParser(recover=True)
             tree = etree.fromstring(xml_output, parser=parser)
         except SyntaxError as err:
-            print("SyntaxError: %s. %s", err, xml_output)
+            print(f"SyntaxError: {err}. {xml_output}")
             return None
 
         return tree
@@ -145,6 +145,10 @@ class AcunetixPlugin(PluginXMLFormat):
             description += f'\nPath: {item.affects}'
         if item.parameter:
             description += f'\nParameter: {item.parameter}'
+        try:
+            cve = [item.cvelist.cve.text if item.cvelist.cve else ""]
+        except Exception:
+            cve = [""]
         self.createAndAddVulnWebToService(
             h_id,
             s_id,
@@ -157,7 +161,8 @@ class AcunetixPlugin(PluginXMLFormat):
             params=item.parameter,
             request=item.technicaldetails.request,
             response=item.technicaldetails.response,
-            ref=[i.url for i in item.references.reference])
+            ref=[i.url for i in item.references.reference],
+            cve=cve)
 
     @staticmethod
     def get_domain(scan: Scan):

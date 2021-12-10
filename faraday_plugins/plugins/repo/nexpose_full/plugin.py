@@ -8,6 +8,7 @@ import re
 import xml.etree.ElementTree as ET
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import CVE_regex
 
 __author__ = "Micaela Ranea Sanchez"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -149,6 +150,7 @@ class NexposeFullXmlParser:
                     'tags': list(),
                     'is_web': vid.startswith('http-'),
                     'risk': vulnDef.get('riskScore'),
+                    'CVE': []
                 }
 
                 for item in list(vulnDef):
@@ -172,16 +174,21 @@ class NexposeFullXmlParser:
                         for ref in list(item):
                             if ref.text:
                                 rf = ref.text.strip()
-                                vuln['refs'].append(rf)
+                                check = CVE_regex.search(rf.upper())
+                                if check:
+                                    vuln["CVE"].append(check.group())
+                                else:
+                                    vuln['refs'].append(rf)
                     if item.tag == 'solution':
                         for htmlType in list(item):
                             vuln['resolution'] += self.parse_html_type(htmlType)
-                    """
-                    # there is currently no method to register tags in vulns
-                    if item.tag == 'tags':
-                        for tag in list(item):
-                            vuln['tags'].append(tag.text.lower())
-                    """
+
+                """
+                # there is currently no method to register tags in vulns
+                if item.tag == 'tags':
+                    for tag in list(item):
+                        vuln['tags'].append(tag.text.lower())
+                """
                 vulns[vid] = vuln
         return vulns
 
@@ -270,7 +277,8 @@ class NexposeFullPlugin(PluginXMLFormat):
                     v['desc'],
                     v['refs'],
                     v['severity'],
-                    v['resolution']
+                    v['resolution'],
+                    cve=v.get('CVE')
                 )
 
             for s in item['services']:
@@ -294,7 +302,9 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['refs'],
                             v['severity'],
                             v['resolution'],
-                            path=v.get('path', ''))
+                            cve=v.get('CVE'),
+                            path=v.get('path', '')
+                        )
                     else:
                         self.createAndAddVulnToService(
                             h_id,
@@ -303,7 +313,8 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['desc'],
                             v['refs'],
                             v['severity'],
-                            v['resolution']
+                            v['resolution'],
+                            cve=v.get('CVE')
                         )
 
         del parser
