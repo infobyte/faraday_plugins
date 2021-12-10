@@ -30,41 +30,35 @@ class SslyzeJsonParser:
         list_vuln = []
         if scan_result:
             for scan in scan_result:
-                try:
-                    host = self.get_host(scan['server_info']['server_location'])
-                except KeyError:
-                    host = {}
+                server_info = scan.get('server_info', scan).get('server_location')
+                host = self.get_host(server_info) if server_info else {}
 
-                try:
-                    certif = self.get_certification(scan['scan_commands_results']['certificate_info'])
-                except KeyError:
-                    certif = {}
+                scan_commands_results = scan.get('scan_commands_results', scan.get("scan_result", {}))
 
-                if not scan['scan_commands']:
-                    ciphers = {}
-                else:
+                if len(scan_commands_results) > 0:
                     commands = []
-                    for command in scan['scan_commands']:
-                        if command.find("cipher") >= 0:
+                    for command in scan_commands_results:
+                        if command.find("cipher") >= 0 and scan_commands_results[command].get('result', True):
                             commands.append(command)
-                    ciphers = self.get_cipher(scan['scan_commands_results'], commands)
+                    ciphers = self.get_cipher(scan_commands_results, commands)
+                else:
+                    ciphers = {}
 
-                try:
-                    heartbleed = self.get_heartbleed(scan['scan_commands_results']['heartbleed'])
-                except KeyError:
-                    heartbleed = {}
 
-                try:
-                    openssl_ccs = self.get_openssl_ccs(scan['scan_commands_results']['openssl_ccs_injection'])
-                except KeyError:
-                    openssl_ccs = {}
+                certificate_info = scan_commands_results.get('certificate_info')
+                certif = self.get_certification(certificate_info) if certificate_info else {}
 
+                heartbleed_reulsts = scan_commands_results.get('heartbleed')
+                heartbleed = self.get_heartbleed(heartbleed_reulsts) if heartbleed_reulsts else {}
+
+                openssl_ccs_injection = scan_commands_results.get('openssl_ccs_injection')
+                openssl_ccs = self.get_openssl_ccs(openssl_ccs_injection) if openssl_ccs_injection else {}
                 json_vuln = {
                     "host_info": host,
                     "certification": certif,
                     "ciphers": ciphers,
                     "heartbleed": heartbleed,
-                    "openssl_ccs":openssl_ccs
+                    "openssl_ccs": openssl_ccs
                 }
 
                 list_vuln.append(json_vuln)
@@ -91,15 +85,21 @@ class SslyzeJsonParser:
         return json_host
 
     def get_certification(self, certificate):
-        certif_deploy = certificate['certificate_deployments']
+        certif_deploy = certificate.get('certificate_deployments', certificate.get('result'))
+        certif_deploy = certif_deploy.get('certificate_deployments', [{}]) if isinstance(certif_deploy, dict) else [{}]
         send_certif = certif_deploy[0].get('leaf_certificate_subject_matches_hostname', True)
 
         if not send_certif:
-            why = certif_deploy[0]['received_certificate_chain'][0]['subject']['rfc4514_string']
+            subject = certif_deploy[0]['received_certificate_chain'][0]['subject']
+            why = subject.get('rfc4514_string')
+            if not why:
+                why = subject.get('attributes', {}).get('rfc4514_string')
+            hostname_used_for_server = certificate.get('hostname_used_for_server_name_indication', certificate.get("result", {})
+                                                       .get('hostname_used_for_server_name_indication', 'Not hostname'))
             json_certif = {
                 "name": "SSL/TLS Certificate Mismatch",
                 "desc": "The software communicates with a host that provides a certificate, but the software does not properly ensure that the certificate is actually associated with that host.",
-                "data": f"Certificate {why} does not match server hostname {certificate.get('hostname_used_for_server_name_indication', 'Not hostname')}",
+                "data": f"Certificate {why} does not match server hostname {hostname_used_for_server}",
                 "impact": {"integrity": True},
                 "ref": ["https://cwe.mitre.org/data/definitions/297.html"],
                 "external_id": "CWE-297",
@@ -149,7 +149,9 @@ class SslyzeJsonParser:
 
     def get_heartbleed(self, heartbleed):
         json_heartbleed = {}
-        if heartbleed.get('is_vulnerable_to_heartbleed', False):
+        vulnerable_to_heartbleed = heartbleed.get('is_vulnerable_to_heartbleed', heartbleed.get('result', False))
+        vulnerable_to_heartbleed = vulnerable_to_heartbleed.get('is_vulnerable_to_heartbleed') if vulnerable_to_heartbleed else False
+        if vulnerable_to_heartbleed:
             json_heartbleed = {
                 "name": "OpenSSL Heartbleed",
                 "desc": "OpenSSL versions 1.0.1 through 1.0.1f contain a flaw in its implementation of the TLS/DTLS heartbeat functionality. This flaw allows an attacker to retrieve private memory of an application that uses the vulnerable OpenSSL library in chunks of 64k at a time. Note that an attacker can repeatedly leverage the vulnerability to retrieve as many 64k chunks of memory as are necessary to retrieve the intended secrets. The sensitive information that may be retrieved using this vulnerability include:\n\n Primary key material (secret keys)\n Secondary key material (user names and passwords used by vulnerable services)\n Protected content (sensitive data used by vulnerable services)\n Collateral (memory addresses and content that can be leveraged to bypass exploit mitigations)\n Exploit code is publicly available for this vulnerability.  Additional details may be found in CERT/CC Vulnerability Note VU#720951.",
@@ -162,7 +164,9 @@ class SslyzeJsonParser:
 
     def get_openssl_ccs(self, openssl_ccs):
         json_openssl_ccs = {}
-        if openssl_ccs.get('is_vulnerable_to_ccs_injection', False):
+        is_vulnerable_to_ccs_injection = openssl_ccs.get('is_vulnerable_to_ccs_injection', openssl_ccs.get('result', False))
+        is_vulnerable_to_ccs_injection = is_vulnerable_to_ccs_injection.get('is_vulnerable_to_ccs_injection', False) if is_vulnerable_to_ccs_injection else False
+        if is_vulnerable_to_ccs_injection:
             json_openssl_ccs = {
                 "name": "OpenSSL CCS Injection",
                 "desc": 'OpenSSL before 0.9.8za, 1.0.0 before 1.0.0m, and 1.0.1 before 1.0.1h does not properly restrict processing of ChangeCipherSpec messages, which allows man-in-the-middle attackers to trigger use of a zero-length master key in certain OpenSSL-to-OpenSSL communications, and consequently hijack sessions or obtain sensitive information, via a crafted TLS handshake, aka the "CCS Injection" vulnerability."',
@@ -182,7 +186,7 @@ class SslyzePlugin(PluginJsonFormat):
         self.name = "Sslyze Json"
         self.plugin_version = "0.1"
         self.version = "3.4.5"
-        self.json_keys = {'server_scan_results', 'sslyze_url'}
+        self.json_keys = {'server_scan_results', 'sslyze_url', 'sslyze_version'}
         self._command_regex = re.compile(r'^(sudo sslyze|sslyze|\.\/sslyze)\s+.*?')
         self.json_arg_re = re.compile(r"^.*(--json_out\s*[^\s]+).*$")
         self._use_temp_file = True
