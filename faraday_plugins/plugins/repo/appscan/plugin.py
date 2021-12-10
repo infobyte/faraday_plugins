@@ -56,6 +56,9 @@ class AppScanParser:
             type_id = item.attrib['id']
             name = item.find("name").text
             issue_types[type_id] = name
+            cve = item.find("cve")
+            if cve and cve.text:
+                issue_types[f"{type_id}_cve"] = cve.text
         return issue_types
 
     @staticmethod
@@ -139,6 +142,8 @@ class AppScanParser:
             else:
                 cve = None
                 cve_url = None
+            if cve is None:
+                cve = self.issue_types.get(f"{item.find('issue-type/ref').text}_cve", None)
             host_key = f"{host}-{port}"
             issue_data = {
                 "host": host,
@@ -154,10 +159,10 @@ class AppScanParser:
                 "response": response,
                 "website": entity['website'],
                 "path": entity['path'],
-                "external_id": cve
+                "cve": []
             }
             if cve:
-                issue_data["ref"].append(cve)
+                issue_data["cve"].append(cve)
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
@@ -210,10 +215,10 @@ class AppScanParser:
                 "desc": description,
                 "ref": [],
                 "resolution": resolution,
-                "external_id": cve
+                "cve": []
             }
             if cve:
-                issue_data["ref"].append(cve)
+                issue_data["cve"].append(cve)
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
