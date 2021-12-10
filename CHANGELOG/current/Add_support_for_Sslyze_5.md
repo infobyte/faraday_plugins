@@ -1,0 +1,1 @@
+Add support for Sslyze 5.0 resports
