@@ -1,3 +1,24 @@
+1.5.8 [Dec 13th, 2021]:
+---
+ * Add CVE to plugins
+- acunetix
+- appscan
+- burp
+- metasploit
+- nessus
+- netsparker
+- nexpose
+- nikto
+- nipper
+- nmap
+- openscap
+- qualysguard
+- retina
+- shodan
+ * Add support for Sslyze 5.0 resports
+ * ADD masscan support to nmap plugin
+ * Fix bug in openvas plugin
+
 1.5.7 [Nov 19th, 2021]:
 ---
  * FIX extrainfo of netsparker plugin
