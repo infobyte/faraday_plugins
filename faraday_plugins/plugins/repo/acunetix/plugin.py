@@ -141,6 +141,8 @@ class AcunetixPlugin(PluginXMLFormat):
 
     def create_vul(self, item, h_id, s_id, url_data):
         description = item.description
+        cvss3 = [item.cvss3.score] if item.cvss3 else []
+        cvss2 = [item.cvss.score] if item.cvss else []
         if item.affects:
             description += f'\nPath: {item.affects}'
         if item.parameter:
@@ -162,7 +164,9 @@ class AcunetixPlugin(PluginXMLFormat):
             request=item.technicaldetails.request,
             response=item.technicaldetails.response,
             ref=[i.url for i in item.references.reference],
-            cve=cve)
+            cve=cve,
+            cvss2=cvss2,
+            cvss3=cvss3)
 
     @staticmethod
     def get_domain(scan: Scan):

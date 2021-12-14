@@ -75,6 +75,10 @@ class VulnerabilityTypes:
     def use_ssl(self) -> bool:
         return self.node.get('use_ssl', '')
 
+    @property
+    def cvss_score(self) -> str:
+        return self.node.get('cvss_score', '')
+
 
 class Info:
     def __init__(self, node):

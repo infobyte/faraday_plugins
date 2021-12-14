@@ -119,7 +119,9 @@ class AcunetixJsonPlugin(PluginJsonFormat):
             severity=vul_type.severity,
             resolution=vul_type.recommendation,
             request=vul.info.request,
-            response=vul.response)
+            response=vul.response,
+            cvss3=[vul_type.cvss_score]
+        )
 
     @staticmethod
     def get_domain(scan: Scan):

@@ -18,6 +18,7 @@ class VulnSoftNipper:
         self.name = ''
         self.data = ''
         self.device = ''
+        self.cvss2 = []
         self.refs = []
 
 
@@ -98,6 +99,9 @@ class NipperParser:
             # nombre de la vuln
 
             vuln_soft.name = itemv.attrib.get('title')
+            cvss2 = itemv.find('infobox/infodata/[@label="CVSSv2 Score"]')
+            if cvss2 is not None:
+                vuln_soft.cvss2.append(cvss2.text)
             for itemvv in itemv:
                 if itemvv.attrib.get('title') == 'Summary':
                     for i in itemvv:
@@ -157,7 +161,8 @@ class NipperPlugin(PluginXMLFormat):
                                             resolution='',
                                             data=vuln.data,
                                             ref=vuln.refs,
-                                            cve=[vuln.name]
+                                            cve=[vuln.name],
+                                            cvss2=vuln.cvss2
                                             )
 
 

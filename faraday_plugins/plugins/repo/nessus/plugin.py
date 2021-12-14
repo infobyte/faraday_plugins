@@ -80,7 +80,6 @@ class NessusPlugin(PluginXMLFormat):
 
     @staticmethod
     def map_item(host_id, run_date, plugin_name, item: ReportItem) -> dict:
-        cvss_base_score = item.cvss_base_score
         data = item.plugin_output
         data += f'{item.exploit_available}'
         return {
@@ -92,7 +91,8 @@ class NessusPlugin(PluginXMLFormat):
             "run_date": run_date,
             "desc": item.description,
             "resolution": item.solution,
-            "ref": [cvss_base_score] if cvss_base_score else []
+            "ref": [],
+            "cvss2": [item.cvss2_base_score] if item.cvss2_base_score else []
         }
 
     def map_policy_general(self, kwargs, item: ReportItem):
@@ -140,7 +140,6 @@ class NessusPlugin(PluginXMLFormat):
             self.logger.error(str(e))
             return None
         report_hosts = parser.report.report_hosts
-
         if report_hosts:
             for host in report_hosts:
                 run_date = host.host_properties.host_end
@@ -186,7 +185,7 @@ class NessusPlugin(PluginXMLFormat):
         if item.cve:
             kwargs["cve"] = item.cve
         if item.cvss3_base_score:
-            kwargs["ref"].append(item.cvss3_base_score)
+            kwargs["cvss3"] = [item.cvss3_base_score]
         if item.cvss3_vector:
             kwargs["ref"].append(item.cvss3_vector)
         return kwargs

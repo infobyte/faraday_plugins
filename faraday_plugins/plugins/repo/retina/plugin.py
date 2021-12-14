@@ -137,10 +137,12 @@ class Results:
         self.desc = self.get_text_from_subnode('description')
         self.solution = self.solution if self.solution else ""
         self.desc += "\nExploit: " + self.exploit if self.exploit else ""
-        self.desc += "\ncvssScore: " + self.cvssScore if self.cvssScore else ""
         self.desc += "\nContext: " + self.context if self.context else ""
 
         self.ref = []
+        self.cvss = []
+        if self.cvssScore != "N/A":
+            self.cvss.append(str(float(self.cvssScore.split(' ')[0])/10))
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
@@ -199,16 +201,16 @@ class RetinaPlugin(PluginXMLFormat):
                         if web:
                             v_id = self.createAndAddVulnWebToService(h_id, s_id, v.name, ref=v.ref,
                                                                      website=hostname, severity=v.severity,
-                                                                     resolution=v.solution, desc=v.desc, cve=cve)
+                                                                     resolution=v.solution, desc=v.desc, cve=cve, cvss3=v.cvss)
                         else:
                             v_id = self.createAndAddVulnToService(h_id, s_id, v.name, ref=v.ref,
                                                                   severity=v.severity, resolution=v.solution,
-                                                                  desc=v.desc, cve=cve)
+                                                                  desc=v.desc, cve=cve, cvss3=v.cvss)
                 else:
                     for v in vulns:
                         cve = v.cve.split(",") if v.cve else []
                         v_id = self.createAndAddVulnToHost(h_id, v.name, ref=v.ref, severity=v.severity,
-                                                           resolution=v.solution, desc=v.desc, cve=cve)
+                                                           resolution=v.solution, desc=v.desc, cve=cve, cvss3=v.cvss)
         del parser
 
 

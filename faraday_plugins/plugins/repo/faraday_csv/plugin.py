@@ -93,6 +93,7 @@ class CSVParser:
         return items
 
     def check_objects_to_import(self, headers):
+        print("+asdadmsadsa;kd;lsakd;lsakd;lsakd;a")
         obj_to_import = []
 
         # From valid_headers, Faraday will define which objects to import
@@ -201,7 +202,7 @@ class CSVParser:
             self.data['web_vulnerability'] = True if row['web_vulnerability'] == "True" else False
         else:
             self.data['web_vulnerability'] = False
-
+        self.logger.error(self.vuln_data)
         for item in self.vuln_data:
             if item in row:
                 if "impact_" in item:
@@ -223,7 +224,7 @@ class CSVParser:
             try:
                 hostnames = literal_eval(row['hostnames'])
             except (ValueError, SyntaxError):
-                self.logger.error("Hostname not valid. Faraday will set it as empty.")
+                self.logger.error(self.vuln_data)
         return hostnames
 
     def parse_vuln_impact(self, impact):

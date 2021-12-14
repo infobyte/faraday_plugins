@@ -126,10 +126,7 @@ class ReportItem:
 
     @property
     def cvss3_base_score(self):
-        cvss_base_score = self.node.findtext("cvss3_base_score")
-        if cvss_base_score:
-            cvss_base_score = f"CVSS3:{cvss_base_score}"
-        return cvss_base_score
+        return self.node.findtext("cvss3_base_score")
 
     @property
     def cvss3_temporal_score(self):
@@ -148,11 +145,8 @@ class ReportItem:
         return self.node.findtext("cvss3_vector")
 
     @property
-    def cvss_base_score(self):
-        cvss_base_score = self.node.findtext("cvss_base_score")
-        if cvss_base_score:
-            cvss_base_score = f"CVSS:{cvss_base_score}"
-        return cvss_base_score
+    def cvss2_base_score(self):
+        return self.node.findtext("cvss_base_score")
 
     @property
     def cvss_score_rationale(self):

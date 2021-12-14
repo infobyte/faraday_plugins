@@ -342,6 +342,7 @@ class OpenvasPlugin(PluginXMLFormat):
             if item.name is not None:
                 ref = []
                 cve = []
+                cvss2 = []
                 if item.cve:
                     cves = item.cve.split(',')
                     for i in cves:
@@ -355,7 +356,7 @@ class OpenvasPlugin(PluginXMLFormat):
                 if item.tags and item.cvss_vector:
                     ref.append(item.cvss_vector)
                 if item.cvss_base:
-                    ref.append(f"CVSS_BASE: {item.cvss_base}")
+                    cvss2.append(item.cvss_base)
                 if item.cpe:
                     ref.append(f"{item.cpe}")
                 if item.threat:
@@ -382,7 +383,9 @@ class OpenvasPlugin(PluginXMLFormat):
                             ref=ref,
                             external_id=item.id,
                             data=item.data,
-                            cve=cve)
+                            cve=cve,
+                            cvss2=cvss2
+                        )
                 else:
                     if item.service:
                         web = re.search(
@@ -414,7 +417,9 @@ class OpenvasPlugin(PluginXMLFormat):
                                 resolution=item.resolution,
                                 external_id=item.id,
                                 data=item.data,
-                                cve=cve)
+                                cve=cve,
+                                cvss2=cvss2
+                            )
                     elif item.severity not in self.ignored_severities:
                         self.createAndAddVulnToService(
                             h_id,
@@ -426,7 +431,9 @@ class OpenvasPlugin(PluginXMLFormat):
                             resolution=item.resolution,
                             external_id=item.id,
                             data=item.data,
-                            cve=cve)
+                            cve=cve,
+                            cvss2=cvss2
+                        )
         del parser
 
     @staticmethod

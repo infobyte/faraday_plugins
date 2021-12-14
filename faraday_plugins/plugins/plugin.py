@@ -15,7 +15,7 @@ import zipfile
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from faraday_plugins.plugins.plugins_utils import its_cve
+from faraday_plugins.plugins.plugins_utils import its_cve, get_severity_from_cvss
 import pytz
 import simplejson as json
 
@@ -384,7 +384,7 @@ class PluginBase:
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
                                severity="", resolution="", data="", external_id=None, run_date=None,
                                impact=None, custom_fields=None, status="", policyviolations=None,
-                               easeofresolution=None, confirmed=False, tags=None, cve=None):
+                               easeofresolution=None, confirmed=False, tags=None, cve=None, cvss2=None, cvss3=None):
         if ref is None:
             ref = []
         if status == "":
@@ -404,10 +404,15 @@ class PluginBase:
         elif type(cve) is str:
             cve = [cve]
         cve = its_cve(cve)
+        cvss = []
+        if cvss3:
+            cvss = cvss3
+        elif cvss2:
+            cvss = cvss2
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
-                         "policyviolations": policyviolations, "cve":  cve,
+                         "policyviolations": policyviolations, "cve":  cve,"cvss": cvss,
                          "confirmed": confirmed, "easeofresolution": easeofresolution, "tags": tags
                          }
         if run_date:
@@ -418,7 +423,7 @@ class PluginBase:
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
                                   custom_fields=None, policyviolations=None, impact=None, status="",
-                                  confirmed=False, easeofresolution=None, tags=None, cve=None):
+                                  confirmed=False, easeofresolution=None, tags=None, cve=None, cvss2=None, cvss3=None):
         if ref is None:
             ref = []
         if status == "":
@@ -438,10 +443,15 @@ class PluginBase:
         elif type(cve) is str:
             cve = [cve]
         cve = its_cve(cve)
+        if cvss2 is None:
+            cvss2 = []
+        if cvss3 is None:
+            cvss3 = []
+        # TODO Agregar cvss2 cuando este en la API
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
-                         "policyviolations": policyviolations, "cve": cve,
+                         "policyviolations": policyviolations, "cve": cve, "cvss": cvss3,
                          "easeofresolution": easeofresolution, "confirmed": confirmed, "tags": tags
                          }
         if run_date:
@@ -456,7 +466,7 @@ class PluginBase:
                                      params="", query="", category="", data="", external_id=None,
                                      confirmed=False, status="", easeofresolution=None, impact=None,
                                      policyviolations=None, status_code=None, custom_fields=None, run_date=None,
-                                     tags=None, cve=None):
+                                     tags=None, cve=None, cvss2=None, cvss3=None):
         if params is None:
             params = ""
         if response is None:
@@ -465,8 +475,6 @@ class PluginBase:
             method = ""
         if pname is None:
             pname = ""
-        if params is None:
-            params = ""
         if query is None:
             query = ""
         if website is None:
@@ -496,12 +504,17 @@ class PluginBase:
         elif type(cve) is str:
             cve = [cve]
         cve = its_cve(cve)
+        if cvss2 is None:
+            cvss2 = []
+        if cvss3 is None:
+            cvss3 = []
+        # TODO Agregar cvss2 cuando este en la API
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
                          "data": data, "website": website, "path": path, "request": request, "response": response,
                          "method": method, "pname": pname, "params": params, "query": query, "category": category,
                          "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
-                         "impact": impact, "policyviolations": policyviolations, "cve": cve,
+                         "impact": impact, "policyviolations": policyviolations, "cve": cve, "cvss": cvss3,
                          "status_code": status_code, "custom_fields": custom_fields, "tags": tags}
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
