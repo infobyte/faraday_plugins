@@ -73,7 +73,7 @@ class ShodanPlugin(PluginMultiLineJsonFormat):
                     description = vuln_info.get('summary')
                     references = vuln_info.get('references')
                     cvss = vuln_info.get('cvss')
-                    severity = get_severity_from_cvss(cvss) if cvss else 0
+                    severity = get_severity_from_cvss(cvss) if cvss else "info"
                     self.createAndAddVulnToService(h_id, s_id, name, desc=description, severity=severity, ref=references, cve=name)
 
 
