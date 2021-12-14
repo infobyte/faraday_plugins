@@ -1,0 +1,1 @@
+Add severity to shodan's plugins using cvss
