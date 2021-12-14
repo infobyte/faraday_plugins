@@ -72,6 +72,8 @@ class Cvss:
 
     @property
     def score(self) -> str:
+        if self.node is None:
+            return ''
         return self.node.findtext('Score', '')
 
     @property
@@ -114,6 +116,8 @@ class Cvss:
 class Cvss3:
     def __init__(self, node):
         self.node = node
+        if self.node is None:
+            return ''
 
     @property
     def descriptor(self) -> str:

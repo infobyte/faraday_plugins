@@ -125,7 +125,7 @@ class AppScanParser:
                 else item.find("variant-group/item/test-http-traffic").text
             response = "" if item.find("variant-group/item/issue-information/testResponseChunk") is None \
                 else item.find("variant-group/item/issue-information/testResponseChunk").text
-            cvss = None if item.find("cvss-score") is None else f"CVSS: {item.find('cvss-score').text}"
+            cvss2 = f"{item.find('cvss-score').text}" if item.find("cvss-score") else None
             cvss_base_vector = None if item.find('cvss-vector/base-vector') is None \
                 else f"CVSS-base-vector: {item.find('cvss-vector/base-vector').text}"
             cvss_temporal_vector = None if item.find('cvss-vector/temporal-vector') is None \
@@ -159,7 +159,8 @@ class AppScanParser:
                 "response": response,
                 "website": entity['website'],
                 "path": entity['path'],
-                "cve": []
+                "cve": [],
+                "cvss2": []
             }
             if cve:
                 issue_data["cve"].append(cve)
@@ -167,8 +168,8 @@ class AppScanParser:
                 issue_data["ref"].append(cve_url)
             if cwe:
                 issue_data["ref"].append(f"CWE: {cwe}")
-            if cvss:
-                issue_data["ref"].append(cvss)
+            if cvss2:
+                issue_data["cvss2"].append(cvss2)
             if cvss_base_vector:
                 issue_data["ref"].append(cvss_base_vector)
             if cvss_temporal_vector:
@@ -191,7 +192,7 @@ class AppScanParser:
             if fix_id:
                 fix = self.fixes[fix_id]
                 resolution = f"{resolution}\nLibrary: {fix['library']}\nLocation: {fix['location']}"
-            cvss = None if item.find("cvss-score") is None else f"CVSS: {item.find('cvss-score').text}"
+            cvss2 = f"{item.find('cvss-score').text}" if item.find("cvss-score") else None
             cvss_base_vector = None if item.find('cvss-vector/base-vector') is None \
                 else f"CVSS-base-vector: {item.find('cvss-vector/base-vector').text}"
             cvss_temporal_vector = None if item.find('cvss-vector/temporal-vector') is None \
@@ -215,7 +216,8 @@ class AppScanParser:
                 "desc": description,
                 "ref": [],
                 "resolution": resolution,
-                "cve": []
+                "cve": [],
+                "cvss2": []
             }
             if cve:
                 issue_data["cve"].append(cve)
@@ -223,8 +225,8 @@ class AppScanParser:
                 issue_data["ref"].append(cve_url)
             if cwe:
                 issue_data["ref"].append(f"CWE: {cwe}")
-            if cvss:
-                issue_data["ref"].append(cvss)
+            if cvss2:
+                issue_data["cvss2"].append(cvss2)
             if cvss_base_vector:
                 issue_data["ref"].append(cvss_base_vector)
             if cvss_temporal_vector:
