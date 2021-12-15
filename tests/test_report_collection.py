@@ -56,16 +56,16 @@ def get_report_json_from_cache(report_file):
 
 def list_report_files():
     report_filenames = os.walk(REPORTS_SUMMARY_DIR)
-    for root, directory, filenames in report_filenames:
+    for plugin_folder, directory, filenames in report_filenames:
         if '.git' in directory or 'faraday_plugins_tests' in directory:
             continue
         for filename in filenames:
             if filename in BLACK_LIST:
                 continue
-            if '.git' in root:
+            if '.git' in plugin_folder:
                 continue
             if not filename.endswith('_summary.json'):
-                yield os.path.join(root, filename)
+                yield Path(plugin_folder).name, os.path.join(plugin_folder, filename)
 
 
 def is_valid_ipv4_address(address):
@@ -96,14 +96,18 @@ def is_valid_ip_address(address):
 def test_reports_collection_exists():
     assert os.path.isdir(REPORTS_SUMMARY_DIR) is True, "Please clone the report-collection repo!"
 
-@pytest.mark.parametrize("report_filename", list_report_files())
-def test_autodetected_on_all_report_collection(report_filename):
+@pytest.mark.parametrize("report_filename_and_folder", list_report_files())
+def test_autodetected_on_all_report_collection(report_filename_and_folder):
+    plugin_folder = report_filename_and_folder[0]
+    report_filename = report_filename_and_folder[1]
     plugin: PluginBase = get_plugin_from_cache(report_filename)
     assert plugin, report_filename
+    assert plugin.id == plugin_folder
 
 
-@pytest.mark.parametrize("report_filename", list_report_files())
-def test_schema_on_all_reports(report_filename):
+@pytest.mark.parametrize("report_filename_and_folder", list_report_files())
+def test_schema_on_all_reports(report_filename_and_folder):
+    report_filename = report_filename_and_folder[1]
     plugin, plugin_json = get_report_json_from_cache(report_filename)
     if plugin_json:
         serializer = BulkCreateSchema()
@@ -114,8 +118,9 @@ def test_schema_on_all_reports(report_filename):
 
 
 @pytest.mark.skip(reason="Skip validate ip format")
-@pytest.mark.parametrize("report_filename", list_report_files())
-def test_host_ips_all_reports(report_filename):
+@pytest.mark.parametrize("report_filename_and_folder", list_report_files())
+def test_host_ips_all_reports(report_filename_and_folder):
+    report_filename = report_filename_and_folder[1]
     plugin, plugin_json = get_report_json_from_cache(report_filename)
     if plugin_json:
         if plugin.id not in SKIP_IP_PLUGINS:
@@ -123,8 +128,9 @@ def test_host_ips_all_reports(report_filename):
                 assert is_valid_ip_address(host['ip']) is True
 
 
-@pytest.mark.parametrize("report_filename", list_report_files())
-def test_summary_reports(report_filename):
+@pytest.mark.parametrize("report_filename_and_folder", list_report_files())
+def test_summary_reports(report_filename_and_folder):
+    report_filename = report_filename_and_folder[1]
     plugin, plugin_json = get_report_json_from_cache(report_filename)
     if plugin_json:
         summary_file = f"{os.path.splitext(report_filename)[0]}_summary.json"
@@ -143,8 +149,9 @@ def test_summary_reports(report_filename):
 
 
 @pytest.mark.performance
-@pytest.mark.parametrize("report_filename", list_report_files())
-def test_detected_tools_on_all_report_collection(report_filename, benchmark):
+@pytest.mark.parametrize("report_filename_and_folder", list_report_files())
+def test_detected_tools_on_all_report_collection(report_filename_and_folder, benchmark):
+    report_filename = report_filename_and_folder[1]
     plugins_manager = PluginsManager()
     analyzer = ReportAnalyzer(plugins_manager)
     plugin: PluginBase = analyzer.get_plugin(report_filename)
