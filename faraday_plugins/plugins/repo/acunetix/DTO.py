@@ -116,8 +116,6 @@ class Cvss:
 class Cvss3:
     def __init__(self, node):
         self.node = node
-        if self.node is None:
-            return ''
 
     @property
     def descriptor(self) -> str:

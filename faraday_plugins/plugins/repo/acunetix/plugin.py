@@ -141,8 +141,8 @@ class AcunetixPlugin(PluginXMLFormat):
 
     def create_vul(self, item, h_id, s_id, url_data):
         description = item.description
-        cvss3 = [item.cvss3.score] if item.cvss3 else []
-        cvss2 = [item.cvss.score] if item.cvss else []
+        cvss3 = [item.cvss3.score] if item.cvss3.node else []
+        cvss2 = [item.cvss.score] if item.cvss.node else []
         if item.affects:
             description += f'\nPath: {item.affects}'
         if item.parameter:
