@@ -155,4 +155,4 @@ faraday-plugins proces-report /path/to/report.xml
 ...
 ```
 
-More documentation here https://github.com/infobyte/faraday/wiki/Basic-plugin-development
+More documentation here https://docs.faradaysec.com/Basic-plugin-development/
