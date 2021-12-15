@@ -29,21 +29,40 @@ class GrypePlugin(PluginJsonFormat):
 
     def parseOutputString(self, output, debug=True):
         grype_json = json.loads(output)
-        host_id = self.createAndAddHost(grype_json["source"]["target"]["userInput"])
+        if "userInput" in grype_json["source"]["target"]:
+            name = grype_json["source"]["target"]["userInput"]
+        else:
+            name = grype_json["source"]["target"]
+        host_id = self.createAndAddHost(name, description=f"Type: {grype_json['source']['type']}")
         for match in grype_json['matches']:
             name = match.get('vulnerability').get('id')
             cve = name
             references = []
-            description = match["relatedVulnerabilities"][0].get('description')
-            references.append(match["relatedVulnerabilities"][0]["dataSource"])
-            related_vuln = match["relatedVulnerabilities"][0]
-            severity = related_vuln["severity"].lower().replace("negligible", "info")
-            for url in related_vuln["urls"]:
-                references.append(url)
-            data = f"Package: {match['artifact']['metadata']['Source']} " \
-                   f"Artifact: {match['artifact']['name']} " \
-                   f"Version: {match['artifact']['version']} " \
-                   f"Type: {match['artifact']['type']}"
+            if match["relatedVulnerabilities"]:
+                description = match["relatedVulnerabilities"][0].get('description')
+                references.append(match["relatedVulnerabilities"][0]["dataSource"])
+                related_vuln = match["relatedVulnerabilities"][0]
+                severity = related_vuln["severity"].lower().replace("negligible", "info")
+                for url in related_vuln["urls"]:
+                    references.append(url)
+            else:
+                description = match.get('vulnerability').get('description')
+                severity = match.get('vulnerability').get('severity').lower().replace("negligible", "info")
+                for url in match.get('vulnerability').get('urls'):
+                    references.append(url)
+            if not match['artifact']['metadata']:
+                data = f"Artifact: {match['artifact']['name']}" \
+                       f"Version: {match['artifact']['version']} " \
+                       f"Type: {match['artifact']['type']}"
+            else:
+                if "Source" in match['artifact']['metadata']:
+                    data = f"Artifact: {match['artifact']['name']} [{match['artifact']['metadata']['Source']}] " \
+                           f"Version: {match['artifact']['version']} " \
+                           f"Type: {match['artifact']['type']}"
+                elif "VirtualPath" in match['artifact']['metadata']:
+                    data = f"Artifact: {match['artifact']['name']} [{match['artifact']['metadata']['VirtualPath']}] " \
+                           f"Version: {match['artifact']['version']} " \
+                           f"Type: {match['artifact']['type']}"
             self.createAndAddVulnToHost(host_id,
                                         name=name,
                                         desc=description,
