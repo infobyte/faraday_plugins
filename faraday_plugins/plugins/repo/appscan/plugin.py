@@ -72,6 +72,7 @@ class AppScanParser:
         hosts = {}
         for item in tree:
             host = item.find("host").text
+            host = host.replace('\\','/')
             port = item.find("port").text
             operating_system = item.find("operating-system").text
             if "unknown" in operating_system.lower():
@@ -95,7 +96,6 @@ class AppScanParser:
             url_data = urlparse(url)
             website = f"{url_data.scheme}://{url_data.netloc}"
             host = url_data.netloc.split(":")[0]
-            host = host.replace('\\','/')
             if url_data.port:
                 port = url_data.port
             else:
@@ -113,6 +113,7 @@ class AppScanParser:
         for item in tree:
             entity = self.entities[item.find("entity/ref").text]
             host = entity["host"]
+            host = host.replace('\\','/')
             port = entity["port"]
             name = self.issue_types[item.find("issue-type/ref").text]
             severity = 0 if item.find("severity-id") is None else int(item.find("severity-id").text)
@@ -141,7 +142,6 @@ class AppScanParser:
                 cve = None
                 cve_url = None
             host_key = f"{host}-{port}"
-            host = host.replace('\\', '/')
             issue_data = {
                 "host": host,
                 "port": port,
