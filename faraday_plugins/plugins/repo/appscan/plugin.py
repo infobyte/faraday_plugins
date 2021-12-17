@@ -56,9 +56,6 @@ class AppScanParser:
             type_id = item.attrib['id']
             name = item.find("name").text
             issue_types[type_id] = name
-            cve = item.find("cve")
-            if cve and cve.text:
-                issue_types[f"{type_id}_cve"] = cve.text
         return issue_types
 
     @staticmethod
@@ -98,6 +95,7 @@ class AppScanParser:
             url_data = urlparse(url)
             website = f"{url_data.scheme}://{url_data.netloc}"
             host = url_data.netloc.split(":")[0]
+            host = host.replace('\\','/')
             if url_data.port:
                 port = url_data.port
             else:
@@ -142,9 +140,8 @@ class AppScanParser:
             else:
                 cve = None
                 cve_url = None
-            if cve is None:
-                cve = self.issue_types.get(f"{item.find('issue-type/ref').text}_cve", None)
             host_key = f"{host}-{port}"
+            host = host.replace('\\', '/')
             issue_data = {
                 "host": host,
                 "port": port,
@@ -159,10 +156,10 @@ class AppScanParser:
                 "response": response,
                 "website": entity['website'],
                 "path": entity['path'],
-                "cve": []
+                "external_id": cve
             }
             if cve:
-                issue_data["cve"].append(cve)
+                issue_data["ref"].append(cve)
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
@@ -215,10 +212,10 @@ class AppScanParser:
                 "desc": description,
                 "ref": [],
                 "resolution": resolution,
-                "cve": []
+                "external_id": cve
             }
             if cve:
-                issue_data["cve"].append(cve)
+                issue_data["ref"].append(cve)
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
@@ -251,8 +248,8 @@ class AppScanPlugin(PluginXMLFormat):
         self.identifier_tag = "xml-report"
         self.id = 'Appscan'
         self.name = 'Appscan XML Plugin'
-        self.plugin_version = '0.0.1'
-        self.version = '1.0.0'
+        self.plugin_version = '0.0.2'
+        self.version = '1.0.1'
         self.framework_version = '1.0.0'
 
     def parseOutputString(self, output):
