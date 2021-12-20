@@ -114,7 +114,7 @@ class AppScanParser:
         dast_issues = []
         for item in tree:
             entity = self.entities[item.find("entity/ref").text]
-            host = entity["host"]
+            host = entity["host"].replace('\\','/')
             port = entity["port"]
             name = self.issue_types[item.find("issue-type/ref").text]
             severity = 0 if item.find("severity-id") is None else int(item.find("severity-id").text)
@@ -157,8 +157,8 @@ class AppScanParser:
                 "resolution": resolution,
                 "request": request,
                 "response": response,
-                "website": entity['website'].replace('\\','/'),
-                "path": entity['path'].replace('\\','/'),
+                "website": entity['website'],
+                "path": entity['path'],
                 "cve": []
             }
             if cve:
