@@ -72,7 +72,6 @@ class AppScanParser:
         hosts = {}
         for item in tree:
             host = item.find("host").text
-            host = host.replace('\\','/')
             port = item.find("port").text
             operating_system = item.find("operating-system").text
             if "unknown" in operating_system.lower():
@@ -259,6 +258,7 @@ class AppScanPlugin(PluginXMLFormat):
         if scan_type == 'DAST':
             for issue in parser.issues:
                 host = issue.pop("host")
+                host = host.replace('\\', '/')
                 port = issue.pop("port")
                 service_name = issue.pop("service_name")
                 ip = resolve_hostname(host)
