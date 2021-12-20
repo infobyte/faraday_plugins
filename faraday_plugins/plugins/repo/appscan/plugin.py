@@ -56,6 +56,9 @@ class AppScanParser:
             type_id = item.attrib['id']
             name = item.find("name").text
             issue_types[type_id] = name
+            cve = item.find("cve")
+            if cve and cve.text:
+                issue_types[f"{type_id}_cve"] = cve.text
         return issue_types
 
     @staticmethod
@@ -112,7 +115,6 @@ class AppScanParser:
         for item in tree:
             entity = self.entities[item.find("entity/ref").text]
             host = entity["host"]
-            host = host.replace('\\','/')
             port = entity["port"]
             name = self.issue_types[item.find("issue-type/ref").text]
             severity = 0 if item.find("severity-id") is None else int(item.find("severity-id").text)
@@ -140,6 +142,8 @@ class AppScanParser:
             else:
                 cve = None
                 cve_url = None
+            if cve is None:
+                cve = self.issue_types.get(f"{item.find('issue-type/ref').text}_cve", None)
             host_key = f"{host}-{port}"
             issue_data = {
                 "host": host,
@@ -153,12 +157,12 @@ class AppScanParser:
                 "resolution": resolution,
                 "request": request,
                 "response": response,
-                "website": entity['website'],
-                "path": entity['path'],
-                "external_id": cve
+                "website": entity['website'].replace('\\','/'),
+                "path": entity['path'].replace('\\','/'),
+                "cve": []
             }
             if cve:
-                issue_data["ref"].append(cve)
+                issue_data["cve"].append(cve)
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
@@ -178,7 +182,7 @@ class AppScanParser:
         sast_issues = []
         for item in tree:
             name = self.issue_types[item.find("issue-type/ref").text]
-            source_file = item.attrib["filename"]
+            source_file = item.attrib["filename"].replace('\\','/')
             severity = 0 if item.find("severity-id") is None else int(item.find("severity-id").text)
             description = item.find("fix/item/general/text").text
             resolution = "" if item.find("variant-group/item/issue-information/fix-resolution-text") is None \
@@ -211,10 +215,11 @@ class AppScanParser:
                 "desc": description,
                 "ref": [],
                 "resolution": resolution,
-                "external_id": cve
+                "cve": []
             }
+
             if cve:
-                issue_data["ref"].append(cve)
+                issue_data["cve"].append(cve)
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
@@ -247,8 +252,8 @@ class AppScanPlugin(PluginXMLFormat):
         self.identifier_tag = "xml-report"
         self.id = 'Appscan'
         self.name = 'Appscan XML Plugin'
-        self.plugin_version = '0.0.2'
-        self.version = '1.0.1'
+        self.plugin_version = '0.0.1'
+        self.version = '1.0.0'
         self.framework_version = '1.0.0'
 
     def parseOutputString(self, output):
@@ -258,7 +263,6 @@ class AppScanPlugin(PluginXMLFormat):
         if scan_type == 'DAST':
             for issue in parser.issues:
                 host = issue.pop("host")
-                host = host.replace('\\', '/')
                 port = issue.pop("port")
                 service_name = issue.pop("service_name")
                 ip = resolve_hostname(host)
