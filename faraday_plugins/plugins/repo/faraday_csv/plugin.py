@@ -1,13 +1,15 @@
 """
 Faraday Penetration Test IDE
-Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
+Copyright (C) 2013  Infobyte LLC (https://www.faradaysec.com/)
 See the file 'doc/LICENSE' for the license information
 """
+# Standard library imports
 import sys
 import re
 import csv
 from ast import literal_eval
 
+# Local application imports
 from faraday_plugins.plugins.plugin import PluginCSVFormat
 
 
@@ -44,6 +46,7 @@ class CSVParser:
             "impact_availability",
             "impact_accountability",
             "policyviolations",
+            "cve",
             "custom_fields",
             "website",
             "path",
@@ -72,9 +75,10 @@ class CSVParser:
             reader.fieldnames[index] = "target"
         custom_fields_names = self.get_custom_fields_names(reader.fieldnames)
         for row in reader:
-            self.data = {}
-            self.data['row_with_service'] = False
-            self.data['row_with_vuln'] = False
+            self.data = {
+                'row_with_service': False,
+                'row_with_vuln': False
+            }
             self.build_host(row)
             if "service" in obj_to_import:
                 if row['port'] and row['protocol']:
@@ -123,8 +127,8 @@ class CSVParser:
             if (port and not protocol) or (protocol and not port):
                 self.logger.error(
                     ("Missing columns in CSV file. "
-                    "In order to import services, you need to add a column called port "
-                    " and a column called protocol.")
+                     "In order to import services, you need to add a column called port "
+                     " and a column called protocol.")
                 )
                 return None
             else:
@@ -137,8 +141,8 @@ class CSVParser:
             if (vuln_name and not vuln_desc) or (vuln_desc and not vuln_name):
                 self.logger.error(
                     ("Missing columns in CSV file. "
-                    "In order to import vulnerabilities, you need to add a "
-                    "column called name and a column called desc.")
+                     "In order to import vulnerabilities, you need to add a "
+                     "column called name and a column called desc.")
                 )
                 return None
             else:
@@ -146,7 +150,8 @@ class CSVParser:
 
         return obj_to_import
 
-    def get_custom_fields_names(self, headers):
+    @staticmethod
+    def get_custom_fields_names(headers):
         custom_fields_names = []
         for header in headers:
             match = re.match(r"cf_(\w+)", header)
@@ -226,7 +231,8 @@ class CSVParser:
                 self.logger.error("Hostname not valid. Faraday will set it as empty.")
         return hostnames
 
-    def parse_vuln_impact(self, impact):
+    @staticmethod
+    def parse_vuln_impact(impact):
         impacts = [
             "accountability",
             "confidentiality",
@@ -237,7 +243,8 @@ class CSVParser:
             if item in impact:
                 return item
 
-    def parse_custom_fields(self, row, custom_fields_names):
+    @staticmethod
+    def parse_custom_fields(row, custom_fields_names):
         custom_fields = {}
         for cf_name in custom_fields_names:
             cf_value = row["cf_" + cf_name]
@@ -302,6 +309,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
+                        cve=item['cve'],
                         custom_fields=item['custom_fields'],
                         tags=item['tags']
                     )
@@ -321,6 +329,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
+                        cve=item['cve'],
                         custom_fields=item['custom_fields'],
                         tags=item['tags']
                     )
@@ -348,6 +357,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
+                        cve=item['cve'],
                         status_code=item['status_code'] or None,
                         custom_fields=item['custom_fields'],
                         tags=item['tags']
