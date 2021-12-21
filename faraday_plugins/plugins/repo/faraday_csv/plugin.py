@@ -212,7 +212,7 @@ class CSVParser:
                 if "impact_" in item:
                     impact = re.match(r"impact_(\w+)", item).group(1)
                     impact_dict[impact] = True if row[item] == "True" else False
-                elif item in ["refs", "policyviolations", "tags"]:
+                elif item in ["refs", "policyviolations", "cve", "tags"]:
                     self.data[item] = literal_eval(row[item])
                 else:
                     self.data[item] = row[item]
