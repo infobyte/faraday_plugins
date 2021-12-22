@@ -360,7 +360,7 @@ class ScriptVulners:
         self.refs = ["https://vulners.com/" + self.table["type"] + "/" + self.table["id"]]
         self.response = ""
         self.web = ""
-        self.cvss2 = [self.table["cvss"]]
+        self.cvss2 = {"base_score" : self.table["cvss"]}
 
     def __str__(self):
         return "%s, %s, %s" % (self.name, self.product, self.version)
@@ -397,7 +397,7 @@ class Script:
         for k in script_node.findall("elem"):
             self.response += "\n" + str(k.get('key')) + ": " + str(k.text)
         self.web = re.search("(http-|https-)", self.name)
-        self.cvss2 = []
+        self.cvss2 = {}
 
     def __str__(self):
         return "%s, %s, %s" % (self.name, self.product, self.version)

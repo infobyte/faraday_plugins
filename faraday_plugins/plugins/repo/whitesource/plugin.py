@@ -35,8 +35,8 @@ class WhitesourcePlugin(PluginJsonFormat):
         parser = json.loads(output)
         if parser.get('vulnerabilities'):
             for vulnerability in parser['vulnerabilities']:
-                cvss3 = []
-                cvss2 = []
+                cvss3 = {}
+                cvss2 = {}
                 if 'project' in vulnerability:
                     application_name = vulnerability.get('project')
                     host_id = self.createAndAddHost(application_name)
@@ -44,9 +44,11 @@ class WhitesourcePlugin(PluginJsonFormat):
                     for key, value in vulnerability['library'].items():
                         data += f'{key}: {value} \n'
                     refs = []
-                    cvss2.append(vulnerability['score'])
+                    cvss2["base_score"] = vulnerability['score']
                     if 'cvss3_score' in vulnerability:
-                        cvss3.append(vulnerability['cvss3_score'])
+                        cvss3["base_score"] = vulnerability['cvss3_score']
+                    if "scoreMetadataVector" in vulnerability:
+                        cvss3["string_vector"] = vulnerability['scoreMetadataVector'].replace('CVSS:3.0/', '')
                     if 'topFix' in vulnerability:
                         refs.append(f"URL: {vulnerability['topFix']['url']}")
                         self.createAndAddVulnToHost(host_id,

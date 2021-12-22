@@ -142,7 +142,10 @@ class ReportItem:
 
     @property
     def cvss3_vector(self):
-        return self.node.findtext("cvss3_vector")
+        cvss3_vector = self.node.findtext("cvss3_vector")
+        if cvss3_vector:
+            cvss3_vector = cvss3_vector.replace("CVSS3.0/", "")
+        return cvss3_vector
 
     @property
     def cvss2_base_score(self):
@@ -168,7 +171,7 @@ class ReportItem:
     def cvss_vector(self):
         cvss_vector = self.node.findtext("cvss_vector")
         if cvss_vector:
-            cvss_vector = f"CVSSVECTOR:{cvss_vector}"
+            cvss_vector = cvss_vector.replace("CVSS2#", "")
         return cvss_vector
 
     @property

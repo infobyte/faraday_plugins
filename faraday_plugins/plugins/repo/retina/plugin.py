@@ -123,7 +123,7 @@ class Results:
         self.pciLevel = self.get_text_from_subnode('pciLevel')
         self.pciReason = self.get_text_from_subnode('pciReason')
         self.pciPassFail = self.get_text_from_subnode('pciPassFail')
-        self.cvssScore = self.get_text_from_subnode('cvssScore')
+        self.cvss2Score = self.get_text_from_subnode('cvssScore')
         self.exploit = self.get_text_from_subnode('exploit')
         self.context = self.get_text_from_subnode('context')
         val = self.context.split(":")
@@ -140,9 +140,9 @@ class Results:
         self.desc += "\nContext: " + self.context if self.context else ""
 
         self.ref = []
-        self.cvss = []
-        if self.cvssScore != "N/A":
-            self.cvss.append(str(float(self.cvssScore.split(' ')[0])/10))
+        self.cvss2 = {}
+        if self.cvss2Score != "N/A":
+            self.cvss2["vector_string"] = self.cvss2Score.split(' ')[1].replace('[', '').replace(']', '')
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
@@ -201,16 +201,16 @@ class RetinaPlugin(PluginXMLFormat):
                         if web:
                             v_id = self.createAndAddVulnWebToService(h_id, s_id, v.name, ref=v.ref,
                                                                      website=hostname, severity=v.severity,
-                                                                     resolution=v.solution, desc=v.desc, cve=cve, cvss3=v.cvss)
+                                                                     resolution=v.solution, desc=v.desc, cve=cve, cvss2=v.cvss2)
                         else:
                             v_id = self.createAndAddVulnToService(h_id, s_id, v.name, ref=v.ref,
                                                                   severity=v.severity, resolution=v.solution,
-                                                                  desc=v.desc, cve=cve, cvss3=v.cvss)
+                                                                  desc=v.desc, cve=cve, cvss2=v.cvss2)
                 else:
                     for v in vulns:
                         cve = v.cve.split(",") if v.cve else []
                         v_id = self.createAndAddVulnToHost(h_id, v.name, ref=v.ref, severity=v.severity,
-                                                           resolution=v.solution, desc=v.desc, cve=cve, cvss3=v.cvss)
+                                                           resolution=v.solution, desc=v.desc, cve=cve, cvss2=v.cvss2)
         del parser
 
 

@@ -1,5 +1,5 @@
 from typing import List
-
+import re
 
 class InfoVul:
     def __init__(self, node):
@@ -78,6 +78,14 @@ class VulnerabilityTypes:
     @property
     def cvss_score(self) -> str:
         return self.node.get('cvss_score', '')
+
+    @property
+    def cvss2_vector(self) -> str:
+        return self.node.get('cvss2', '')
+
+    @property
+    def cvss3_vector(self) -> str:
+        return re.sub(r'(CVSS:3\.[0,1]/)', '', self.node.get('cvss3', ''))
 
 
 class Info:

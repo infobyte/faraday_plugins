@@ -1,5 +1,5 @@
 from typing import List
-
+import re
 
 class Technicaldetails:
     def __init__(self, node):
@@ -119,7 +119,7 @@ class Cvss3:
 
     @property
     def descriptor(self) -> str:
-        return self.node.findtext('Descriptor', '')
+        return re.sub(r'(CVSS:3\.[0,1]/)', '', self.node.findtext('Descriptor', ''))
 
     @property
     def score(self) -> str:

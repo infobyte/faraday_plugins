@@ -110,6 +110,12 @@ class AcunetixJsonPlugin(PluginJsonFormat):
             self.create_vul(i, vul_type, h_id, s_id, url_data)
 
     def create_vul(self, vul: Vulnerabilities, vul_type: VulnerabilityTypes, h_id, s_id, url_data):
+        cvss3 = {
+            'vector_string': vul_type.cvss3_vector
+        }
+        cvss2 = {
+            'vector_string': vul_type.cvss2_vector
+        }
         self.createAndAddVulnWebToService(
             h_id,
             s_id,
@@ -120,7 +126,8 @@ class AcunetixJsonPlugin(PluginJsonFormat):
             resolution=vul_type.recommendation,
             request=vul.info.request,
             response=vul.response,
-            cvss3=[vul_type.cvss_score]
+            cvss3=cvss3,
+            cvss2=cvss2
         )
 
     @staticmethod

@@ -342,7 +342,7 @@ class OpenvasPlugin(PluginXMLFormat):
             if item.name is not None:
                 ref = []
                 cve = []
-                cvss2 = []
+                cvss2 = {}
                 if item.cve:
                     cves = item.cve.split(',')
                     for i in cves:
@@ -354,9 +354,9 @@ class OpenvasPlugin(PluginXMLFormat):
                 if item.xref:
                     ref.append(item.xref)
                 if item.tags and item.cvss_vector:
-                    ref.append(item.cvss_vector)
+                    cvss2["vector_string"] = item.cvss_vector
                 if item.cvss_base:
-                    cvss2.append(item.cvss_base)
+                    cvss2["base_score"] = item.cvss_base
                 if item.cpe:
                     ref.append(f"{item.cpe}")
                 if item.threat:
