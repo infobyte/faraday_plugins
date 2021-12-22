@@ -157,9 +157,9 @@ class QualysWebappPlugin(PluginXMLFormat):
 
             vuln_resolution = vuln_data.get('SOLUTION')
 
-            cvss3 = []
+            cvss3 = {}
             if vuln_data.get('CVSS_BASE'):
-                cvss3 = [vuln_data.get('CVSS_BASE')]
+                cvss3["base_score"] = vuln_data.get('CVSS_BASE')
 
             vuln_data_add = "ID: {}, DETECTION_ID: {}, CATEGORY: {}, GROUP: {}, URL: {}, IMPACT: {}".format(
                 v.dict_result_vul.get('ID'), v.dict_result_vul.get('DETECTION_ID'), vuln_data.get('CATEGORY'),

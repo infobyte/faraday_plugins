@@ -148,7 +148,10 @@ class NexposeFullXmlParser:
                     'is_web': vid.startswith('http-'),
                     'risk': vulnDef.get('riskScore'),
                     'CVE': [],
-                    'cvss': [vulnDef.get('cvssScore')] if vulnDef.get('cvssScore') else []
+                    'cvss2': {
+                        "base_score": vulnDef.get('cvssScore') if vulnDef.get('cvssScore') else "",
+                        "string_vector": vector.replace("(", "").replace(")", "") if vector else ""
+                     }
                 }
 
                 for item in list(vulnDef):
@@ -277,7 +280,7 @@ class NexposeFullPlugin(PluginXMLFormat):
                     v['severity'],
                     v['resolution'],
                     cve=v.get('CVE'),
-                    cvss2=v.get('cvss')
+                    cvss2=v.get('cvss2')
                 )
 
             for s in item['services']:
@@ -303,7 +306,7 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['resolution'],
                             cve=v.get('CVE'),
                             path=v.get('path', ''),
-                            cvss2=v.get('cvss')
+                            cvss2=v.get('cvss2')
                         )
                     else:
                         self.createAndAddVulnToService(
@@ -315,7 +318,7 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['severity'],
                             v['resolution'],
                             cve=v.get('CVE'),
-                            cvss2=v.get('cvss')
+                            cvss2=v.get('cvss2')
                         )
 
         del parser

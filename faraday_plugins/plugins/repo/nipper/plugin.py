@@ -18,7 +18,7 @@ class VulnSoftNipper:
         self.name = ''
         self.data = ''
         self.device = ''
-        self.cvss2 = []
+        self.cvss2 = {}
         self.refs = []
 
 
@@ -99,9 +99,10 @@ class NipperParser:
             # nombre de la vuln
 
             vuln_soft.name = itemv.attrib.get('title')
-            cvss2 = itemv.find('infobox/infodata/[@label="CVSSv2 Score"]')
-            if cvss2 is not None:
-                vuln_soft.cvss2.append(cvss2.text)
+            cvss2_score = itemv.find('infobox/infodata/[@label="CVSSv2 Score"]')
+            vuln_soft.cvss2["base_score"]= cvss2_score.text if cvss2_score is not None else ""
+            cvss2_vector = itemv.find('infobox/infodata/[@label="CVSSv2 Base"]')
+            vuln_soft.cvss2["vector_string"] = cvss2_vector.text.split(' ')[0] if cvss2_vector is not None else ""
             for itemvv in itemv:
                 if itemvv.attrib.get('title') == 'Summary':
                     for i in itemvv:
