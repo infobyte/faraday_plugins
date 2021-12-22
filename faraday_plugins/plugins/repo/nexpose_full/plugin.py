@@ -151,7 +151,7 @@ class NexposeFullXmlParser:
                     'cvss2': {
                         "base_score": vulnDef.get('cvssScore') if vulnDef.get('cvssScore') else None,
                         "string_vector": vector.replace("(", "").replace(")", "") if vector else None
-                     }
+                    }
                 }
 
                 for item in list(vulnDef):
