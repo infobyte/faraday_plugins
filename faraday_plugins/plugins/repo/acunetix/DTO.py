@@ -74,7 +74,7 @@ class Cvss:
     def score(self) -> str:
         if self.node is None:
             return ''
-        return self.node.findtext('Score', '')
+        return self.node.findtext('Score')
 
     @property
     def av(self) -> str:
@@ -123,7 +123,7 @@ class Cvss3:
 
     @property
     def score(self) -> str:
-        return self.node.findtext('Score', '')
+        return self.node.findtext('Score')
 
     @property
     def tempscore(self):

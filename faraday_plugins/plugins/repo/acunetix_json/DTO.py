@@ -77,7 +77,7 @@ class VulnerabilityTypes:
 
     @property
     def cvss_score(self) -> str:
-        return self.node.get('cvss_score', '')
+        return self.node.get('cvss_score')
 
     @property
     def cvss2_vector(self) -> str:
