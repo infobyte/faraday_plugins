@@ -1,3 +1,8 @@
+1.5.9 [Dec 27th, 2021]:
+---
+ * ADD cve in faraday_csv plugin
+ * ADD Grype plugin
+
 1.5.8 [Dec 13th, 2021]:
 ---
  * Add CVE to plugins
@@ -16,6 +21,7 @@
 - retina
 - shodan
  * Add support for Sslyze 5.0 resports
+ * Fix errors while creating hosts with wrong regex
  * ADD masscan support to nmap plugin
  * Fix bug in openvas plugin
 
