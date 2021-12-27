@@ -4,6 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+# Standard library imports
 import hashlib
 import logging
 import os
@@ -15,9 +16,13 @@ import zipfile
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from faraday_plugins.plugins.plugins_utils import its_cve, get_severity_from_cvss
+
+# Related third party imports
 import pytz
 import simplejson as json
+
+# Local application imports
+from faraday_plugins.plugins.plugins_utils import its_cve
 
 logger = logging.getLogger("faraday").getChild(__name__)
 
@@ -31,7 +36,7 @@ class PluginBase:
 
     def __init__(self, ignore_info=False):
         # Must be unique. Check that there is not
-        # an existant plugin with the same id.
+        # an existent plugin with the same id.
         # TODO: Make script that list current ids.
         self.ignore_info = ignore_info
         self.id = None
@@ -85,7 +90,7 @@ class PluginBase:
                 utc_date = date.astimezone(pytz.UTC)
                 return utc_date.timestamp()
             except Exception as e:
-                logger.error("Error generating timestamp: %s", e)
+                logger.error(f"Error generating timestamp: {e}")
                 return None
         else:
             return date
@@ -253,7 +258,7 @@ class PluginBase:
 
     def canParseCommandString(self, current_input):
         """
-        This method can be overriden in the plugin implementation
+        This method can be overridden in the plugin implementation
         if a different kind of check is needed
         """
         if (self._command_regex is not None and
@@ -288,7 +293,7 @@ class PluginBase:
 
     def getCompletitionSuggestionsList(self, current_input):
         """
-        This method can be overriden in the plugin implementation
+        This method can be overridden in the plugin implementation
         if a different kind of check is needed
         """
         words = current_input.split(" ")
@@ -315,7 +320,7 @@ class PluginBase:
                 elif filename.is_dir():
                     shutil.rmtree(filename)
             except Exception as e:
-                self.logger.error("Error on delete file: (%s) [%s]", filename, e)
+                self.logger.error(f"Error on delete file: ({filename}) [{e}]")
 
     def processReport(self, filepath: Path, user="faraday"):
         if type(filepath) == str:  # TODO workaround for compatibility, remove in the future
@@ -608,7 +613,7 @@ class PluginByExtension(PluginBase):
             match = (self.extension == extension)
         elif type(self.extension) == list:
             match = (extension in self.extension)
-        self.logger.debug("Extension Match: [%s =/in %s] -> %s", extension, self.extension, match)
+        self.logger.debug(f"Extension Match: [{extension} =/in {self.extension}] -> {match}")
         return match
 
 
@@ -630,7 +635,7 @@ class PluginXMLFormat(PluginByExtension):
                 match = (main_tag in self.identifier_tag)
             if self.identifier_tag_attributes:
                 match = self.identifier_tag_attributes.issubset(main_tag_attributes)
-            self.logger.debug("Tag Match: [%s =/in %s] -> %s", main_tag, self.identifier_tag, match)
+            self.logger.debug(f"Tag Match: [{main_tag} =/in {self.identifier_tag}] -> {match}")
         return match
 
 
@@ -647,7 +652,7 @@ class PluginJsonFormat(PluginByExtension):
             if file_json_keys is None:
                 file_json_keys = set()
             match = self.json_keys.issubset(file_json_keys)
-            self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", file_json_keys, self.json_keys, match)
+            self.logger.debug(f"Json Keys Match: [{file_json_keys} =/in {self.json_keys}] -> {match}")
         return match
 
 
@@ -669,8 +674,7 @@ class PluginMultiLineJsonFormat(PluginByExtension):
                         matched_lines = list(filter(lambda json_line: self.json_keys.issubset(json_line.keys()),
                                                     json_lines))
                         match = len(matched_lines) == len(json_lines)
-                        self.logger.debug("Json Keys Match: [%s =/in %s] -> %s", json_lines[0].keys(), self.json_keys,
-                                          match)
+                        self.logger.debug(f"Json Keys Match: [{json_lines[0].keys()} =/in {self.json_keys}] -> {match}")
                 except ValueError:
                     return False
         return match
@@ -692,7 +696,7 @@ class PluginCSVFormat(PluginByExtension):
                 match = bool(list(filter(lambda x: x.issubset(file_csv_headers), self.csv_headers)))
             else:
                 match = self.csv_headers.issubset(file_csv_headers)
-            self.logger.debug("CSV Headers Match: [%s =/in %s] -> %s", file_csv_headers, self.csv_headers, match)
+            self.logger.debug(f"CSV Headers Match: [{file_csv_headers} =/in {self.csv_headers}] -> {match}")
         return match
 
 
@@ -713,5 +717,5 @@ class PluginZipFormat(PluginByExtension):
             if files_in_zip is None:
                 files_in_zip = set()
             match = bool(self.files_list & files_in_zip)
-            self.logger.debug("Files List Match: [%s =/in %s] -> %s", files_in_zip, self.files_list, match)
+            self.logger.debug(f"Files List Match: [{files_in_zip} =/in {self.files_list}] -> {match}")
         return match
