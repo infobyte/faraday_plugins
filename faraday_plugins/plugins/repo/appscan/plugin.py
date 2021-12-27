@@ -35,7 +35,7 @@ class AppScanParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print('SyntaxError In xml: %s. %s' % (err, xml_output))
+            print(f'SyntaxError In xml: {err}. {xml_output}')
             return None
         return tree
 
@@ -114,7 +114,7 @@ class AppScanParser:
         dast_issues = []
         for item in tree:
             entity = self.entities[item.find("entity/ref").text]
-            host = entity["host"]
+            host = entity["host"].replace('\\','/')
             port = entity["port"]
             name = self.issue_types[item.find("issue-type/ref").text]
             severity = 0 if item.find("severity-id") is None else int(item.find("severity-id").text)
@@ -183,7 +183,7 @@ class AppScanParser:
         sast_issues = []
         for item in tree:
             name = self.issue_types[item.find("issue-type/ref").text]
-            source_file = item.attrib["filename"]
+            source_file = item.attrib["filename"].replace('\\','/')
             severity = 0 if item.find("severity-id") is None else int(item.find("severity-id").text)
             description = item.find("fix/item/general/text").text
             resolution = "" if item.find("variant-group/item/issue-information/fix-resolution-text") is None \
@@ -219,6 +219,7 @@ class AppScanParser:
                 "cve": [],
                 "cvss2": {}
             }
+
             if cve:
                 issue_data["cve"].append(cve)
             if cve_url:
