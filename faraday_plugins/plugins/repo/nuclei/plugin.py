@@ -90,28 +90,19 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 references = []
 
             cve = vuln_dict['info'].get('classification', {}).get('cve-id', [])
-            cwe = vuln_dict['info'].get('classification', {}).get('cwe-id', [])
-            cvss_score = vuln_dict['info'].get('classification', {}).get('cvss-score')
-            cvss_metrics = vuln_dict['info'].get('classification', {}).get('cvss-metrics')
-            capec = vuln_dict['info'].get('metadata', {}).get('capec', [])
-
             cve = [x.upper() for x in cve]
-            cwe = [x.upper() for x in cwe]
-            if isinstance(capec, str):
-                capec = capec.upper().split(',')
+
+            # TODO CVSSv2, CVSSv3, CWE and CAPEC
+            #cvssv2 = vuln_dict['info'].get('classification', {}).get('cvss-score')
+            #cvssv3 = vuln_dict['info'].get('classification', {}).get('cvss-metrics')
+            #cwe = vuln_dict['info'].get('classification', {}).get('cwe-id', [])
+            #cwe = [x.upper() for x in cwe]
+            #capec = vuln_dict['info'].get('metadata', {}).get('capec', [])
+            #if isinstance(capec, str):
+            #    capec = capec.upper().split(',')
 
             refs = sorted(list(set(reference + references)))
             refs = list(filter(None, refs))
-
-            custom_fields = {}
-            if cwe:
-                custom_fields['cwe'] = cwe
-            if capec:
-                custom_fields['capec'] = capec
-            if cvss_score:
-                custom_fields['cvss-score'] = cvss_score
-            if cvss_metrics:
-                custom_fields['cvss-metrics'] = cvss_metrics
 
             tags = vuln_dict['info'].get('tags', [])
             if isinstance(tags, str):
@@ -148,11 +139,15 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 ref=refs,
                 severity=vuln_dict["info"].get('severity'),
                 tags=tags,
-                custom_fields=custom_fields,
                 impact=impact,
                 resolution=resolution,
                 easeofresolution=easeofresolution,
                 cve=cve,
+                # TODO CVSSv2, CVSSv3, CWE and CAPEC
+                #cvssv2=cvssv2,
+                #cvssv3=cvssv3,
+                #cwe=cwe,
+                #capec=capec,
                 website=host,
                 request=request,
                 response=vuln_dict.get('response', ''),
