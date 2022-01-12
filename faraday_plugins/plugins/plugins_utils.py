@@ -1,9 +1,10 @@
 """
 Faraday Penetration Test IDE
-Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
+Copyright (C) 2013  Infobyte LLC (https://www.faradaysec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+# Standard library imports
 import logging
 import os
 import socket
@@ -128,6 +129,6 @@ def get_severity_from_cvss(cvss):
         return 'unclassified'
 
 
-def its_cve(cves:list):
+def its_cve(cves: list):
     r = [cve for cve in cves if CVE_regex.match(cve)]
     return r
