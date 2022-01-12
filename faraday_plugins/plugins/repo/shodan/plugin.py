@@ -74,7 +74,6 @@ class ShodanPlugin(PluginMultiLineJsonFormat):
                     references = vuln_info.get('references')
                     self.createAndAddVulnToService(h_id, s_id, name, desc=description, severity=0, ref=references, cve=name)
 
-
     def processCommandString(self, username, current_path, command_string):
         """
         Adds the path to a temporary file parameter to get .json.gz output to the command string that the
