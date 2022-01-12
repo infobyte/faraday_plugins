@@ -33,8 +33,8 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
         super().__init__(*arg, **kwargs)
         self.id = "nuclei"
         self.name = "Nuclei"
-        self.plugin_version = "1.0.2"
-        self.version = "2.5.3"
+        self.plugin_version = "1.0.3"
+        self.version = "2.5.5"
         self.json_keys = {"matched-at", "template-id", "host"}
         self._command_regex = re.compile(r'^(sudo nuclei|nuclei|\.\/nuclei|^.*?nuclei)\s+.*?')
         self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
@@ -88,15 +88,35 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                         references = [references]
             else:
                 references = []
-            cwe = vuln_dict['info'].get('cwe', [])
-            capec = vuln_dict['info'].get('capec', [])
-            refs = sorted(list(set(reference + references + cwe + capec)))
+
+            cve = vuln_dict['info'].get('classification', {}).get('cve-id', [])
+            cve = [x.upper() for x in cve]
+
+            # TODO CVSSv2, CVSSv3, CWE and CAPEC
+            #cvssv2 = vuln_dict['info'].get('classification', {}).get('cvss-score')
+            #cvssv3 = vuln_dict['info'].get('classification', {}).get('cvss-metrics')
+            #cwe = vuln_dict['info'].get('classification', {}).get('cwe-id', [])
+            #cwe = [x.upper() for x in cwe]
+            #capec = vuln_dict['info'].get('metadata', {}).get('capec', [])
+            #if isinstance(capec, str):
+            #    capec = capec.upper().split(',')
+
+            refs = sorted(list(set(reference + references)))
+            refs = list(filter(None, refs))
+
             tags = vuln_dict['info'].get('tags', [])
             if isinstance(tags, str):
                 tags = tags.split(',')
-            impact = vuln_dict['info'].get('impact')
-            resolution = vuln_dict['info'].get('resolution', '')
-            easeofresolution = vuln_dict['info'].get('easeofresolution')
+
+            impact = {}
+            impacted = vuln_dict['info'].get('metadata', {}).get('impact')
+            if isinstance(impacted, str):
+                for x in impacted.split(','):
+                    impact[x] = True
+
+            resolution = vuln_dict['info'].get('metadata', {}).get('resolution', '')
+            easeofresolution = vuln_dict['info'].get('metadata', {}).get('easeofresolution', None)
+
             request = vuln_dict.get('request', '')
             if request:
                 method = request.split(" ")[0]
@@ -122,6 +142,12 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 impact=impact,
                 resolution=resolution,
                 easeofresolution=easeofresolution,
+                cve=cve,
+                # TODO CVSSv2, CVSSv3, CWE and CAPEC
+                #cvssv2=cvssv2,
+                #cvssv3=cvssv3,
+                #cwe=cwe,
+                #capec=capec,
                 website=host,
                 request=request,
                 response=vuln_dict.get('response', ''),
