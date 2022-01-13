@@ -1,6 +1,10 @@
+1.5.10 [Jan 13th, 2022]:
+---
+ * support cve,cwe,cvss and metadata
+
 1.5.9 [Dec 27th, 2021]:
 ---
- * ADD cve in faraday_csv plugin
+ * Add cve in faraday_csv plugin
  * ADD Grype plugin
 
 1.5.8 [Dec 13th, 2021]:
