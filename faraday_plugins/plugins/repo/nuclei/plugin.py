@@ -90,7 +90,8 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 references = []
 
             cve = vuln_dict['info'].get('classification', {}).get('cve-id', [])
-            cve = [x.upper() for x in cve]
+            if cve:
+                cve = [x.upper() for x in cve]
 
             # TODO CVSSv2, CVSSv3, CWE and CAPEC
             #cvssv2 = vuln_dict['info'].get('classification', {}).get('cvss-score')
