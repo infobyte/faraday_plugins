@@ -1,3 +1,11 @@
+1.6.0 [Feb 3rd, 2022]:
+---
+ * Add packaging to requierments in setup.py
+ * Add severity to shodan's plugins using cvss
+ * check if cve exist on cve-id field
+ * Fix Fortify's plugin
+ * Change qualysguard's plugin severity_dict to refer level 2 severities as low
+
 1.5.10 [Jan 13th, 2022]:
 ---
  * support cve,cwe,cvss and metadata
