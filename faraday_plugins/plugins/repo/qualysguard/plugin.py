@@ -146,7 +146,7 @@ class ResultsAssetReport():
 
         self.severity_dict = {
             '1': 'info',
-            '2': 'info',
+            '2': 'low',
             '3': 'med',
             '4': 'high',
             '5': 'critical'}
@@ -180,10 +180,10 @@ class ResultsAssetReport():
             self.cve.append(cve_id)
 
         if self.cvss:
-            self.ref.append('CVSS SCORE: {}'.format(self.cvss))
+            self.ref.append(f'CVSS SCORE: {self.cvss}')
 
         if self.pci:
-            self.ref.append('PCI: {}'.format(self.pci))
+            self.ref.append(f'PCI: {self.pci}')
 
     def get_text_from_glossary(self, tag):
         """
@@ -286,7 +286,7 @@ class ResultsScanReport():
 
         self.severity_dict = {
             '1': 'info',
-            '2': 'info',
+            '2': 'low',
             '3': 'med',
             '4': 'high',
             '5': 'critical'}
