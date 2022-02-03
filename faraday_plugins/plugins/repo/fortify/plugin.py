@@ -58,7 +58,6 @@ class FortifyPlugin(PluginByExtension):
                 service_name,
                 protocol=protocol_name,
                 ports=[vuln_data['service']['port']])
-
             self.createAndAddVulnWebToService(
                 host_id, service_id,
                 vuln_data['name'],
@@ -85,7 +84,7 @@ class FortifyPlugin(PluginByExtension):
 
 
 class FortifyParser:
-    """  
+    """
     Parser for fortify on demand
     """
 
@@ -222,18 +221,18 @@ class FortifyParser:
                         references.append(classification.text)
 
                     # Build description
-                    description = u''
+                    description = ''
                     for report_section in issue_data.findall('./ReportSection'):
-                        description += u'{} \n'.format(report_section.Name.text)
-                        description += u'{} \n'.format(report_section.SectionText.text)
-                    description += u'{} \n'.format(issue_data.get('id'))
+                        description += f'{report_section.Name.text} \n'
+                        description += f'{report_section.SectionText.text} \n'
+                    description += f'{issue_data.get("id")} \n'
 
                     h = html2text.HTML2Text()
                     description = h.handle(description)
 
                     for repro_step in issue_data.findall('./ReproSteps'):
                         step = repro_step.ReproStep
-                        
+
                         if step is not None:
                             try:
                                 params = step.PostParams.text
@@ -259,7 +258,7 @@ class FortifyParser:
                             "method": method,
                             "query": query,
                             "response": response,
-                            "request": request,
+                            "request": request.decode('utf-8'),
                             "path": path,
                             "params": params,
                             "status_code": status_code,
@@ -372,8 +371,8 @@ class FortifyParser:
                 idx = match.group(1)
                 if match.group(3):
                     idx = match.group(3)
-                    _filekey = "{}.file".format(idx)
-                    _linekey = "{}.line".format(idx)
+                    _filekey = f"{idx}.file"
+                    _linekey = f"{idx}.line"
                     text = text.replace(placeholder, "").replace(
                         torepl.format(_filekey), replacements[_filekey]).replace(
                         torepl.format(_linekey), replacements[_linekey])
@@ -387,11 +386,10 @@ class FortifyParser:
 
             text = text.replace(placeholder, replace_with)
 
-        text += '{}\n Instance ID: {} \n'.format(text, vulnID)
+        text += f'{text}\n Instance ID: {vulnID} \n'
         h = html2text.HTML2Text()
         return text
 
 
 def createPlugin(ignore_info=False):
     return FortifyPlugin(ignore_info=ignore_info)
-
