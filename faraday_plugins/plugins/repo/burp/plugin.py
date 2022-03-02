@@ -221,7 +221,7 @@ class BurpPlugin(PluginXMLFormat):
             data = self.removeHtml(data)
             ref = []
             if item.references:
-                ref += self.get_ref(item.references)
+                ref += self.get_url(item.references)
             if item.vulnClass:
                 ref += self.get_ref(item.vulnClass)
 
@@ -285,6 +285,14 @@ class BurpPlugin(PluginXMLFormat):
         ref = str(soup).strip().split("\n")
         return ref
 
+    def get_url(self, markup):
+        soup = BeautifulSoup(markup, "html.parser")
+        ref = []
+        for tag in soup.find_all("ul"):
+            for item in tag.find_all("li"):
+                for a in item.find_all("a"):
+                    ref += [a['href'].strip()]
+        return ref
 
 def createPlugin(ignore_info=False):
     return BurpPlugin(ignore_info=ignore_info)
