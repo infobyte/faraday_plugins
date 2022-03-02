@@ -215,9 +215,10 @@ class BurpPlugin(PluginXMLFormat):
             else:
                 desc = ""
             desc = self.removeHtml(desc)
+            data = ""
             if item.detail:
                 desc += self.removeHtml(item.detail)
-            data = ""
+                data = self.removeHtml(item.detail)
             resolution = self.removeHtml(item.remediation) if item.remediation else ""
 
             self.createAndAddVulnWebToService(
