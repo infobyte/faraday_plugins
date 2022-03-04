@@ -105,10 +105,11 @@ class Item:
         external_id = item_node.findall('type')[0]
         request = self.decode_binary_node('./requestresponse/request')
         response = self.decode_binary_node('./requestresponse/response')
-
         detail = self.do_clean(item_node.findall('issueDetail'))
         remediation = self.do_clean(item_node.findall('remediationBackground'))
         background = self.do_clean(item_node.findall('issueBackground'))
+        self.references = self.do_clean(item_node.findall('references'))
+        self.vulnClass = self.do_clean(item_node.findall('vulnerabilityClassifications'))
         self.cve = []
         if background:
             cve = CVE_regex.search(background)
@@ -144,9 +145,8 @@ class Item:
     def do_clean(value):
 
         myreturn = ""
-        if value is not None:
-            if len(value) > 0:
-                myreturn = value[0].text
+        if value is not None and len(value) > 0:
+            myreturn = value[0].text
         return myreturn
 
     def decode_binary_node(self, path):
@@ -210,15 +210,20 @@ class BurpPlugin(PluginXMLFormat):
                 ports=[str(item.port)],
                 status="open")
 
+            desc = ""
             if item.background:
-                desc = item.background
-            else:
-                desc = ""
+                desc += item.background
             desc = self.removeHtml(desc)
             data = ""
             if item.detail:
                 desc += self.removeHtml(item.detail)
                 data = self.removeHtml(item.detail)
+            ref = []
+            if item.references:
+                ref += self.get_url(item.references)
+            if item.vulnClass:
+                ref += self.get_ref(item.vulnClass)
+
             resolution = self.removeHtml(item.remediation) if item.remediation else ""
 
             self.createAndAddVulnWebToService(
@@ -233,6 +238,7 @@ class BurpPlugin(PluginXMLFormat):
                 request=item.request,
                 response=item.response,
                 resolution=resolution,
+                ref=ref,
                 external_id=item.external_id,
                 cve=item.cve
             )
@@ -266,6 +272,26 @@ class BurpPlugin(PluginXMLFormat):
 
         return str(soup)
 
+    def get_ref(self, markup):
+        soup = BeautifulSoup(markup, "html.parser")
+
+        for tag in soup.find_all("ul"):
+            for item in tag.find_all("li"):
+                for a in item.find_all("a"):
+                    a.unwrap()
+                item.unwrap()
+            tag.unwrap()
+        ref = str(soup).strip().split("\n")
+        return ref
+
+    def get_url(self, markup):
+        soup = BeautifulSoup(markup, "html.parser")
+        ref = []
+        for tag in soup.find_all("ul"):
+            for item in tag.find_all("li"):
+                for a in item.find_all("a"):
+                    ref += [a['href'].strip()]
+        return ref
 
 def createPlugin(ignore_info=False):
     return BurpPlugin(ignore_info=ignore_info)
