@@ -214,11 +214,10 @@ class BurpPlugin(PluginXMLFormat):
             if item.background:
                 desc += item.background
             desc = self.removeHtml(desc)
+            data = ""
             if item.detail:
-                data = item.detail
-            else:
-                data = ""
-            data = self.removeHtml(data)
+                desc += self.removeHtml(item.detail)
+                data = self.removeHtml(item.detail)
             ref = []
             if item.references:
                 ref += self.get_url(item.references)
