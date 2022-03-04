@@ -60,7 +60,7 @@ class BurpXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print("SyntaxError: %s. %s" % (err, xml_output))
+            print(f"SyntaxError: {err}. {xml_output}")
             return None
 
         return tree
@@ -215,11 +215,10 @@ class BurpPlugin(PluginXMLFormat):
             else:
                 desc = ""
             desc = self.removeHtml(desc)
+            data = ""
             if item.detail:
-                data = item.detail
-            else:
-                data = ""
-            data = self.removeHtml(data)
+                desc += self.removeHtml(item.detail)
+                data = self.removeHtml(item.detail)
             resolution = self.removeHtml(item.remediation) if item.remediation else ""
 
             self.createAndAddVulnWebToService(
