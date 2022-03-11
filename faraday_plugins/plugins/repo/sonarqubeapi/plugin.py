@@ -22,7 +22,7 @@ SEVERITIES = {
 }
 STATUSES = {
     'OPEN': 'open',
-    'CONFIRMED': 'opened',
+    'CONFIRMED': 'open',
     'REOPENED': 're-opened',
     'CLOSED': 'closed',
     'RESOLVED': 'closed'
