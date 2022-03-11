@@ -393,7 +393,7 @@ class PluginBase:
         if ref is None:
             ref = []
         if status == "":
-            status = "opened"
+            status = "open"
         if impact is None:
             impact = {}
         if policyviolations is None:
@@ -427,7 +427,7 @@ class PluginBase:
         if ref is None:
             ref = []
         if status == "":
-            status = "opened"
+            status = "open"
         if impact is None:
             impact = {}
         if policyviolations is None:
@@ -485,7 +485,7 @@ class PluginBase:
         if ref is None:
             ref = []
         if status == "":
-            status = "opened"
+            status = "open"
         if impact is None:
             impact = {}
         if policyviolations is None:
