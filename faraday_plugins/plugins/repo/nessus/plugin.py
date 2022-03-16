@@ -92,7 +92,8 @@ class NessusPlugin(PluginXMLFormat):
             "desc": item.description,
             "resolution": item.solution,
             "ref": [],
-            "cvss2": [item.cvss2_base_score] if item.cvss2_base_score else []
+            "cvss2": [item.cvss2_base_score] if item.cvss2_base_score else [],
+            "cvss3": [item.cvss3_base_score] if item.cvss3_base_score else []
         }
 
     def map_policy_general(self, kwargs, item: ReportItem):

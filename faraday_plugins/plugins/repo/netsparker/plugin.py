@@ -56,7 +56,7 @@ class NetsparkerXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            self.plugin.logger.error("SyntaxError: %s. %s" % (err, xml_output))
+            self.plugin.logger.error(f"SyntaxError: {err}. {xml_output}")
             return None
 
         return tree
@@ -82,11 +82,11 @@ class Item:
         self.url = self.get_text_from_subnode("url")
 
         host = re.search(
-            "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]"
-            "{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2"
-            "[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]"
-            "{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|"
-            "pro|aero|coop|museum|[a-zA-Z]{2}))[\:]*([0-9]+)*([/]*($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+)).*?$",
+            r"(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]"
+            r"{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2"
+            r"[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]"
+            r"{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|"
+            "pro|aero|coop|museum|[a-zA-Z]{2}))[\\:]*([0-9]+)*([/]*($|[a-zA-Z0-9\\.\\,\\?\'\\\\+&amp;%\\$#\\=~_\\-]+)).*?$",
             self.url)
 
         self.protocol = host.group(1)
@@ -146,13 +146,13 @@ class Item:
         if self.owasp:
             self.ref.append("OWASP-" + self.owasp)
         if self.reference:
-            self.ref.extend(sorted(set(re.findall('https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', self.reference))))
+            self.ref.extend(sorted(set(re.findall(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', self.reference))))
         if self.cvss_full_vector:
-            self.ref.append(self.cvss_full_vector)
+            self.cvss3["vector_string"] = self.cvss_full_vector.replace("CVSS:3.0/", "")
         if self.cvss_score:
             self.cvss3["base_score"] = self.cvss_score
 
-    
+
         self.data = ""
         self.data += "\nKnowVulns: " + \
             "\n".join(self.kvulns) if self.kvulns else ""
@@ -211,7 +211,7 @@ class NetsparkerPlugin(PluginXMLFormat):
             else:
                 ip = host_names_resolve[i.hostname]
             h_id = self.createAndAddHost(ip, hostnames=[i.hostname])
-            
+
             s_id = self.createAndAddServiceToHost(h_id, str(i.port),
                                                        protocol = str(i.protocol),
                                                        ports=[str(i.port)],
@@ -240,5 +240,3 @@ class NetsparkerPlugin(PluginXMLFormat):
 
 def createPlugin(ignore_info=False):
     return NetsparkerPlugin(ignore_info=ignore_info)
-
-

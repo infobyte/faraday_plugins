@@ -11,7 +11,6 @@ See the file 'doc/LICENSE' for the license information
 from lxml import etree
 from lxml.etree import XMLParser
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -202,14 +201,14 @@ class Host:
             os_gen = osclass.get("osgen", "unknown")
             accuracy = osclass.get("accuracy", "unknown")
 
-            yield ("%s %s %s" % (os_vendor, os_family, os_gen), accuracy)
+            yield (f"{os_vendor} {os_family} {os_gen}", accuracy)
 
         # Os information in services, bad acurracy.
         if osclasses == []:
             services = self.node.findall("ports/port/service")
             for service in services:
                 ostype = service.get("ostype", "unknown")
-                yield ("%s" % ostype, 0)
+                yield (f"{ostype}", 0)
 
     def top_os_guess(self):
         """
@@ -244,16 +243,11 @@ class Host:
     def __str__(self):
         ports = []
         for port in self.ports:
-            var = "    %s" % port
+            var = f"    {port}"
             ports.append(var)
         ports = "\n".join(ports)
 
-        return "%s, %s, %s [%s], %s\n%s" % (
-            self.hostnames,
-            self.status,
-            self.ipv4_address,
-            self.mac_address,
-            self.os, ports)
+        return f"{self.hostnames}, {self.status}, {self.ipv4_address} [{self.mac_address}], {self.os}\n{ports}"
 
 
 class Port:
@@ -324,7 +318,7 @@ class Port:
                 yield Script(s)
 
     def __str__(self):
-        return "%s, %s, Service: %s" % (self.number, self.state, self.service)
+        return f"{self.number}, {self.state}, Service: {self.service}"
 
 
 class ScriptVulners:
@@ -360,10 +354,10 @@ class ScriptVulners:
         self.refs = ["https://vulners.com/" + self.table["type"] + "/" + self.table["id"]]
         self.response = ""
         self.web = ""
-        self.cvss2 = {"base_score" : self.table["cvss"]}
+        self.cvss2 = {"base_score": self.table["cvss"]}
 
     def __str__(self):
-        return "%s, %s, %s" % (self.name, self.product, self.version)
+        return f"{self.name}, {self.product}, {self.version}"
 
 
 class Script:
@@ -379,7 +373,7 @@ class Script:
     """
 
     def parse_output(self, output):
-        block_re = re.compile('^\s{4}References:((?:.|[\r\n])+[\r\n](?:\s{4}\w|\s*$))', re.MULTILINE)
+        block_re = re.compile('^\\s{4}References:((?:.|[\r\n])+[\r\n](?:\\s{4}\\w|\\s*$))', re.MULTILINE)
         m1 = block_re.findall(output)
         if len(m1) > 0:
             links_re = re.compile('[ \t]+([^ \t\n\r]+)[ \t]*')
@@ -400,7 +394,7 @@ class Script:
         self.cvss2 = {}
 
     def __str__(self):
-        return "%s, %s, %s" % (self.name, self.product, self.version)
+        return f"{self.name}, {self.product}, {self.version}"
 
 
 class Service:
@@ -439,7 +433,7 @@ class Service:
         self.ostype = self.node.get("ostype")
 
     def __str__(self):
-        return "%s, %s, %s" % (self.name, self.product, self.version)
+        return f"{self.name}, {self.product}, {self.version}"
 
 
 class NmapPlugin(PluginXMLFormat):

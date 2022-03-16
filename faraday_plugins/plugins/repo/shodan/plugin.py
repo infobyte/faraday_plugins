@@ -13,7 +13,6 @@ import os
 import shutil
 
 from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
-from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
 
 __author__ = "Valentin Vila"
 __copyright__ = "Copyright (c) 2021, Faraday"
@@ -76,8 +75,7 @@ class ShodanPlugin(PluginMultiLineJsonFormat):
                     cvss2 = {
                         "base_score": vuln_info.get('cvss')
                     }
-                    severity = get_severity_from_cvss(cvss2["base_score"]) if cvss2 else "info"
-                    self.createAndAddVulnToService(h_id, s_id, name, desc=description, severity=severity, ref=references
+                    self.createAndAddVulnToService(h_id, s_id, name, desc=description, ref=references
                                                    , cve=name, cvss2=cvss2)
 
     def processCommandString(self, username, current_path, command_string):
