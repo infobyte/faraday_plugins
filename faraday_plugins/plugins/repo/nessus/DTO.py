@@ -144,7 +144,7 @@ class ReportItem:
     def cvss3_vector(self):
         cvss3_vector = self.node.findtext("cvss3_vector")
         if cvss3_vector:
-            cvss3_vector = cvss3_vector.replace("CVSS3.0/", "")
+            cvss3_vector = cvss3_vector.replace("CVSS:3.0/", "")
         return cvss3_vector
 
     @property
@@ -391,4 +391,3 @@ class Report:
     @property
     def report_hosts(self) -> List[ReportHost]:
         return [ReportHost(i) for i in self.node.findall('ReportHost')]
-
