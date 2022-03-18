@@ -1,3 +1,9 @@
+1.6.1 [Mar 18th, 2022]:
+---
+ * Add references tu burp plugin
+ * Move item.detail from data to desc
+ * update open status
+
 1.6.0 [Feb 3rd, 2022]:
 ---
  * Add packaging to requierments in setup.py
