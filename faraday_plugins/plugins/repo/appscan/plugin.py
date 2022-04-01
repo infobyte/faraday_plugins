@@ -242,13 +242,12 @@ class AppScanParser:
                 data.append(f"Location: {item.find('variant-group/item/issue-information/method-signature2').text}")
             line = item.find("location")
             highlight = item.find("variant-group/item/issue-information/call-trace/call-invocation/context/highlight")
-            if line is not None:
-                data.append(f"line {line.text.split(':')[1]}")
-                issue_data["desc"] += line.text.split(':')[1]
+            if line is not None and len(line.text.split(':')) > 1 and line.text.split(':')[-1].isdigit():
+                data.append(f"line {line.text.split(':')[-1]}")
+                issue_data["desc"] += line.text.split(':')[-1]
             if highlight is not None:
                 data.append(f"{highlight.text}")
                 issue_data["desc"] += highlight.text
-
             issue_data['data'] = "\n".join(data)
             sast_issues.append(issue_data)
         return sast_issues
