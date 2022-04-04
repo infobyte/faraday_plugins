@@ -128,8 +128,9 @@ class Item:
                                       else 80)
 
         self.name = name.text
-        self.location = location.text
         self.path = path.text
+        loc = re.search(r"(?<=\[).+?(?=\])", location.text.replace(self.path, ""))
+        self.location = loc.group().split(" ")[0] if loc else ""
 
         self.ip = host_node.get('ip')
         self.url = self.node.get('url')
@@ -239,6 +240,7 @@ class BurpPlugin(PluginXMLFormat):
                 response=item.response,
                 resolution=resolution,
                 ref=ref,
+                params=item.location,
                 external_id=item.external_id,
                 cve=item.cve
             )
