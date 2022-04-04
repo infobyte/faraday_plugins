@@ -35,7 +35,7 @@ class AppScanParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print('SyntaxError In xml: %s. %s' % (err, xml_output))
+            print(f'SyntaxError In xml: {err}. {xml_output}')
             return None
         return tree
 
@@ -182,7 +182,7 @@ class AppScanParser:
         sast_issues = []
         for item in tree:
             name = self.issue_types[item.find("issue-type/ref").text]
-            source_file = item.attrib["filename"].replace('\\','/')
+            source_file = item.attrib["filename"].replace('\\', '/')
             severity = 0 if item.find("severity-id") is None else int(item.find("severity-id").text)
             description = item.find("fix/item/general/text").text
             resolution = "" if item.find("variant-group/item/issue-information/fix-resolution-text") is None \
@@ -240,6 +240,14 @@ class AppScanParser:
                 data.append(f"Method: {item.find('variant-group/item/issue-information/method-signature').text}")
             if item.find("variant-group/item/issue-information/method-signature2") is not None:
                 data.append(f"Location: {item.find('variant-group/item/issue-information/method-signature2').text}")
+            line = item.find("location")
+            highlight = item.find("variant-group/item/issue-information/call-trace/call-invocation/context/highlight")
+            if highlight is not None:
+                data.append(f" {highlight.text}")
+                issue_data["desc"] += "\n" + highlight.text
+            if line is not None and len(line.text.split(':')) > 1 and line.text.split(':')[-1].isdigit():
+                data.append(f"line {line.text.split(':')[-1]}")
+                issue_data["desc"] += f"line {line.text.split(':')[-1]}"
             issue_data['data'] = "\n".join(data)
             sast_issues.append(issue_data)
         return sast_issues
