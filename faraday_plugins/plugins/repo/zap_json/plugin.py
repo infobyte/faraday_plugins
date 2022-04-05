@@ -80,11 +80,11 @@ class ZapJsonPlugin(PluginJsonFormat):
 
                     ref = []
                     if item.reference:
-                        ref += item.reference
+                        ref += [strip_tags(item.reference)]
                     if item.cwe:
-                        ref += f"CWE:{item.cwe}"
+                        ref += [f"CWE:{item.cwe}"]
                     if item.wasc:
-                        ref += f"WASC:{item.wasc}"
+                        ref += [f"WASC:{item.wasc}"]
 
                     self.createAndAddVulnWebToService(
                         h_id,
@@ -97,7 +97,7 @@ class ZapJsonPlugin(PluginJsonFormat):
                         path=instance.uri.path,
                         params=instance.param,
                         method=instance.method,
-                        ref=item.reference,
+                        ref=ref,
                         resolution=strip_tags(item.solution),
                         data=data,
                         pname=instance.param,
