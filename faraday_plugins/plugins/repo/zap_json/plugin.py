@@ -21,6 +21,11 @@ __status__ = "Development"
 
 
 def split_and_strip_tags(data):
+    """
+    Split string using closing html tags
+    then remove them
+    @return list Stripped string
+    """
     r = []
     split = re.compile('</.*?>')
     for i in re.split(split, data)[:-1]:
@@ -38,9 +43,6 @@ def strip_tags(data):
 
 
 class ZapJsonPlugin(PluginJsonFormat):
-    """
-    Example plugin to parse zap output.
-    """
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
@@ -48,15 +50,16 @@ class ZapJsonPlugin(PluginJsonFormat):
         self.id = "Zap_Json"
         self.name = "Zap Json Output Plugin"
         self.plugin_version = "0.1"
-        self.version = "2.10.0"
+        self.version = "2.11.1"
         self.framework_version = "1.0.0"
         self.options = None
         self._temp_file_extension = "json"
+        self.json_keys = {'@version'}
 
     def parseOutputString(self, output):
         """
         This method will discard the output the shell sends, it will read it
-        from the xml where it expects it to be present.
+        from the json where it expects it to be present.
         """
 
         parser = ZapJsonParser(loads(output))
