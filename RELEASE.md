@@ -1,3 +1,7 @@
+1.6.2 [Apr 4th, 2022]:
+---
+ * Now Appscan plugin saves line and highlight of the vulns in desc and data
+
 1.6.1 [Mar 18th, 2022]:
 ---
  * Add references tu burp plugin
