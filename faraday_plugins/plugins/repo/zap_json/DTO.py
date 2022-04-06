@@ -1,5 +1,13 @@
 from typing import List
 from urllib.parse import urlparse
+import re
+
+
+def extract_params_from_uri(uri):
+    f = re.compile(r"(\w+)=")
+    params = re.findall(f, uri)
+    return params if params else ''
+
 
 class Uri:
     def __init__(self, uri):
@@ -7,6 +15,7 @@ class Uri:
         self.parsed_url = urlparse(uri)
         self.query = self.parsed_url.query
         self.path = self.parsed_url.path
+        self.params = extract_params_from_uri(uri)
 
 
 class Instance:
