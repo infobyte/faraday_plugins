@@ -20,6 +20,14 @@ __email__ = "gmartinez@infobytesec.com"
 __status__ = "Development"
 
 
+def split_and_strip_tags(data):
+    r = []
+    split = re.compile('</.*?>')
+    for i in re.split(split, data)[:-1]:
+        r += [strip_tags(i)]
+    return r
+
+
 def strip_tags(data):
     """
     Remove html tags from a string
@@ -80,7 +88,7 @@ class ZapJsonPlugin(PluginJsonFormat):
 
                     ref = []
                     if item.reference:
-                        ref += [strip_tags(item.reference)]
+                        ref += split_and_strip_tags(item.reference)
                     if item.cwe:
                         ref += [f"CWE:{item.cwe}"]
                     if item.wasc:
@@ -95,7 +103,7 @@ class ZapJsonPlugin(PluginJsonFormat):
                         query=instance.uri.query,
                         severity=item.riskcode,
                         path=instance.uri.path,
-                        params=instance.param,
+                        params=', '.join(instance.uri.params),
                         method=instance.method,
                         ref=ref,
                         resolution=strip_tags(item.solution),
