@@ -1,3 +1,7 @@
+1.6.3 [Apr 19th, 2022]:
+---
+ * Add Zap Json plugin.
+
 1.6.2 [Apr 4th, 2022]:
 ---
  * Now Appscan plugin saves line and highlight of the vulns in desc and data
