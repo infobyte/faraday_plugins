@@ -7,7 +7,6 @@ See the file 'doc/LICENSE' for the license information
 import re
 import json
 from faraday_plugins.plugins.plugin import PluginJsonFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Blas Moyano"
 __copyright__ = "Copyright (c) 2020, Infobyte LLC"
