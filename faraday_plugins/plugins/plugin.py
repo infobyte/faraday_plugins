@@ -16,6 +16,7 @@ import zipfile
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+import socket
 
 # Related third party imports
 import pytz
@@ -34,11 +35,12 @@ class PluginBase:
     # TODO: Add class generic identifier
     class_signature = "PluginBase"
 
-    def __init__(self, ignore_info=False):
+    def __init__(self, ignore_info=False, hostname_resolution=True):
         # Must be unique. Check that there is not
         # an existent plugin with the same id.
         # TODO: Make script that list current ids.
         self.ignore_info = ignore_info
+        self.hostname_resolution = hostname_resolution
         self.id = None
         self.auto_load = True
         self._rid = id(self)
@@ -82,6 +84,21 @@ class PluginBase:
         temp_filename = f"{self.id}_{next(tempfile._get_candidate_names())}.{extension}"
         temp_file_path = os.path.join(temp_dir, temp_filename)
         return temp_file_path
+
+    def resolve_hostname(self, hostname):
+        if not self.hostname_resolution:
+            return hostname
+        try:
+            socket.inet_aton(hostname)  # is already an ip
+            return hostname
+        except socket.error:
+            pass
+        try:
+            ip_address = socket.gethostbyname(hostname)
+        except Exception as e:
+            return hostname
+        else:
+            return ip_address
 
     @staticmethod
     def get_utctimestamp(date):
