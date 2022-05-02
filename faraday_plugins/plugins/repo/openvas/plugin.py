@@ -383,7 +383,7 @@ class OpenvasPlugin(PluginXMLFormat):
                             severity=item.severity,
                             resolution=item.resolution,
                             ref=ref,
-                            external_id=item.id,
+                            external_id=f"OPENVAS-{item.id}",
                             data=item.data,
                             cve=cve)
                 else:
@@ -415,7 +415,7 @@ class OpenvasPlugin(PluginXMLFormat):
                                 severity=item.severity,
                                 ref=ref,
                                 resolution=item.resolution,
-                                external_id=item.id,
+                                external_id=f"OPENVAS-{item.id}",
                                 data=item.data,
                                 cve=cve)
                     elif item.severity not in self.ignored_severities:
@@ -427,7 +427,7 @@ class OpenvasPlugin(PluginXMLFormat):
                             severity=item.severity,
                             ref=ref,
                             resolution=item.resolution,
-                            external_id=item.id,
+                            external_id=f"OPENVAS-{item.id}",
                             data=item.data,
                             cve=cve)
         del parser
