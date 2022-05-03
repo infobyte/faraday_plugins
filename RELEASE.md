@@ -1,3 +1,12 @@
+1.6.5 [Apr 28th, 2022]:
+---
+ * Now Openvas's plugin set severity to Critical when cvss >= 9.0
+
+1.6.4 [Apr 21th, 2022]:
+---
+ * Add location as params in burp's plugin
+ * Now the faraday_csv custom_fields regex match any no whitespace character.
+
 1.6.3 [Apr 19th, 2022]:
 ---
  * Add Zap Json plugin.
