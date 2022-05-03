@@ -12,7 +12,6 @@ __license__ = ""
 __version__ = "1.0.0"
 
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class brutexss (PluginBase):
@@ -33,7 +32,7 @@ class brutexss (PluginBase):
         found_vuln = False
         for linea in lineas:
             if linea.find("is available! Good!") > 0:
-                url = re.findall('(?:[-\w.]|(?:%[\da-fA-F]{2}))+', linea)[0]
+                url = re.findall(r'(?:[-\w.]|(?:%[\da-fA-F]{2}))+', linea)[0]
                 port = 80
                 if urlparse(url).scheme == 'https':
                     port = 443
@@ -41,11 +40,11 @@ class brutexss (PluginBase):
                 if len(netloc_splitted) > 1:
                     port = netloc_splitted[1]
             if linea.find("Vulnerable") > 0 and "No" not in linea:
-                vuln_list = re.findall("\w+", linea)
+                vuln_list = re.findall(r"\w+", linea)
                 if vuln_list[2] == "Vulnerable":
                     parametro.append(vuln_list[1])
                     found_vuln = len(parametro) > 0
-                    address = resolve_hostname(url)
+                    address = self.resolve_hostname(url)
                     host_id = self.createAndAddHost(url, hostnames=[url])
                     service_id = self.createAndAddServiceToHost(host_id, self.protocol, 'tcp',
                                                                 ports=[port], status='Open', version="",
@@ -59,5 +58,3 @@ class brutexss (PluginBase):
 
 def createPlugin(ignore_info=False):
     return brutexss(ignore_info=ignore_info)
-
-
