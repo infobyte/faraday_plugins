@@ -14,7 +14,6 @@ __email__ = "fede.merlo26@gmail.com"
 __status__ = "Development"
 
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class dirbPlugin(PluginBase):
@@ -41,7 +40,7 @@ class dirbPlugin(PluginBase):
 
     def getIP(self, host):
         try:
-            ip = resolve_hostname(host)
+            ip = self.resolve_hostname(host)
         except Exception:
             pass
 
@@ -113,10 +112,8 @@ class dirbPlugin(PluginBase):
         arg_search = re.search(silent_mode_re,command_string)
         if arg_search is None:
             extra_arg +=" -S"
-        return "%s%s" % (command_string, extra_arg)
+        return f"{command_string}{extra_arg}"
 
 
 def createPlugin(ignore_info=False):
     return dirbPlugin(ignore_info=ignore_info)
-
-
