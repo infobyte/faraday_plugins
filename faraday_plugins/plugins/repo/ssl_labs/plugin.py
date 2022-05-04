@@ -4,11 +4,8 @@ Copyright (C) 2020  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-import re
 import json
-from urllib.parse import urlparse
 from faraday_plugins.plugins.plugin import PluginJsonFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Blas Moyano"
 __copyright__ = "Copyright (c) 2020, Infobyte LLC"
@@ -110,5 +107,5 @@ class SslLabsPlugin(PluginJsonFormat):
                                            data=vuln['data'])
 
 
-def createPlugin(ignore_info=False):
-    return SslLabsPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return SslLabsPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

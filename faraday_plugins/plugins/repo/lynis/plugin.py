@@ -37,13 +37,13 @@ class LynisLogDataExtracter():
         return " ".join([name, version])
 
     def ipv4(self):
-        ipv4s = re.findall('^network_ipv4_address\[\]=(.+)$',
+        ipv4s = re.findall(r'^network_ipv4_address\[\]=(.+)$',
                        self.rawcontents, re.MULTILINE)
         ipv4addrs = self.ipv4_filter(ipv4s)
         return(ipv4addrs)
 
     def ipv6(self):
-        ipv6s = re.findall('^network_ipv6_address\[\]=(.+)$',
+        ipv6s = re.findall(r'^network_ipv6_address\[\]=(.+)$',
                        self.rawcontents, re.MULTILINE)
         ipv6addrs = self.ipv6_filter(ipv6s)
         return(ipv6addrs)
@@ -75,7 +75,7 @@ class LynisLogDataExtracter():
         return versions_dict
 
     def listeningservices(self):
-        line = re.findall('^network_listen_port\[\]=(.+)$',
+        line = re.findall(r'^network_listen_port\[\]=(.+)$',
                        self.rawcontents, re.MULTILINE)
         # To avoid local services, we will create the following list
         local_services = ['*', 'localhost']
@@ -197,13 +197,13 @@ class LynisLogDataExtracter():
         #Ipv6
         elif count == 5:
             port = elements_ip_port[5]
-            ip = items_service[0].replace(':{}'.format(port), '')
+            ip = items_service[0].replace(f':{port}', '')
 
         return ip, port
 
     def parse_suggestions(self):
         sugs = {}
-        m = re.findall('^suggestion\[\]=(.+)$', self.rawcontents, re.MULTILINE)
+        m = re.findall(r'^suggestion\[\]=(.+)$', self.rawcontents, re.MULTILINE)
         for combo in m:
             x = combo.split('|')
             sugs[x[0]] = x[1]
@@ -211,7 +211,7 @@ class LynisLogDataExtracter():
 
     def parse_warnings(self):
         warns = {}
-        m = re.findall('^warning\[\]=(.+)$', self.rawcontents, re.MULTILINE)
+        m = re.findall(r'^warning\[\]=(.+)$', self.rawcontents, re.MULTILINE)
         for combo in m:
             x = combo.split('|')
             warns[x[0]] = x[1]
@@ -319,12 +319,10 @@ class LynisPlugin(PluginByExtension):
             )
 
     def processOutput(self, command_output):
-        m = re.search('(\/.+\.dat)$', command_output, re.MULTILINE)
+        m = re.search(r'(\/.+\.dat)$', command_output, re.MULTILINE)
         file_path = m.group(0).strip()
         self._parse_filename(file_path)
 
 
-def createPlugin(ignore_info=False):
-    return LynisPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return LynisPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

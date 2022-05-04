@@ -13,7 +13,6 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = 'Leonardo Lazzaro'
 __copyright__ = 'Copyright (c) 2017, Infobyte LLC'
@@ -150,7 +149,7 @@ class ReconngPlugin(PluginXMLFormat):
             self.host_mapper[host['host']] = h_id
         for vuln in parser.vulns:
             if vuln['host'] not in list(self.host_mapper.keys()):
-                ip = resolve_hostname(vuln['host'])
+                ip = self.resolve_hostname(vuln['host'])
                 h_id = self.createAndAddHost(
                     ip,
                     hostnames=[vuln['host']]
@@ -171,7 +170,5 @@ class ReconngPlugin(PluginXMLFormat):
 
 
 
-def createPlugin(ignore_info=False):
-    return ReconngPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return ReconngPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

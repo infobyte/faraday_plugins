@@ -9,7 +9,6 @@ import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -24,9 +23,9 @@ __status__ = "Development"
 def get_urls(string):
     if isinstance(string, bytes):
         string_decode = string.decode("utf-8")
-        urls = re.findall('(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+', string_decode)
+        urls = re.findall(r'(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+', string_decode)
     else:
-        urls = re.findall('(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+', string)
+        urls = re.findall(r'(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+', string)
     return urls
 
 
@@ -61,7 +60,7 @@ class NetsparkerCloudXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            self.logger.error("SyntaxError: %s. %s" % (err, xml_output))
+            self.logger.error(f"SyntaxError: {err}. {xml_output}")
             return None
         return tree
 
@@ -124,9 +123,9 @@ class Item:
 
         self.ref = []
         if self.cwe:
-            self.ref.append("CWE-{}".format(self.cwe))
+            self.ref.append(f"CWE-{self.cwe}")
         if self.owasp:
-            self.ref.append("OWASP-{}".format(self.owasp))
+            self.ref.append(f"OWASP-{self.owasp}")
 
         self.node = item_node
         self.remedyreferences = self.get_text_from_subnode("remedy-references")
@@ -186,7 +185,7 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
         first = True
         for i in parser.items:
             if first:
-                ip = resolve_hostname(i.hostname)
+                ip = self.resolve_hostname(i.hostname)
                 h_id = self.createAndAddHost(ip, hostnames=[i.hostname])
                 s_id = self.createAndAddServiceToHost(h_id, i.protocol, ports=[i.port], status="open")
                 first = False
@@ -197,5 +196,5 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
         del parser
 
 
-def createPlugin(ignore_info=False):
-    return NetsparkerCloudPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return NetsparkerCloudPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

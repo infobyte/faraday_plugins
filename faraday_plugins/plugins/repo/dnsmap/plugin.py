@@ -130,12 +130,12 @@ class DnsmapPlugin(PluginBase):
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:
-            return "%s -r %s \\n" % (command_string, self._output_file_path)
+            return f"{command_string} -r {self._output_file_path} \\n"
         else:
             return re.sub(arg_match.group(1),
                           r"-r %s" % self._output_file_path,
                           command_string)
 
 
-def createPlugin(ignore_info=False):
-    return DnsmapPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return DnsmapPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

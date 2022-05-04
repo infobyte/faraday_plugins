@@ -91,7 +91,7 @@ class PluginBase:
         try:
             socket.inet_aton(hostname)  # is already an ip
             return hostname
-        except socket.error:
+        except OSError:
             pass
         try:
             ip_address = socket.gethostbyname(hostname)
@@ -610,8 +610,8 @@ class PluginCustomOutput(PluginBase):
 
 
 class PluginByExtension(PluginBase):
-    def __init__(self, ignore_info=False):
-        super().__init__(ignore_info)
+    def __init__(self, ignore_info=False, hostname_resolution=True):
+        super().__init__(ignore_info, hostname_resolution)
         self.extension = []
 
     def report_belongs_to(self, extension="", **kwargs):
@@ -626,8 +626,8 @@ class PluginByExtension(PluginBase):
 
 class PluginXMLFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False):
-        super().__init__(ignore_info)
+    def __init__(self, ignore_info=False, hostname_resolution=True):
+        super().__init__(ignore_info, hostname_resolution)
         self.identifier_tag = []
         self.identifier_tag_attributes = {}
         self.extension = ".xml"
@@ -648,8 +648,8 @@ class PluginXMLFormat(PluginByExtension):
 
 class PluginJsonFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False):
-        super().__init__(ignore_info)
+    def __init__(self, ignore_info=False, hostname_resolution=True):
+        super().__init__(ignore_info, hostname_resolution)
         self.json_keys = set()
         self.extension = ".json"
 
@@ -665,8 +665,8 @@ class PluginJsonFormat(PluginByExtension):
 
 class PluginMultiLineJsonFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False):
-        super().__init__(ignore_info)
+    def __init__(self, ignore_info=False, hostname_resolution=True):
+        super().__init__(ignore_info, hostname_resolution)
         self.json_keys = set()
         self.extension = ".json"
 
@@ -689,8 +689,8 @@ class PluginMultiLineJsonFormat(PluginByExtension):
 
 class PluginCSVFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False):
-        super().__init__(ignore_info)
+    def __init__(self, ignore_info=False, hostname_resolution=True):
+        super().__init__(ignore_info, hostname_resolution)
         self.extension = ".csv"
         self.csv_headers = set()
 
@@ -709,8 +709,8 @@ class PluginCSVFormat(PluginByExtension):
 
 class PluginZipFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False):
-        super().__init__(ignore_info)
+    def __init__(self, ignore_info=False, hostname_resolution=True):
+        super().__init__(ignore_info, hostname_resolution)
         self.extension = ".zip"
         self.files_list = set()
 
