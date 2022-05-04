@@ -113,10 +113,10 @@ class WcscanPlugin(PluginBase):
         arg_match = self.xml_arg_re.match(command_string)
 
         if arg_match is None:
-            return "%s --xml %s" % (command_string, self._output_file_path)
+            return f"{command_string} --xml {self._output_file_path}"
         else:
             return re.sub(arg_match.group(1), r"-xml %s" % self._output_file_path, command_string)
 
 
-def createPlugin(ignore_info=False):
-    return WcscanPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return WcscanPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

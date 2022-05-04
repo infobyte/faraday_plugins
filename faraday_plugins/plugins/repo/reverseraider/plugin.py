@@ -36,11 +36,11 @@ class ReverseraiderParser:
 
         for line in lists:
             if line != "":
-                print("(%s)" % line)
+                print(f"({line})")
                 info = line.split("\t")
                 if info.__len__() > 0:
                     item = {'host': info[0], 'ip': info[1]}
-                    print("host = %s, ip = %s" % (info[0], info[1]))
+                    print(f"host = {info[0]}, ip = {info[1]}")
                     self.items.append(item)
 
 
@@ -78,7 +78,5 @@ class ReverseraiderPlugin(PluginBase):
 
 
 
-def createPlugin(ignore_info=False):
-    return ReverseraiderPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return ReverseraiderPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

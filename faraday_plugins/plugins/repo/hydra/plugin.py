@@ -4,7 +4,6 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 import re
 from collections import defaultdict
 
@@ -31,7 +30,7 @@ class HydraParser:
         for line in lines:
 
             reg = re.search(
-                "\[([^$]+)\]\[([^$]+)\] host: ([^$]+)   login: ([^$]+)   password: ([^$]+)",
+                r"\[([^$]+)\]\[([^$]+)\] host: ([^$]+)   login: ([^$]+)   password: ([^$]+)",
                 line)
 
             if reg:
@@ -84,7 +83,7 @@ class HydraPlugin(PluginBase):
             hosts[item['ip']].append([item['login'], item['password']])
 
         for k, v in hosts.items():
-            ip = resolve_hostname(k)
+            ip = self.resolve_hostname(k)
             if ip != k:
                 hostnames = [k]
             else:
@@ -108,7 +107,7 @@ class HydraPlugin(PluginBase):
                     h_id,
                     s_id,
                     "Weak Credentials",
-                    "[hydra found the following credentials]\nuser:%s\npass:%s" % (cred[0], cred[1]),
+                    f"[hydra found the following credentials]\nuser:{cred[0]}\npass:{cred[1]}",
                     severity="high")
 
         del parser
@@ -130,7 +129,5 @@ class HydraPlugin(PluginBase):
 
 
 
-def createPlugin(ignore_info=False):
-    return HydraPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return HydraPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

@@ -36,18 +36,18 @@ class WebfuzzerParser:
     def __init__(self, webfuzzer_filepath):
         self.filepath = webfuzzer_filepath
 
-        with open(self.filepath, "r") as f:
+        with open(self.filepath) as f:
             try:
                 data = f.read()
                 f.close()
                 m = re.search(
-                    "Scan of ([\w.]+):([\d]+) \[([/\w]+)\] \(([\w.]+)\)", data)
+                    r"Scan of ([\w.]+):([\d]+) \[([/\w]+)\] \(([\w.]+)\)", data)
                 self.hostname = m.group(1)
                 self.port = m.group(2)
                 self.uri = m.group(3)
                 self.ipaddress = m.group(4)
 
-                m = re.search("Server header:\n\n([\w\W]+)\n\n\n", data)
+                m = re.search("Server header:\n\n([\\w\\W]+)\n\n\n", data)
                 self.header = m.group(1)
 
                 self.items = []
@@ -58,7 +58,7 @@ class WebfuzzerParser:
 
                     method = m.group(1)
                     info = re.search(
-                        "^([\w\W]+)\(([\w\W]+)\)\n--\[ ([\w\W]+)$", m.group(2))
+                        "^([\\w\\W]+)\\(([\\w\\W]+)\\)\n--\\[ ([\\w\\W]+)$", m.group(2))
 
                     vuln = {'method': m.group(1), 'desc': info.group(
                         1), 'url': info.group(2), 'resp': info.group(3)}
@@ -129,13 +129,11 @@ class WebfuzzerPlugin(PluginBase):
         """
         """
         super().processCommandString(username, current_path, command_string)
-        host = re.search("\-([G|P]) ([\w\.\-]+)", command_string)
+        host = re.search(r"\-([G|P]) ([\w\.\-]+)", command_string)
         if host is not None:
             self.host = host.group(2)
             self._output_path = current_path + "/" + self.host + ".txt"
 
 
-def createPlugin(ignore_info=False):
-    return WebfuzzerPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return WebfuzzerPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

@@ -59,7 +59,7 @@ class hping3(PluginBase):
         for linea in lineas:
             if (re.match(" ", linea)):
 
-                list = re.findall("\w+", linea)
+                list = re.findall(r"\w+", linea)
                 service = list[1]
                 port = [list[0]]
 
@@ -68,7 +68,5 @@ class hping3(PluginBase):
                         host_id, service, protocol="tcp", ports=port, status="open")
 
 
-def createPlugin(ignore_info=False):
-    return hping3(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return hping3(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

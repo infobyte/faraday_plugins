@@ -516,5 +516,5 @@ class ArachniPlugin(PluginXMLFormat):
         return self.hostname
 
 
-def createPlugin(ignore_info=False):
-    return ArachniPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return ArachniPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

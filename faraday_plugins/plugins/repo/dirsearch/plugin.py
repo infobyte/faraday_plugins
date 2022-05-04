@@ -131,5 +131,5 @@ class DirsearchPlugin(PluginBase):
             return f'{command_string} --json-report {self._output_file_path}'
 
 
-def createPlugin(ignore_info=False):
-    return DirsearchPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return DirsearchPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

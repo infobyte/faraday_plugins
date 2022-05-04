@@ -7,7 +7,6 @@ import re
 import os
 
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -30,9 +29,10 @@ class GoohostParser:
     @param goohost_scantype You could select scan type ip, mail or host
     """
 
-    def __init__(self, output, goohost_scantype):
+    def __init__(self, output, goohost_scantype, resolve_hostname):
 
         self.items = []
+        self.resolve_hostname = resolve_hostname
         lines = list(filter(None, output.split('\n')))
         for line in lines:
             if goohost_scantype == 'ip':
@@ -41,7 +41,7 @@ class GoohostParser:
                 self.add_host_info_to_items(item['ip'], item['host'])
             elif goohost_scantype == 'host':
                 data = line.strip()
-                item = {'host': data, 'ip': resolve_hostname(data)}
+                item = {'host': data, 'ip': self.resolve_hostname(data)}
                 self.add_host_info_to_items(item['ip'], item['host'])
             else:
                 item = {'data': line}
@@ -89,7 +89,7 @@ class GoohostPlugin(PluginBase):
 
         """
         scantype = self.define_scantype_by_output(output)
-        parser = GoohostParser(output, scantype)
+        parser = GoohostParser(output, scantype, self.resolve_hostname)
         if scantype == 'host' or scantype == 'ip':
             for item in parser.items:
                 h_id = self.createAndAddHost(item['ip'], hostnames=item['hosts'])
@@ -111,7 +111,7 @@ class GoohostPlugin(PluginBase):
             return 'ip'
 
     def get_report_path_from_output(self, command_output):
-        report_name = re.search("Results saved in file (\S+)", command_output)
+        report_name = re.search(r"Results saved in file (\S+)", command_output)
         if not report_name:
             return False
         else:
@@ -129,6 +129,5 @@ class GoohostPlugin(PluginBase):
             self.parseOutputString(command_output)
 
 
-def createPlugin(ignore_info=False):
-    return GoohostPlugin(ignore_info=ignore_info)
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return GoohostPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
