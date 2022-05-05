@@ -147,13 +147,12 @@ class QualysWebappPlugin(PluginXMLFormat):
             url = urlparse(v.dict_result_vul.get('URL'))
             host_id = self.createAndAddHost(name=url.netloc, os=operating_system, hostnames=hostnames)
 
-            vuln_scan_id = "QUALYS-"+v.dict_result_vul.get('QID')
+            vuln_scan_id = v.dict_result_vul.get('QID')
 
             # Data in the xml is in different parts, we look into the glossary
             vuln_data = next((item for item in glossary if item["QID"] == vuln_scan_id), None)
             vuln_name = vuln_data.get('TITLE')
             vuln_desc = vuln_data.get('DESCRIPTION') + v.dict_result_vul.get('URL')
-
             raw_severity = int(vuln_data.get('SEVERITY', 0))
             vuln_severity = raw_severity - 1
 
@@ -174,7 +173,7 @@ class QualysWebappPlugin(PluginXMLFormat):
 
             self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc, ref=vuln_ref,
                                         severity=vuln_severity, resolution=vuln_resolution, run_date=run_date,
-                                        external_id=vuln_scan_id, data=vuln_data_add)
+                                        external_id="QUALYS-"+vuln_scan_id, data=vuln_data_add)
 
 
 def createPlugin(ignore_info=False):
