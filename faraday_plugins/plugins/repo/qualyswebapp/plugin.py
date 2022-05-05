@@ -147,7 +147,7 @@ class QualysWebappPlugin(PluginXMLFormat):
             url = urlparse(v.dict_result_vul.get('URL'))
             host_id = self.createAndAddHost(name=url.netloc, os=operating_system, hostnames=hostnames)
 
-            vuln_scan_id = v.dict_result_vul.get('QID')
+            vuln_scan_id = "QUALYS-"+v.dict_result_vul.get('QID')
 
             # Data in the xml is in different parts, we look into the glossary
             vuln_data = next((item for item in glossary if item["QID"] == vuln_scan_id), None)
