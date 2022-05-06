@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
@@ -24,7 +23,10 @@ class QualysWebappParser:
     def __init__(self, xml_output):
         self.tree = self.parse_xml(xml_output)
         if self.tree:
-            self.info_results = self.get_results_vul(self.tree.find('RESULTS'))
+            if self.tree.find('RESULTS/WEB_APPLICATION'):
+                self.info_results = self.get_results_vul(self.tree.find('RESULTS/WEB_APPLICATION'))
+            else:
+                self.info_results = self.get_results_vul(self.tree.find('RESULTS'))
             self.info_glossary = self.get_glossary_qid(self.tree.find('GLOSSARY'))
             self.info_appendix = self.get_appendix(self.tree.find('APPENDIX'))
         else:
@@ -34,24 +36,27 @@ class QualysWebappParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print('SyntaxError In xml: %s. %s' % (err, xml_output))
+            print(f'SyntaxError In xml: {err} {xml_output}')
             return None
         return tree
 
-    def get_appendix(self, tree):
-        for self.appendix_tags in tree:
-            yield Appendix(self.appendix_tags)
+    @staticmethod
+    def get_appendix(tree):
+        for appendix_tags in tree:
+            yield Appendix(appendix_tags)
 
-    def get_glossary_qid(self, tree):
-        for self.glossary_tags in tree.find('QID_LIST'):
-            yield Glossary(self.glossary_tags)
+    @staticmethod
+    def get_glossary_qid(tree):
+        for glossary_tags in tree.find('QID_LIST'):
+            yield Glossary(glossary_tags)
 
-    def get_results_vul(self, tree):
-        for self.results_tags in tree.find('VULNERABILITY_LIST'):
-            yield Results(self.results_tags)
+    @staticmethod
+    def get_results_vul(tree):
+        for results_tags in tree.find('VULNERABILITY_LIST'):
+            yield Results(results_tags)
 
 
-class Appendix():
+class Appendix:
     def __init__(self, appendix_tags):
         if appendix_tags.tag == 'SCAN_LIST':
             self.lista_scan = self.get_scan(appendix_tags.find('SCAN'))
@@ -59,20 +64,22 @@ class Appendix():
         elif appendix_tags.tag == 'WEBAPP':
             self.lista_webapp = self.get_webapp(appendix_tags)
 
-    def get_scan(self, appendix_tags):
-        self.result_scan = {}
+    @staticmethod
+    def get_scan(appendix_tags):
+        result_scan = {}
         for scan in appendix_tags:
-            self.result_scan[scan.tag] = scan.text
-        return self.result_scan
+            result_scan[scan.tag] = scan.text
+        return result_scan
 
-    def get_webapp(self, appendix_tags):
-        self.result_webapp = {}
+    @staticmethod
+    def get_webapp(appendix_tags):
+        result_webapp = {}
         for webapp in appendix_tags:
-            self.result_webapp[webapp.tag] = webapp.text
-        return self.result_webapp
+            result_webapp[webapp.tag] = webapp.text
+        return result_webapp
 
 
-class Glossary():
+class Glossary:
     def __init__(self, glossary_tags):
         self.lista_qid = self.get_qid_list(glossary_tags)
 
@@ -83,7 +90,7 @@ class Glossary():
         return self.dict_result_qid
 
 
-class Results():
+class Results:
     def __init__(self, glossary_tags):
         self.lista_vul = self.get_qid_list(glossary_tags)
 
@@ -98,7 +105,7 @@ class QualysWebappPlugin(PluginXMLFormat):
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
-        self.identifier_tag = ["WAS_SCAN_REPORT"]
+        self.identifier_tag = ["WAS_WEBAPP_REPORT", "WAS_SCAN_REPORT"]
         self.id = 'QualysWebapp'
         self.name = 'QualysWebapp XML Output Plugin'
         self.plugin_version = '1.0.0'
@@ -121,6 +128,7 @@ class QualysWebappPlugin(PluginXMLFormat):
         for host_create in parser.info_appendix:
             self.scan_list_result.append(host_create)
 
+        operating_system = ""
         for k in self.scan_list_result:
             if 'result_scan' in k.__dict__:
                 self.credential = k.lista_scan.get('AUTHENTICATION_RECORD')
@@ -161,9 +169,9 @@ class QualysWebappPlugin(PluginXMLFormat):
             if vuln_data.get('CVSS_BASE'):
                 cvss3["base_score"] = vuln_data.get('CVSS_BASE')
 
-            vuln_data_add = "ID: {}, DETECTION_ID: {}, CATEGORY: {}, GROUP: {}, URL: {}, IMPACT: {}".format(
-                v.dict_result_vul.get('ID'), v.dict_result_vul.get('DETECTION_ID'), vuln_data.get('CATEGORY'),
-                vuln_data.get('GROUP'), v.dict_result_vul.get('URL'), vuln_data.get('IMPACT'))
+            vuln_data_add = f"ID: {v.dict_result_vul.get('ID')}, DETECTION_ID: {v.dict_result_vul.get('DETECTION_ID')}" \
+                            f", CATEGORY: {vuln_data.get('CATEGORY')}, GROUP: {vuln_data.get('GROUP')}" \
+                            f", URL: {v.dict_result_vul.get('URL')}, IMPACT: {vuln_data.get('IMPACT')}"
 
             self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc,
                                         severity=vuln_severity, resolution=vuln_resolution, run_date=run_date,
