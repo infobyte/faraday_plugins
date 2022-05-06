@@ -1,6 +1,41 @@
+1.6.5 [Apr 28th, 2022]:
+---
+ * Now Openvas's plugin set severity to Critical when cvss >= 9.0
+
+1.6.4 [Apr 21th, 2022]:
+---
+ * Add location as params in burp's plugin
+ * Now the faraday_csv custom_fields regex match any no whitespace character.
+
+1.6.3 [Apr 19th, 2022]:
+---
+ * Add Zap Json plugin.
+
+1.6.2 [Apr 4th, 2022]:
+---
+ * Now Appscan plugin saves line and highlight of the vulns in desc and data
+
+1.6.1 [Mar 18th, 2022]:
+---
+ * Add references tu burp plugin
+ * Move item.detail from data to desc
+ * update open status
+
+1.6.0 [Feb 3rd, 2022]:
+---
+ * Add packaging to requierments in setup.py
+ * Add severity to shodan's plugins using cvss
+ * check if cve exist on cve-id field
+ * Fix Fortify's plugin
+ * Change qualysguard's plugin severity_dict to refer level 2 severities as low
+
+1.5.10 [Jan 13th, 2022]:
+---
+ * support cve,cwe,cvss and metadata
+
 1.5.9 [Dec 27th, 2021]:
 ---
- * ADD cve in faraday_csv plugin
+ * Add cve in faraday_csv plugin
  * ADD Grype plugin
 
 1.5.8 [Dec 13th, 2021]:
