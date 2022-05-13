@@ -46,6 +46,9 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             vuln_dict = json.loads(vuln_json)
             host = vuln_dict.get('host')
             url_data = urlparse(host)
+            if url_data.hostname is None:
+                host = 'http://' + host
+                url_data = urlparse(host)
             ip = vuln_dict.get("ip")
             if not ip:
                 ip = resolve_hostname(url_data.hostname)
