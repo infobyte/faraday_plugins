@@ -117,7 +117,7 @@ class OpenvasXmlParser:
     def do_clean(self, value):
         myreturn = ""
         if value is not None:
-            myreturn = re.sub("\s+", " ", value)
+            myreturn = re.sub(r"\s+", " ", value)
         return myreturn.strip()
 
 
@@ -234,7 +234,7 @@ class Item:
     def do_clean(self, value):
         myreturn = ""
         if value is not None:
-            myreturn = re.sub("\s+", " ", value)
+            myreturn = re.sub(r"\s+", " ", value)
 
         return myreturn.strip()
 
@@ -349,7 +349,7 @@ class OpenvasPlugin(PluginXMLFormat):
                 if item.bid:
                     bids = item.bid.split(',')
                     for bid in bids:
-                        ref.append("BID-%s" % bid.strip())
+                        ref.append(f"BID-{bid.strip()}")
                 if item.xref:
                     ref.append(item.xref)
                 if item.tags and item.cvss_vector:
@@ -358,10 +358,13 @@ class OpenvasPlugin(PluginXMLFormat):
                     ref.append(f"CVSS_BASE: {item.cvss_base}")
                 if item.cpe:
                     ref.append(f"{item.cpe}")
+                if item.severity_nr:
+                    if float(item.severity_nr) >= 9.0:
+                        item.threat = "Critical"
+                        item.severity = "Critical"
+                    ref.append(f"SEVERITY NUMBER: {item.severity_nr}")
                 if item.threat:
                     ref.append(f"THREAT: {item.threat}")
-                if item.severity_nr:
-                    ref.append(f"SEVERITY NUMBER: {item.severity_nr}")
 
                 if item.subnet in ids:
                     h_id = ids[item.host]
@@ -380,7 +383,7 @@ class OpenvasPlugin(PluginXMLFormat):
                             severity=item.severity,
                             resolution=item.resolution,
                             ref=ref,
-                            external_id=item.id,
+                            external_id=f"OPENVAS-{item.id}",
                             data=item.data,
                             cve=cve)
                 else:
@@ -412,7 +415,7 @@ class OpenvasPlugin(PluginXMLFormat):
                                 severity=item.severity,
                                 ref=ref,
                                 resolution=item.resolution,
-                                external_id=item.id,
+                                external_id=f"OPENVAS-{item.id}",
                                 data=item.data,
                                 cve=cve)
                     elif item.severity not in self.ignored_severities:
@@ -424,7 +427,7 @@ class OpenvasPlugin(PluginXMLFormat):
                             severity=item.severity,
                             ref=ref,
                             resolution=item.resolution,
-                            external_id=item.id,
+                            external_id=f"OPENVAS-{item.id}",
                             data=item.data,
                             cve=cve)
         del parser
