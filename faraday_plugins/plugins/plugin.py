@@ -35,7 +35,7 @@ class PluginBase:
     # TODO: Add class generic identifier
     class_signature = "PluginBase"
 
-    def __init__(self, ignore_info=False, hostname_resolution=True):
+    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
         # Must be unique. Check that there is not
         # an existent plugin with the same id.
         # TODO: Make script that list current ids.
@@ -610,7 +610,7 @@ class PluginCustomOutput(PluginBase):
 
 
 class PluginByExtension(PluginBase):
-    def __init__(self, ignore_info=False, hostname_resolution=True):
+    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
         super().__init__(ignore_info, hostname_resolution)
         self.extension = []
 
@@ -626,7 +626,7 @@ class PluginByExtension(PluginBase):
 
 class PluginXMLFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True):
+    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
         super().__init__(ignore_info, hostname_resolution)
         self.identifier_tag = []
         self.identifier_tag_attributes = {}
@@ -648,7 +648,7 @@ class PluginXMLFormat(PluginByExtension):
 
 class PluginJsonFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True):
+    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
         super().__init__(ignore_info, hostname_resolution)
         self.json_keys = set()
         self.extension = ".json"
@@ -665,7 +665,7 @@ class PluginJsonFormat(PluginByExtension):
 
 class PluginMultiLineJsonFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True):
+    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
         super().__init__(ignore_info, hostname_resolution)
         self.json_keys = set()
         self.extension = ".json"
@@ -689,7 +689,7 @@ class PluginMultiLineJsonFormat(PluginByExtension):
 
 class PluginCSVFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True):
+    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
         super().__init__(ignore_info, hostname_resolution)
         self.extension = ".csv"
         self.csv_headers = set()
@@ -709,7 +709,7 @@ class PluginCSVFormat(PluginByExtension):
 
 class PluginZipFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True):
+    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
         super().__init__(ignore_info, hostname_resolution)
         self.extension = ".zip"
         self.files_list = set()
