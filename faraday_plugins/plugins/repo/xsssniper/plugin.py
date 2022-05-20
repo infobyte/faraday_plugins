@@ -11,7 +11,6 @@ __license__ = ""
 __version__ = "1.0.0"
 
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class xsssniper(PluginBase):
@@ -34,18 +33,18 @@ class xsssniper(PluginBase):
             if not linea:
                 continue
             linea = linea.lower()
-            if ((linea.find("target:")>0)):
-                url = re.findall('(?:[-\w.]|(?:%[\da-fA-F]{2}))+', linea)
-                address = resolve_hostname(url[3])
+            if (linea.find("target:")>0):
+                url = re.findall(r'(?:[-\w.]|(?:%[\da-fA-F]{2}))+', linea)
+                address = self.resolve_hostname(url[3])
                 host_id = self.createAndAddHost(address, hostnames=url[3])
-            if ((linea.find("method")>0)):
-                list_a = re.findall("\w+", linea)
+            if (linea.find("method")>0):
+                list_a = re.findall(r"\w+", linea)
                 metodo= list_a[1]
-            if ((linea.find("query string:")>0)):
+            if (linea.find("query string:")>0):
                 lista_parametros=linea.split('=')
                 aux=len(lista_parametros)
-            if ((linea.find("param:")>0)):
-                list2 = re.findall("\w+",linea)
+            if (linea.find("param:")>0):
+                list2 = re.findall(r"\w+",linea)
                 parametro.append(list2[1])
                 service_id = self.createAndAddServiceToHost(host_id, self.protocol, 'tcp', ports=['80'], status='Open',
                                                             version="", description="")
@@ -55,7 +54,5 @@ class xsssniper(PluginBase):
                                               params=''.join(parametro), request='', response='')
 
 
-def createPlugin(ignore_info=False):
-    return xsssniper(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return xsssniper(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

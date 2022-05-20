@@ -6,7 +6,6 @@ See the file 'doc/LICENSE' for the license information
 """
 
 # Author: @EzequielTBH
-from builtins import str
 
 from faraday_plugins.plugins.plugin import PluginBase
 import json
@@ -37,7 +36,7 @@ class pasteAnalyzerPlugin(PluginBase):
             indexStart:self.command_string.find(" ", indexStart)]
         fileJson = self._current_path + "/" + fileJson
         try:
-            with open(fileJson, "r") as fileJ:
+            with open(fileJson) as fileJ:
                 results = json.loads(fileJ.read())
         except Exception as e:
             return
@@ -86,7 +85,5 @@ class pasteAnalyzerPlugin(PluginBase):
         return command_string
 
 
-def createPlugin(ignore_info=False):
-    return pasteAnalyzerPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return pasteAnalyzerPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

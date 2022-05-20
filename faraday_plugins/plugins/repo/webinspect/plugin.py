@@ -44,7 +44,7 @@ class WebInspectParser():
             return text
         except:
             return ""
-    
+
     def parse(self):
 
         map_objects_fields = {
@@ -123,7 +123,7 @@ class WebInspectPlugin(PluginXMLFormat):
         self.identifier_tag = ["Scan"]
 
     def parseOutputString(self, output):
-        
+
         parser = WebInspectParser(output)
         vulns = parser.parse()
 
@@ -133,7 +133,7 @@ class WebInspectPlugin(PluginXMLFormat):
             service_id = self.createAndAddServiceToHost(host_id, vuln.get("Service").get("name"),
                                                         protocol=vuln.get("Service").get("name"),
                                                         ports=[vuln.get("Service").get("port")])
-            
+
             self.createAndAddVulnWebToService(
                 host_id, service_id,
                 vuln.get("Vuln").get("name"),
@@ -150,6 +150,5 @@ class WebInspectPlugin(PluginXMLFormat):
             )
 
 
-def createPlugin(ignore_info=False):
-    return WebInspectPlugin(ignore_info=ignore_info)
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return WebInspectPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
