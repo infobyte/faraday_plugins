@@ -8,7 +8,6 @@ from json import loads
 
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 from faraday_plugins.plugins.repo.zap_json.DTO import ZapJsonParser
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Gonzalo Martinez"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -65,7 +64,7 @@ class ZapJsonPlugin(PluginJsonFormat):
         parser = ZapJsonParser(loads(output))
 
         for site in parser.sites:
-            ip = resolve_hostname(site.host)
+            ip = self.resolve_hostname(site.host)
             host = []
             if site.host != ip:
                 host = [site.host]
@@ -118,5 +117,5 @@ class ZapJsonPlugin(PluginJsonFormat):
         del parser
 
 
-def createPlugin(ignore_info=False):
-    return ZapJsonPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return ZapJsonPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

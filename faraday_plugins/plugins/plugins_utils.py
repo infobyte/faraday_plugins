@@ -20,7 +20,7 @@ def get_vulnweb_url_fields(url):
     """Given a URL, return kwargs to pass to createAndAddVulnWebToService."""
     parse = urlsplit(url)
     return {
-        "website": "{}://{}".format(parse.scheme, parse.netloc),
+        "website": f"{parse.scheme}://{parse.netloc}",
         "path": parse.path,
         "query": parse.query
     }
@@ -94,22 +94,7 @@ def get_all_protocols():
         'mobility-header'
     ]
 
-    for item in protocols:
-        yield item
-
-
-def resolve_hostname(hostname):
-    try:
-        socket.inet_aton(hostname)  # is already an ip
-        return hostname
-    except socket.error:
-        pass
-    try:
-        ip_address = socket.gethostbyname(hostname)
-    except Exception as e:
-        return hostname
-    else:
-        return ip_address
+    yield from protocols
 
 
 def get_severity_from_cvss(cvss):
