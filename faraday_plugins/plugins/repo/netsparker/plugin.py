@@ -141,7 +141,7 @@ class Item:
 
         self.ref = []
         if self.cwe:
-            self.ref.append("CWE-" + self.cwe)
+            self.cwe = ["CWE-" + self.cwe]
         if self.owasp:
             self.ref.append("OWASP-" + self.owasp)
         if self.reference:
@@ -229,7 +229,7 @@ class NetsparkerPlugin(PluginXMLFormat):
             self.createAndAddVulnWebToService(h_id, s_id, name, ref=i.ref, website=i.hostname,
                                                      severity=i.severity, desc=desc, path=i.url, method=i.method,
                                                      request=i.request, response=i.response, resolution=resolution,
-                                                     pname=i.param, data=i.data, cve=i.cve)
+                                                     pname=i.param, data=i.data, cve=i.cve, cwe=i.cwe)
 
         del parser
 

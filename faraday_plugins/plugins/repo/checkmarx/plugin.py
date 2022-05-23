@@ -112,7 +112,7 @@ class CheckmarxPlugin(PluginXMLFormat):
             vuln_name = vulns.query_attrib['name']
             vuln_severity = vulns.query_attrib['Severity']
             vuln_external_id = vulns.query_attrib['id']
-            refs.append(f'CWE-{vulns.query_attrib["cweId"]}')
+            cwe = [f'CWE-{vulns.query_attrib["cweId"]}']
             data = ''
             for files_data in vulns.path_node:
                 for file_data in files_data:
@@ -125,11 +125,11 @@ class CheckmarxPlugin(PluginXMLFormat):
                 refs.append(v_result['FileName'])
 
             self.createAndAddVulnToHost(host_id, vuln_name, severity=vuln_severity,
-                                        resolution=data, external_id=vuln_external_id)
+                                        resolution=data, external_id=vuln_external_id, cwe=cwe)
 
             self.createAndAddVulnWebToService(host_id, service_to_interface, vuln_name,
                                               desc=vuln_desc, severity=vuln_severity,
-                                              resolution=data, ref=refs)
+                                              resolution=data, ref=refs, cwe=cwe)
 
 
 def createPlugin(ignore_info=False, hostname_resolution=True):

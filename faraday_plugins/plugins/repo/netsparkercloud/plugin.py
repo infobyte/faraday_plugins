@@ -123,7 +123,7 @@ class Item:
 
         self.ref = []
         if self.cwe:
-            self.ref.append(f"CWE-{self.cwe}")
+            self.cwe = [f"CWE-{self.cwe}"]
         if self.owasp:
             self.ref.append(f"OWASP-{self.owasp}")
 
@@ -192,7 +192,7 @@ class NetsparkerCloudPlugin(PluginXMLFormat):
             v_id = self.createAndAddVulnWebToService(h_id, s_id, i.name, ref=i.ref, website=i.hostname,
                                                      severity=i.severity, desc=i.desc, path=i.url.path, method=i.method,
                                                      request=i.request, response=i.response, resolution=i.resolution,
-                                                     pname=i.param)
+                                                     pname=i.param, cwe=i.cwe)
         del parser
 
 
