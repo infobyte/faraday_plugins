@@ -13,6 +13,7 @@ from urllib.parse import urlsplit
 
 SERVICE_MAPPER = None
 CVE_regex = re.compile(r'CVE-\d{4}-\d{4,7}')
+CWE_regex = re.compile(r'CWE-\d{1,4}')
 logger = logging.getLogger(__name__)
 
 
@@ -20,7 +21,7 @@ def get_vulnweb_url_fields(url):
     """Given a URL, return kwargs to pass to createAndAddVulnWebToService."""
     parse = urlsplit(url)
     return {
-        "website": "{}://{}".format(parse.scheme, parse.netloc),
+        "website": f"{parse.scheme}://{parse.netloc}",
         "path": parse.path,
         "query": parse.query
     }
@@ -94,15 +95,14 @@ def get_all_protocols():
         'mobility-header'
     ]
 
-    for item in protocols:
-        yield item
+    yield from protocols
 
 
 def resolve_hostname(hostname):
     try:
         socket.inet_aton(hostname)  # is already an ip
         return hostname
-    except socket.error:
+    except OSError:
         pass
     try:
         ip_address = socket.gethostbyname(hostname)
@@ -131,4 +131,9 @@ def get_severity_from_cvss(cvss):
 
 def its_cve(cves: list):
     r = [cve for cve in cves if CVE_regex.match(cve)]
+    return r
+
+
+def its_cwe(cwes: list):
+    r = [cwe for cwe in cwes if CWE_regex.match(cwe)]
     return r
