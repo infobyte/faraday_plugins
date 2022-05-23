@@ -58,7 +58,7 @@ class ArachniXmlParser:
             return System(system_tree, True)
 
 
-class Issue():
+class Issue:
 
     def __init__(self, issue_node):
         self.node = issue_node
@@ -165,9 +165,9 @@ class Issue():
         data = request.findtext("method", "").upper()
         data += f" {request.findtext('url', '')}"
         for h in request.findall('headers/header'):
-            data += "\n%s: %s" % (h.get('name'), h.get('value'))
+            data += f"\n{h.get('name')}: {h.get('value')}"
         if request.findtext('body',""):
-            data += "\n%s" % request.findtext('body',"")
+            data += f"\n{request.findtext('body','')}"
         return data
 
     @staticmethod
@@ -199,7 +199,7 @@ class Issue():
             return 'None'
 
 
-class System():
+class System:
 
     def __init__(self, node, tag_exists):
         self.node = node
@@ -277,7 +277,7 @@ class System():
         return result
 
 
-class Plugins():
+class Plugins:
     """
     Support:
     WAF (Web Application Firewall) Detector (waf_detector)
@@ -444,7 +444,7 @@ class ArachniPlugin(PluginXMLFormat):
 
             references = issue.references
             if issue.cwe != 'None':
-                references.append('CWE-' + str(issue.cwe))
+                cwe = ['CWE-' + str(issue.cwe)]
 
             if resol == 'None':
                 resol = ''
@@ -464,7 +464,9 @@ class ArachniPlugin(PluginXMLFormat):
                 pname=issue.var,
                 params=issue.parameters,
                 request=issue.request,
-                response=issue.response)
+                response=issue.response,
+                cwe=cwe
+            )
 
         return
 
@@ -495,9 +497,9 @@ class ArachniPlugin(PluginXMLFormat):
         # add reporter
         cmd_prefix_match = re.match(r"(^.*?)arachni ", command_string)
         cmd_prefix = cmd_prefix_match.group(1)
-        reporter_cmd = "%s%s --reporter=\"xml:outfile=%s\" \"%s\"" % (cmd_prefix, "arachni_reporter", xml_file_path,
+        reporter_cmd = "{}{} --reporter=\"xml:outfile={}\" \"{}\"".format(cmd_prefix, "arachni_reporter", xml_file_path,
                                                                       afr_file_path)
-        return "/usr/bin/env -- bash -c '%s  2>&1 && if [ -e \"%s\" ];then %s 2>&1;fi'" % (main_cmd,
+        return "/usr/bin/env -- bash -c '{}  2>&1 && if [ -e \"{}\" ];then {} 2>&1;fi'".format(main_cmd,
                                                                                            afr_file_path,
                                                                                            reporter_cmd)
 

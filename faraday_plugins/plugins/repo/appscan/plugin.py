@@ -159,14 +159,15 @@ class AppScanParser:
                 "response": response,
                 "website": entity['website'],
                 "path": entity['path'],
-                "cve": []
+                "cve": [],
+                "cwe": []
             }
             if cve:
                 issue_data["cve"].append(cve)
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
-                issue_data["ref"].append(f"CWE: {cwe}")
+                issue_data["cwe"].append(f"CWE-{cwe}")
             if cvss:
                 issue_data["ref"].append(cvss)
             if cvss_base_vector:
@@ -215,7 +216,8 @@ class AppScanParser:
                 "desc": description,
                 "ref": [],
                 "resolution": resolution,
-                "cve": []
+                "cve": [],
+                "cwe": []
             }
 
             if cve:
@@ -223,7 +225,7 @@ class AppScanParser:
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
-                issue_data["ref"].append(f"CWE: {cwe}")
+                issue_data["cwe"].append(f"CWE-{cwe}")
             if cvss:
                 issue_data["ref"].append(cvss)
             if cvss_base_vector:

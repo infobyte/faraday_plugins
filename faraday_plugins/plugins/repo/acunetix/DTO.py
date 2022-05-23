@@ -46,11 +46,11 @@ class Cwe:
 
     @property
     def id_attr(self) -> str:
-        return self.node.findtext('id', '')
+        return self.node.attrib.get('id', '')
 
     @property
     def text(self) -> str:
-        return self.node.findtext('#text', '')
+        return self.node.text
 
 
 class Cwelist:
