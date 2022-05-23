@@ -8,7 +8,6 @@ import re
 import os
 
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 __author__ = "Javier Victor Mariano Bruno"
@@ -47,10 +46,10 @@ class CmdFtpPlugin(PluginBase):
     def parseOutputString(self, output):
 
         host_info = re.search(r"Connected to (.+)\.", output)
-        banner = re.search("220?([\w\W]+)$", output)
+        banner = re.search(r"220?([\w\W]+)$", output)
         if re.search("Connection timed out", output) is None and host_info is not None:
             hostname = host_info.group(1)
-            ip_address = resolve_hostname(hostname)
+            ip_address = self.resolve_hostname(hostname)
             self._version = banner.groups(0) if banner else ""
             h_id = self.createAndAddHost(ip_address, hostnames=[hostname])
             s_id = self.createAndAddServiceToHost(
@@ -68,11 +67,9 @@ class CmdFtpPlugin(PluginBase):
         count_args = command_string.split()
         c = count_args.__len__()
         self._port = "21"
-        if re.search("[\d]+", count_args[c - 1]):
+        if re.search(r"[\d]+", count_args[c - 1]):
             self._port = count_args[c - 1]
 
 
-def createPlugin(ignore_info=False):
-    return CmdFtpPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return CmdFtpPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

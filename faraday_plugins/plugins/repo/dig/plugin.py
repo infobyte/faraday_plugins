@@ -7,17 +7,16 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 
-__author__ = u"Andres Tarantini"
-__copyright__ = u"Copyright (c) 2015 Andres Tarantini"
-__credits__ = [u"Andres Tarantini"]
-__license__ = u"MIT"
-__version__ = u"0.0.1"
-__maintainer__ = u"Andres Tarantini"
-__email__ = u"atarantini@gmail.com"
-__status__ = u"Development"
+__author__ = "Andres Tarantini"
+__copyright__ = "Copyright (c) 2015 Andres Tarantini"
+__credits__ = ["Andres Tarantini"]
+__license__ = "MIT"
+__version__ = "0.0.1"
+__maintainer__ = "Andres Tarantini"
+__email__ = "atarantini@gmail.com"
+__status__ = "Development"
 
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class DigPlugin(PluginBase):
@@ -36,14 +35,14 @@ class DigPlugin(PluginBase):
     def parseOutputString(self, output):
         # Ignore all lines that start with ";"
         parsed_output = [line for line in output.splitlines() if line and line[
-            0] != u";"]
+            0] != ";"]
         if not parsed_output:
             return True
 
         # Parse results
         results = []
-        answer_section_columns = [u"domain",
-                                  u"ttl", u"class", u"type", u"data"]
+        answer_section_columns = ["domain",
+                                  "ttl", "class", "type", "data"]
         for line in parsed_output:
             line_split = line.split() # the first 4 elements are domain, ttl, class, type; everything else data
             results.append(dict(zip(answer_section_columns, line_split[:4] + [line_split[4:]] )))
@@ -51,29 +50,29 @@ class DigPlugin(PluginBase):
         # Create hosts is results information is relevant
         try:
             for result in results:
-                relevant_types = [u"A", u"AAAA", u"MX", u"NS", u"SOA", u"TXT"]
+                relevant_types = ["A", "AAAA", "MX", "NS", "SOA", "TXT"]
                 # TODO implement more types from https://en.wikipedia.org/wiki/List_of_DNS_record_types
 
-                if result.get(u"type") in relevant_types:
+                if result.get("type") in relevant_types:
 
                     # get domain
-                    domain = result.get(u"domain")
+                    domain = result.get("domain")
 
 
                     # get IP address (special if type "A")
-                    if result.get(u"type") == u"A": # A = IPv4 address from dig
-                        ip_address = result.get(u"data")[0]
+                    if result.get("type") == "A": # A = IPv4 address from dig
+                        ip_address = result.get("data")[0]
                     else:                           # if not, from socket
-                        ip_address = resolve_hostname(domain)
+                        ip_address = self.resolve_hostname(domain)
 
                     # Create host
                     host_id = self.createAndAddHost(ip_address, hostnames=[domain])
 
 
                     # all other TYPES that aren't 'A' and 'AAAA' are dealt here:
-                    if result.get(u"type") == u"MX": # Mail exchange record
-                        mx_priority = result.get(u"data")[0]
-                        mx_record = result.get(u"data")[1]
+                    if result.get("type") == "MX": # Mail exchange record
+                        mx_priority = result.get("data")[0]
+                        mx_record = result.get("data")[1]
 
                         service_id = self.createAndAddServiceToHost(
                             host_id=host_id,
@@ -89,22 +88,22 @@ class DigPlugin(PluginBase):
                             name="priority",
                             text=text.encode('ascii', 'ignore'))
 
-                    elif result.get(u"type") == u"NS": # Name server record
-                        ns_record = result.get(u"data")[0]
+                    elif result.get("type") == "NS": # Name server record
+                        ns_record = result.get("data")[0]
                         self.createAndAddServiceToHost(
                             name=ns_record,
                             protocol="DNS",
                             ports=[53],
                             description="DNS Server")
 
-                    elif result.get(u"type") == u"SOA": # Start of Authority Record
-                        ns_record = result.get(u"data")[0] # primary namer server
-                        responsible_party = result.get(u"data")[1] # responsible party of domain
-                        timestamp = result.get(u"data")[2]
-                        refresh_zone_time = result.get(u"data")[3]
-                        retry_refresh_time = result.get(u"data")[4]
-                        upper_limit_time = result.get(u"data")[5]
-                        negative_result_ttl = result.get(u"data")[6]
+                    elif result.get("type") == "SOA": # Start of Authority Record
+                        ns_record = result.get("data")[0] # primary namer server
+                        responsible_party = result.get("data")[1] # responsible party of domain
+                        timestamp = result.get("data")[2]
+                        refresh_zone_time = result.get("data")[3]
+                        retry_refresh_time = result.get("data")[4]
+                        upper_limit_time = result.get("data")[5]
+                        negative_result_ttl = result.get("data")[6]
 
                         service_id = self.createAndAddServiceToHost(
                             host_id=host_id,
@@ -127,8 +126,8 @@ class DigPlugin(PluginBase):
                             name="priority",
                             text=text.encode('ascii', 'ignore'))
 
-                    elif result.get(u"type") == u"TXT": # TXT record
-                        text = " ".join(result.get(u"data")[:])
+                    elif result.get("type") == "TXT": # TXT record
+                        text = " ".join(result.get("data")[:])
                         self.createAndAddNoteToHost(
                             host_id=host_id,
                             name="TXT Information",
@@ -141,7 +140,5 @@ class DigPlugin(PluginBase):
         return True
 
 
-def createPlugin(ignore_info=False):
-    return DigPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return DigPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

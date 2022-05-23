@@ -6,7 +6,6 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Facundo de Guzmán, Esteban Guillardoy"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -61,7 +60,7 @@ class TelnetRouterPlugin(PluginBase):
         host_info = re.search(r"Connected to (.+)\.", output)
 
         hostname = host_info.group(1)
-        ip_address = resolve_hostname(hostname)
+        ip_address = self.resolve_hostname(hostname)
 
         if host_info is not None:
             h_id = self.createAndAddHost(ip_address, hostnames=[hostname])
@@ -77,7 +76,5 @@ class TelnetRouterPlugin(PluginBase):
             self._port = count_args[c - 1]
 
 
-def createPlugin(ignore_info=False):
-    return TelnetRouterPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return TelnetRouterPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

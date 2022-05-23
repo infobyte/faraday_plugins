@@ -9,7 +9,6 @@ import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = 'Ezequiel Tavella'
 __copyright__ = 'Copyright 2016, Faraday Project'
@@ -420,9 +419,9 @@ class ArachniPlugin(PluginXMLFormat):
 
         self.hostname = self.getHostname(parser.system.url)
         if parser.plugins.ip:
-            self.address = resolve_hostname(parser.plugins.ip)
+            self.address = self.resolve_hostname(parser.plugins.ip)
         else:
-            self.address = resolve_hostname(self.hostname)
+            self.address = self.resolve_hostname(self.hostname)
 
         # Create host and interface
         host_id = self.createAndAddHost(self.address, hostnames=[self.hostname])
@@ -519,5 +518,5 @@ class ArachniPlugin(PluginXMLFormat):
         return self.hostname
 
 
-def createPlugin(ignore_info=False):
-    return ArachniPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return ArachniPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
