@@ -23,7 +23,7 @@ import pytz
 import simplejson as json
 
 # Local application imports
-from faraday_plugins.plugins.plugins_utils import its_cve
+from faraday_plugins.plugins.plugins_utils import its_cve, its_cwe
 
 logger = logging.getLogger("faraday").getChild(__name__)
 
@@ -425,9 +425,12 @@ class PluginBase:
             cve = []
         elif type(cve) is str:
             cve = [cve]
+        cve = its_cve(cve)
         if cwe is None:
             cwe = []
-        cve = its_cve(cve)
+        elif type(cwe) is str:
+            cwe = [cwe]
+        cwe = its_cwe(cwe)
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
@@ -464,6 +467,9 @@ class PluginBase:
         cve = its_cve(cve)
         if cwe is None:
             cwe = []
+        elif type(cwe) is str:
+            cwe = [cwe]
+        cwe = its_cwe(cwe)
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
@@ -524,7 +530,7 @@ class PluginBase:
             cwe = []
         elif type(cwe) is str:
             cwe = [cwe]
-        cwe = its_cve(cwe)
+        cwe = its_cwe(cwe)
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
                          "data": data, "website": website, "path": path, "request": request, "response": response,

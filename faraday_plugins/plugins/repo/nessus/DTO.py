@@ -284,7 +284,7 @@ class ReportItem:
 
     @property
     def cwe(self) -> list:
-        return [i.text for i in self.node.findall("cwe")]
+        return ["CWE-"+i.text for i in self.node.findall("cwe")]
 
     @property
     def edb_id(self) -> list:
@@ -394,4 +394,3 @@ class Report:
     @property
     def report_hosts(self) -> List[ReportHost]:
         return [ReportHost(i) for i in self.node.findall('ReportHost')]
-

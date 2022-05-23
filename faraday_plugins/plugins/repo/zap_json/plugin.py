@@ -89,10 +89,11 @@ class ZapJsonPlugin(PluginJsonFormat):
                         data += f" Parameter:\n {instance.param}"
 
                     ref = []
+                    cwe = []
                     if item.reference:
                         ref += split_and_strip_tags(item.reference)
                     if item.cwe:
-                        ref += [f"CWE:{item.cwe}"]
+                        cwe += [f"CWE-{item.cwe}"]
                     if item.wasc:
                         ref += [f"WASC:{item.wasc}"]
 
@@ -111,7 +112,8 @@ class ZapJsonPlugin(PluginJsonFormat):
                         resolution=strip_tags(item.solution),
                         data=data,
                         pname=instance.param,
-                        external_id="ZAP-" + str(item.plugin_id)
+                        external_id="ZAP-" + str(item.plugin_id),
+                        cwe=cwe
                     )
 
         del parser

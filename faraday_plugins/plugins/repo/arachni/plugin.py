@@ -444,7 +444,6 @@ class ArachniPlugin(PluginXMLFormat):
             references = issue.references
             if issue.cwe != 'None':
                 cwe = ['CWE-' + str(issue.cwe)]
-
             if resol == 'None':
                 resol = ''
 

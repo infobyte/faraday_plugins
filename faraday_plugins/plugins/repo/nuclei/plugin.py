@@ -95,8 +95,8 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             # TODO CVSSv2, CVSSv3, CWE and CAPEC
             #cvssv2 = vuln_dict['info'].get('classification', {}).get('cvss-score')
             #cvssv3 = vuln_dict['info'].get('classification', {}).get('cvss-metrics')
-            #cwe = vuln_dict['info'].get('classification', {}).get('cwe-id', [])
-            #cwe = [x.upper() for x in cwe]
+            cwe = vuln_dict['info'].get('classification', {}).get('cwe-id', [])
+            cwe = [x.upper() for x in cwe]
             #capec = vuln_dict['info'].get('metadata', {}).get('capec', [])
             #if isinstance(capec, str):
             #    capec = capec.upper().split(',')
@@ -146,7 +146,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 # TODO CVSSv2, CVSSv3, CWE and CAPEC
                 #cvssv2=cvssv2,
                 #cvssv3=cvssv3,
-                #cwe=cwe,
+                cwe=cwe,
                 #capec=capec,
                 website=host,
                 request=request,
