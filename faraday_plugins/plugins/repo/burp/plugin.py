@@ -222,8 +222,8 @@ class BurpPlugin(PluginXMLFormat):
             ref = []
             if item.references:
                 ref += self.get_url(item.references)
+            cwe = []
             if item.vulnClass:
-                cwe = []
                 for cwe_ref in self.get_ref(item.vulnClass):
                     if CWE_regex.search(cwe_ref):
                         cwe.append(CWE_regex.search(cwe_ref).group())
