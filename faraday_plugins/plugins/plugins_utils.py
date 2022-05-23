@@ -98,20 +98,6 @@ def get_all_protocols():
     yield from protocols
 
 
-def resolve_hostname(hostname):
-    try:
-        socket.inet_aton(hostname)  # is already an ip
-        return hostname
-    except OSError:
-        pass
-    try:
-        ip_address = socket.gethostbyname(hostname)
-    except Exception as e:
-        return hostname
-    else:
-        return ip_address
-
-
 def get_severity_from_cvss(cvss):
     try:
         if type(cvss) != float:

@@ -77,5 +77,5 @@ class GrypePlugin(PluginJsonFormat):
         return command_string
 
 
-def createPlugin(ignore_info=False):
-    return GrypePlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return GrypePlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

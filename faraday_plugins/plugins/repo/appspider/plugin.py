@@ -113,5 +113,5 @@ class AppSpiderPlugin(PluginXMLFormat):
                                         external_id=vuln_external_id, data=str_data, cwe=cwe)
 
 
-def createPlugin(ignore_info=False):
-    return AppSpiderPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return AppSpiderPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
