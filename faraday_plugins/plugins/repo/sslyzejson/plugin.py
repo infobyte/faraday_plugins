@@ -7,7 +7,6 @@ See the file 'doc/LICENSE' for the license information
 import re
 import json
 from faraday_plugins.plugins.plugin import PluginJsonFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Blas Moyano"
 __copyright__ = "Copyright (c) 2020, Infobyte LLC"
@@ -21,7 +20,8 @@ __status__ = "Development"
 
 class SslyzeJsonParser:
 
-    def __init__(self, json_output):
+    def __init__(self, json_output, resolve_hostname):
+        self.resolve_hostname = resolve_hostname
         json_sslyze = json.loads(json_output)
         scan_result = json_sslyze.get('server_scan_results')
         self.list_vul = self.get_vuln(scan_result)
@@ -67,7 +67,7 @@ class SslyzeJsonParser:
     def get_host(self, server_location):
         port = server_location.get('port', None)
         hostname = server_location.get('hostname', None)
-        ip = server_location.get('ip_address', resolve_hostname(hostname))
+        ip = server_location.get('ip_address', self.resolve_hostname(hostname))
         if port != 443:
             url = f"https://{hostname}:{port}"
         else:
@@ -193,7 +193,7 @@ class SslyzePlugin(PluginJsonFormat):
         self._temp_file_extension = "json"
 
     def parseOutputString(self, output):
-        parser = SslyzeJsonParser(output)
+        parser = SslyzeJsonParser(output, self.resolve_hostname)
 
         for info_sslyze in parser.list_vul:
             info_sslyze['host_info'].get('hostname')
@@ -287,6 +287,5 @@ class SslyzePlugin(PluginJsonFormat):
                           command_string)
 
 
-def createPlugin(ignore_info=False):
-    return SslyzePlugin(ignore_info=ignore_info)
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return SslyzePlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

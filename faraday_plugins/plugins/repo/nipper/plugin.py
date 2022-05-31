@@ -1,7 +1,5 @@
 import xml.etree.ElementTree as ET
-from colorama import Fore, Style
 
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = "@rfocke and @pasta <3"
@@ -134,7 +132,7 @@ class NipperPlugin(PluginXMLFormat):
         parser = NipperParser(output, debug=False)
         for vuln in parser.vulns_first:
             for device in vuln.affected_devices:
-                ip = resolve_hostname(device)
+                ip = self.resolve_hostname(device)
                 h_id = self.createAndAddHost(ip, hostnames=device)
                 self.createAndAddVulnToHost(h_id,
                                             name=vuln.name,
@@ -148,7 +146,7 @@ class NipperPlugin(PluginXMLFormat):
                                             )
         for vuln in parser.vulns_audit:
             if vuln.data:
-                ip = resolve_hostname(device)
+                ip = self.resolve_hostname(device)
                 h_id = self.createAndAddHost(ip, hostnames=vuln.device)
                 self.createAndAddVulnToHost(h_id,
                                             name=vuln.name,
@@ -161,5 +159,5 @@ class NipperPlugin(PluginXMLFormat):
                                             )
 
 
-def createPlugin(ignore_info=False):
-    return NipperPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return NipperPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

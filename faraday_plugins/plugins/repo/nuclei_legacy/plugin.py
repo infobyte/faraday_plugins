@@ -5,7 +5,6 @@ import dateutil
 from packaging import version
 from urllib.parse import urlparse
 from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Emilio Couto"
 __copyright__ = "Copyright (c) 2021, Faraday Security"
@@ -39,7 +38,7 @@ class NucleiLegacyPlugin(PluginMultiLineJsonFormat):
             vuln_dict = json.loads(vuln_json)
             host = vuln_dict.get('host')
             url_data = urlparse(host)
-            ip = vuln_dict.get("ip", resolve_hostname(url_data.hostname))
+            ip = vuln_dict.get("ip", self.resolve_hostname(url_data.hostname))
             host_id = self.createAndAddHost(
                 name=ip,
                 hostnames=[url_data.hostname])
@@ -149,5 +148,5 @@ class NucleiLegacyPlugin(PluginMultiLineJsonFormat):
             except Exception as e:
                 return False
 
-def createPlugin(ignore_info=False):
-    return NucleiLegacyPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return NucleiLegacyPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

@@ -2,8 +2,6 @@ import re
 from collections import defaultdict
 
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
-
 
 class RDPScanPlugin(PluginBase):
 
@@ -43,5 +41,5 @@ class RDPScanPlugin(PluginBase):
                     )
 
 
-def createPlugin(ignore_info=False):
-    return RDPScanPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return RDPScanPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

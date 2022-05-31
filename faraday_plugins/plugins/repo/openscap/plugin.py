@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2020  Infobyte LLC (http://www.infobytesec.com/)
@@ -34,7 +33,7 @@ class OpenScapParser:
             parser = etree.XMLParser(recover=True)
             tree = etree.fromstring(xml_output, parser=parser)
         except SyntaxError as err:
-            print('SyntaxError In xml: %s. %s' % (err, xml_output))
+            print(f'SyntaxError In xml: {err}. {xml_output}')
             return None
         return tree
 
@@ -208,5 +207,5 @@ class OpenScapPlugin(PluginXMLFormat):
                     cve=[vuln_cve])
 
 
-def createPlugin(ignore_info=False):
-    return OpenScapPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return OpenScapPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
