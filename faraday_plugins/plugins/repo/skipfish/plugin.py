@@ -12,7 +12,6 @@ import shutil
 import tempfile
 
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 __author__ = "Nicolas Rodriguez"
@@ -41,7 +40,7 @@ class SkipfishParser:
     def __init__(self, skipfish_filepath):
         self.filepath = skipfish_filepath
 
-        tmp = open(skipfish_filepath + "/samples.js", "r").read()
+        tmp = open(skipfish_filepath + "/samples.js").read()
         data = self.extract_data(
             tmp,
             "var issue_samples =", "];",
@@ -52,7 +51,7 @@ class SkipfishParser:
         # Also remove \n character and space for have a valid JSON.
         issues = json.loads(repr(data[1]).replace("\\n"," ").replace("'","") + "]")
 
-        tmp = open(skipfish_filepath + "/index.html", "r").read()
+        tmp = open(skipfish_filepath + "/index.html").read()
         err_msg = json.loads(
             self.extract_data(
                 tmp,
@@ -152,7 +151,7 @@ class SkipfishPlugin(PluginBase):
             for sample in issue["samples"]:
                 if not sample["url"] in hostc:
                     reg = re.search(
-                        "(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))[\:]*([0-9]+)*([/]*($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+)).*?$", sample["url"])
+                        "(http|https|ftp)\\://([a-zA-Z0-9\\.\\-]+(\\:[a-zA-Z0-9\\.&amp;%\\$\\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\\-]+\\.)*[a-zA-Z0-9\\-]+\\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))[\\:]*([0-9]+)*([/]*($|[a-zA-Z0-9\\.\\,\\?\'\\\\+&amp;%\\$#\\=~_\\-]+)).*?$", sample["url"])
 
                     protocol = reg.group(1)
                     host = reg.group(4)
@@ -161,7 +160,7 @@ class SkipfishPlugin(PluginBase):
                     else:
                         port = 443 if protocol == "https" else 80
 
-                    ip = resolve_hostname(host)
+                    ip = self.resolve_hostname(host)
 
                     h_id = self.createAndAddHost(ip, hostnames=[host])
                     s_id = self.createAndAddServiceToHost(h_id, "http", "tcp", ports=[port], status="open")
@@ -204,7 +203,5 @@ class SkipfishPlugin(PluginBase):
 
 
 
-def createPlugin(ignore_info=False):
-    return SkipfishPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return SkipfishPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

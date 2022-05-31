@@ -56,7 +56,5 @@ class traceroutePlugin(PluginBase):
         return None
 
 
-def createPlugin(ignore_info=False):
-    return traceroutePlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return traceroutePlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

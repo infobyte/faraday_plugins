@@ -8,8 +8,7 @@ from urllib.parse import urlsplit
 
 from lxml import etree
 
-from faraday_plugins.plugins.plugin import PluginXMLFormat, PluginJsonFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
+from faraday_plugins.plugins.plugin import PluginJsonFormat
 from faraday_plugins.plugins.repo.acunetix.DTO import Acunetix, Scan
 from json import loads
 
@@ -94,7 +93,7 @@ class AcunetixJsonPlugin(PluginJsonFormat):
     def new_structure(self, site: Scan):
         start_url = site.info.host
         url_data = urlsplit(start_url)
-        site_ip = resolve_hostname(url_data.hostname)
+        site_ip = self.resolve_hostname(url_data.hostname)
         ports = '443' if (url_data.scheme == 'https') else '80'
         vulnerability_type = {i.vt_id: i for i in site.vul_types}
         h_id = self.createAndAddHost(site_ip, None, hostnames=[url_data.hostname])
@@ -141,5 +140,5 @@ class AcunetixJsonPlugin(PluginJsonFormat):
         return url_data
 
 
-def createPlugin(ignore_info=False):
-    return AcunetixJsonPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return AcunetixJsonPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

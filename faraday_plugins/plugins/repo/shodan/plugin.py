@@ -106,5 +106,5 @@ class ShodanPlugin(PluginMultiLineJsonFormat):
         return cmd
 
 
-def createPlugin(ignore_info=False):
-    return ShodanPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return ShodanPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

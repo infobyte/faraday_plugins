@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname, CVE_regex
+from faraday_plugins.plugins.plugins_utils import CVE_regex
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -151,8 +151,6 @@ class Item:
             self.cvss3["vector_string"] = self.cvss_full_vector.replace("CVSS:3.0/", "")
         if self.cvss_score:
             self.cvss3["base_score"] = self.cvss_score
-
-
         self.data = ""
         self.data += "\nKnowVulns: " + \
             "\n".join(self.kvulns) if self.kvulns else ""
@@ -205,8 +203,8 @@ class NetsparkerPlugin(PluginXMLFormat):
         host_names_resolve = {}
         for i in parser.items:
 
-            if (i.hostname not in host_names_resolve):
-                ip = resolve_hostname(i.hostname)
+            if i.hostname not in host_names_resolve:
+                ip = self.resolve_hostname(i.hostname)
                 host_names_resolve[i.hostname] = ip
             else:
                 ip = host_names_resolve[i.hostname]
@@ -238,5 +236,5 @@ class NetsparkerPlugin(PluginXMLFormat):
         del parser
 
 
-def createPlugin(ignore_info=False):
-    return NetsparkerPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return NetsparkerPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
