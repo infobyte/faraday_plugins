@@ -52,7 +52,7 @@ class NiktoXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print("SyntaxError: %s. %s" % (err, xml_output))
+            print(f"SyntaxError: {err}. {xml_output}")
             return None
 
         return tree
@@ -311,9 +311,9 @@ class NiktoPlugin(PluginXMLFormat):
         if arg_match is None:
             return re.sub(r"(^.*?nikto(\.pl)?)", r"\1 -output %s -Format XML" % self._output_file_path, command_string)
         else:
-            data = re.sub(" \-Format XML", "", command_string)
+            data = re.sub(r" \-Format XML", "", command_string)
             return re.sub(arg_match.group(1), r"-output %s -Format XML" % self._output_file_path, data)
 
 
-def createPlugin(ignore_info=False):
-    return NiktoPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return NiktoPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

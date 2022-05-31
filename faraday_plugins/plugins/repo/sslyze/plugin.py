@@ -132,7 +132,7 @@ class SslyzePlugin(PluginXMLFormat):
                 host_id,
                 service_id,
                 name="Certificate mismatch",
-                desc="Certificate does not match server hostname {}".format(server_hostname),
+                desc=f"Certificate does not match server hostname {server_hostname}",
                 severity="info")
         # Ciphers
         cipher = parser.cipher_suite
@@ -143,7 +143,7 @@ class SslyzePlugin(PluginXMLFormat):
                     host_id,
                     service_id,
                     name=value,
-                    desc="In protocol [{}], weak cipher suite: {}".format(key, value),
+                    desc=f"In protocol [{key}], weak cipher suite: {value}",
                     severity="low")
 
         # Heartbleed
@@ -169,5 +169,5 @@ class SslyzePlugin(PluginXMLFormat):
                 severity="medium")
 
 
-def createPlugin(ignore_info=False):
-    return SslyzePlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return SslyzePlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

@@ -50,7 +50,7 @@ class DnsenumXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print("SyntaxError: %s. %s" % (err, xml_output))
+            print(f"SyntaxError: {err}. {xml_output}")
             return None
 
         return tree
@@ -165,5 +165,5 @@ class DnsenumPlugin(PluginBase):
             return re.sub(arg_match.group(1), r"-o %s" % self._output_file_path, command_string)
 
 
-def createPlugin(ignore_info=False):
-    return DnsenumPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return DnsenumPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

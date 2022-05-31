@@ -17,7 +17,6 @@ __email__ = "atarantini@gmail.com"
 __status__ = "Development"
 
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class PeepingTomPlugin(PluginBase):
@@ -49,7 +48,7 @@ class PeepingTomPlugin(PluginBase):
         for url in re.findall(r'href=[\'"]?([^\'" >]+)', html):
             if "://" in url:
                 url_parsed = urlparse(url)
-                address = resolve_hostname(url_parsed.netloc)
+                address = self.resolve_hostname(url_parsed.netloc)
                 host = self.createAndAddHost(address)
                 service = self.createAndAddServiceToHost(host, "http", protocol="tcp", ports=[80])
                 self.createAndAddNoteToService(
@@ -71,7 +70,5 @@ class PeepingTomPlugin(PluginBase):
         self._path = current_path
 
 
-def createPlugin(ignore_info=False):
-    return PeepingTomPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return PeepingTomPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

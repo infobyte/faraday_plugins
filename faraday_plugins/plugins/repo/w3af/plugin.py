@@ -9,7 +9,6 @@ import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -147,17 +146,17 @@ class Item:
 
             self.req = hreq.find('status').text
             for h in hreq.findall('headers/header'):
-                self.req += "\n%s: %s" % (h.get('field'), h.get('content'))
+                self.req += f"\n{h.get('field')}: {h.get('content')}"
 
-            if hreq.findtext('body',""):
-                self.req += "\n%s" % hreq.findtext('body',"")
+            if hreq.findtext('body', ""):
+                self.req += f"\n{hreq.findtext('body', '')}"
 
             self.resp = hres.find('status').text
             for h in hres.findall('headers/header'):
-                self.resp += "\n%s: %s" % (h.get('field'), h.get('content'))
+                self.resp += f"\n{h.get('field')}: {h.get('content')}"
 
-            if hres.findtext('body',""):
-                self.resp += "\n%s" % hres.findtext('body',"")
+            if hres.findtext('body', ""):
+                self.resp += f"\n{hres.findtext('body', '')}"
 
     def do_clean(self, value):
         myreturn = ""
@@ -202,7 +201,7 @@ class W3afPlugin(PluginXMLFormat):
 
     def parseOutputString(self, output):
         parser = W3afXmlParser(output)
-        ip = resolve_hostname(parser.host)
+        ip = self.resolve_hostname(parser.host)
         h_id = self.createAndAddHost(ip, hostnames=[parser.host])
         s_id = self.createAndAddServiceToHost(h_id, "http", "tcp", ports=[parser.port], status="open")
 
@@ -214,5 +213,5 @@ class W3afPlugin(PluginXMLFormat):
         del parser
 
 
-def createPlugin(ignore_info=False):
-    return W3afPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return W3afPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

@@ -19,7 +19,7 @@ __status__ = "Development"
 class MbsaParser:
     def __init__(self, log_output):
         self.computer_name = re.search('(Computer name:) (.*[A-Z])', log_output)
-        self.ip = re.search('(IP address:) ([0-9]+(?:\.[0-9]+){3})', log_output)
+        self.ip = re.search(r'(IP address:) ([0-9]+(?:\.[0-9]+){3})', log_output)
         self.scan_date = re.search('(Scan date:) (.*[0-9])', log_output)
         self.issues = re.findall(r'Issue: .*', log_output)
         self.score = re.findall(r'Score: .*', log_output)
@@ -114,5 +114,5 @@ class MbsaPlugin(PluginByExtension):
             i += 1
 
 
-def createPlugin(ignore_info=False):
-    return MbsaPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return MbsaPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

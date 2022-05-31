@@ -1,3 +1,8 @@
+1.6.6 [May 20th, 2022]:
+---
+ * Add hostname_resolution parameter within plugins
+ * Fix openvas external ID
+
 1.6.5 [Apr 28th, 2022]:
 ---
  * Now Openvas's plugin set severity to Critical when cvss >= 9.0

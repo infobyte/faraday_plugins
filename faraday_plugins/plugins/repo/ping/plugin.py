@@ -48,5 +48,5 @@ class CmdPingPlugin(PluginBase):
             return False
 
 
-def createPlugin(ignore_info=False):
-    return CmdPingPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return CmdPingPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
