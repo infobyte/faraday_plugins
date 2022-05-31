@@ -207,6 +207,8 @@ class Item:
         severity = self.get_text_from_subnode('threat')
         if severity == 'Alarm':
             severity = 'Critical'
+        if severity == 'Log':
+            severity = 'Info'
         return severity
 
     def get_service(self, port_string, port, details_from_host):
