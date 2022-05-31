@@ -74,5 +74,5 @@ class WhatWebPlugin(PluginJsonFormat):
                                   description=desc)
 
 
-def createPlugin(ignore_info=False):
-    return WhatWebPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return WhatWebPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

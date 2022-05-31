@@ -18,13 +18,13 @@ __email__ = "nrebagliati@infobytesec.com"
 __status__ = "Development"
 
 from faraday_plugins.plugins.plugin import PluginJsonFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class WPScanJsonParser:
 
-    def __init__(self, json_output):
+    def __init__(self, json_output, resolve_hostname):
         self.json_data = json.loads(json_output)
+        self.resolve_hostname = resolve_hostname
 
     def parse_url(self, url):
         # Strips protocol and gets hostname from URL.
@@ -39,7 +39,7 @@ class WPScanJsonParser:
         elif protocol == 'http':
             if not port:
                 port = 80
-        address = resolve_hostname(hostname)
+        address = self.resolve_hostname(hostname)
         return {'protocol': protocol, 'hostname': hostname, 'port': port, 'address': address}
 
 
@@ -58,7 +58,7 @@ class WPScanPlugin(PluginJsonFormat):
         self.json_keys = {"target_url", "effective_url", "interesting_findings"}
 
     def parseOutputString(self, output):
-        parser = WPScanJsonParser(output)
+        parser = WPScanJsonParser(output, self.resolve_hostname)
         url_data = parser.parse_url(parser.json_data['target_url'])
         host_id = self.createAndAddHost(url_data['address'], hostnames=[url_data['hostname']])
         service_id = self.createAndAddServiceToHost(
@@ -91,5 +91,5 @@ class WPScanPlugin(PluginJsonFormat):
                                               severity='unclassified')
 
 
-def createPlugin(ignore_info=False):
-    return WPScanPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return WPScanPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

@@ -21,7 +21,6 @@ __maintainer__ = "Blas"
 __email__ = "bmoyano@infobytesec.com"
 __status__ = "Development"
 
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 class CobaltParser:
@@ -85,7 +84,7 @@ class CobaltPlugin(PluginCSVFormat):
                     port = 80
             else:
                 port = url_data.port
-            name = resolve_hostname(url_data.netloc)
+            name = self.resolve_hostname(url_data.netloc)
             references = []
             if row['RefKey']:
                 references.append(row['RefKey'])
@@ -102,5 +101,5 @@ class CobaltPlugin(PluginCSVFormat):
                                               data=row['StepsToReproduce'], external_id=row['Tag'], run_date=run_date)
 
 
-def createPlugin(ignore_info=False):
-    return CobaltPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return CobaltPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

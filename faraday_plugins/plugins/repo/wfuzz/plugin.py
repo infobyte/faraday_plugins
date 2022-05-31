@@ -77,14 +77,12 @@ class WfuzzPlugin(PluginBase):
             lines = item['lines']
             chars = item['chars']
             words = item['words']
-            name = "Wfuzz found: {path} with status {status} on url {url}".format(path=path, status=status, url=url)
+            name = f"Wfuzz found: {path} with status {status} on url {url}"
             desc = 'Wfuzz found a response with status {status}. Response contains: \n* {words} words \n* {lines} ' \
                    'lines \n* {chars} chars'.format(words=words, lines=lines, chars=chars, status=status)
             self.createAndAddVulnWebToService(host_id, service_id, name, desc, severity="info", website=target,
                                               path=path)
 
 
-def createPlugin(ignore_info=False):
-    return WfuzzPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return WfuzzPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

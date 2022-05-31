@@ -178,5 +178,5 @@ class QualysWebappPlugin(PluginXMLFormat):
                                         external_id=vuln_scan_id, data=vuln_data_add)
 
 
-def createPlugin(ignore_info=False):
-    return QualysWebappPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return QualysWebappPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

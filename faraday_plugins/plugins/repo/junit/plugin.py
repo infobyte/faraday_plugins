@@ -23,7 +23,7 @@ __status__ = "Development"
 This plugin has been designed to be used with python-unittest2/paramiko script to perform security compliancy verification. It enables to have displayed both security scans results (nmap,
 nessus, ..) and security verification compliancy (CIS-CAT, compagny's product security requirement) by Faraday-IPE
 
-This plugin requires that a element "host" is added to <testcase/> (sed -i 's/<testcase/<testcase host=\"192.168.1.1\"/' junit.xml) 
+This plugin requires that a element "host" is added to <testcase/> (sed -i 's/<testcase/<testcase host=\"192.168.1.1\"/' junit.xml)
 
  <testsuite errors="0" failures="1" name="AccountsWithSuperuserPrivilegesShallBeDisabledByDefault-20170118090010" skipped="0" tests="1" time="0.144">
                 <testcase host="192.168.1.1" classname="AccountsWithSuperuserPrivilegesShallBeDisabledByDefault" name="test_sshdRootLogin" time="0.144">
@@ -68,7 +68,7 @@ class JunitXmlParser:
         try:
             tree = etree.fromstring(xml_output)
         except SyntaxError as err:
-            print("SyntaxError: %s. %s" % (err, xml_output))
+            print(f"SyntaxError: {err}. {xml_output}")
             return None
         return tree
 
@@ -131,5 +131,5 @@ class JunitPlugin(PluginXMLFormat):
         del parser
 
 
-def createPlugin(ignore_info=False):
-    return JunitPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return JunitPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

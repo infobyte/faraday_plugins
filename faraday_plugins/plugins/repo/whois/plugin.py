@@ -8,7 +8,6 @@ import re
 import os
 
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 __author__ = "Facundo de Guzmán, Esteban Guillardoy"
@@ -70,24 +69,24 @@ class CmdWhoisPlugin(PluginBase):
 
     def processCommandString(self, username, current_path, command_string):
         self.command_string = command_string
-        super(CmdWhoisPlugin, self).processCommandString(username, current_path, command_string)
+        super().processCommandString(username, current_path, command_string)
 
     def parseOutputString(self, output):
-        matches = re.findall("Name Server:\s*(.*)\s*", output)
+        matches = re.findall(r"Name Server:\s*(.*)\s*", output)
         if not matches:
-            matches = re.findall("nserver:\s*(.*)\s*", output)
+            matches = re.findall(r"nserver:\s*(.*)\s*", output)
 
         if not matches:
             ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', self.command_string)
             if not ip:
                 url = self.command_string.replace('whois ', '')
-                ip = [resolve_hostname(url)]
-            matches_descr = re.findall("descr:\s*(.*)\s*", output)
+                ip = [self.resolve_hostname(url)]
+            matches_descr = re.findall(r"descr:\s*(.*)\s*", output)
 
-            matches_netname = re.findall("NetName:\s*(.*)\s*", output)
+            matches_netname = re.findall(r"NetName:\s*(.*)\s*", output)
             if not matches_netname:
-                matches_netname = re.findall("netname:\s*(.*)\s*", output)
-            matches_ref = re.findall("Ref:\s*(.*)\s*", output)
+                matches_netname = re.findall(r"netname:\s*(.*)\s*", output)
+            matches_ref = re.findall(r"Ref:\s*(.*)\s*", output)
             desc = ""
             ref = []
             os_name = "unknown"
@@ -110,15 +109,15 @@ class CmdWhoisPlugin(PluginBase):
             for m in matches:
                 m = m.strip()
                 url = re.findall(r'https?://[^\s<>"]+|.[^\s<>"]+', str(m))
-                ip = resolve_hostname(url[0])
+                ip = self.resolve_hostname(url[0])
                 self.createAndAddHost(
                     ip,
                     hostnames=[m]
                 )
-            matches_domain = re.findall("Domain Name:\s*(.*)\s*", output)
+            matches_domain = re.findall(r"Domain Name:\s*(.*)\s*", output)
             for md in matches_domain:
                 md = md.strip()
-                ip = resolve_hostname(md)
+                ip = self.resolve_hostname(md)
                 self.createAndAddHost(
                     ip,
                     hostnames=[md]
@@ -126,5 +125,5 @@ class CmdWhoisPlugin(PluginBase):
         return True
 
 
-def createPlugin(ignore_info=False):
-    return CmdWhoisPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return CmdWhoisPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

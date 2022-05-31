@@ -9,7 +9,7 @@ import shlex
 import argparse
 import urllib.parse as urlparse
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import get_vulnweb_url_fields, resolve_hostname
+from faraday_plugins.plugins.plugins_utils import get_vulnweb_url_fields
 
 
 __author__ = "Matías Lang"
@@ -83,7 +83,7 @@ class DirsearchPlugin(PluginBase):
             return
         for (base_url, items) in data.items():
             base_split = urlparse.urlsplit(base_url)
-            ip = resolve_hostname(base_split.hostname)
+            ip = self.resolve_hostname(base_split.hostname)
             h_id = self.createAndAddHost(ip, hostnames=[base_split.hostname])
             s_id = self.createAndAddServiceToHost(
                 h_id,
@@ -104,13 +104,12 @@ class DirsearchPlugin(PluginBase):
             item['content-length'])
         redirect = item.get('redirect')
         if redirect is not None:
-            response += '\nLocation: {}'.format(redirect)
+            response += f'\nLocation: {redirect}'
         self.createAndAddVulnWebToService(
             h_id,
             s_id,
-            name='Path found: {} ({})'.format(item['path'], item['status']),
-            desc="Dirsearch tool found the following URL: {}".format(
-                url.geturl()),
+            name=f'Path found: {item["path"]} ({item["status"]})',
+            desc=f"Dirsearch tool found the following URL: {url.geturl()}",
             severity="info",
             method='GET',
             response=response,
@@ -129,9 +128,8 @@ class DirsearchPlugin(PluginBase):
             return None
         else:
             super().processCommandString(username, current_path, command_string)
-            return '{} --json-report {}'.format(command_string, self._output_file_path)
+            return f'{command_string} --json-report {self._output_file_path}'
 
 
-def createPlugin(ignore_info=False):
-    return DirsearchPlugin(ignore_info=ignore_info)
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return DirsearchPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

@@ -137,5 +137,5 @@ class AmapPlugin(PluginBase):
         return final
 
 
-def createPlugin(ignore_info=False):
-    return AmapPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return AmapPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

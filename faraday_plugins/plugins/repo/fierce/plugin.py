@@ -5,11 +5,8 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
-import os
-import random
 
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 __author__ = "Francisco Amato"
@@ -42,7 +39,7 @@ class FierceParser:
         self.items = []
 
         regex = re.search(
-            "DNS Servers for ([\w\.-]+):\n([^$]+)Trying zone transfer first...",
+            "DNS Servers for ([\\w\\.-]+):\n([^$]+)Trying zone transfer first...",
             output)
 
         if regex is not None:
@@ -51,7 +48,7 @@ class FierceParser:
             self.dns = list(filter(None, mstr.splitlines()))
 
         regex = re.search(
-            "Now performing [\d]+ test\(s\)...\n([^$]+)\nSubnets found ",
+            "Now performing [\\d]+ test\\(s\\)...\n([^$]+)\nSubnets found ",
             output)
         if regex is not None:
             hosts_list = regex.group(1).splitlines()
@@ -119,7 +116,7 @@ class FiercePlugin(PluginBase):
                 item['ip'] = i['ip']
                 return item
         try:
-            item['ip'] = resolve_hostname(item['ip'])
+            item['ip'] = self.resolve_hostname(item['ip'])
         except:
             pass
         return item
@@ -127,7 +124,7 @@ class FiercePlugin(PluginBase):
     def resolveNS(self, item, items):
         try:
             item['hosts'][0] = item['ip']
-            item['ip'] = resolve_hostname(item['ip'])
+            item['ip'] = self.resolve_hostname(item['ip'])
         except:
             pass
         return item
@@ -139,9 +136,9 @@ class FiercePlugin(PluginBase):
 
             item['isResolver'] = False
             item['isZoneVuln'] = False
-            if (item['record'] == "CNAME"):
+            if item['record'] == "CNAME":
                 self.resolveCNAME(item, parser.items)
-            if (item['record'] == "NS"):
+            if item['record'] == "NS":
                 self.resolveNS(item, parser.items)
                 item['isResolver'] = True
                 item['isZoneVuln'] = parser.isZoneVuln
@@ -175,8 +172,5 @@ class FiercePlugin(PluginBase):
                         ref=["CVE-1999-0532"])
 
 
-
-def createPlugin(ignore_info=False):
-    return FiercePlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return FiercePlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
