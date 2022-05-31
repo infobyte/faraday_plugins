@@ -42,7 +42,7 @@ def generate_reports_tests(force, debug):
     generated_summaries = 0
     analysed_reports = 0
     click.echo(f"{colorama.Fore.GREEN}Generate Faraday Plugins Tests Summary")
-    plugins_manager = PluginsManager()
+    plugins_manager = PluginsManager(hostname_resolution=False)
     analyzer = ReportAnalyzer(plugins_manager)
     for report_file_path in list_report_files():
         if debug:

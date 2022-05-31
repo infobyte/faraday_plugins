@@ -5,10 +5,8 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import re
-import os
 import json
 from faraday_plugins.plugins.plugin import PluginBase
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 
 __author__ = "Blas Moyano"
@@ -65,5 +63,5 @@ class CmdNextNetin(PluginBase):
         return True
 
 
-def createPlugin(ignore_info=False):
-    return CmdNextNetin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return CmdNextNetin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

@@ -7,7 +7,6 @@ import xml.etree.ElementTree as ET
 import zipfile
 
 from faraday_plugins.plugins.plugin import PluginZipFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 __author__ = "Ezequiel Tavella"
 __copyright__ = "Copyright (c) 2015, Infobyte LLC"
@@ -96,7 +95,7 @@ def readMtgl(mtgl_file):
     return check_files
 
 
-class Host():
+class Host:
 
     def __init__(self):
         self.ip = ""
@@ -109,10 +108,11 @@ class Host():
         self.ns_record = ""
 
 
-class MaltegoParser():
+class MaltegoParser:
 
-    def __init__(self, xml_file, extension):
+    def __init__(self, xml_file, extension, resolve_hostname):
 
+        self.resolve_hostname = resolve_hostname
         if extension == '.mtgx':
             self.xml = readMtgx(xml_file)
             self.nodes = self.xml.findall(
@@ -169,7 +169,7 @@ class MaltegoParser():
             "{http://maltego.paterva.com/xml/mtgx}Property/"
             "{http://maltego.paterva.com/xml/mtgx}Value")
         if entity.get("type") in ("maltego.Domain", "maltego.Website"):
-            ip = resolve_hostname(value.text)
+            ip = self.resolve_hostname(value.text)
             hostname = value.text
         else:
             ip = value.text
@@ -377,7 +377,7 @@ class MaltegoPlugin(PluginZipFormat):
 
     def parseOutputString(self, output):
         if 'Graphs/Graph1.graphml' in output.namelist():
-            maltego_parser = MaltegoParser(output, self.extension[1])
+            maltego_parser = MaltegoParser(output, self.extension[1], resolve_hostname=self.resolve_hostname)
             hosts = maltego_parser.parse()
             if not hosts:
                 self.logger.warning("No hosts data found in maltego report")
@@ -440,7 +440,7 @@ class MaltegoPlugin(PluginZipFormat):
                         self.createAndAddServiceToHost(host_id=host_id, name=host.ns_record["value"], protocol="DNS",
                                                        ports=[53], description="DNS Server")
         else:
-            maltego_parser = MaltegoParser(output, self.extension[0])
+            maltego_parser = MaltegoParser(output, self.extension[0], resolve_hostname=self.resolve_hostname)
             if not maltego_parser.xml.get('domain') or not maltego_parser.xml.get('ipv4'):
                 return
             if maltego_parser.xml.get('domain'):
@@ -496,5 +496,5 @@ class MaltegoPlugin(PluginZipFormat):
                                                description="DNS Server")
 
 
-def createPlugin(ignore_info=False):
-    return MaltegoPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return MaltegoPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

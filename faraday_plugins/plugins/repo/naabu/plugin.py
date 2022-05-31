@@ -41,7 +41,7 @@ class NaabuPlugin(PluginMultiLineJsonFormat):
             port = host_dict.get('port')
             try:
                 service = socket.getservbyport(port)
-            except socket.error:
+            except OSError:
                 service = 'Unknown service on port ' + str(port)
             host_id = self.createAndAddHost(
                 name=ip,
@@ -67,5 +67,5 @@ class NaabuPlugin(PluginMultiLineJsonFormat):
             command_string += " -silent"
         return command_string
 
-def createPlugin(ignore_info=False):
-    return NaabuPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return NaabuPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

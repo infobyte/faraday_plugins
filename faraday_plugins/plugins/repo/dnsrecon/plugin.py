@@ -50,7 +50,7 @@ class DnsreconXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print("SyntaxError: %s. %s" % (err, xml_output))
+            print(f"SyntaxError: {err}. {xml_output}")
             return None
 
         return tree
@@ -212,5 +212,5 @@ class DnsreconPlugin(PluginBase):
                           command_string)
 
 
-def createPlugin(ignore_info=False):
-    return DnsreconPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return DnsreconPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

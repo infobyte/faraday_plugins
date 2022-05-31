@@ -1,7 +1,6 @@
 from urllib.parse import urlparse
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-from faraday_plugins.plugins.plugins_utils import resolve_hostname
 
 import xml.etree.ElementTree as ET
 
@@ -273,7 +272,7 @@ class AppScanPlugin(PluginXMLFormat):
                 host = issue.pop("host")
                 port = issue.pop("port")
                 service_name = issue.pop("service_name")
-                ip = resolve_hostname(host)
+                ip = self.resolve_hostname(host)
                 host_os = issue.pop("os")
                 host_id = self.createAndAddHost(ip, hostnames=host, os=host_os)
                 service_id = self.createAndAddServiceToHost(host_id, service_name, ports=port)
@@ -286,5 +285,5 @@ class AppScanPlugin(PluginXMLFormat):
                 self.createAndAddVulnToHost(host_id=host_id, **issue)
 
 
-def createPlugin(ignore_info=False):
-    return AppScanPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return AppScanPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

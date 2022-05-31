@@ -351,7 +351,7 @@ class MetasploitPlugin(PluginXMLFormat):
                         self.createAndAddCredToService(
                             h_id, s_id, c.user, c.passwd)
                         self.createAndAddVulnToService(h_id, s_id, "Weak Credentials",
-                                                       "[metasploit found the following credentials]\nuser:%s\npass:%s" % (
+                                                       "[metasploit found the following credentials]\nuser:{}\npass:{}".format(
                                                            c.user, c.passwd), severity="high")
 
                 for v in item.vulnsByService[s['id']]:
@@ -375,5 +375,5 @@ class MetasploitPlugin(PluginXMLFormat):
             return False
 
 
-def createPlugin(ignore_info=False):
-    return MetasploitPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return MetasploitPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

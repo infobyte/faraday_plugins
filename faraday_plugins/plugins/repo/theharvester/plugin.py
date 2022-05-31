@@ -36,11 +36,11 @@ class TheharvesterParser:
         _hosts, _vhosts = [], []
 
         mregex = re.search(
-            "\[\+\] Hosts found in search engines:[-=\s]+([\w\W]*)\[\+\]", output)
+            r"\[\+\] Hosts found in search engines:[-=\s]+([\w\W]*)\[\+\]", output)
         if mregex is None:
             mregex = re.search(
-                "\[\+\] Hosts found in search engines:[-=\s]+([\w\W]*)\n", output)
-        mregex2 = re.search("\[\+\] Virtual hosts:[-=\s]+([\w\W]*)\n", output)
+                "\\[\\+\\] Hosts found in search engines:[-=\\s]+([\\w\\W]*)\n", output)
+        mregex2 = re.search("\\[\\+\\] Virtual hosts:[-=\\s]+([\\w\\W]*)\n", output)
 
         if mregex is None and mregex2 is None:
             return
@@ -115,8 +115,5 @@ class TheharvesterPlugin(PluginBase):
 
 
 
-def createPlugin(ignore_info=False):
-    return TheharvesterPlugin(ignore_info=ignore_info)
-
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return TheharvesterPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
