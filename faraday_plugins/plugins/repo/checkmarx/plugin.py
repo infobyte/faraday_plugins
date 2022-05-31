@@ -29,7 +29,7 @@ class CheckmarxXmlParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print('SyntaxError In xml: %s. %s' % (err, xml_output))
+            print(f'SyntaxError In xml: {err}. {xml_output}')
             return None
         return tree
 
@@ -132,5 +132,5 @@ class CheckmarxPlugin(PluginXMLFormat):
                                               resolution=data, ref=refs)
 
 
-def createPlugin(ignore_info=False):
-    return CheckmarxPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return CheckmarxPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

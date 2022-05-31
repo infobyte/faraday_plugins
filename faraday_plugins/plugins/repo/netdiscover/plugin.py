@@ -27,7 +27,7 @@ class NetdiscoverPlugin(PluginBase):
     def parseOutputString(self, output):
         #regexp get ip, mac and hostname
         reg = re.findall(r"(([0-9]+\.?){4})\s+(([0-9a-f]+\:?){6})((\s+[0-9]+){2})(.*)", output)
-        
+
         if output.find('Finished!') != -1 and len(reg) > 0:
 
             for stdout in reg:
@@ -39,7 +39,5 @@ class NetdiscoverPlugin(PluginBase):
 
 
 
-def createPlugin(ignore_info=False):
-    return NetdiscoverPlugin(ignore_info=ignore_info)
-
-
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return NetdiscoverPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

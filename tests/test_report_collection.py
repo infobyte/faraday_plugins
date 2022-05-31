@@ -16,7 +16,7 @@ BLACK_LIST = [
 
 ]
 
-plugins_manager = PluginsManager()
+plugins_manager = PluginsManager(hostname_resolution=False)
 analyzer = ReportAnalyzer(plugins_manager)
 
 PLUGINS_CACHE = {}
@@ -74,10 +74,10 @@ def is_valid_ipv4_address(address):
     except AttributeError:  # no inet_pton here, sorry
         try:
             socket.inet_aton(address)
-        except socket.error:
+        except OSError:
             return False
         return address.count('.') == 3
-    except socket.error:  # not a valid address
+    except OSError:  # not a valid address
         return False
     return True
 
@@ -85,7 +85,7 @@ def is_valid_ipv4_address(address):
 def is_valid_ipv6_address(address):
     try:
         socket.inet_pton(socket.AF_INET6, address)
-    except socket.error:  # not a valid address
+    except OSError:  # not a valid address
         return False
     return True
 
@@ -163,4 +163,3 @@ def test_detected_tools_on_all_report_collection(report_filename_and_folder, ben
     assert "hosts" in plugin_json
     assert "command" in plugin_json
     assert os.path.isfile(report_filename) is True
-

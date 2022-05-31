@@ -63,7 +63,7 @@ class SourceclearPlugin(PluginJsonFormat):
             for vuln in vulns:
                 v_name = vuln['title']
                 v_desc = vuln['overview']
-                v_ref = "CVSS: {}".format(vuln['cvssScore'])
+                v_ref = f"CVSS: {vuln['cvssScore']}"
                 v_data = vuln['libraries']
                 v_website = vuln['_links']['html']
                 url_data = parser.parse_url(v_website)
@@ -82,5 +82,5 @@ class SourceclearPlugin(PluginJsonFormat):
                                                   website=v_website)
 
 
-def createPlugin(ignore_info=False):
-    return SourceclearPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return SourceclearPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

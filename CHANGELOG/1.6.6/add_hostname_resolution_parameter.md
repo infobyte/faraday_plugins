@@ -1,0 +1,1 @@
+Add hostname_resolution parameter within plugins

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
@@ -32,7 +31,7 @@ class AppSpiderParser:
         try:
             tree = ET.fromstring(xml_output)
         except SyntaxError as err:
-            print('SyntaxError In xml: %s. %s' % (err, xml_output))
+            print(f'SyntaxError In xml: {err}. {xml_output}')
             return None
         return tree
 
@@ -113,5 +112,5 @@ class AppSpiderPlugin(PluginXMLFormat):
                                         external_id=vuln_external_id, data=str_data)
 
 
-def createPlugin(ignore_info=False):
-    return AppSpiderPlugin(ignore_info=ignore_info)
+def createPlugin(ignore_info=False, hostname_resolution=True):
+    return AppSpiderPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
