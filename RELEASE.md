@@ -1,3 +1,8 @@
+1.6.7 [Jun 2nd, 2022]:
+---
+ * Change hostname_restolution to dont_resolve_hostname for process-report and now test dosent resovle hostname
+ * Now QualysWebApp's plugin will diferenciate vulns from differents urlpaths
+
 1.6.6 [May 20th, 2022]:
 ---
  * Add hostname_resolution parameter within plugins
