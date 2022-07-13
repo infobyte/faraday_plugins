@@ -16,7 +16,7 @@ class SyhuntParser:
     def __init__(self, xml_output):
         tree = self.parse_xml(xml_output)
         if tree:
-            self.scan_type = "SAST" if "sast" in next(tree.iter("ignore_id")).text.lower() else "DAST"
+            self.scan_type = "SAST" if "Application Code Scan" in tree.find("scan_method").text else "DAST"
             self.issues = self.get_issues(tree.find("hosts"))
 
     @staticmethod
@@ -84,6 +84,7 @@ class SyhuntParser:
         }
         return host
 
+
 class SyhuntPlugin(PluginXMLFormat):
 
     def __init__(self, *arg, **kwargs):
@@ -94,6 +95,13 @@ class SyhuntPlugin(PluginXMLFormat):
         self.plugin_version = '0.0.1'
         self.version = '1.0.0'
         self.framework_version = '1.0.0'
+
+    #uggly fix because wakiti and syhunt share identifier_tag
+    def report_belongs_to(self, main_tag="", main_tag_attributes={}, **kwargs):
+        match = super().report_belongs_to(main_tag, main_tag_attributes,**kwargs)
+        if match:
+            match = main_tag_attributes == {}
+        return match
 
     def parseOutputString(self, output):
         parser = SyhuntParser(output)
