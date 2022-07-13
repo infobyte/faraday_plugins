@@ -1,5 +1,3 @@
-from urllib.parse import urlparse
-
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 import xml.etree.ElementTree as ET
@@ -46,13 +44,13 @@ class SyhuntParser:
                     issues.append(self.get_vulns(vuln))
         return issues
 
-
     def get_vulns(self, vuln):
         name = vuln.find("check_name").text
         desc = vuln.find("description").text
         resolution = vuln.find("solution").text
         cvss2 = self.get_cvss(vuln.find("cvss/cvss2"))
         cvss3 = self.get_cvss(vuln.find("cvss/cvss3"))
+        severity = vuln.find("cvss/cvss3/severity").text
         ref = []
         if vuln.find("references/cwe"):
             ref.append("CWE:" + vuln.find("references/cwe").text)
@@ -61,6 +59,7 @@ class SyhuntParser:
             "desc": desc,
             "resolution": resolution,
             "ref": ref,
+            "severity": severity
         }
         if self.scan_type == "DAST":
             v['data'] = vuln.find("request").text + "\n"
@@ -102,7 +101,6 @@ class SyhuntPlugin(PluginXMLFormat):
 
         if scan_type == 'DAST':
             for issue in parser.issues:
-                print(issue)
                 ip = issue["host"].pop("ip")
                 port = issue["host"].pop("port")
                 hostname = issue["host"].pop("hostname")
