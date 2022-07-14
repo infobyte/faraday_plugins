@@ -69,20 +69,26 @@ class Appscan_CSV_Plugin(PluginCSVFormat):
                 data.append(f"Security Risk: {row['Security Risk']}")
             desc = [row['Description']]
             if row['Line']:
-                desc.append(f"Line {row['Line']}")
+                desc.append(f"Line:  {row['Line']}")
+            if row['Cause']:
+                desc.append(f"Cause:  {row['Cause']}")
+            if row['Threat Class']:
+                desc.append(f"Threat Class:   {row['Threat Class']}")
+            if row['Security Risk']:
+                desc.append(f"Security Risk:   {row['Security Risk']}")
             if row['Calling Method']:
-                desc.append(f"Calling Method: {row['Calling Method']}")
+                desc.append(f"Calling Method:   {row['Calling Method']}")
             h_id = self.createAndAddHost(name=path)
             self.createAndAddVulnToHost(
                 h_id,
                 name=name,
-                desc=" /n".join(desc),
+                desc=" \n".join(desc),
                 resolution=row['Remediation'],
                 external_id=row['Issue Id'],
                 run_date=run_date,
                 severity=row["Severity"],
                 ref=references,
-                data=" /n".join(data)
+                data=" \n".join(data)
             )
 
 def createPlugin(ignore_info=False, hostname_resolution=True):
