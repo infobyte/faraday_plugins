@@ -285,5 +285,5 @@ class AppScanPlugin(PluginXMLFormat):
                 self.createAndAddVulnToHost(host_id=host_id, **issue)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return AppScanPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return AppScanPlugin(*args, **kwargs)

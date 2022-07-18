@@ -68,5 +68,5 @@ class hping3(PluginBase):
                         host_id, service, protocol="tcp", ports=port, status="open")
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return hping3(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return hping3(*args, **kwargs)

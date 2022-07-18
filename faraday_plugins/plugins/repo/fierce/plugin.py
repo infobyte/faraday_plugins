@@ -172,5 +172,5 @@ class FiercePlugin(PluginBase):
                         ref=["CVE-1999-0532"])
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return FiercePlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return FiercePlugin(*args, **kwargs)

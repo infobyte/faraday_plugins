@@ -66,13 +66,20 @@ def list_plugins(custom_plugins_folder):
 @click.option('-o', '--output-file', type=click.Path(exists=False))
 @click.option('--ignore-info', is_flag=True, help="Ignore information vulnerabilities")
 @click.option('-drh', '--dont-resolve-hostname', is_flag=True, help="Dont resolve hostname", default=False)
+@click.option('--vuln-tag', help="Vuln tag", default=None)
+@click.option('--service-tag', help="Service tag", default=None)
+@click.option('--host-tag', help="Host tag", default=None)
 def process_report(report_file, plugin_id, custom_plugins_folder, summary, output_file, ignore_info,
-                   dont_resolve_hostname):
+                   dont_resolve_hostname, vuln_tag, service_tag, host_tag):
     if not os.path.isfile(report_file):
         click.echo(click.style(f"File {report_file} Don't Exists", fg="red"), err=True)
     else:
-        plugins_manager = PluginsManager(custom_plugins_folder, ignore_info=ignore_info,
-                                         hostname_resolution=not dont_resolve_hostname)
+        plugins_manager = PluginsManager(custom_plugins_folder,
+                                         ignore_info=ignore_info,
+                                         hostname_resolution=not dont_resolve_hostname,
+                                         vuln_tag=vuln_tag,
+                                         service_tag=service_tag,
+                                         host_tag=host_tag)
         analyzer = ReportAnalyzer(plugins_manager)
         if plugin_id:
             plugin = plugins_manager.get_plugin(plugin_id)

@@ -177,5 +177,5 @@ class X1Plugin(PluginXMLFormat):
         del parser
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return X1Plugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return X1Plugin(*args, **kwargs)

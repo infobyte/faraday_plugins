@@ -174,5 +174,5 @@ class AcunetixPlugin(PluginXMLFormat):
         return url_data
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return AcunetixPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return AcunetixPlugin(*args, **kwargs)

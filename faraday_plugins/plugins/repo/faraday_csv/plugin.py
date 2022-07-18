@@ -364,5 +364,5 @@ class FaradayCSVPlugin(PluginCSVFormat):
                     )
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
+def createPlugin(*args, **kwargs):
     return FaradayCSVPlugin(ignore_info=False)
