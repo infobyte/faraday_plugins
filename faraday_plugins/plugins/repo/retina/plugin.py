@@ -212,5 +212,5 @@ class RetinaPlugin(PluginXMLFormat):
         del parser
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return RetinaPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return RetinaPlugin(*args, **kwargs)

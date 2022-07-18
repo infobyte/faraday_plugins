@@ -117,5 +117,5 @@ class ZapJsonPlugin(PluginJsonFormat):
         del parser
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return ZapJsonPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return ZapJsonPlugin(*args, **kwargs)

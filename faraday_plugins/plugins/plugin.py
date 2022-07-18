@@ -35,12 +35,16 @@ class PluginBase:
     # TODO: Add class generic identifier
     class_signature = "PluginBase"
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         # Must be unique. Check that there is not
         # an existent plugin with the same id.
         # TODO: Make script that list current ids.
-        self.ignore_info = ignore_info
-        self.hostname_resolution = hostname_resolution
+        self.ignore_info = kwargs.get("ignore_info", False)
+        self.hostname_resolution = kwargs.get("hostname_resolution", True)
+        self.default_vuln_tag = kwargs.get("default_vuln_tag", None)
+        self.vuln_tag = kwargs.get("vuln_tag", None)
+        self.host_tag = kwargs.get("host_tag", None)
+        self.service_tag = kwargs.get("service_tag", None)
         self.id = None
         self.auto_load = True
         self._rid = id(self)
@@ -374,6 +378,11 @@ class PluginBase:
             tags = []
         if isinstance(tags, str):
             tags = [tags]
+        if self.host_tag:
+            if isinstance(self.host_tag, list):
+                tags += self.host_tag
+            else:
+                tags.append(self.host_tag)
         host = {"ip": name, "os": os, "hostnames": hostnames, "description": description, "mac": mac,
                 "credentials": [], "services": [], "vulnerabilities": [], "tags": tags}
         host_id = self.save_host_cache(host)
@@ -395,6 +404,11 @@ class PluginBase:
             tags = []
         if isinstance(tags, str):
             tags = [tags]
+        if self.service_tag:
+            if isinstance(self.service_tag, list):
+                tags += self.service_tag
+            else:
+                tags.append(self.service_tag)
         service = {"name": name, "protocol": protocol, "port": ports, "status": status,
                    "version": version, "description": description, "credentials": [], "vulnerabilities": [],
                    "tags": tags}
@@ -421,6 +435,16 @@ class PluginBase:
             tags = []
         if isinstance(tags, str):
             tags = [tags]
+        if self.vuln_tag:
+            if isinstance(self.vuln_tag, list):
+                tags += self.vuln_tag
+            else:
+                tags.append(self.vuln_tag)
+        if self.default_vuln_tag:
+            if isinstance(self.default_vuln_tag, list):
+                tags += self.default_vuln_tag
+            else:
+                tags.append(self.default_vuln_tag)
         if cve is None:
             cve = []
         elif type(cve) is str:
@@ -455,6 +479,16 @@ class PluginBase:
             tags = []
         if isinstance(tags, str):
             tags = [tags]
+        if self.vuln_tag:
+            if isinstance(self.vuln_tag, list):
+                tags += self.vuln_tag
+            else:
+                tags.append(self.vuln_tag)
+        if self.default_vuln_tag:
+            if isinstance(self.default_vuln_tag, list):
+                tags += self.default_vuln_tag
+            else:
+                tags.append(self.default_vuln_tag)
         if cve is None:
             cve = []
         elif type(cve) is str:
@@ -513,6 +547,16 @@ class PluginBase:
             tags = []
         if isinstance(tags, str):
             tags = [tags]
+        if self.vuln_tag:
+            if isinstance(self.vuln_tag, list):
+                tags += self.vuln_tag
+            else:
+                tags.append(self.vuln_tag)
+        if self.default_vuln_tag:
+            if isinstance(self.default_vuln_tag, list):
+                tags += self.default_vuln_tag
+            else:
+                tags.append(self.default_vuln_tag)
         if cve is None:
             cve = []
         elif type(cve) is str:
@@ -610,8 +654,8 @@ class PluginCustomOutput(PluginBase):
 
 
 class PluginByExtension(PluginBase):
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.extension = []
 
     def report_belongs_to(self, extension="", **kwargs):
@@ -626,8 +670,8 @@ class PluginByExtension(PluginBase):
 
 class PluginXMLFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.identifier_tag = []
         self.identifier_tag_attributes = {}
         self.extension = ".xml"
@@ -648,8 +692,8 @@ class PluginXMLFormat(PluginByExtension):
 
 class PluginJsonFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.json_keys = set()
         self.extension = ".json"
 
@@ -665,8 +709,8 @@ class PluginJsonFormat(PluginByExtension):
 
 class PluginMultiLineJsonFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.json_keys = set()
         self.extension = ".json"
 
@@ -689,8 +733,8 @@ class PluginMultiLineJsonFormat(PluginByExtension):
 
 class PluginCSVFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.extension = ".csv"
         self.csv_headers = set()
 
@@ -709,8 +753,8 @@ class PluginCSVFormat(PluginByExtension):
 
 class PluginZipFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.extension = ".zip"
         self.files_list = set()
 
