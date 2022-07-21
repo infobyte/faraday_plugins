@@ -355,6 +355,11 @@ class HostProperties:
         return _dict.get("host-fqdn", None)
 
     @property
+    def host_rdns(self) -> str:
+        _dict = self.dict_tags
+        return _dict.get("host-rdns", None)
+
+    @property
     def dict_tags(self):
         host_tags = {}
         for t in self.node:
