@@ -69,11 +69,17 @@ class NessusPlugin(PluginXMLFormat):
                 compliance_data[compliance_name] = value
         return compliance_data
 
-    @staticmethod
-    def map_properties(host: ReportHost):
+    def map_properties(self, host: ReportHost):
+        if self.hostname_resolution:
+            name = host.host_properties.host_ip if host.host_properties.host_ip else host.name
+        else:
+            name = host.name
+        hostnames = [host.host_properties.host_fqdn]
+        if host.host_properties.host_rdns and host.host_properties.host_rdns not in hostnames:
+            hostnames.append(host.host_properties.host_rdns)
         return {
-            "name": host.host_properties.host_ip if host.host_properties.host_ip else host.name,
-            "hostnames": host.host_properties.host_fqdn,
+            "name": name,
+            "hostnames": hostnames,
             "mac": host.host_properties.mac_address,
             "os": host.host_properties.operating_system
         }

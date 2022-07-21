@@ -145,7 +145,6 @@ class QualysWebappPlugin(PluginXMLFormat):
 
         for v in parser.info_results:
             url = urlparse(v.dict_result_vul.get('URL'))
-
             host_id = self.createAndAddHost(name=url.netloc, os=operating_system, hostnames=hostnames)
 
             vuln_scan_id = v.dict_result_vul.get('QID')
@@ -175,7 +174,7 @@ class QualysWebappPlugin(PluginXMLFormat):
 
             self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc, ref=vuln_ref,
                                         severity=vuln_severity, resolution=vuln_resolution, run_date=run_date,
-                                        external_id=vuln_scan_id, data=vuln_data_add, cwe=vuln_CWE)
+                                        external_id="QUALYS-"+vuln_scan_id, data=vuln_data_add, cwe=vuln_CWE)
 
 
 def createPlugin(ignore_info=False, hostname_resolution=True):
