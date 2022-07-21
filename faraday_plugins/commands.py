@@ -112,10 +112,17 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary, outpu
 @click.option('-sh', '--show-output', is_flag=True)
 @click.option('--ignore-info', is_flag=True, help="Ignore information vulnerabilities")
 @click.option('--hostname-resolution', is_flag=True, help="Resolve hostname")
+@click.option('--vuln-tag', help="Vuln tag", default=None)
+@click.option('--service-tag', help="Service tag", default=None)
+@click.option('--host-tag', help="Host tag", default=None)
 def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary, output_file, show_output,
-                    ignore_info, hostname_resolution):
-    plugins_manager = PluginsManager(custom_plugins_folder, ignore_info=ignore_info,
-                                     hostname_resolution=hostname_resolution)
+                    ignore_info, hostname_resolution, vuln_tag, service_tag, host_tag):
+    plugins_manager = PluginsManager(custom_plugins_folder,
+                                     ignore_info=ignore_info,
+                                     hostname_resolution=hostname_resolution,
+                                     vuln_tag=vuln_tag,
+                                     service_tag=service_tag,
+                                     host_tag=host_tag)
     analyzer = CommandAnalyzer(plugins_manager)
     if plugin_id:
         plugin = plugins_manager.get_plugin(plugin_id)
