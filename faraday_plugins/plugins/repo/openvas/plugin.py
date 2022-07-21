@@ -346,6 +346,7 @@ class OpenvasPlugin(PluginXMLFormat):
             if item.name is not None:
                 ref = []
                 cve = []
+                cvss2 = {}
                 if item.cve:
                     cves = item.cve.split(',')
                     for i in cves:
@@ -357,9 +358,9 @@ class OpenvasPlugin(PluginXMLFormat):
                 if item.xref:
                     ref.append(item.xref)
                 if item.tags and item.cvss_vector:
-                    ref.append(item.cvss_vector)
+                    cvss2["vector_string"] = item.cvss_vector
                 if item.cvss_base:
-                    ref.append(f"CVSS_BASE: {item.cvss_base}")
+                    cvss2["base_score"] = item.cvss_base
                 if item.cpe:
                     ref.append(f"{item.cpe}")
                 if item.severity_nr:
@@ -390,7 +391,9 @@ class OpenvasPlugin(PluginXMLFormat):
                             external_id=f"OPENVAS-{item.id}",
                             data=item.data,
                             cve=cve,
-                            cwe=item.cwe)
+                            cwe=item.cwe,
+                            cvss2=cvss2
+                        )
                 else:
                     if item.service:
                         web = re.search(
@@ -423,7 +426,9 @@ class OpenvasPlugin(PluginXMLFormat):
                                 external_id=f"OPENVAS-{item.id}",
                                 data=item.data,
                                 cve=cve,
-                                cwe=item.cwe)
+                                cwe=item.cwe,
+                                cvss2=cvss2
+                            )
                     elif item.severity not in self.ignored_severities:
                         self.createAndAddVulnToService(
                             h_id,
@@ -436,7 +441,9 @@ class OpenvasPlugin(PluginXMLFormat):
                             external_id=f"OPENVAS-{item.id}",
                             data=item.data,
                             cve=cve,
-                            cwe=item.cwe)
+                            cwe=item.cwe,
+                            cvss2=cvss2
+                        )
         del parser
 
     @staticmethod

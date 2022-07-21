@@ -35,18 +35,20 @@ class WhitesourcePlugin(PluginJsonFormat):
         parser = json.loads(output)
         if parser.get('vulnerabilities'):
             for vulnerability in parser['vulnerabilities']:
-
+                cvss3 = {}
+                cvss2 = {}
                 if 'project' in vulnerability:
                     application_name = vulnerability.get('project')
                     host_id = self.createAndAddHost(application_name)
                     data = ''
                     for key, value in vulnerability['library'].items():
                         data += f'{key}: {value} \n'
-                    refs = [
-                        f"CVSS: {vulnerability['score']}",
-                    ]
+                    refs = []
+                    cvss2["base_score"] = vulnerability['score']
                     if 'cvss3_score' in vulnerability:
-                        refs.append(f"CVSS3: {vulnerability['cvss3_score']}")
+                        cvss3["base_score"] = vulnerability['cvss3_score']
+                    if "scoreMetadataVector" in vulnerability:
+                        cvss3["vector_string"] = vulnerability['scoreMetadataVector'].replace('CVSS:3.0/', '')
                     if 'topFix' in vulnerability:
                         refs.append(f"URL: {vulnerability['topFix']['url']}")
                         self.createAndAddVulnToHost(host_id,
@@ -56,14 +58,18 @@ class WhitesourcePlugin(PluginJsonFormat):
                                                     resolution=vulnerability['topFix']['fixResolution'],
                                                     ref=refs,
                                                     severity=vulnerability['severity'],
-                                                    cve=[vulnerability['name']])
+                                                    cve=[vulnerability['name']],
+                                                    cvss2=cvss2,
+                                                    cvss3=cvss3)
                     else:
                         self.createAndAddVulnToHost(host_id,
                                                     name=vulnerability['name'],
                                                     desc=vulnerability['description'],
                                                     data=data,
                                                     ref=refs,
-                                                    severity=vulnerability['severity'])
+                                                    severity=vulnerability['severity'],
+                                                    cvss2=cvss2,
+                                                    cvss3=cvss3)
                 elif 'namespace' in vulnerability:
                     host_id = self.createAndAddHost(vulnerability['namespace'])
                     service_id = self.createAndAddServiceToHost(

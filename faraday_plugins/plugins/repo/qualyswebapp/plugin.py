@@ -164,17 +164,18 @@ class QualysWebappPlugin(PluginXMLFormat):
 
             vuln_resolution = vuln_data.get('SOLUTION')
 
-            vuln_ref = []
+            cvss3 = {}
             if vuln_data.get('CVSS_BASE'):
-                vuln_ref = [f"CVSS: {vuln_data.get('CVSS_BASE')}"]
+                cvss3["base_score"] = vuln_data.get('CVSS_BASE')
 
             vuln_data_add = f"ID: {v.dict_result_vul.get('ID')}, DETECTION_ID: {v.dict_result_vul.get('DETECTION_ID')}" \
                             f", CATEGORY: {vuln_data.get('CATEGORY')}, GROUP: {vuln_data.get('GROUP')}" \
                             f", URL: {v.dict_result_vul.get('URL')}, IMPACT: {vuln_data.get('IMPACT')}"
 
-            self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc, ref=vuln_ref,
+            self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc,
                                         severity=vuln_severity, resolution=vuln_resolution, run_date=run_date,
-                                        external_id="QUALYS-"+vuln_scan_id, data=vuln_data_add, cwe=vuln_CWE)
+                                        external_id="QUALYS-"+vuln_scan_id, data=vuln_data_add, cwe=vuln_CWE,
+                                        cvss3=cvss3)
 
 
 def createPlugin(ignore_info=False, hostname_resolution=True):

@@ -133,9 +133,6 @@ class NexposeFullXmlParser:
         @returns vulns A dict of Vulnerability Definitions
         """
         vulns = dict()
-        # CVSS V3
-        SEVERITY_MAPPING_DICT = {'0': 'info', '1': 'low', '2': 'low', '3': 'low', '4': 'med', '5': 'med', '6': 'med',
-                                 '7': 'high', '8': 'high', '9': 'critical', '10': 'critical'}
 
         for vulnsDef in tree.iter('VulnerabilityDefinitions'):
             for vulnDef in vulnsDef.iter('vulnerability'):
@@ -146,11 +143,15 @@ class NexposeFullXmlParser:
                     'name': vulnDef.get('title'),
                     'refs': ["vector: " + vector, vid],
                     'resolution': "",
-                    'severity': SEVERITY_MAPPING_DICT[vulnDef.get('severity')],
+                    'severity': "",
                     'tags': list(),
                     'is_web': vid.startswith('http-'),
                     'risk': vulnDef.get('riskScore'),
-                    'CVE': []
+                    'CVE': [],
+                    'cvss2': {
+                        "base_score": vulnDef.get('cvssScore') if vulnDef.get('cvssScore') else None,
+                        "vector_string": vector.replace("(", "").replace(")", "") if vector else None
+                    }
                 }
 
                 for item in list(vulnDef):
@@ -278,7 +279,8 @@ class NexposeFullPlugin(PluginXMLFormat):
                     v['refs'],
                     v['severity'],
                     v['resolution'],
-                    cve=v.get('CVE')
+                    cve=v.get('CVE'),
+                    cvss2=v.get('cvss2')
                 )
 
             for s in item['services']:
@@ -303,7 +305,8 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['severity'],
                             v['resolution'],
                             cve=v.get('CVE'),
-                            path=v.get('path', '')
+                            path=v.get('path', ''),
+                            cvss2=v.get('cvss2')
                         )
                     else:
                         self.createAndAddVulnToService(
@@ -314,7 +317,8 @@ class NexposeFullPlugin(PluginXMLFormat):
                             v['refs'],
                             v['severity'],
                             v['resolution'],
-                            cve=v.get('CVE')
+                            cve=v.get('CVE'),
+                            cvss2=v.get('cvss2')
                         )
 
         del parser
