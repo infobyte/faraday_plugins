@@ -137,8 +137,9 @@ class Item:
         self.pci = self.get_text_from_subnode("PCI")
         self.pci2 = self.get_text_from_subnode("PCI2")
         self.node = item_node.find("classification/CVSS")
-        self.cvss = self.get_text_from_subnode("vector")
-
+        self.cvss_full_vector = self.get_text_from_subnode("vector")
+        self.cvss_score = self.get_text_from_subnode("score[1]/value") if self.get_text_from_subnode("score[1]/value") else None
+        self.cvss3 = {}
         self.ref = []
         if self.cwe:
             self.cwe = ["CWE-" + self.cwe]
@@ -146,9 +147,10 @@ class Item:
             self.ref.append("OWASP-" + self.owasp)
         if self.reference:
             self.ref.extend(sorted(set(re.findall(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', self.reference))))
-        if self.cvss:
-            self.ref.append(self.cvss)
-
+        if self.cvss_full_vector:
+            self.cvss3["vector_string"] = self.cvss_full_vector.replace("CVSS:3.0/", "")
+        if self.cvss_score:
+            self.cvss3["base_score"] = self.cvss_score
         self.data = ""
         self.data += "\nKnowVulns: " + \
             "\n".join(self.kvulns) if self.kvulns else ""
@@ -229,7 +231,7 @@ class NetsparkerPlugin(PluginXMLFormat):
             self.createAndAddVulnWebToService(h_id, s_id, name, ref=i.ref, website=i.hostname,
                                                      severity=i.severity, desc=desc, path=i.url, method=i.method,
                                                      request=i.request, response=i.response, resolution=resolution,
-                                                     pname=i.param, data=i.data, cve=i.cve, cwe=i.cwe)
+                                                     pname=i.param, data=i.data, cve=i.cve, cwe=i.cwe, cvss3=i.cvss3)
 
         del parser
 

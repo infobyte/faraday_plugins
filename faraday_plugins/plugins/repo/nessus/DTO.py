@@ -126,10 +126,7 @@ class ReportItem:
 
     @property
     def cvss3_base_score(self):
-        cvss_base_score = self.node.findtext("cvss3_base_score")
-        if cvss_base_score:
-            cvss_base_score = f"CVSS3:{cvss_base_score}"
-        return cvss_base_score
+        return self.node.findtext("cvss3_base_score")
 
     @property
     def cvss3_temporal_score(self):
@@ -145,14 +142,14 @@ class ReportItem:
 
     @property
     def cvss3_vector(self):
-        return self.node.findtext("cvss3_vector")
+        cvss3_vector = self.node.findtext("cvss3_vector")
+        if cvss3_vector:
+            cvss3_vector = cvss3_vector.replace("CVSS:3.0/", "")
+        return cvss3_vector
 
     @property
-    def cvss_base_score(self):
-        cvss_base_score = self.node.findtext("cvss_base_score")
-        if cvss_base_score:
-            cvss_base_score = f"CVSS:{cvss_base_score}"
-        return cvss_base_score
+    def cvss2_base_score(self):
+        return self.node.findtext("cvss_base_score")
 
     @property
     def cvss_score_rationale(self):
@@ -174,7 +171,7 @@ class ReportItem:
     def cvss_vector(self):
         cvss_vector = self.node.findtext("cvss_vector")
         if cvss_vector:
-            cvss_vector = f"CVSSVECTOR:{cvss_vector}"
+            cvss_vector = cvss_vector.replace("CVSS2#", "")
         return cvss_vector
 
     @property
