@@ -200,7 +200,8 @@ class WapitiPlugin(PluginXMLFormat):
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
-        self.identifier_tag = "report"
+        #self.identifier_tag = "report"
+        self.identifier_tag_attributes = {'type'}
         self.id = "Wapiti"
         self.name = "Wapiti XML Output Plugin"
         self.plugin_version = "0.0.1"
