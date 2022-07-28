@@ -365,4 +365,4 @@ class FaradayCSVPlugin(PluginCSVFormat):
 
 
 def createPlugin(*args, **kwargs):
-    return FaradayCSVPlugin(ignore_info=False)
+    return FaradayCSVPlugin(*args, **kwargs)
