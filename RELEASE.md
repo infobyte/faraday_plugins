@@ -1,3 +1,11 @@
+1.6.8 [Jul 25th, 2022]:
+---
+ * Add appscan csv
+ * Now faraday_csv's plugin uses ignore_info parameter
+ * Add syhunt plugin
+ * Add cve and data fields to desc for avoid duplications
+ * Now nuclei resolve hostname if the field ip is None
+
 1.6.7 [Jun 2nd, 2022]:
 ---
  * Change hostname_restolution to dont_resolve_hostname for process-report and now test dosent resovle hostname
