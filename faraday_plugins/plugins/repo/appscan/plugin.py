@@ -164,6 +164,7 @@ class AppScanParser:
             }
             if cve:
                 issue_data["cve"].append(cve)
+                issue_data["desc"] += cve
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
@@ -221,8 +222,6 @@ class AppScanParser:
                 "cvss2": {}
             }
 
-            if cve:
-                issue_data["cve"].append(cve)
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
@@ -235,6 +234,9 @@ class AppScanParser:
                 issue_data["ref"].append(cvss_temporal_vector)
             if cvss_environmental_vector:
                 issue_data["ref"].append(cvss_environmental_vector)
+            if cve:
+                issue_data["cve"].append(cve)
+                issue_data["desc"] += f"\nCVE: {cve}"
             # Build data
             data = []
             if item.attrib.get("caller"):
@@ -243,15 +245,8 @@ class AppScanParser:
                 data.append(f"Method: {item.find('variant-group/item/issue-information/method-signature').text}")
             if item.find("variant-group/item/issue-information/method-signature2") is not None:
                 data.append(f"Location: {item.find('variant-group/item/issue-information/method-signature2').text}")
-            line = item.find("location")
-            highlight = item.find("variant-group/item/issue-information/call-trace/call-invocation/context/highlight")
-            if highlight is not None:
-                data.append(f" {highlight.text}")
-                issue_data["desc"] += "\n" + highlight.text
-            if line is not None and len(line.text.split(':')) > 1 and line.text.split(':')[-1].isdigit():
-                data.append(f"line {line.text.split(':')[-1]}")
-                issue_data["desc"] += f"line {line.text.split(':')[-1]}"
             issue_data['data'] = "\n".join(data)
+            issue_data['desc'] += "\n".join(data)
             sast_issues.append(issue_data)
         return sast_issues
 
