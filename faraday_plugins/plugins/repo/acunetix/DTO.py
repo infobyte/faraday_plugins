@@ -119,7 +119,7 @@ class Cvss3:
 
     @property
     def descriptor(self) -> str:
-        return re.sub(r'(CVSS:3\.[0,1]/)', '', self.node.findtext('Descriptor', ''))
+        return self.node.findtext('Descriptor', '')
 
     @property
     def score(self) -> str:

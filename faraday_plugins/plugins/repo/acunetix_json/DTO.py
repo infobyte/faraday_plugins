@@ -85,7 +85,7 @@ class VulnerabilityTypes:
 
     @property
     def cvss3_vector(self) -> str:
-        return re.sub(r'(CVSS:3\.[0,1]/)', '', self.node.get('cvss3', ''))
+        return self.node.get('cvss3', '')
 
 
 class Info:

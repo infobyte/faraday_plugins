@@ -148,7 +148,7 @@ class Item:
         if self.reference:
             self.ref.extend(sorted(set(re.findall(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', self.reference))))
         if self.cvss_full_vector:
-            self.cvss3["vector_string"] = self.cvss_full_vector.replace("CVSS:3.0/", "")
+            self.cvss3["vector_string"] = self.cvss_full_vector
         if self.cvss_score:
             self.cvss3["base_score"] = self.cvss_score
         self.data = ""

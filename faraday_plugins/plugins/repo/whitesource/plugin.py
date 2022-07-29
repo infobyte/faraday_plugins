@@ -48,7 +48,7 @@ class WhitesourcePlugin(PluginJsonFormat):
                     if 'cvss3_score' in vulnerability:
                         cvss3["base_score"] = vulnerability['cvss3_score']
                     if "scoreMetadataVector" in vulnerability:
-                        cvss3["vector_string"] = vulnerability['scoreMetadataVector'].replace('CVSS:3.0/', '')
+                        cvss3["vector_string"] = vulnerability['scoreMetadataVector']
                     if 'topFix' in vulnerability:
                         refs.append(f"URL: {vulnerability['topFix']['url']}")
                         self.createAndAddVulnToHost(host_id,
