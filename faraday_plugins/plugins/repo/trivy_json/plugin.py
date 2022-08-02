@@ -31,39 +31,50 @@ class TrivyJsonPlugin(PluginJsonFormat):
 
     def parseOutputString(self, output):
         parser = TrivyJsonParser(loads(output))
+        scantype = parser.scantype
         for result in parser.results:
-            self.new_structure(result)
+            self.new_structure(result, scantype)
 
-    def new_structure(self, result):
+    def new_structure(self, result, scantype):
         source_file = result.target
-        host_id = self.createAndAddHost(source_file)
+        host_id = self.createAndAddHost(source_file, os=result.result_type, description=scantype)
         for misconfiguration in result.misconfigurations:
             self.create_vuln_dockerfile(misconfiguration, host_id)
-        for vulneravilty in result.vulnerabilities:
-            self.create_vuln_image(vulneravilty, host_id)
+        for vulnerability in result.vulnerability:
+            self.create_vuln_image(vulnerability, host_id)
 
-    def create_vuln_image(self, vulneravilty, host_id):
-        ref = vulneravilty.references
-        if vulneravilty.cvss:
+    def create_vuln_image(self, vulnerability, host_id):
+        ref = vulnerability.references
+        if vulnerability.cvss:
             cvss3 = {
-                "base_score": vulneravilty.cvss.v3score,
-                "vector_string": vulneravilty.cvss.v3score
+                "base_score": vulnerability.cvss.v3score,
+                "vector_string": vulnerability.cvss.v3score
             }
             cvss2 = {
-                "base_score": vulneravilty.cvss.v2score,
-                "vector_string": vulneravilty.cvss.v2score
+                "base_score": vulnerability.cvss.v2score,
+                "vector_string": vulnerability.cvss.v2score
             }
             ref.append(cvss3)
             ref.append(cvss2)
-        if vulneravilty.cwe:
-            ref.append(vulneravilty.cwe)
+        if vulnerability.cwe:
+            if isinstance(vulnerability.cwe, list):
+                for cwe in vulnerability.cwe:
+                    ref.append(cwe)
+            else:
+                ref.append(vulnerability.cwe)
+        if vulnerability.title == "security flaw":
+            name = vulnerability.pkgname + ":" + vulnerability.title
+        elif vulnerability.title is None:
+            name = vulnerability.pkgname
+        else:
+            name = vulnerability.title
         self.createAndAddVulnToHost(
             host_id,
-            name=vulneravilty.name,
-            desc=vulneravilty.description,
-            severity=vulneravilty.severity,
-            ref=vulneravilty.references,
-            cve=vulneravilty.name
+            name=name,
+            desc=vulnerability.description,
+            severity=vulnerability.severity,
+            ref=vulnerability.references,
+            cve=vulnerability.name
         )
 
 

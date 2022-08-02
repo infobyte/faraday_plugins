@@ -95,6 +95,14 @@ class Vulnerability(Base):
         return self.node.get("VulnerabilityID")
 
     @property
+    def title(self):
+        return self.node.get("Title")
+
+    @property
+    def pkgname(self):
+        return self.node.get("PkgName")
+
+    @property
     def url(self):
         return self.node.get("PrimaryURL")
 
@@ -133,8 +141,23 @@ class Result(Base):
         return [Misconfiguration(i) for i in self.node.get("Misconfigurations", [])]
 
     @property
-    def vulnerabilities(self):
+    def vulnerability(self):
         return [Vulnerability(i) for i in self.node.get("Vulnerabilities", [])]
+
+    @property
+    def result_type(self):
+        return self.node.get("Type")
+
+
+class Metadata(Base):
+
+    @property
+    def os_family(self):
+        return self.node.get("Family")
+
+    @property
+    def os_name(self):
+        return self.node.get("Name")
 
 
 class TrivyJsonParser(Base):
@@ -146,3 +169,6 @@ class TrivyJsonParser(Base):
     @property
     def scantype(self):
         return self.node.get('ArtifactType')
+
+    def metadata(self):
+        return Metadata(self.node.get('Metadata'))
