@@ -57,6 +57,8 @@ class TrivyJsonPlugin(PluginJsonFormat):
             }
             ref.append(cvss3)
             ref.append(cvss2)
+        if vulneravilty.cwe:
+            ref.append(vulneravilty.cwe)
         self.createAndAddVulnToHost(
             host_id,
             name=vulneravilty.name,
