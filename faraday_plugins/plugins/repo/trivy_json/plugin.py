@@ -4,7 +4,6 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from urllib.parse import urlsplit
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 from faraday_plugins.plugins.repo.trivy_json.DTO import TrivyJsonParser
 from json import loads
@@ -32,11 +31,10 @@ class TrivyJsonPlugin(PluginJsonFormat):
 
     def parseOutputString(self, output):
         parser = TrivyJsonParser(loads(output))
-        scan_type = parser.scantype
         for result in parser.results:
-            self.new_structure(result, scan_type)
+            self.new_structure(result)
 
-    def new_structure(self, result, scan_type):
+    def new_structure(self, result):
         source_file = result.target
         host_id = self.createAndAddHost(source_file)
         for misconfiguration in result.misconfigurations:
