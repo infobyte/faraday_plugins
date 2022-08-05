@@ -51,9 +51,9 @@ class Appscan_CSV_Plugin(PluginCSVFormat):
             #Skip Fix Group
             if row["Issue Id"] == "Fix Group Attributes:":
                 break
-            path = row['Location']
-            if not path:
-                continue
+            path = row['Source File']
+            if path == "":
+                path = row['Location']
             try:
                 run_date = dateutil.parser.parse(row['Date Created'])
             except:
@@ -64,20 +64,28 @@ class Appscan_CSV_Plugin(PluginCSVFormat):
                 references.append(f"CWE-{row['Cwe']}")
             if row["Cve"]:
                 references.append(row["Cve"])
+
             data = []
             if row['Security Risk']:
                 data.append(f"Security Risk: {row['Security Risk']}")
             desc = [row['Description']]
+            if row['Cve']:
+                desc.append(f"Cve:  {row['Cve']}")
             if row['Line']:
                 desc.append(f"Line:  {row['Line']}")
             if row['Cause']:
                 desc.append(f"Cause:  {row['Cause']}")
+            if row['Remediation']:
+                desc.append(f"Resolution:  {row['Resolution']}")
             if row['Threat Class']:
                 desc.append(f"Threat Class:   {row['Threat Class']}")
             if row['Security Risk']:
                 desc.append(f"Security Risk:   {row['Security Risk']}")
             if row['Calling Method']:
                 desc.append(f"Calling Method:   {row['Calling Method']}")
+            if row['Location']:
+                desc.append(f"Vulnerability Line:   {row['Location']}")
+
             h_id = self.createAndAddHost(name=path)
             self.createAndAddVulnToHost(
                 h_id,
@@ -85,6 +93,7 @@ class Appscan_CSV_Plugin(PluginCSVFormat):
                 desc=" \n".join(desc),
                 resolution=row['Remediation'],
                 external_id=row['Issue Id'],
+                cve=row['Cve'],
                 run_date=run_date,
                 severity=row["Severity"],
                 ref=references,
