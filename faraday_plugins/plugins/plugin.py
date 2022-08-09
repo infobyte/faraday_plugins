@@ -433,7 +433,7 @@ class PluginBase:
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
-                         "policyviolations": policyviolations, "cve":  cve, "cvssv3": cvss3, "cvssv2": cvss2,
+                         "policyviolations": policyviolations, "cve":  cve, "cvss3": cvss3, "cvss2": cvss2,
                          "confirmed": confirmed, "easeofresolution": easeofresolution, "tags": tags
                          }
         if run_date:
@@ -471,7 +471,7 @@ class PluginBase:
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
-                         "policyviolations": policyviolations, "cve": cve, "cvssv3": cvss3, "cvssv2": cvss2,
+                         "policyviolations": policyviolations, "cve": cve, "cvss3": cvss3, "cvss2": cvss2,
                          "easeofresolution": easeofresolution, "confirmed": confirmed, "tags": tags
                          }
         if run_date:
@@ -533,8 +533,8 @@ class PluginBase:
                          "data": data, "website": website, "path": path, "request": request, "response": response,
                          "method": method, "pname": pname, "params": params, "query": query, "category": category,
                          "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
-                         "impact": impact, "policyviolations": policyviolations, "cve": cve,  "cvssv3": cvss3,
-                         "cvssv2": cvss2, "status_code": status_code, "custom_fields": custom_fields, "tags": tags}
+                         "impact": impact, "policyviolations": policyviolations, "cve": cve,  "cvss3": cvss3,
+                         "cvss2": cvss2, "status_code": status_code, "custom_fields": custom_fields, "tags": tags}
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
         vulnerability_id = self.save_service_vuln_cache(host_id, service_id, vulnerability)
