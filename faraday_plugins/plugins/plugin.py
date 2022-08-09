@@ -403,12 +403,18 @@ class PluginBase:
 
         return service_id
 
+    @staticmethod
+    def modify_refs_struct(ref):
+        refs = []
+        if ref:
+            refs = [{'name': url, 'type': 'other'} for url in ref]
+        return refs
+
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
                                severity="", resolution="", data="", external_id=None, run_date=None,
                                impact=None, custom_fields=None, status="", policyviolations=None,
                                easeofresolution=None, confirmed=False, tags=None, cve=None):
-        if ref is None:
-            ref = []
+        ref = self.modify_refs_struct(ref)
         if status == "":
             status = "open"
         if impact is None:
@@ -441,8 +447,7 @@ class PluginBase:
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
                                   custom_fields=None, policyviolations=None, impact=None, status="",
                                   confirmed=False, easeofresolution=None, tags=None, cve=None):
-        if ref is None:
-            ref = []
+        ref = self.modify_refs_struct(ref)
         if status == "":
             status = "open"
         if impact is None:
@@ -499,8 +504,7 @@ class PluginBase:
             request = ""
         if response is None:
             response = ""
-        if ref is None:
-            ref = []
+        ref = self.modify_refs_struct(ref)
         if status == "":
             status = "open"
         if impact is None:
