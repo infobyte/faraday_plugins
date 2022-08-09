@@ -404,7 +404,10 @@ class PluginBase:
         return service_id
 
     @staticmethod
-    def modify_refs_struct(ref):
+    def modify_refs_struct(ref: list[str]) -> list[dict]:
+        """
+        Change reference struct from list of strings to a list of dicts with the form of {name, type}
+        """
         refs = []
         if ref:
             refs = [{'name': url, 'type': 'other'} for url in ref]
