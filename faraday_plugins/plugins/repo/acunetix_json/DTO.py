@@ -18,6 +18,8 @@ class InfoVul:
         return self.node.get('request', '')
 
 
+
+
 class Vulnerabilities:
     def __init__(self, node):
         self.node = node
@@ -73,9 +75,16 @@ class VulnerabilityTypes:
 
     @property
     def use_ssl(self) -> bool:
+        if not self.node:
+            return ''
         return self.node.get('use_ssl', '')
 
     @property
+    def tags(self) -> list:
+        if not self.node:
+            return ['']
+        return self.node.get('tags', [''])
+
     def cvss_score(self) -> str:
         return self.node.get('cvss_score')
 

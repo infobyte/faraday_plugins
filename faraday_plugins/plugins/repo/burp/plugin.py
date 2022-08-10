@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 from bs4 import BeautifulSoup, Comment
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-from faraday_plugins.plugins.plugins_utils import CVE_regex
+from faraday_plugins.plugins.plugins_utils import CVE_regex, CWE_regex
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -222,9 +222,11 @@ class BurpPlugin(PluginXMLFormat):
             ref = []
             if item.references:
                 ref += self.get_url(item.references)
+            cwe = []
             if item.vulnClass:
-                ref += self.get_ref(item.vulnClass)
-
+                for cwe_ref in self.get_ref(item.vulnClass):
+                    if CWE_regex.search(cwe_ref):
+                        cwe.append(CWE_regex.search(cwe_ref).group())
             resolution = self.removeHtml(item.remediation) if item.remediation else ""
 
             self.createAndAddVulnWebToService(
@@ -242,7 +244,8 @@ class BurpPlugin(PluginXMLFormat):
                 ref=ref,
                 params=item.location,
                 external_id=item.external_id,
-                cve=item.cve
+                cve=item.cve,
+                cwe=cwe
             )
 
         del parser
@@ -294,6 +297,7 @@ class BurpPlugin(PluginXMLFormat):
                 for a in item.find_all("a"):
                     ref += [a['href'].strip()]
         return ref
+
 
 def createPlugin(ignore_info=False, hostname_resolution=True):
     return BurpPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)

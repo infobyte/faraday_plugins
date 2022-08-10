@@ -159,6 +159,7 @@ class AppScanParser:
                 "website": entity['website'],
                 "path": entity['path'],
                 "cve": [],
+                "cwe": [],
                 "cvss2": {}
             }
             if cve:
@@ -167,7 +168,7 @@ class AppScanParser:
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
-                issue_data["ref"].append(f"CWE: {cwe}")
+                issue_data["cwe"].append(f"CWE-{cwe}")
             if cvss2:
                 issue_data["cvss2"]["base_score"] = cvss2
             if cvss2_base_vector:
@@ -217,13 +218,14 @@ class AppScanParser:
                 "ref": [],
                 "resolution": resolution,
                 "cve": [],
+                "cwe": [],
                 "cvss2": {}
             }
 
             if cve_url:
                 issue_data["ref"].append(cve_url)
             if cwe:
-                issue_data["ref"].append(f"CWE: {cwe}")
+                issue_data["cwe"].append(f"CWE-{cwe}")
             if cvss2:
                 issue_data["cvss2"]['base_score'] = cvss2
             if cvss2_base_vector:
