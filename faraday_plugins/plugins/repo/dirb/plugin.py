@@ -41,7 +41,7 @@ class dirbPlugin(PluginBase):
     def getIP(self, host):
         try:
             ip = self.resolve_hostname(host)
-        except Exception:
+        except Exception:  # nosec
             pass
 
         return ip

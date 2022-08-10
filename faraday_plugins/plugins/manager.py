@@ -83,7 +83,7 @@ class ReportAnalyzer:
                         main_tag = elem.tag
                         try:
                             main_tag_attributes = elem.attrib
-                        except:
+                        except AttributeError:
                             pass
                     break
                 logger.debug("Found XML content on file: %s - Main tag: %s Attributes: %s", report_path, main_tag,
