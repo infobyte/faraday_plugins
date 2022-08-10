@@ -178,6 +178,10 @@ class Item:
         self.cve = self.get_text_from_subnode('cve') if self.get_text_from_subnode('cve') != "NOCVE" else ""
         self.bid = self.get_text_from_subnode('bid') if self.get_text_from_subnode('bid') != "NOBID" else ""
         self.xref = self.get_text_from_subnode('xref') if self.get_text_from_subnode('xref') != "NOXREF" else ""
+        self.cwe = []
+        if "URL:https://cwe.mitre.org/data/definitions/" in self.xref:
+            self.cwe.append("CWE-"+self.xref.split("URL:https://cwe.mitre.org/data/definitions/")[1]
+                            .replace("html", ""))
         self.description = ''
         self.resolution = ''
         self.cvss_vector = ''
@@ -387,6 +391,7 @@ class OpenvasPlugin(PluginXMLFormat):
                             external_id=f"OPENVAS-{item.id}",
                             data=item.data,
                             cve=cve,
+                            cwe=item.cwe,
                             cvss2=cvss2
                         )
                 else:
@@ -421,6 +426,7 @@ class OpenvasPlugin(PluginXMLFormat):
                                 external_id=f"OPENVAS-{item.id}",
                                 data=item.data,
                                 cve=cve,
+                                cwe=item.cwe,
                                 cvss2=cvss2
                             )
                     elif item.severity not in self.ignored_severities:
@@ -435,6 +441,7 @@ class OpenvasPlugin(PluginXMLFormat):
                             external_id=f"OPENVAS-{item.id}",
                             data=item.data,
                             cve=cve,
+                            cwe=item.cwe,
                             cvss2=cvss2
                         )
         del parser

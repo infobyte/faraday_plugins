@@ -157,7 +157,11 @@ class AcunetixPlugin(PluginXMLFormat):
         try:
             cve = [item.cvelist.cve.text if item.cvelist.cve else ""]
         except Exception:
-            cve = [""]
+            cve = []
+        try:
+            cwe = [item.cwelist.cwe.text if item.cwelist.cwe else ""]
+        except:
+            cwe = []
         self.createAndAddVulnWebToService(
             h_id,
             s_id,
@@ -172,6 +176,7 @@ class AcunetixPlugin(PluginXMLFormat):
             response=item.technicaldetails.response,
             ref=[i.url for i in item.references.reference],
             cve=cve,
+            cwe=cwe,
             cvss2=cvss2,
             cvss3=cvss3)
 

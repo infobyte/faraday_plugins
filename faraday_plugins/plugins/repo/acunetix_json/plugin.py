@@ -22,6 +22,7 @@ __status__ = "Development"
 
 from faraday_plugins.plugins.repo.acunetix_json.DTO import AcunetixJsonParser, Vulnerabilities, \
     VulnerabilityTypes
+from faraday_plugins.plugins.plugins_utils import its_cwe
 
 
 class AcunetixXmlParser:
@@ -106,9 +107,10 @@ class AcunetixJsonPlugin(PluginJsonFormat):
             status='open')
         for i in site.vulnerabilities:
             vul_type = vulnerability_type[i.info.vt_id]
-            self.create_vul(i, vul_type, h_id, s_id, url_data)
+            cwe = its_cwe(vul_type.tags)
+            self.create_vul(i, vul_type, h_id, s_id, url_data, cwe)
 
-    def create_vul(self, vul: Vulnerabilities, vul_type: VulnerabilityTypes, h_id, s_id, url_data):
+    def create_vul(self, vul: Vulnerabilities, vul_type: VulnerabilityTypes, h_id, s_id, url_data, cwe):
         cvss3 = {
             'vector_string': vul_type.cvss3_vector
         }
@@ -125,6 +127,7 @@ class AcunetixJsonPlugin(PluginJsonFormat):
             resolution=vul_type.recommendation,
             request=vul.info.request,
             response=vul.response,
+            cwe=cwe,
             cvss3=cvss3,
             cvss2=cvss2
         )
