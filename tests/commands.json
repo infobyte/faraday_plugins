@@ -17,7 +17,6 @@
     {"plugin_id": "Dnsrecon", "command": "dnsrecon www.google.com", "command_result": "Dnsrecon"},
     {"plugin_id": "Dnswalk", "command": "dnswalk www.google.com", "command_result": "Dnswalk"},
     {"plugin_id": "Fierce", "command": "fierce www.google.com", "command_result": "Fierce"},
-    {"plugin_id": "fruitywifi", "command": "fruitywifi www.google.com", "command_result": "fruitywifi"},
     {"plugin_id": "ftp", "command": "ftp www.google.com", "command_result": "ftp"},
     {"plugin_id": "Goohost", "command": "goohost.sh www.google.com", "command_result": "goohost.sh"},
     {"plugin_id": "Hping3", "command": "hping3 www.google.com", "command_result": "Hping3"},
