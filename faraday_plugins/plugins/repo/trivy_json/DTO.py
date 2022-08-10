@@ -65,7 +65,11 @@ class Misconfiguration(Base):
 
     @property
     def description(self):
-        return self.node.get("Description")
+        description = self.node.get("Description")
+        if description:
+            return description
+        else:
+            return "Issues provided no description"
 
     @property
     def message(self):
@@ -108,7 +112,11 @@ class Vulnerability(Base):
 
     @property
     def description(self):
-        return self.node.get("Description")
+        description = self.node.get("Description")
+        if description:
+            return description
+        else:
+            return "Issues provided no description"
 
     @property
     def severity(self):
