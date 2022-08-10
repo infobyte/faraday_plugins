@@ -17,6 +17,7 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 import socket
+from typing import List
 
 # Related third party imports
 import pytz
@@ -404,7 +405,7 @@ class PluginBase:
         return service_id
 
     @staticmethod
-    def modify_refs_struct(ref: list[str]) -> list[dict]:
+    def modify_refs_struct(ref: List[str]) -> List[dict]:
         """
         Change reference struct from list of strings to a list of dicts with the form of {name, type}
         """
