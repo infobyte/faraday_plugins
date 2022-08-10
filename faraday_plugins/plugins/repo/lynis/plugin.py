@@ -38,15 +38,15 @@ class LynisLogDataExtracter():
 
     def ipv4(self):
         ipv4s = re.findall(r'^network_ipv4_address\[\]=(.+)$',
-                       self.rawcontents, re.MULTILINE)
+                           self.rawcontents, re.MULTILINE)
         ipv4addrs = self.ipv4_filter(ipv4s)
-        return(ipv4addrs)
+        return ipv4addrs
 
     def ipv6(self):
         ipv6s = re.findall(r'^network_ipv6_address\[\]=(.+)$',
-                       self.rawcontents, re.MULTILINE)
+                           self.rawcontents, re.MULTILINE)
         ipv6addrs = self.ipv6_filter(ipv6s)
-        return(ipv6addrs)
+        return ipv6addrs
 
     def ipv4_filter(self, ips):
         ip_list = []
@@ -76,7 +76,7 @@ class LynisLogDataExtracter():
 
     def listeningservices(self):
         line = re.findall(r'^network_listen_port\[\]=(.+)$',
-                       self.rawcontents, re.MULTILINE)
+                          self.rawcontents, re.MULTILINE)
         # To avoid local services, we will create the following list
         local_services = ['*', 'localhost']
 
@@ -91,7 +91,6 @@ class LynisLogDataExtracter():
 
     def clean_services(self, combo, local_services):
         add = False
-        #if "localhost" in combo:
         if combo.count("|") > 1:
             # Service with url, protocol and perhaps name
             items_service = combo.split('|')
@@ -172,8 +171,8 @@ class LynisLogDataExtracter():
     def search_service(self, port):
         srv = filter_services()
         details_dict = {
-            'name' : 'Unknown',
-            'protocol' : 'Unknown'
+            'name': 'Unknown',
+            'protocol': 'Unknown'
         }
         for item in srv:
             service_tuple = item[0].split('/')
@@ -207,7 +206,7 @@ class LynisLogDataExtracter():
         for combo in m:
             x = combo.split('|')
             sugs[x[0]] = x[1]
-        return(sugs)
+        return sugs
 
     def parse_warnings(self):
         warns = {}
@@ -215,7 +214,7 @@ class LynisLogDataExtracter():
         for combo in m:
             x = combo.split('|')
             warns[x[0]] = x[1]
-        return(warns)
+        return warns
 
 
 class LynisPlugin(PluginByExtension):
@@ -259,8 +258,8 @@ class LynisPlugin(PluginByExtension):
 
         for ipv4 in ipv4s:
             h_id = self.createAndAddHost(name=ipv4,
-                                            os=lde.osfullname(),
-                                            hostnames=[hostname])
+                                         os=lde.osfullname(),
+                                         hostnames=[hostname])
 
             self.create_services(h_id, services, ipv4)
             self.create_vulns_with_kernel(h_id, kernel_versions)
@@ -269,8 +268,8 @@ class LynisPlugin(PluginByExtension):
 
         for ipv6 in ipv6s:
             h_id = self.createAndAddHost(name=ipv6,
-                                            os=lde.osfullname(),
-                                            hostnames=[hostname])
+                                         os=lde.osfullname(),
+                                         hostnames=[hostname])
 
             self.create_services(h_id, services, ipv6)
             self.create_vulns_with_kernel(h_id, kernel_versions)
