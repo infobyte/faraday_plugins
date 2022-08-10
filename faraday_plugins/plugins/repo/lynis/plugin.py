@@ -280,16 +280,16 @@ class LynisPlugin(PluginByExtension):
     def create_services(self, host_id, parsed_services, ip_version):
         for service_data in parsed_services[ip_version]:
             self.createAndAddServiceToHost(host_id=host_id,
-                                            name=service_data['name'],
-                                            protocol=service_data['protocol'],
-                                            ports=[service_data['port']])
+                                           name=service_data['name'],
+                                           protocol=service_data['protocol'],
+                                           ports=[service_data['port']])
 
         if '0.0.0.0' in parsed_services:
             for service_data in parsed_services['0.0.0.0']:
                 self.createAndAddServiceToHost(host_id=host_id,
-                                            name=service_data['name'],
-                                            protocol=service_data['protocol'],
-                                            ports=[service_data['port']])
+                                               name=service_data['name'],
+                                               protocol=service_data['protocol'],
+                                               ports=[service_data['port']])
 
     def create_vulns_with_kernel(self, host_id, kernel_versions):
         for kernel, version in kernel_versions.items():

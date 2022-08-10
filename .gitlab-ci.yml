@@ -50,7 +50,7 @@ bandit:
   script:
     - pip3 install bandit
     - mkdir /results
-    - "bandit -r ${CI_PROJECT_DIR} -o /results/output.xml -f xml"
+    - "bandit -r ${CI_PROJECT_DIR} -o /results/output.xml -f xml --skip B410,B320,B310,B314,B404,B405,B324,B603,B104,B110,B112,B101"
   after_script:
     - curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
     - apt update
