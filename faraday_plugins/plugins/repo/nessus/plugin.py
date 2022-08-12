@@ -98,8 +98,6 @@ class NessusPlugin(PluginXMLFormat):
             "desc": item.description,
             "resolution": item.solution,
             "ref": [],
-            "cvss2": [item.cvss2_base_score] if item.cvss2_base_score else [],
-            "cvss3": [item.cvss3_base_score] if item.cvss3_base_score else []
         }
 
     def map_policy_general(self, kwargs, item: ReportItem):
@@ -182,8 +180,6 @@ class NessusPlugin(PluginXMLFormat):
     def map_add_ref(kwargs, item: ReportItem):
         kwargs["cvss2"] = {}
         kwargs["cvss3"] = {}
-        if item.cvss_vector:
-            kwargs["ref"].append(item.cvss_vector)
         if item.see_also:
             kwargs["ref"].append(item.see_also)
         if item.cpe:
@@ -192,12 +188,8 @@ class NessusPlugin(PluginXMLFormat):
             kwargs["cve"] = item.cve
         if item.cwe:
             kwargs["cwe"] = item.cwe
-        if item.cvss3_base_score:
-            kwargs["cvss3"]["base_score"] = item.cvss3_base_score
         if item.cvss3_vector:
             kwargs["cvss3"]["vector_string"] = item.cvss3_vector
-        if item.cvss2_base_score:
-            kwargs["cvss2"]["base_score"] = item.cvss2_base_score
         if item.cvss_vector:
             kwargs["cvss2"]["vector_string"] = item.cvss_vector
         return kwargs

@@ -354,7 +354,7 @@ class ScriptVulners:
         self.refs = ["https://vulners.com/" + self.table["type"] + "/" + self.table["id"]]
         self.response = ""
         self.web = ""
-        self.cvss2 = {"base_score": self.table["cvss"]}
+        self.cvss2 = {}
 
     def __str__(self):
         return f"{self.name}, {self.product}, {self.version}"

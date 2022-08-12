@@ -169,8 +169,6 @@ class AppScanParser:
                 issue_data["ref"].append(cve_url)
             if cwe:
                 issue_data["cwe"].append(f"CWE-{cwe}")
-            if cvss2:
-                issue_data["cvss2"]["base_score"] = cvss2
             if cvss2_base_vector:
                 issue_data["cvss2"]["vector_string"] = cvss2_base_vector
             if cvss_temporal_vector:
@@ -226,8 +224,6 @@ class AppScanParser:
                 issue_data["ref"].append(cve_url)
             if cwe:
                 issue_data["cwe"].append(f"CWE-{cwe}")
-            if cvss2:
-                issue_data["cvss2"]['base_score'] = cvss2
             if cvss2_base_vector:
                 issue_data["cvss2"]['vector_string'] = cvss2_base_vector
             if cvss_temporal_vector:
