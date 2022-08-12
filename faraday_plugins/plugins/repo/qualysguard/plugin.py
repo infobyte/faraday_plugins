@@ -156,8 +156,6 @@ class ResultsAssetReport():
         self.severity = self.severity_dict.get(self.get_text_from_glossary('SEVERITY'), 'info')
         self.title = self.get_text_from_glossary('TITLE')
         self.cvss2 = {}
-        if self.get_text_from_glossary('CVSS_SCORE/CVSS_BASE'):
-            self.cvss2["base_score"] = self.get_text_from_glossary('CVSS_SCORE/CVSS_BASE')
         self.pci = self.get_text_from_glossary('PCI_FLAG')
         self.solution = self.get_text_from_glossary('SOLUTION')
         self.impact = self.get_text_from_glossary('IMPACT')
@@ -278,8 +276,6 @@ class ResultsScanReport():
         self.external_id = self.node.get('number')
         self.title = self.get_text_from_subnode('TITLE')
         self.cvss2 = {}
-        if self.get_text_from_subnode('CVSS_BASE'):
-            self.cvss2["base_score"] = self.get_text_from_subnode('CVSS_BASE')
 
         self.diagnosis = self.get_text_from_subnode('DIAGNOSIS')
         self.solution = self.get_text_from_subnode('SOLUTION')

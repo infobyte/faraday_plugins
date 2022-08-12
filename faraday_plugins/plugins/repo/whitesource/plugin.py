@@ -44,9 +44,6 @@ class WhitesourcePlugin(PluginJsonFormat):
                     for key, value in vulnerability['library'].items():
                         data += f'{key}: {value} \n'
                     refs = []
-                    cvss2["base_score"] = vulnerability['score']
-                    if 'cvss3_score' in vulnerability:
-                        cvss3["base_score"] = vulnerability['cvss3_score']
                     if "scoreMetadataVector" in vulnerability:
                         cvss3["vector_string"] = vulnerability['scoreMetadataVector']
                     if 'topFix' in vulnerability:

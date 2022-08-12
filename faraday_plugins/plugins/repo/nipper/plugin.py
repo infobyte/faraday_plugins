@@ -97,8 +97,6 @@ class NipperParser:
             # nombre de la vuln
 
             vuln_soft.name = itemv.attrib.get('title')
-            cvss2_score = itemv.find('infobox/infodata/[@label="CVSSv2 Score"]')
-            vuln_soft.cvss2["base_score"]= cvss2_score.text if cvss2_score is not None else None
             cvss2_vector = itemv.find('infobox/infodata/[@label="CVSSv2 Base"]')
             vuln_soft.cvss2["vector_string"] = cvss2_vector.text.split(' ')[0] if cvss2_vector is not None else None
             for itemvv in itemv:
