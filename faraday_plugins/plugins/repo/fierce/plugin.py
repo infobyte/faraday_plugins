@@ -118,7 +118,7 @@ class FiercePlugin(PluginBase):
         try:
             item['ip'] = self.resolve_hostname(item['ip'])
         except:
-            pass
+            pass  # nosec
         return item
 
     def resolveNS(self, item, items):

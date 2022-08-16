@@ -193,7 +193,8 @@ class SkipfishPlugin(PluginBase):
         """
         super().processCommandString(username, current_path, command_string)
         arg_match = self.xml_arg_re.match(command_string)
-        self._output_file_path = os.path.join(tempfile.gettempdir(), "faraday_plugin_skipfish_%d" % random.randint(1, 999999))
+        self._output_file_path = os.path.join(tempfile.gettempdir(),
+                                              "faraday_plugin_skipfish_%d" % random.randint(1, 999999))  # nosec
         self._delete_temp_file = True
         if arg_match is None:
             return re.sub(r"(^.*?skipfish)", r"\1 -o %s" % self._output_file_path, command_string, 1)
