@@ -625,7 +625,7 @@ class PluginBase:
             vuln_copy = vuln.copy()
             for field in VULN_SKIP_FIELDS_TO_HASH:
                 vuln_copy.pop(field, None)
-            dict_hash = hashlib.sha1(json.dumps(vuln_copy).encode()).hexdigest()
+            dict_hash = hashlib.sha1(json.dumps(vuln_copy).encode()).hexdigest() # nosec
             summary['vuln_hashes'].append(dict_hash)
         return summary
 
