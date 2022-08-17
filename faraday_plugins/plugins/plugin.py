@@ -41,10 +41,10 @@ class PluginBase:
         # TODO: Make script that list current ids.
         self.ignore_info = kwargs.get("ignore_info", False)
         self.hostname_resolution = kwargs.get("hostname_resolution", True)
-        self.default_vuln_tag = kwargs.get("default_vuln_tag", None)
         self.vuln_tag = kwargs.get("vuln_tag", None)
         self.host_tag = kwargs.get("host_tag", None)
         self.service_tag = kwargs.get("service_tag", None)
+        self.default_vuln_tag = None
         self.id = None
         self.auto_load = True
         self._rid = id(self)
