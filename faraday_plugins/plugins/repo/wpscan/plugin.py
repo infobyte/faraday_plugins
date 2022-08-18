@@ -5,8 +5,10 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import json
+import re
 from urllib.parse import urlparse
 
+from faraday_plugins.plugins.plugin import PluginJsonFormat
 
 __author__ = "Nicolas Rebagliati"
 __copyright__ = "Copyright (c) 2019, Infobyte LLC"
@@ -16,8 +18,6 @@ __version__ = "0.0.1"
 __maintainer__ = "Nicolas Rebagliati"
 __email__ = "nrebagliati@infobytesec.com"
 __status__ = "Development"
-
-from faraday_plugins.plugins.plugin import PluginJsonFormat
 
 
 class WPScanJsonParser:
@@ -43,7 +43,6 @@ class WPScanJsonParser:
         return {'protocol': protocol, 'hostname': hostname, 'port': port, 'address': address}
 
 
-
 class WPScanPlugin(PluginJsonFormat):
     """ Handle the WPScan tool. Detects the output of the tool
     and adds the information to Faraday.
@@ -56,6 +55,9 @@ class WPScanPlugin(PluginJsonFormat):
         self.plugin_version = "0.2"
         self.version = "3.4.5"
         self.json_keys = {"target_url", "effective_url", "interesting_findings"}
+        self._command_regex = re.compile(r'^(sudo wpscan|wpscan)\s+.*?')
+        self._use_temp_file = True
+        self._temp_file_extension = "json"
 
     def parseOutputString(self, output):
         parser = WPScanJsonParser(output, self.resolve_hostname)
@@ -89,6 +91,15 @@ class WPScanPlugin(PluginJsonFormat):
                 vuln_name = vuln['to_s']
             self.createAndAddVulnWebToService(host_id, service_id, vuln_name, ref=vuln['references'].get('url', []),
                                               severity='unclassified')
+
+    def processCommandString(self, username, current_path, command_string):
+        """
+        Adds the path to a temporary file parameter to get .json output to the command string that the
+        user has set.
+        """
+        super().processCommandString(username, current_path, command_string)
+        command_string += f" --output={self._output_file_path} --format json"
+        return command_string
 
 
 def createPlugin(ignore_info=False, hostname_resolution=True):
