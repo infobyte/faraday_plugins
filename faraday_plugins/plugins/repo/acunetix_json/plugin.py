@@ -131,6 +131,7 @@ class AcunetixJsonPlugin(PluginJsonFormat):
         url_data = urlsplit(url)
         if not url_data.scheme:
             url_data = urlsplit(scan.crawler.start_url_attr)
+        return url_data
 
 
 def createPlugin(ignore_info=False, hostname_resolution=True):
