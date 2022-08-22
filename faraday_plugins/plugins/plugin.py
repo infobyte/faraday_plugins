@@ -87,15 +87,17 @@ class PluginBase:
         return temp_file_path
 
     @staticmethod
-    def valid_ip(address):
+    def invalid_ip(address):
         try:
             ipaddress.ip_address(address)
-            return True
-        except:
             return False
+        except:
+            return True
 
     def resolve_hostname(self, hostname):
-        if not self.hostname_resolution or self.valid_ip(hostname):
+        if not hostname:
+            return ""
+        if not (self.hostname_resolution or self.invalid_ip(hostname)):
             return hostname
         try:
             socket.inet_aton(hostname)  # is already an ip
