@@ -17,7 +17,6 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 import socket
-import ipaddress
 
 # Related third party imports
 import pytz
