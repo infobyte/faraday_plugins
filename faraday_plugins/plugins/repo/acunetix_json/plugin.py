@@ -5,6 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from urllib.parse import urlsplit
+import ipaddress
 
 from lxml import etree
 
@@ -92,6 +93,8 @@ class AcunetixJsonPlugin(PluginJsonFormat):
 
     def new_structure(self, site: Scan):
         start_url = site.info.host
+        if site.info.start_url:
+            start_url = site.info.start_url
         url_data = urlsplit(start_url)
         site_ip = self.resolve_hostname(url_data.hostname)
         ports = '443' if (url_data.scheme == 'https') else '80'

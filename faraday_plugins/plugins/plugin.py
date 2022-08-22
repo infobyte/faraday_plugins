@@ -88,6 +88,9 @@ class PluginBase:
     def resolve_hostname(self, hostname):
         if not self.hostname_resolution:
             return hostname
+        if not hostname:
+            self.logger.error(f"Hostname provided is None or Empty {hostname}, using 0.0.0.0 as ip")
+            return "0.0.0.0"
         try:
             socket.inet_aton(hostname)  # is already an ip
             return hostname
