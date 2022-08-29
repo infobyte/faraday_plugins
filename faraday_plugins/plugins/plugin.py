@@ -661,8 +661,15 @@ class PluginJsonFormat(PluginByExtension):
         if super().report_belongs_to(**kwargs):
             if file_json_keys is None:
                 file_json_keys = set()
-            match = self.json_keys.issubset(file_json_keys)
-            self.logger.debug(f"Json Keys Match: [{file_json_keys} =/in {self.json_keys}] -> {match}")
+            if isinstance(self.json_keys, list):
+                for jk in self.json_keys:
+                    match = jk.issubset(file_json_keys)
+                    self.logger.debug(f"Json Keys Match: [{file_json_keys} =/in {jk}] -> {match}")
+                    if match:
+                        break
+            else:
+                match = self.json_keys.issubset(file_json_keys)
+                self.logger.debug(f"Json Keys Match: [{file_json_keys} =/in {self.json_keys}] -> {match}")
         return match
 
 
