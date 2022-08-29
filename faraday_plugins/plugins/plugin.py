@@ -88,6 +88,9 @@ class PluginBase:
     def resolve_hostname(self, hostname):
         if not self.hostname_resolution:
             return hostname
+        if not hostname:
+            self.logger.error(f"Hostname provided is None or Empty {hostname}, using 0.0.0.0 as ip")
+            return "0.0.0.0"
         try:
             socket.inet_aton(hostname)  # is already an ip
             return hostname
@@ -581,7 +584,7 @@ class PluginBase:
             vuln_copy = vuln.copy()
             for field in VULN_SKIP_FIELDS_TO_HASH:
                 vuln_copy.pop(field, None)
-            dict_hash = hashlib.sha1(json.dumps(vuln_copy).encode()).hexdigest()
+            dict_hash = hashlib.sha1(json.dumps(vuln_copy).encode()).hexdigest() # nosec
             summary['vuln_hashes'].append(dict_hash)
         return summary
 
