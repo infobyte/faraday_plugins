@@ -101,5 +101,5 @@ class CobaltPlugin(PluginCSVFormat):
                                               data=row['StepsToReproduce'], external_id=row['Tag'], run_date=run_date)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return CobaltPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return CobaltPlugin(*args, **kwargs)

@@ -91,5 +91,5 @@ class Appscan_CSV_Plugin(PluginCSVFormat):
                 data=" \n".join(data)
             )
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return Appscan_CSV_Plugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kargs):
+    return Appscan_CSV_Plugin(*args, **kargs)
