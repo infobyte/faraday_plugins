@@ -315,5 +315,5 @@ class NiktoPlugin(PluginXMLFormat):
             return re.sub(arg_match.group(1), r"-output %s -Format XML" % self._output_file_path, data)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return NiktoPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return NiktoPlugin(*args, **kwargs)

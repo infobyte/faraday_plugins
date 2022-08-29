@@ -115,5 +115,5 @@ class dirbPlugin(PluginBase):
         return f"{command_string}{extra_arg}"
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return dirbPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return dirbPlugin(*args, **kwargs)

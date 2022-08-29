@@ -134,5 +134,5 @@ class AcunetixJsonPlugin(PluginJsonFormat):
         return url_data
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return AcunetixJsonPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return AcunetixJsonPlugin(*args, **kwargs)

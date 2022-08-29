@@ -152,5 +152,5 @@ class CmdNdiffPlugin(PluginBase):
             return f"{command_string} --xml "
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return CmdNdiffPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return CmdNdiffPlugin(*args, **kwargs)
