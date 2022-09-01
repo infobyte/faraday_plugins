@@ -5,6 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from dateutil.parser import parse
+import re
 import json
 from datetime import datetime
 from dataclasses import dataclass
@@ -18,7 +19,7 @@ __version__ = "0.0.1"
 __maintainer__ = "Nicolas Rebagliati"
 __email__ = "nrebagliati@faradaysec.com"
 __status__ = "Development"
-
+CHECK_NUMBER_REGEX = re.compile(r"^(\[check\d\])")
 
 @dataclass
 class Issue:
@@ -53,7 +54,7 @@ class ProwlerJsonParser:
             scored = json_data.get("Status", "")
             account = json_data.get("Account Number", "")
             message = json_data.get("Message", "")
-            control = json_data.get("Control", "")
+            control = CHECK_NUMBER_REGEX.sub("", json_data.get("Control", "")).strip()
             status = json_data.get("Status", "")
             level = json_data.get("Level", "")
             control_id = json_data.get("Control ID", "")
@@ -105,7 +106,8 @@ class ProwlerPlugin(PluginMultiLineJsonFormat):
                                         data=f"Resource ID: {issue.resource_id}",
                                         severity=self.normalize_severity(issue.severity), resolution=issue.remediation,
                                         run_date=issue.timestamp, external_id=f"{self.name.upper()}-{issue.control_id}",
-                                        ref=[issue.doc_link])
+                                        ref=[issue.doc_link],
+                                        policyviolations=issue.caf_epic)
 
 
 def createPlugin(*args, **kwargs):
