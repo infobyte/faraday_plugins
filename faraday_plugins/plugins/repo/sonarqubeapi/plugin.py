@@ -6,8 +6,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import json
 from faraday_plugins.plugins.plugin import PluginJsonFormat
-from datetime import datetime
-import dateutil
+from dateutil.parser import parse
 
 VULNERABILITY = "VULNERABILITY"
 
@@ -53,7 +52,7 @@ class SonarQubeAPIParser:
             status = STATUSES[issue['status']]
             tags = issue['tags']
             external_id = issue['rule']
-            creation_date = dateutil.parser.parse(issue['creationDate'])
+            creation_date = parse(issue['creationDate'])
             data = [] if not issue['flows'] else ["Flows:"]
             for flow in issue['flows']:
                 for location in flow['locations']:

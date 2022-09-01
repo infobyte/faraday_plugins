@@ -7,7 +7,7 @@ See the file 'doc/LICENSE' for the license information
 
 import xml.etree.ElementTree as ET
 
-import dateutil
+from dateutil.parser import parse
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = "Blas"
@@ -151,7 +151,7 @@ class NessusPlugin(PluginXMLFormat):
             for host in report_hosts:
                 run_date = host.host_properties.host_end
                 if run_date:
-                    run_date = dateutil.parser.parse(run_date)
+                    run_date = parse(run_date)
                 website = host.host_properties.host_fqdn
                 host_id = self.createAndAddHost(**self.map_properties(host))
 
