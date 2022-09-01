@@ -635,8 +635,8 @@ class PluginBase:
 
 # TODO Borrar
 class PluginTerminalOutput(PluginBase):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def processOutput(self, term_output):
         try:
@@ -647,8 +647,8 @@ class PluginTerminalOutput(PluginBase):
 
 # TODO Borrar
 class PluginCustomOutput(PluginBase):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def processOutput(self, term_output):
         # we discard the term_output since it's not necessary
