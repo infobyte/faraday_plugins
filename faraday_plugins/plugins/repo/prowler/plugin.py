@@ -63,7 +63,7 @@ class ProwlerJsonParser:
                 timestamp = parse(timestamp)
             compliance = json_data.get("Compliance", "")
             service = json_data.get("Service", "")
-            caf_epic = json_data.get("CAF Epic", "")
+            caf_epic = [json_data.get("CAF Epic", "")]
             risk = json_data.get("Risk", "")
             doc_link = json_data.get("Doc link", "")
             remediation = json_data.get("Remediation", "")
