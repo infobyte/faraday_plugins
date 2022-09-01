@@ -1,9 +1,9 @@
 import subprocess
 import re
 import json
-import dateutil
 from packaging import version
 from urllib.parse import urlparse
+from dateutil.parser import parse
 from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
 
 __author__ = "Emilio Couto"
@@ -97,7 +97,7 @@ class NucleiLegacyPlugin(PluginMultiLineJsonFormat):
             name = vuln_dict["info"].get("name")
             run_date = vuln_dict.get('timestamp')
             if run_date:
-                run_date = dateutil.parser.parse(run_date)
+                run_date = parse(run_date)
             self.createAndAddVulnWebToService(
                 host_id,
                 service_id,
