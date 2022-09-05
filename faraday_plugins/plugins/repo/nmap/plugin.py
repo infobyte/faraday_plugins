@@ -576,5 +576,5 @@ class NmapPlugin(PluginXMLFormat):
                           command_string)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return NmapPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return NmapPlugin(*args, **kwargs)

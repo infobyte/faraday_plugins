@@ -109,5 +109,5 @@ class DnswalkPlugin(PluginBase):
         return True
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return DnswalkPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return DnswalkPlugin(*args, **kwargs)

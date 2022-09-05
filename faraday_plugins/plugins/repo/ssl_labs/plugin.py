@@ -107,5 +107,5 @@ class SslLabsPlugin(PluginJsonFormat):
                                            data=vuln['data'])
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return SslLabsPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return SslLabsPlugin(*args, **kwargs)

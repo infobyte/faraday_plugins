@@ -176,5 +176,5 @@ class QualysWebappPlugin(PluginXMLFormat):
                                         cvss3=cvss3)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return QualysWebappPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return QualysWebappPlugin(*args, **kwargs)

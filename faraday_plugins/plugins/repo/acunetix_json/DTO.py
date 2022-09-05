@@ -107,6 +107,11 @@ class Info:
             return ''
         return self.node.get('host', '')
 
+    @property
+    def start_url(self) -> str:
+        if not self.node:
+            return ''
+        return self.node.get('start_url', '')
 
 class Scan:
     def __init__(self, node):
