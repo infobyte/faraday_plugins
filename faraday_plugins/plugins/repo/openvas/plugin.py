@@ -178,6 +178,10 @@ class Item:
         self.cve = self.get_text_from_subnode('cve') if self.get_text_from_subnode('cve') != "NOCVE" else ""
         self.bid = self.get_text_from_subnode('bid') if self.get_text_from_subnode('bid') != "NOBID" else ""
         self.xref = self.get_text_from_subnode('xref') if self.get_text_from_subnode('xref') != "NOXREF" else ""
+        self.cwe = []
+        if "URL:https://cwe.mitre.org/data/definitions/" in self.xref:
+            self.cwe.append("CWE-"+self.xref.split("URL:https://cwe.mitre.org/data/definitions/")[1]
+                            .replace("html", ""))
         self.description = ''
         self.resolution = ''
         self.cvss_vector = ''
@@ -342,6 +346,7 @@ class OpenvasPlugin(PluginXMLFormat):
             if item.name is not None:
                 ref = []
                 cve = []
+                cvss2 = {}
                 if item.cve:
                     cves = item.cve.split(',')
                     for i in cves:
@@ -353,9 +358,7 @@ class OpenvasPlugin(PluginXMLFormat):
                 if item.xref:
                     ref.append(item.xref)
                 if item.tags and item.cvss_vector:
-                    ref.append(item.cvss_vector)
-                if item.cvss_base:
-                    ref.append(f"CVSS_BASE: {item.cvss_base}")
+                    cvss2["vector_string"] = item.cvss_vector
                 if item.cpe:
                     ref.append(f"{item.cpe}")
                 if item.severity_nr:
@@ -385,7 +388,10 @@ class OpenvasPlugin(PluginXMLFormat):
                             ref=ref,
                             external_id=f"OPENVAS-{item.id}",
                             data=item.data,
-                            cve=cve)
+                            cve=cve,
+                            cwe=item.cwe,
+                            cvss2=cvss2
+                        )
                 else:
                     if item.service:
                         web = re.search(
@@ -417,7 +423,10 @@ class OpenvasPlugin(PluginXMLFormat):
                                 resolution=item.resolution,
                                 external_id=f"OPENVAS-{item.id}",
                                 data=item.data,
-                                cve=cve)
+                                cve=cve,
+                                cwe=item.cwe,
+                                cvss2=cvss2
+                            )
                     elif item.severity not in self.ignored_severities:
                         self.createAndAddVulnToService(
                             h_id,
@@ -429,7 +438,10 @@ class OpenvasPlugin(PluginXMLFormat):
                             resolution=item.resolution,
                             external_id=f"OPENVAS-{item.id}",
                             data=item.data,
-                            cve=cve)
+                            cve=cve,
+                            cwe=item.cwe,
+                            cvss2=cvss2
+                        )
         del parser
 
     @staticmethod

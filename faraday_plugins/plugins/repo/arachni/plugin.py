@@ -57,7 +57,7 @@ class ArachniXmlParser:
             return System(system_tree, True)
 
 
-class Issue():
+class Issue:
 
     def __init__(self, issue_node):
         self.node = issue_node
@@ -198,7 +198,7 @@ class Issue():
             return 'None'
 
 
-class System():
+class System:
 
     def __init__(self, node, tag_exists):
         self.node = node
@@ -276,7 +276,7 @@ class System():
         return result
 
 
-class Plugins():
+class Plugins:
     """
     Support:
     WAF (Web Application Firewall) Detector (waf_detector)
@@ -443,8 +443,7 @@ class ArachniPlugin(PluginXMLFormat):
 
             references = issue.references
             if issue.cwe != 'None':
-                references.append('CWE-' + str(issue.cwe))
-
+                cwe = ['CWE-' + str(issue.cwe)]
             if resol == 'None':
                 resol = ''
 
@@ -463,7 +462,9 @@ class ArachniPlugin(PluginXMLFormat):
                 pname=issue.var,
                 params=issue.parameters,
                 request=issue.request,
-                response=issue.response)
+                response=issue.response,
+                cwe=cwe
+            )
 
         return
 

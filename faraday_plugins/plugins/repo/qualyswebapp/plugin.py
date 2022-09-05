@@ -152,7 +152,8 @@ class QualysWebappPlugin(PluginXMLFormat):
             # Data in the xml is in different parts, we look into the glossary
             vuln_data = next((item for item in glossary if item["QID"] == vuln_scan_id), None)
             vuln_name = vuln_data.get('TITLE')
-            vuln_desc = vuln_data.get('DESCRIPTION') + v.dict_result_vul.get('URL')
+            vuln_desc = vuln_data.get('DESCRIPTION')
+            vuln_CWE = [vuln_data.get('CWE', '')]
             raw_severity = int(vuln_data.get('SEVERITY', 0))
             vuln_severity = raw_severity - 1
 
@@ -163,17 +164,16 @@ class QualysWebappPlugin(PluginXMLFormat):
 
             vuln_resolution = vuln_data.get('SOLUTION')
 
-            vuln_ref = []
-            if vuln_data.get('CVSS_BASE'):
-                vuln_ref = [f"CVSS: {vuln_data.get('CVSS_BASE')}"]
+            cvss3 = {}
 
             vuln_data_add = f"ID: {v.dict_result_vul.get('ID')}, DETECTION_ID: {v.dict_result_vul.get('DETECTION_ID')}" \
                             f", CATEGORY: {vuln_data.get('CATEGORY')}, GROUP: {vuln_data.get('GROUP')}" \
                             f", URL: {v.dict_result_vul.get('URL')}, IMPACT: {vuln_data.get('IMPACT')}"
 
-            self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc, ref=vuln_ref,
+            self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc,
                                         severity=vuln_severity, resolution=vuln_resolution, run_date=run_date,
-                                        external_id="QUALYS-"+vuln_scan_id, data=vuln_data_add)
+                                        external_id="QUALYS-"+vuln_scan_id, data=vuln_data_add, cwe=vuln_CWE,
+                                        cvss3=cvss3)
 
 
 def createPlugin(*args, **kwargs):

@@ -13,6 +13,7 @@ from urllib.parse import urlsplit
 
 SERVICE_MAPPER = None
 CVE_regex = re.compile(r'CVE-\d{4}-\d{4,7}')
+CWE_regex = re.compile(r'CWE-\d{1,4}')
 logger = logging.getLogger(__name__)
 
 
@@ -116,4 +117,9 @@ def get_severity_from_cvss(cvss):
 
 def its_cve(cves: list):
     r = [cve for cve in cves if CVE_regex.match(cve)]
+    return r
+
+
+def its_cwe(cwes: list):
+    r = [cwe for cwe in cwes if CWE_regex.match(cwe)]
     return r
