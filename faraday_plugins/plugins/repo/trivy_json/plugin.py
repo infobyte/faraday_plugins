@@ -45,23 +45,18 @@ class TrivyJsonPlugin(PluginJsonFormat):
 
     def create_vuln_image(self, vulnerability, host_id):
         ref = vulnerability.references
+        cvss3 = {}
+        cvss2 = {}
         if vulnerability.cvss:
-            cvss3 = {
-                "base_score": vulnerability.cvss.v3score,
-                "vector_string": vulnerability.cvss.v3score
-            }
-            cvss2 = {
-                "base_score": vulnerability.cvss.v2score,
-                "vector_string": vulnerability.cvss.v2score
-            }
-            ref.append(cvss3)
-            ref.append(cvss2)
+            cvss3["vector_string"] = vulnerability.cvss.v3score
+            cvss2["vector_string"] = vulnerability.cvss.v2score
+        cwe = []
         if vulnerability.cwe:
             if isinstance(vulnerability.cwe, list):
-                for cwe in vulnerability.cwe:
-                    ref.append(cwe)
+                for v_cwe in vulnerability.cwe:
+                    cwe.append(v_cwe)
             else:
-                ref.append(vulnerability.cwe)
+                cwe.append(vulnerability.cwe)
         if vulnerability.title == "security flaw":
             name = vulnerability.pkgname + ":" + vulnerability.title
         elif vulnerability.title is None:
@@ -73,10 +68,12 @@ class TrivyJsonPlugin(PluginJsonFormat):
             name=name,
             desc=vulnerability.description,
             severity=vulnerability.severity,
-            ref=vulnerability.references,
-            cve=vulnerability.name
+            ref=ref,
+            cve=vulnerability.name,
+            cvss2=cvss2,
+            cvss3=cvss3,
+            cwe=cwe
         )
-
 
     def create_vuln_dockerfile(self, misconfiguration, host_id):
         ref = misconfiguration.references
@@ -95,5 +92,6 @@ class TrivyJsonPlugin(PluginJsonFormat):
             data="\n".join(data)
         )
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return TrivyJsonPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+
+def createPlugin(*args, **kwargs):
+    return TrivyJsonPlugin(*args, **kwargs)
