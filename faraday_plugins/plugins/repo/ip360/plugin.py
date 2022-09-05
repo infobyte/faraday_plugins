@@ -103,5 +103,5 @@ class Ip360Plugin(PluginBase):
                 ref=vulnerability.get("ref"))
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return Ip360Plugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return Ip360Plugin(*args, **kwargs)

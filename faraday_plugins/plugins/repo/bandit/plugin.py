@@ -68,5 +68,5 @@ class BanditParser:
         return vulns
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return BanditPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return BanditPlugin(*args, **kwargs)

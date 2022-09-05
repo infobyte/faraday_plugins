@@ -391,5 +391,5 @@ class FortifyParser:
         return text
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return FortifyPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return FortifyPlugin(*args, **kwargs)

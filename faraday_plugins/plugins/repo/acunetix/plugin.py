@@ -140,6 +140,12 @@ class AcunetixPlugin(PluginXMLFormat):
 
     def create_vul(self, item, h_id, s_id, url_data):
         description = item.description
+        cvss3 = {}
+        if item.cvss3.node is not None:
+            cvss3['vector_string'] = item.cvss3.descriptor
+        cvss2 = {}
+        if item.cvss.node is not None:
+            cvss2['vector_string'] = item.cvss.descriptor
         if item.affects:
             description += f'\nPath: {item.affects}'
         if item.parameter:
@@ -147,7 +153,11 @@ class AcunetixPlugin(PluginXMLFormat):
         try:
             cve = [item.cvelist.cve.text if item.cvelist.cve else ""]
         except Exception:
-            cve = [""]
+            cve = []
+        try:
+            cwe = [item.cwelist.cwe.text if item.cwelist.cwe else ""]
+        except:
+            cwe = []
         self.createAndAddVulnWebToService(
             h_id,
             s_id,
@@ -161,7 +171,10 @@ class AcunetixPlugin(PluginXMLFormat):
             request=item.technicaldetails.request,
             response=item.technicaldetails.response,
             ref=[i.url for i in item.references.reference],
-            cve=cve)
+            cve=cve,
+            cwe=cwe,
+            cvss2=cvss2,
+            cvss3=cvss3)
 
     @staticmethod
     def get_domain(scan: Scan):
@@ -174,5 +187,5 @@ class AcunetixPlugin(PluginXMLFormat):
         return url_data
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return AcunetixPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return AcunetixPlugin(*args, **kwargs)

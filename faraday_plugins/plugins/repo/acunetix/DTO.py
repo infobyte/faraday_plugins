@@ -1,5 +1,5 @@
 from typing import List
-
+import re
 
 class Technicaldetails:
     def __init__(self, node):
@@ -46,11 +46,11 @@ class Cwe:
 
     @property
     def id_attr(self) -> str:
-        return self.node.findtext('id', '')
+        return self.node.attrib.get('id', '')
 
     @property
     def text(self) -> str:
-        return self.node.findtext('#text', '')
+        return self.node.text
 
 
 class Cwelist:
@@ -72,7 +72,9 @@ class Cvss:
 
     @property
     def score(self) -> str:
-        return self.node.findtext('Score', '')
+        if self.node is None:
+            return ''
+        return self.node.findtext('Score')
 
     @property
     def av(self) -> str:
@@ -121,7 +123,7 @@ class Cvss3:
 
     @property
     def score(self) -> str:
-        return self.node.findtext('Score', '')
+        return self.node.findtext('Score')
 
     @property
     def tempscore(self):

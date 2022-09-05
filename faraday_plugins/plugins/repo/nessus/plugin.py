@@ -7,7 +7,7 @@ See the file 'doc/LICENSE' for the license information
 
 import xml.etree.ElementTree as ET
 
-import dateutil
+from dateutil.parser import parse
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = "Blas"
@@ -86,7 +86,6 @@ class NessusPlugin(PluginXMLFormat):
 
     @staticmethod
     def map_item(host_id, run_date, plugin_name, item: ReportItem) -> dict:
-        cvss_base_score = item.cvss_base_score
         data = item.plugin_output
         data += f'{item.exploit_available}'
         return {
@@ -98,7 +97,7 @@ class NessusPlugin(PluginXMLFormat):
             "run_date": run_date,
             "desc": item.description,
             "resolution": item.solution,
-            "ref": [cvss_base_score] if cvss_base_score else []
+            "ref": [],
         }
 
     def map_policy_general(self, kwargs, item: ReportItem):
@@ -146,12 +145,11 @@ class NessusPlugin(PluginXMLFormat):
             self.logger.error(str(e))
             return None
         report_hosts = parser.report.report_hosts
-
         if report_hosts:
             for host in report_hosts:
                 run_date = host.host_properties.host_end
                 if run_date:
-                    run_date = dateutil.parser.parse(run_date)
+                    run_date = parse(run_date)
                 website = host.host_properties.host_fqdn
                 host_id = self.createAndAddHost(**self.map_properties(host))
 
@@ -180,23 +178,22 @@ class NessusPlugin(PluginXMLFormat):
 
     @staticmethod
     def map_add_ref(kwargs, item: ReportItem):
-
-        if item.cvss_vector:
-            kwargs["ref"].append(item.cvss_vector)
+        kwargs["cvss2"] = {}
+        kwargs["cvss3"] = {}
         if item.see_also:
             kwargs["ref"].append(item.see_also)
         if item.cpe:
             kwargs["ref"].append(item.cpe)
-        if item.xref:
-            kwargs["ref"].append(item.xref)
         if item.cve:
             kwargs["cve"] = item.cve
-        if item.cvss3_base_score:
-            kwargs["ref"].append(item.cvss3_base_score)
+        if item.cwe:
+            kwargs["cwe"] = item.cwe
         if item.cvss3_vector:
-            kwargs["ref"].append(item.cvss3_vector)
+            kwargs["cvss3"]["vector_string"] = item.cvss3_vector
+        if item.cvss_vector:
+            kwargs["cvss2"]["vector_string"] = item.cvss_vector
         return kwargs
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return NessusPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return NessusPlugin(*args, **kwargs)

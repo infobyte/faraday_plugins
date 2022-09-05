@@ -140,5 +140,5 @@ class DigPlugin(PluginBase):
         return True
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return DigPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return DigPlugin(*args, **kwargs)
