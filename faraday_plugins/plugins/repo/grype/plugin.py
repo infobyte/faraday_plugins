@@ -50,7 +50,7 @@ class GrypePlugin(PluginJsonFormat):
                 severity = match.get('vulnerability').get('severity').lower().replace("negligible", "info")
                 for url in match.get('vulnerability').get('urls'):
                     references.append(url)
-            if not match['artifact']['metadata']:
+            if not match['artifact'].get('metadata'):
                 data = f"Artifact: {match['artifact']['name']}" \
                        f"Version: {match['artifact']['version']} " \
                        f"Type: {match['artifact']['type']}"
@@ -77,5 +77,5 @@ class GrypePlugin(PluginJsonFormat):
         return command_string
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return GrypePlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return GrypePlugin(*args, **kwargs)

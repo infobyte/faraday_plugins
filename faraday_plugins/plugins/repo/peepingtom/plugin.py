@@ -70,5 +70,5 @@ class PeepingTomPlugin(PluginBase):
         self._path = current_path
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return PeepingTomPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return PeepingTomPlugin(*args, **kwargs)

@@ -38,13 +38,13 @@ class LynisLogDataExtracter():
 
     def ipv4(self):
         ipv4s = re.findall(r'^network_ipv4_address\[\]=(.+)$',
-                       self.rawcontents, re.MULTILINE)
+                           self.rawcontents, re.MULTILINE)
         ipv4addrs = self.ipv4_filter(ipv4s)
         return ipv4addrs
 
     def ipv6(self):
         ipv6s = re.findall(r'^network_ipv6_address\[\]=(.+)$',
-                       self.rawcontents, re.MULTILINE)
+                           self.rawcontents, re.MULTILINE)
         ipv6addrs = self.ipv6_filter(ipv6s)
         return ipv6addrs
 
@@ -76,7 +76,7 @@ class LynisLogDataExtracter():
 
     def listeningservices(self):
         line = re.findall(r'^network_listen_port\[\]=(.+)$',
-                       self.rawcontents, re.MULTILINE)
+                          self.rawcontents, re.MULTILINE)
         # To avoid local services, we will create the following list
         local_services = ['*', 'localhost']
 
@@ -91,7 +91,6 @@ class LynisLogDataExtracter():
 
     def clean_services(self, combo, local_services):
         add = False
-        #if "localhost" in combo:
         if combo.count("|") > 1:
             # Service with url, protocol and perhaps name
             items_service = combo.split('|')
@@ -172,8 +171,8 @@ class LynisLogDataExtracter():
     def search_service(self, port):
         srv = filter_services()
         details_dict = {
-            'name' : 'Unknown',
-            'protocol' : 'Unknown'
+            'name': 'Unknown',
+            'protocol': 'Unknown'
         }
         for item in srv:
             service_tuple = item[0].split('/')
@@ -259,8 +258,8 @@ class LynisPlugin(PluginByExtension):
 
         for ipv4 in ipv4s:
             h_id = self.createAndAddHost(name=ipv4,
-                                            os=lde.osfullname(),
-                                            hostnames=[hostname])
+                                         os=lde.osfullname(),
+                                         hostnames=[hostname])
 
             self.create_services(h_id, services, ipv4)
             self.create_vulns_with_kernel(h_id, kernel_versions)
@@ -269,8 +268,8 @@ class LynisPlugin(PluginByExtension):
 
         for ipv6 in ipv6s:
             h_id = self.createAndAddHost(name=ipv6,
-                                            os=lde.osfullname(),
-                                            hostnames=[hostname])
+                                         os=lde.osfullname(),
+                                         hostnames=[hostname])
 
             self.create_services(h_id, services, ipv6)
             self.create_vulns_with_kernel(h_id, kernel_versions)
@@ -280,16 +279,16 @@ class LynisPlugin(PluginByExtension):
     def create_services(self, host_id, parsed_services, ip_version):
         for service_data in parsed_services[ip_version]:
             self.createAndAddServiceToHost(host_id=host_id,
-                                            name=service_data['name'],
-                                            protocol=service_data['protocol'],
-                                            ports=[service_data['port']])
+                                           name=service_data['name'],
+                                           protocol=service_data['protocol'],
+                                           ports=[service_data['port']])
 
         if '0.0.0.0' in parsed_services:
             for service_data in parsed_services['0.0.0.0']:
                 self.createAndAddServiceToHost(host_id=host_id,
-                                            name=service_data['name'],
-                                            protocol=service_data['protocol'],
-                                            ports=[service_data['port']])
+                                               name=service_data['name'],
+                                               protocol=service_data['protocol'],
+                                               ports=[service_data['port']])
 
     def create_vulns_with_kernel(self, host_id, kernel_versions):
         for kernel, version in kernel_versions.items():
@@ -324,5 +323,5 @@ class LynisPlugin(PluginByExtension):
         self._parse_filename(file_path)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return LynisPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return LynisPlugin(*args, **kwargs)
