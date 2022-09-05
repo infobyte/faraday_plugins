@@ -78,7 +78,7 @@ class NucleiLegacyPlugin(PluginMultiLineJsonFormat):
                 references = []
             cwe = vuln_dict['info'].get('cwe', [])
             capec = vuln_dict['info'].get('capec', [])
-            refs = sorted(list(set(reference + references + cwe + capec)))
+            refs = sorted(list(set(reference + references + capec)))
             tags = vuln_dict['info'].get('tags', [])
             if isinstance(tags, str):
                 tags = tags.split(',')
@@ -118,7 +118,8 @@ class NucleiLegacyPlugin(PluginMultiLineJsonFormat):
                 path=matched_data.path,
                 data="\n".join(data),
                 external_id=f"NUCLEI-{vuln_dict.get('templateID', '')}",
-                run_date=run_date
+                run_date=run_date,
+                cwe=cwe
             )
 
     def processCommandString(self, username, current_path, command_string):

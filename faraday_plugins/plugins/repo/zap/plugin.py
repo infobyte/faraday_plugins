@@ -140,7 +140,7 @@ class Item:
             self.resolution = self.get_text_from_subnode('solution')
         else:
             self.resolution = ''
-
+        self.cwe = []
         self.ref = []
         if self.get_text_from_subnode('reference'):
             links = self.get_text_from_subnode('reference')
@@ -150,7 +150,7 @@ class Item:
                     self.ref.append(strip_tags(link))
 
         if self.get_text_from_subnode('cweid'):
-            self.ref.append("CWE:" + self.get_text_from_subnode('cweid'))
+            self.cwe.append("CWE-" + self.get_text_from_subnode('cweid'))
 
         if self.get_text_from_subnode('wascid'):
             self.ref.append("WASC:" + self.get_text_from_subnode('wascid'))
@@ -278,7 +278,8 @@ class ZapPlugin(PluginXMLFormat):
                         resolution=strip_tags(item.resolution),
                         data=instance["data"],
                         pname=instance["pname"],
-                        external_id="ZAP-" + str(item.id)
+                        external_id="ZAP-" + str(item.id),
+                        cwe=item.cwe
                     )
 
         del parser

@@ -70,6 +70,7 @@ class AppSpiderPlugin(PluginXMLFormat):
         data_info = []
 
         for vulns in parser.vuln_list:
+
             vuln_name = vulns.findtext('VulnType')
             vuln_desc = vulns.findtext('Description')
             vuln_ref = vulns.findtext('VulnUrl')
@@ -78,7 +79,7 @@ class AppSpiderPlugin(PluginXMLFormat):
             vuln_external_id = vulns.findtext('DbId')
             vuln_run_date = vulns.findtext('ScanDate')
             data_info.append(vulns.findtext('AttackClass'))
-            data_info.append(vulns.findtext('CweId'))
+            cwe = ["CWE-" + vulns.findtext('CweId')] if vulns.findtext('CweId') else []
             data_info.append(vulns.findtext('CAPEC'))
             data_info.append(vulns.findtext('DISSA_ASC'))
             data_info.append(vulns.findtext('OWASP2007'))
@@ -98,9 +99,9 @@ class AppSpiderPlugin(PluginXMLFormat):
             else:
                 severity = 10
 
-            str_data = f'AttackClass: {data_info[0]}, CweId: {data_info[1]}, CAPEC: {data_info[2]}, ' \
-                       f'DISSA_ASC: {data_info[3]}, OWASP2007: {data_info[4]}, OWASP2010: {data_info[5]}, ' \
-                       f'OWASP2013: {data_info[6]}, OVAL: {data_info[7]}, WASC: {data_info[8]}'
+            str_data = f'AttackClass: {data_info[0]}, CAPEC: {data_info[1]}, ' \
+                       f'DISSA_ASC: {data_info[2]}, OWASP2007: {data_info[3]}, OWASP2010: {data_info[4]}, ' \
+                       f'OWASP2013: {data_info[5]}, OVAL: {data_info[6]}, WASC: {data_info[7]}'
 
             if vuln_run_date is None:
                 vuln_run_date = None
@@ -109,7 +110,7 @@ class AppSpiderPlugin(PluginXMLFormat):
 
             self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc, ref=[vuln_ref],
                                         severity=severity, resolution=vuln_resolution, run_date=vuln_run_date,
-                                        external_id=vuln_external_id, data=str_data)
+                                        external_id=vuln_external_id, data=str_data, cwe=cwe)
 
 
 def createPlugin(*args, **kwargs):

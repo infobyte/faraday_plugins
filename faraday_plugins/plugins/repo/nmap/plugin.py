@@ -11,7 +11,6 @@ See the file 'doc/LICENSE' for the license information
 from lxml import etree
 from lxml.etree import XMLParser
 from faraday_plugins.plugins.plugin import PluginXMLFormat
-from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -353,10 +352,9 @@ class ScriptVulners:
             self.desc += " *EXPLOIT*"
 
         self.refs = ["https://vulners.com/" + self.table["type"] + "/" + self.table["id"]]
-        self.refs.append("CVSS: " + self.table["cvss"])
         self.response = ""
         self.web = ""
-        self.severity = get_severity_from_cvss(self.table["cvss"])
+        self.cvss2 = {}
 
     def __str__(self):
         return f"{self.name}, {self.product}, {self.version}"
@@ -393,6 +391,7 @@ class Script:
         for k in script_node.findall("elem"):
             self.response += "\n" + str(k.get('key')) + ": " + str(k.text)
         self.web = re.search("(http-|https-)", self.name)
+        self.cvss2 = {}
 
     def __str__(self):
         return f"{self.name}, {self.product}, {self.version}"
@@ -539,7 +538,9 @@ class NmapPlugin(PluginXMLFormat):
                             ref=refs,
                             severity=severity,
                             website=minterfase,
-                            cve=[v.name])
+                            cve=[v.name],
+                            cvss2=v.cvss2
+                        )
                     else:
                         v_id = self.createAndAddVulnToService(
                             h_id,
@@ -548,7 +549,8 @@ class NmapPlugin(PluginXMLFormat):
                             desc=v.desc,
                             ref=refs,
                             severity=severity,
-                            cve=[v.name]
+                            cve=[v.name],
+                            cvss2=v.cvss2
                         )
         del parser
 

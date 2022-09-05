@@ -155,7 +155,7 @@ class ResultsAssetReport():
         self.glossary = glossary
         self.severity = self.severity_dict.get(self.get_text_from_glossary('SEVERITY'), 'info')
         self.title = self.get_text_from_glossary('TITLE')
-        self.cvss = self.get_text_from_glossary('CVSS_SCORE/CVSS_BASE')
+        self.cvss2 = {}
         self.pci = self.get_text_from_glossary('PCI_FLAG')
         self.solution = self.get_text_from_glossary('SOLUTION')
         self.impact = self.get_text_from_glossary('IMPACT')
@@ -178,9 +178,6 @@ class ResultsAssetReport():
         cve_id = self.get_text_from_glossary('CVE_ID_LIST/CVE_ID/ID')
         if cve_id:
             self.cve.append(cve_id)
-
-        if self.cvss:
-            self.ref.append(f'CVSS SCORE: {self.cvss}')
 
         if self.pci:
             self.ref.append(f'PCI: {self.pci}')
@@ -278,7 +275,8 @@ class ResultsScanReport():
         self.name = self.node.get('number')
         self.external_id = self.node.get('number')
         self.title = self.get_text_from_subnode('TITLE')
-        self.cvss = self.get_text_from_subnode('CVSS_BASE')
+        self.cvss2 = {}
+
         self.diagnosis = self.get_text_from_subnode('DIAGNOSIS')
         self.solution = self.get_text_from_subnode('SOLUTION')
         self.result = self.get_text_from_subnode('RESULT')
@@ -312,9 +310,6 @@ class ResultsScanReport():
         for r in issue_node.findall('BUGTRAQ_ID_LIST/BUGTRAQ_ID'):
             self.node = r
             self.ref.append('bid-' + self.get_text_from_subnode('ID'))
-
-        if self.cvss:
-            self.ref.append('CVSS BASE: ' + self.cvss)
 
     def get_text_from_subnode(self, subnode_xpath_expr):
         """
@@ -364,7 +359,9 @@ class QualysguardPlugin(PluginXMLFormat):
                         resolution=v.solution if v.solution else '',
                         desc=v.desc,
                         external_id=v.external_id,
-                        cve=v.cve)
+                        cve=v.cve,
+                        cvss2=v.cvss2
+                    )
 
                 else:
                     web = False
@@ -398,7 +395,9 @@ class QualysguardPlugin(PluginXMLFormat):
                             desc=v.desc,
                             resolution=v.solution if v.solution else '',
                             external_id=v.external_id,
-                            cve=v.cve)
+                            cve=v.cve,
+                            cvss2=v.cvss2
+                        )
 
                     else:
                         self.createAndAddVulnToService(
@@ -410,7 +409,9 @@ class QualysguardPlugin(PluginXMLFormat):
                             desc=v.desc,
                             resolution=v.solution if v.solution else '',
                             external_id=v.external_id,
-                            cve=v.cve)
+                            cve=v.cve,
+                            cvss2=v.cvss2
+                        )
 
         del parser
 

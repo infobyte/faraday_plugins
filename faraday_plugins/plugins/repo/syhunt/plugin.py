@@ -59,7 +59,9 @@ class SyhuntParser:
             "desc": desc,
             "resolution": resolution,
             "ref": ref,
-            "severity": severity
+            "severity": severity,
+            "cvss3": cvss3,
+            "cvss2": cvss2
         }
         if self.scan_type == "DAST":
             v['data'] = vuln.find("request").text + "\n"
@@ -72,8 +74,7 @@ class SyhuntParser:
     @staticmethod
     def get_cvss(tree):
         cvss_vector = tree.find("vector").text
-        cvss_score = tree.find("score").text
-        return {'base_score':cvss_score, 'cvss_vector': cvss_vector}
+        return {'vector_stringr': cvss_vector}
 
     def get_host(self, tree):
         host = {
