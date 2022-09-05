@@ -14,6 +14,7 @@ import shutil
 
 from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
 from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
+
 __author__ = "Valentin Vila"
 __copyright__ = "Copyright (c) 2021, Faraday"
 __credits__ = ["Valentin Vila"]
@@ -103,5 +104,5 @@ class ShodanPlugin(PluginMultiLineJsonFormat):
         return cmd
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return ShodanPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return ShodanPlugin(*args, **kwargs)

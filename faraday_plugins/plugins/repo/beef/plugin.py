@@ -49,10 +49,9 @@ class BeefPlugin(PluginBase):
         output being sent is valid.
         """
         try:
-            f = urlopen(self.getSetting(
-                "Host") + "/api/hooks?token=" + self.getSetting("Authkey"))
+            f = urlopen(self.getSetting("Host") + "/api/hooks?token=" + self.getSetting("Authkey"))
             data = json.loads(f.read())
-        except:
+        except Exception:
             self.logger.info("[BeEF] - Connection with api")
             return
 
@@ -96,5 +95,5 @@ class BeefPlugin(PluginBase):
 
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return BeefPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return BeefPlugin(*args, **kwargs)

@@ -163,5 +163,5 @@ class NipperPlugin(PluginXMLFormat):
                                             )
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return NipperPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return NipperPlugin(*args, **kwargs)
