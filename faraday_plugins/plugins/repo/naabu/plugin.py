@@ -67,5 +67,5 @@ class NaabuPlugin(PluginMultiLineJsonFormat):
             command_string += " -silent"
         return command_string
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return NaabuPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return NaabuPlugin(*args, **kwargs)

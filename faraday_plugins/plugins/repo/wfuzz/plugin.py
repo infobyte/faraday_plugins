@@ -84,5 +84,5 @@ class WfuzzPlugin(PluginBase):
                                               path=path)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return WfuzzPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return WfuzzPlugin(*args, **kwargs)

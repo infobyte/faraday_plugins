@@ -129,5 +129,5 @@ class GoohostPlugin(PluginBase):
             self.parseOutputString(command_output)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return GoohostPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return GoohostPlugin(*args, **kwargs)

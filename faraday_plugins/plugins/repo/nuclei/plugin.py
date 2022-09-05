@@ -8,7 +8,7 @@ import subprocess
 import re
 import sys
 import json
-import dateutil
+from dateutil.parser import parse
 from urllib.parse import urlparse
 from packaging import version
 from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
@@ -100,8 +100,8 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             # TODO CVSSv2, CVSSv3, CWE and CAPEC
             #cvssv2 = vuln_dict['info'].get('classification', {}).get('cvss-score')
             #cvssv3 = vuln_dict['info'].get('classification', {}).get('cvss-metrics')
-            #cwe = vuln_dict['info'].get('classification', {}).get('cwe-id', [])
-            #cwe = [x.upper() for x in cwe]
+            cwe = vuln_dict['info'].get('classification', {}).get('cwe-id', [])
+            cwe = [x.upper() for x in cwe]
             #capec = vuln_dict['info'].get('metadata', {}).get('capec', [])
             #if isinstance(capec, str):
             #    capec = capec.upper().split(',')
@@ -135,7 +135,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             name = vuln_dict["info"].get("name")
             run_date = vuln_dict.get('timestamp')
             if run_date:
-                run_date = dateutil.parser.parse(run_date)
+                run_date = parse(run_date)
             self.createAndAddVulnWebToService(
                 host_id,
                 service_id,
@@ -151,7 +151,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 # TODO CVSSv2, CVSSv3, CWE and CAPEC
                 #cvssv2=cvssv2,
                 #cvssv3=cvssv3,
-                #cwe=cwe,
+                cwe=cwe,
                 #capec=capec,
                 website=host,
                 request=request,
@@ -193,5 +193,5 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 return False
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return NucleiPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return NucleiPlugin(*args, **kwargs)

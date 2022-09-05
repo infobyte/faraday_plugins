@@ -135,5 +135,5 @@ class WebfuzzerPlugin(PluginBase):
             self._output_path = current_path + "/" + self.host + ".txt"
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return WebfuzzerPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return WebfuzzerPlugin(*args, **kwargs)

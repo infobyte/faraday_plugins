@@ -17,13 +17,14 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 import socket
+from typing import List
 
 # Related third party imports
 import pytz
 import simplejson as json
 
 # Local application imports
-from faraday_plugins.plugins.plugins_utils import its_cve
+from faraday_plugins.plugins.plugins_utils import its_cve, its_cwe
 
 logger = logging.getLogger("faraday").getChild(__name__)
 
@@ -35,12 +36,16 @@ class PluginBase:
     # TODO: Add class generic identifier
     class_signature = "PluginBase"
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         # Must be unique. Check that there is not
         # an existent plugin with the same id.
         # TODO: Make script that list current ids.
-        self.ignore_info = ignore_info
-        self.hostname_resolution = hostname_resolution
+        self.ignore_info = kwargs.get("ignore_info", False)
+        self.hostname_resolution = kwargs.get("hostname_resolution", True)
+        self.vuln_tag = kwargs.get("vuln_tag", None)
+        self.host_tag = kwargs.get("host_tag", None)
+        self.service_tag = kwargs.get("service_tag", None)
+        self.default_vuln_tag = None
         self.id = None
         self.auto_load = True
         self._rid = id(self)
@@ -88,6 +93,9 @@ class PluginBase:
     def resolve_hostname(self, hostname):
         if not self.hostname_resolution:
             return hostname
+        if not hostname:
+            self.logger.error(f"Hostname provided is None or Empty {hostname}, using 0.0.0.0 as ip")
+            return "0.0.0.0"
         try:
             socket.inet_aton(hostname)  # is already an ip
             return hostname
@@ -374,6 +382,11 @@ class PluginBase:
             tags = []
         if isinstance(tags, str):
             tags = [tags]
+        if self.host_tag:
+            if isinstance(self.host_tag, list):
+                tags += self.host_tag
+            else:
+                tags.append(self.host_tag)
         host = {"ip": name, "os": os, "hostnames": hostnames, "description": description, "mac": mac,
                 "credentials": [], "services": [], "vulnerabilities": [], "tags": tags}
         host_id = self.save_host_cache(host)
@@ -395,6 +408,11 @@ class PluginBase:
             tags = []
         if isinstance(tags, str):
             tags = [tags]
+        if self.service_tag:
+            if isinstance(self.service_tag, list):
+                tags += self.service_tag
+            else:
+                tags.append(self.service_tag)
         service = {"name": name, "protocol": protocol, "port": ports, "status": status,
                    "version": version, "description": description, "credentials": [], "vulnerabilities": [],
                    "tags": tags}
@@ -403,12 +421,23 @@ class PluginBase:
 
         return service_id
 
+    @staticmethod
+    def modify_refs_struct(ref: List[str]) -> List[dict]:
+        """
+        Change reference struct from list of strings to a list of dicts with the form of {name, type}
+        """
+        refs = []
+        if ref:
+            refs = [{'name': url, 'type': 'other'} for url in ref]
+        return refs
+
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
                                severity="", resolution="", data="", external_id=None, run_date=None,
                                impact=None, custom_fields=None, status="", policyviolations=None,
-                               easeofresolution=None, confirmed=False, tags=None, cve=None):
-        if ref is None:
-            ref = []
+                               easeofresolution=None, confirmed=False, tags=None, cve=None, cwe=None, cvss2=None,
+                               cvss3=None):
+
+        ref = self.modify_refs_struct(ref)
         if status == "":
             status = "open"
         if impact is None:
@@ -421,16 +450,35 @@ class PluginBase:
             tags = []
         if isinstance(tags, str):
             tags = [tags]
+        if self.vuln_tag:
+            if isinstance(self.vuln_tag, list):
+                tags += self.vuln_tag
+            else:
+                tags.append(self.vuln_tag)
+        if self.default_vuln_tag:
+            if isinstance(self.default_vuln_tag, list):
+                tags += self.default_vuln_tag
+            else:
+                tags.append(self.default_vuln_tag)
         if cve is None:
             cve = []
         elif type(cve) is str:
             cve = [cve]
         cve = its_cve(cve)
+        if cwe is None:
+            cwe = []
+        elif type(cwe) is str:
+            cwe = [cwe]
+        cwe = its_cwe(cwe)
+        if cvss2 is None:
+            cvss2 = {}
+        if cvss3 is None:
+            cvss3 = {}
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
-                         "policyviolations": policyviolations, "cve":  cve,
-                         "confirmed": confirmed, "easeofresolution": easeofresolution, "tags": tags
+                         "policyviolations": policyviolations, "cve":  cve, "cvss3": cvss3, "cvss2": cvss2,
+                         "confirmed": confirmed, "easeofresolution": easeofresolution, "tags": tags, "cwe": cwe
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
@@ -440,9 +488,9 @@ class PluginBase:
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
                                   custom_fields=None, policyviolations=None, impact=None, status="",
-                                  confirmed=False, easeofresolution=None, tags=None, cve=None):
-        if ref is None:
-            ref = []
+                                  confirmed=False, easeofresolution=None, tags=None, cve=None, cwe=None,cvss2=None,
+                                  cvss3=None):
+        ref = self.modify_refs_struct(ref)
         if status == "":
             status = "open"
         if impact is None:
@@ -455,16 +503,35 @@ class PluginBase:
             tags = []
         if isinstance(tags, str):
             tags = [tags]
+        if self.vuln_tag:
+            if isinstance(self.vuln_tag, list):
+                tags += self.vuln_tag
+            else:
+                tags.append(self.vuln_tag)
+        if self.default_vuln_tag:
+            if isinstance(self.default_vuln_tag, list):
+                tags += self.default_vuln_tag
+            else:
+                tags.append(self.default_vuln_tag)
         if cve is None:
             cve = []
         elif type(cve) is str:
             cve = [cve]
         cve = its_cve(cve)
+        if cwe is None:
+            cwe = []
+        elif type(cwe) is str:
+            cwe = [cwe]
+        cwe = its_cwe(cwe)
+        if cvss2 is None:
+            cvss2 = {}
+        if cvss3 is None:
+            cvss3 = {}
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "Vulnerability", "resolution": resolution, "data": data,
                          "custom_fields": custom_fields, "status": status, "impact": impact,
-                         "policyviolations": policyviolations, "cve": cve,
-                         "easeofresolution": easeofresolution, "confirmed": confirmed, "tags": tags
+                         "policyviolations": policyviolations, "cve": cve, "cvss3": cvss3, "cvss2": cvss2,
+                         "easeofresolution": easeofresolution, "confirmed": confirmed, "tags": tags, "cwe": cwe
                          }
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
@@ -478,17 +545,13 @@ class PluginBase:
                                      params="", query="", category="", data="", external_id=None,
                                      confirmed=False, status="", easeofresolution=None, impact=None,
                                      policyviolations=None, status_code=None, custom_fields=None, run_date=None,
-                                     tags=None, cve=None):
+                                     tags=None, cve=None, cvss2=None, cvss3=None, cwe=None):
         if params is None:
             params = ""
-        if response is None:
-            response = ""
         if method is None:
             method = ""
         if pname is None:
             pname = ""
-        if params is None:
-            params = ""
         if query is None:
             query = ""
         if website is None:
@@ -499,8 +562,7 @@ class PluginBase:
             request = ""
         if response is None:
             response = ""
-        if ref is None:
-            ref = []
+        ref = self.modify_refs_struct(ref)
         if status == "":
             status = "open"
         if impact is None:
@@ -513,18 +575,38 @@ class PluginBase:
             tags = []
         if isinstance(tags, str):
             tags = [tags]
+        if self.vuln_tag:
+            if isinstance(self.vuln_tag, list):
+                tags += self.vuln_tag
+            else:
+                tags.append(self.vuln_tag)
+        if self.default_vuln_tag:
+            if isinstance(self.default_vuln_tag, list):
+                tags += self.default_vuln_tag
+            else:
+                tags.append(self.default_vuln_tag)
         if cve is None:
             cve = []
         elif type(cve) is str:
             cve = [cve]
         cve = its_cve(cve)
+        if cwe is None:
+            cwe = []
+        elif type(cwe) is str:
+            cwe = [cwe]
+        cwe = its_cwe(cwe)
+        if cvss2 is None:
+            cvss2 = {}
+        if cvss3 is None:
+            cvss3 = {}
         vulnerability = {"name": name, "desc": desc, "severity": self.normalize_severity(severity), "refs": ref,
                          "external_id": external_id, "type": "VulnerabilityWeb", "resolution": resolution,
                          "data": data, "website": website, "path": path, "request": request, "response": response,
                          "method": method, "pname": pname, "params": params, "query": query, "category": category,
                          "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
-                         "impact": impact, "policyviolations": policyviolations, "cve": cve,
-                         "status_code": status_code, "custom_fields": custom_fields, "tags": tags}
+                         "impact": impact, "policyviolations": policyviolations, "cve": cve,  "cvss3": cvss3,
+                         "cvss2": cvss2, "status_code": status_code, "custom_fields": custom_fields, "tags": tags,
+                         "cwe": cwe}
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
         vulnerability_id = self.save_service_vuln_cache(host_id, service_id, vulnerability)
@@ -581,15 +663,15 @@ class PluginBase:
             vuln_copy = vuln.copy()
             for field in VULN_SKIP_FIELDS_TO_HASH:
                 vuln_copy.pop(field, None)
-            dict_hash = hashlib.sha1(json.dumps(vuln_copy).encode()).hexdigest()
+            dict_hash = hashlib.sha1(json.dumps(vuln_copy).encode()).hexdigest() # nosec
             summary['vuln_hashes'].append(dict_hash)
         return summary
 
 
 # TODO Borrar
 class PluginTerminalOutput(PluginBase):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def processOutput(self, term_output):
         try:
@@ -600,8 +682,8 @@ class PluginTerminalOutput(PluginBase):
 
 # TODO Borrar
 class PluginCustomOutput(PluginBase):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def processOutput(self, term_output):
         # we discard the term_output since it's not necessary
@@ -610,8 +692,8 @@ class PluginCustomOutput(PluginBase):
 
 
 class PluginByExtension(PluginBase):
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.extension = []
 
     def report_belongs_to(self, extension="", **kwargs):
@@ -626,8 +708,8 @@ class PluginByExtension(PluginBase):
 
 class PluginXMLFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.identifier_tag = []
         self.identifier_tag_attributes = {}
         self.extension = ".xml"
@@ -648,8 +730,8 @@ class PluginXMLFormat(PluginByExtension):
 
 class PluginJsonFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.json_keys = set()
         self.extension = ".json"
 
@@ -665,8 +747,8 @@ class PluginJsonFormat(PluginByExtension):
 
 class PluginMultiLineJsonFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.json_keys = set()
         self.extension = ".json"
 
@@ -689,8 +771,8 @@ class PluginMultiLineJsonFormat(PluginByExtension):
 
 class PluginCSVFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.extension = ".csv"
         self.csv_headers = set()
 
@@ -709,8 +791,8 @@ class PluginCSVFormat(PluginByExtension):
 
 class PluginZipFormat(PluginByExtension):
 
-    def __init__(self, ignore_info=False, hostname_resolution=True, *args, **kwargs):
-        super().__init__(ignore_info, hostname_resolution)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.extension = ".zip"
         self.files_list = set()
 

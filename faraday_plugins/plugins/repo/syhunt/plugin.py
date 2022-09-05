@@ -59,7 +59,9 @@ class SyhuntParser:
             "desc": desc,
             "resolution": resolution,
             "ref": ref,
-            "severity": severity
+            "severity": severity,
+            "cvss3": cvss3,
+            "cvss2": cvss2
         }
         if self.scan_type == "DAST":
             v['data'] = vuln.find("request").text + "\n"
@@ -72,8 +74,7 @@ class SyhuntParser:
     @staticmethod
     def get_cvss(tree):
         cvss_vector = tree.find("vector").text
-        cvss_score = tree.find("score").text
-        return {'base_score':cvss_score, 'cvss_vector': cvss_vector}
+        return {'vector_stringr': cvss_vector}
 
     def get_host(self, tree):
         host = {
@@ -125,5 +126,5 @@ class SyhuntPlugin(PluginXMLFormat):
                 self.createAndAddVulnToHost(host_id=host_id, **issue)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return SyhuntPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return SyhuntPlugin(*args, **kwargs)
