@@ -54,5 +54,5 @@ class xsssniper(PluginBase):
                                               params=''.join(parametro), request='', response='')
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return xsssniper(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return xsssniper(*args, **kwargs)

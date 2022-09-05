@@ -63,5 +63,5 @@ class CmdNextNetin(PluginBase):
         return True
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return CmdNextNetin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return CmdNextNetin(*args, **kwargs)

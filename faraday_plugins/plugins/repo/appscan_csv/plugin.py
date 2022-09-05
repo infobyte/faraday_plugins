@@ -6,11 +6,9 @@ See the file 'doc/LICENSE' for the license information
 """
 
 from faraday_plugins.plugins.plugin import PluginCSVFormat
-from urllib.parse import urlparse
 from itertools import islice
 import csv
-import sys
-import dateutil
+from dateutil.parser import parse
 
 __author__ = "Erodriguez"
 __copyright__ = "Copyright (c) 2019, Infobyte LLC"
@@ -55,7 +53,7 @@ class Appscan_CSV_Plugin(PluginCSVFormat):
             if path == "":
                 path = row['Location']
             try:
-                run_date = dateutil.parser.parse(row['Date Created'])
+                run_date = parse(row['Date Created'])
             except:
                 run_date = None
             name = row["Issue Type Name"]
@@ -100,5 +98,5 @@ class Appscan_CSV_Plugin(PluginCSVFormat):
                 data=" \n".join(data)
             )
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return Appscan_CSV_Plugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kargs):
+    return Appscan_CSV_Plugin(*args, **kargs)

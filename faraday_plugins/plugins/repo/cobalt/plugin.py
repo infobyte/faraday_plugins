@@ -9,7 +9,8 @@ from faraday_plugins.plugins.plugin import PluginCSVFormat
 from urllib.parse import urlparse
 import csv
 import io
-import dateutil
+from dateutil.parser import parse
+
 
 
 __author__ = "Blas"
@@ -74,7 +75,7 @@ class CobaltPlugin(PluginCSVFormat):
             scheme = url_data.scheme
             port = url_data.port
             try:
-                run_date = dateutil.parser.parse(row['CreatedAt'])
+                run_date = parse(row['CreatedAt'])
             except:
                 run_date = None
             if url_data.port is None:
@@ -101,5 +102,5 @@ class CobaltPlugin(PluginCSVFormat):
                                               data=row['StepsToReproduce'], external_id=row['Tag'], run_date=run_date)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return CobaltPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return CobaltPlugin(*args, **kwargs)
