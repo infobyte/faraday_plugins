@@ -276,8 +276,16 @@ class HostVuln:
         self.service_id = self.get_text_from_subnode('service-id')
         self.name = self.get_text_from_subnode('name')
         self.desc = self.get_text_from_subnode('info')
-        self.refs = [r.text for r in self.node.findall('refs/ref') if not r.text.startswith('CVE')]
-        self.cve = [r.text for r in self.node.findall('refs/ref') if r.text.startswith('CVE')]
+        self.refs = []
+        self.cve = []
+        self.cwe = []
+        for r in self.node.findall('refs/ref'):
+            if r.text.startswith('CVE'):
+                self.cve.append(r.text)
+            elif r.text.startswith('CWE'):
+                self.cwe.append(r.text)
+            else:
+                self.refs.append(r.text)
         self.exploited_date = self.get_text_from_subnode('exploited-at')
         self.exploited = (self.exploited_date is not None)
         self.isWeb = False
@@ -363,7 +371,7 @@ class MetasploitPlugin(PluginXMLFormat):
                                                                  category=v.category)
                     else:
                         self.createAndAddVulnToService(
-                            h_id, s_id, v.name, v.desc, ref=v.refs, cve=v.cve)
+                            h_id, s_id, v.name, v.desc, ref=v.refs, cve=v.cve, cwe=v.cwe)
 
         del parser
 
@@ -375,5 +383,5 @@ class MetasploitPlugin(PluginXMLFormat):
             return False
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return MetasploitPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return MetasploitPlugin(*args, **kwargs)

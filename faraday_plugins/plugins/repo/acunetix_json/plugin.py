@@ -5,6 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from urllib.parse import urlsplit
+import ipaddress
 
 from lxml import etree
 
@@ -22,6 +23,7 @@ __status__ = "Development"
 
 from faraday_plugins.plugins.repo.acunetix_json.DTO import AcunetixJsonParser, Vulnerabilities, \
     VulnerabilityTypes
+from faraday_plugins.plugins.plugins_utils import its_cwe
 
 
 class AcunetixXmlParser:
@@ -92,6 +94,8 @@ class AcunetixJsonPlugin(PluginJsonFormat):
 
     def new_structure(self, site: Scan):
         start_url = site.info.host
+        if site.info.start_url:
+            start_url = site.info.start_url
         url_data = urlsplit(start_url)
         site_ip = self.resolve_hostname(url_data.hostname)
         ports = '443' if (url_data.scheme == 'https') else '80'
@@ -106,9 +110,16 @@ class AcunetixJsonPlugin(PluginJsonFormat):
             status='open')
         for i in site.vulnerabilities:
             vul_type = vulnerability_type[i.info.vt_id]
-            self.create_vul(i, vul_type, h_id, s_id, url_data)
+            cwe = its_cwe(vul_type.tags)
+            self.create_vul(i, vul_type, h_id, s_id, url_data, cwe)
 
-    def create_vul(self, vul: Vulnerabilities, vul_type: VulnerabilityTypes, h_id, s_id, url_data):
+    def create_vul(self, vul: Vulnerabilities, vul_type: VulnerabilityTypes, h_id, s_id, url_data, cwe):
+        cvss3 = {
+            'vector_string': vul_type.cvss3_vector
+        }
+        cvss2 = {
+            'vector_string': vul_type.cvss2_vector
+        }
         self.createAndAddVulnWebToService(
             h_id,
             s_id,
@@ -118,7 +129,11 @@ class AcunetixJsonPlugin(PluginJsonFormat):
             severity=vul_type.severity,
             resolution=vul_type.recommendation,
             request=vul.info.request,
-            response=vul.response)
+            response=vul.response,
+            cwe=cwe,
+            cvss3=cvss3,
+            cvss2=cvss2
+        )
 
     @staticmethod
     def get_domain(scan: Scan):
@@ -131,5 +146,5 @@ class AcunetixJsonPlugin(PluginJsonFormat):
         return url_data
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return AcunetixJsonPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return AcunetixJsonPlugin(*args, **kwargs)

@@ -63,7 +63,6 @@ class SourceclearPlugin(PluginJsonFormat):
             for vuln in vulns:
                 v_name = vuln['title']
                 v_desc = vuln['overview']
-                v_ref = f"CVSS: {vuln['cvssScore']}"
                 v_data = vuln['libraries']
                 v_website = vuln['_links']['html']
                 url_data = parser.parse_url(v_website)
@@ -78,9 +77,9 @@ class SourceclearPlugin(PluginJsonFormat):
                 h_id = self.createAndAddHost(name=host_name, scan_template=records['metadata']['recordType'])
                 s_id = self.createAndAddServiceToHost(h_id, "Sourceclear", protocol=url_data['protocol'],
                                                       ports=url_data['port'], status='open')
-                self.createAndAddVulnWebToService(h_id, s_id, name=v_name, desc=v_desc, ref=[v_ref], data=v_data,
+                self.createAndAddVulnWebToService(h_id, s_id, name=v_name, desc=v_desc, data=v_data,
                                                   website=v_website)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return SourceclearPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return SourceclearPlugin(*args, **kwargs)
