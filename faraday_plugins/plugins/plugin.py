@@ -428,7 +428,11 @@ class PluginBase:
         """
         refs = []
         if ref:
-            refs = [{'name': url, 'type': 'other'} for url in ref]
+            for r in ref:
+                if isinstance(r, dict):
+                    refs.append(r)
+                else:
+                    refs.append({'name': r, 'type': 'other'})
         return refs
 
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
