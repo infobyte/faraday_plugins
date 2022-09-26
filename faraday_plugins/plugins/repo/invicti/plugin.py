@@ -91,23 +91,24 @@ class InvictiPlugin(PluginXMLFormat):
                     "external_id": vulnerability.look_id,
                     "resolution": BeautifulSoup(vulnerability.remedial_procedure).text}
             if vulnerability.classification:
-                reference = []
+                references = []
                 if vulnerability.classification.owasp:
-                    reference.append("OWASP" + vulnerability.classification.owasp)
+                    references.append("OWASP" + vulnerability.classification.owasp)
                 if vulnerability.classification.wasc:
-                    reference.append("WASC" + vulnerability.classification.wasc)
+                    references.append("WASC" + vulnerability.classification.wasc)
                 if vulnerability.classification.cwe:
                     vuln["cwe"] = "CWE-" + vulnerability.classification.cwe
                 if vulnerability.classification.capec:
-                    reference.append("CAPEC" + vulnerability.classification.capec)
+                    references.append("CAPEC" + vulnerability.classification.capec)
                 if vulnerability.classification.pci32:
-                    reference.append("PCI32" + vulnerability.classification.pci32)
+                    references.append("PCI32" + vulnerability.classification.pci32)
                 if vulnerability.classification.hipaa:
-                    reference.append("HIPAA" + vulnerability.classification.hipaa)
+                    references.append("HIPAA" + vulnerability.classification.hipaa)
                 if vulnerability.classification.owasppc:
-                    reference.append("OWASPPC" + vulnerability.classification.owasppc)
+                    references.append("OWASPPC" + vulnerability.classification.owasppc)
                 if vulnerability.classification.cvss3.node:
                     vuln["cvss3"] = {"vector_string": vulnerability.classification.cvss3.vector}
+                vuln["ref"] = references
             if vulnerability.http_response.node:
                 vuln["response"] = vulnerability.http_response.content
             if vulnerability.http_request.node:
