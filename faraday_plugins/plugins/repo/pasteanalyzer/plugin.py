@@ -85,5 +85,5 @@ class pasteAnalyzerPlugin(PluginBase):
         return command_string
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return pasteAnalyzerPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return pasteAnalyzerPlugin(*args, **kwargs)

@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import CWE_regex
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -148,10 +149,18 @@ class Item:
             vulns_dict['description'] = self.get_text_from_subnode(vuln, 'description')
             vulns_dict['solution'] = self.get_text_from_subnode(vuln, 'solution')
             vulns_dict['references'] = self.get_references(vuln)
+            vulns_dict['cwe'] = self.get_cwe(vuln)
             vulns_dict['entries'] = self.get_entries(vuln)
             vulns_list.append(vulns_dict)
 
         return vulns_list
+
+    def get_cwe(self, node):
+        refs = node.findall('references/reference')
+        for ref in refs:
+            if CWE_regex.search(self.get_text_from_subnode(ref, 'title')):
+                return [CWE_regex.search(self.get_text_from_subnode(ref, 'title')).group()]
+        return []
 
     def get_references(self, node):
         refs = node.findall('references/reference')
@@ -291,7 +300,8 @@ class WapitiPlugin(PluginXMLFormat):
                                                                 path=entry['path'],
                                                                 request=entry['http_request'],
                                                                 method=entry['method'],
-                                                                params=entry['parameter'])
+                                                                params=entry['parameter'],
+                                                                cwe=vuln["cwe"])
 
     def processCommandString(self, username, current_path, command_string):
         """
@@ -317,5 +327,5 @@ class WapitiPlugin(PluginXMLFormat):
         return f"{command_string} -o {self._output_file_path} -f xml \n"
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return WapitiPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return WapitiPlugin(*args, **kwargs)
