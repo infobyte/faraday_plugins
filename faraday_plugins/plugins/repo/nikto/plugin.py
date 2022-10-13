@@ -100,7 +100,7 @@ class Item:
         self.node = item_node
 
         self.osvdbid = [
-            "OSVDB-ID: " + self.node.get('osvdbid')] if self.node.get('osvdbid') != "0" else []
+            "OSVDB-ID: " + self.node.get('osvdbid')] if self.node.get('osvdbid', "0") != "0" else []
 
         self.namelink = self.get_text_from_subnode('namelink')
         self.iplink = self.get_text_from_subnode('iplink')
@@ -207,7 +207,7 @@ class NiktoPlugin(PluginXMLFormat):
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
-        self.identifier_tag = "niktoscan"
+        self.identifier_tag = ["niktoscan", "niktoscans"]
         self.id = "Nikto"
         self.name = "Nikto XML Output Plugin"
         self.plugin_version = "0.0.2"
