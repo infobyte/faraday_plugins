@@ -1,3 +1,58 @@
+1.7.0 [Sep 5th, 2022]:
+---
+ * Add CWE to PluginBase. The plugins that have this implemented are the following:
+"Acunetix",
+"Acunetix_Json",
+"AppSpider",
+"Appscan",
+"Arachni",
+"Burp",
+"Checkmarx",
+"Metasploit",
+"Nessus",
+"Netsparker",
+"NetsparkerCloud",
+"Openvas",
+"QualysWebapp",
+"W3af",
+"Wapiti",
+"Zap",
+"Zap_Json",
+"nuclei",
+"nuclei_legacy"
+ * Now the nexts pluggins extracts cvss from reports:
+
+- Acunetix
+- Acunetix_Json
+- Appscan
+- Nessus
+- Netsparker
+- NexposeFull
+- Nipper
+- Nmap
+- Openvas
+- QualysWebapp
+- Qualysguard
+- Retina
+- shodan
+- whitesource
+ * Add arguments for add tags for vulns, services and host.
+
+Add test for tags and ignore_info
+ * Add trivy's json plugin
+ * Add command support for the wpscan plugin
+ * [MOD] Now refs field is a list of dictionary with the format:
+    {'name': string, 'type': string},
+ * Fix for acunetix_json when host is ip
+ * [FIX] - Asset duplicated on same file with multiple entries for Appscan_csv plugin.
+ * [FIX] Change import dateutil to from dateutil.parser import parse
+for compatibility issues with python 3.10
+ * [FIX] Add case for Netsparker plugins, when the url has a number inside a parenthesis.
+ * Add *args **kwargs to syhunt plugin
+ * fix bug when grype report has no arifact/metadata
+ * [MOD] Now prowler plugin returns CAF Epic as policy violation and
+remove [check#] from tittle
+
 1.6.8 [Jul 25th, 2022]:
 ---
  * Add appscan csv

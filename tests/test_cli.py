@@ -96,3 +96,26 @@ def test_process_report_summary():
     assert summary['severity_vulns'] == saved_summary['severity_vulns']
     assert vuln_hashes == saved_vuln_hashes
 
+
+def test_process_report_ignore_info():
+    report_file = os.path.join('./report-collection', 'faraday_plugins_tests', 'Nmap', 'nmap_5.21.xml')
+    runner = CliRunner()
+    result = runner.invoke(process_report, args=[report_file, '--summary', '--ignore-info'])
+    assert result.exit_code == 0
+    summary = json.loads(result.output.strip())
+    assert summary['hosts'] == 256
+    assert summary['services'] == 69
+    assert summary['hosts_vulns'] == 0
+    assert summary['services_vulns'] == 0
+
+
+def test_process_report_tags():
+    report_file = os.path.join('./report-collection', 'faraday_plugins_tests', 'Acunetix', 'acunetix_valid_dummy.xml')
+    runner = CliRunner()
+    args = [report_file, '--vuln-tag=vuln_tag', '--service-tag=service_tag', '--host-tag=host_tag']
+    result = runner.invoke(process_report, args=args)
+    assert result.exit_code == 0
+    body = json.loads(result.output.strip())
+    assert body['hosts'][0]["tags"][0] == "host_tag"
+    assert body['hosts'][0]["services"][0]["tags"][0] == "service_tag"
+    assert body['hosts'][0]["services"][0]["vulnerabilities"][0]["tags"][0] == "vuln_tag"

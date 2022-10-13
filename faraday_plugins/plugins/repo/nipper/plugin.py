@@ -16,6 +16,7 @@ class VulnSoftNipper:
         self.name = ''
         self.data = ''
         self.device = ''
+        self.cvss2 = {}
         self.refs = []
 
 
@@ -96,6 +97,8 @@ class NipperParser:
             # nombre de la vuln
 
             vuln_soft.name = itemv.attrib.get('title')
+            cvss2_vector = itemv.find('infobox/infodata/[@label="CVSSv2 Base"]')
+            vuln_soft.cvss2["vector_string"] = cvss2_vector.text.split(' ')[0] if cvss2_vector is not None else None
             for itemvv in itemv:
                 if itemvv.attrib.get('title') == 'Summary':
                     for i in itemvv:
@@ -155,9 +158,10 @@ class NipperPlugin(PluginXMLFormat):
                                             resolution='',
                                             data=vuln.data,
                                             ref=vuln.refs,
-                                            cve=[vuln.name]
+                                            cve=[vuln.name],
+                                            cvss2=vuln.cvss2
                                             )
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return NipperPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return NipperPlugin(*args, **kwargs)

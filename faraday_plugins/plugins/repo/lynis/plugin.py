@@ -323,5 +323,5 @@ class LynisPlugin(PluginByExtension):
         self._parse_filename(file_path)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return LynisPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return LynisPlugin(*args, **kwargs)

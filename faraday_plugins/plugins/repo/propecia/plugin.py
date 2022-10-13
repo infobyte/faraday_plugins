@@ -61,5 +61,5 @@ class CmdPropeciaPlugin(PluginBase):
             self._port = count_args[2]
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True):
-    return CmdPropeciaPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution)
+def createPlugin(*args, **kwargs):
+    return CmdPropeciaPlugin(*args, **kwargs)
