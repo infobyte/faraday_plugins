@@ -29,7 +29,7 @@ class GrypePlugin(PluginJsonFormat):
 
     def parseOutputString(self, output, debug=True):
         grype_json = json.loads(output)
-        if "userInput" in grype_json.get("source", {}).get("target"):
+        if "userInput" in grype_json.get("source", {"target": ""}).get("target"):
             name = grype_json["source"]["target"]["userInput"]
             host_type = grype_json['source']['type']
         elif "tags" in grype_json.get("image", {}):
@@ -43,7 +43,7 @@ class GrypePlugin(PluginJsonFormat):
             name = match.get('vulnerability').get('id')
             cve = name
             references = []
-            if match["relatedVulnerabilities"]:
+            if match.get("relatedVulnerabilities"):
                 description = match["relatedVulnerabilities"][0].get('description')
                 references.append(match["relatedVulnerabilities"][0]["dataSource"])
                 related_vuln = match["relatedVulnerabilities"][0]
