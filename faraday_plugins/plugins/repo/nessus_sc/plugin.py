@@ -28,7 +28,7 @@ class NessusScPlugin(PluginCSVFormat):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self.csv_headers = [{'Plugin', 'Plugin Name'}]
-        self.id = "Nessus sc"
+        self.id = "Nessus_sc"
         self.name = "Nessus Sc Output Plugin"
         self.plugin_version = "1.0.0"
         self.version = "1.0.0"
@@ -57,6 +57,8 @@ class NessusScPlugin(PluginCSVFormat):
                 vuln["resolution"] = solution
             cvss3_vector = row['CVSS V3 Vector']
             if cvss3_vector:
+                if not cvss3_vector.startswith("CVSS:3.0/"):
+                    cvss3_vector = "CVSS:3.0/"+cvss3_vector
                 vuln["cvss3"] = {"vector_string": cvss3_vector}
             cvss2_vector = row['CVSS V2 Vector']
             if cvss2_vector:
