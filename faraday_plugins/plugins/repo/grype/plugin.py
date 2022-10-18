@@ -25,31 +25,44 @@ class GrypePlugin(PluginJsonFormat):
         self._command_regex = re.compile(r'^grype\s+.*')
         self._use_temp_file = True
         self._temp_file_extension = "json"
-        self.json_keys = {"source", "matches", "descriptor"}
+        self.json_keys = [{"source", "matches", "descriptor"}, {"matches", "image"}]
 
     def parseOutputString(self, output, debug=True):
         grype_json = json.loads(output)
-        if "userInput" in grype_json["source"]["target"]:
+        if "userInput" in grype_json.get("source", {"target": ""}).get("target"):
             name = grype_json["source"]["target"]["userInput"]
+            host_type = grype_json['source']['type']
+        elif "tags" in grype_json.get("image", {}):
+            name = " ".join(grype_json["image"]["tags"])
+            host_type = "Docker Image"
         else:
             name = grype_json["source"]["target"]
-        host_id = self.createAndAddHost(name, description=f"Type: {grype_json['source']['type']}")
+            host_type = grype_json['source']['type']
+        host_id = self.createAndAddHost(name, description=f"Type: {host_type}")
         for match in grype_json['matches']:
             name = match.get('vulnerability').get('id')
             cve = name
             references = []
-            if match["relatedVulnerabilities"]:
+            if match.get("relatedVulnerabilities"):
                 description = match["relatedVulnerabilities"][0].get('description')
                 references.append(match["relatedVulnerabilities"][0]["dataSource"])
                 related_vuln = match["relatedVulnerabilities"][0]
                 severity = related_vuln["severity"].lower().replace("negligible", "info")
-                for url in related_vuln["urls"]:
-                    references.append(url)
+                if related_vuln.get("links"):
+                    for url in related_vuln["links"]:
+                        references.append(url)
+                else:
+                    for url in related_vuln["urls"]:
+                        references.append(url)
             else:
-                description = match.get('vulnerability').get('description')
+                description = match.get('vulnerability').get('description', "Issues provided no description")
                 severity = match.get('vulnerability').get('severity').lower().replace("negligible", "info")
-                for url in match.get('vulnerability').get('urls'):
-                    references.append(url)
+                if match.get('vulnerability').get("links"):
+                    for url in match.get('vulnerability')["links"]:
+                        references.append(url)
+                else:
+                    for url in match.get('vulnerability')["urls"]:
+                        references.append(url)
             if not match['artifact'].get('metadata'):
                 data = f"Artifact: {match['artifact']['name']}" \
                        f"Version: {match['artifact']['version']} " \
@@ -61,6 +74,10 @@ class GrypePlugin(PluginJsonFormat):
                            f"Type: {match['artifact']['type']}"
                 elif "VirtualPath" in match['artifact']['metadata']:
                     data = f"Artifact: {match['artifact']['name']} [{match['artifact']['metadata']['VirtualPath']}] " \
+                           f"Version: {match['artifact']['version']} " \
+                           f"Type: {match['artifact']['type']}"
+                else:
+                    data = f"Artifact: {match['artifact']['name']}" \
                            f"Version: {match['artifact']['version']} " \
                            f"Type: {match['artifact']['type']}"
             self.createAndAddVulnToHost(host_id,

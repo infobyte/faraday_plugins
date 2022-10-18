@@ -86,10 +86,11 @@ class InvictiPlugin(PluginXMLFormat):
         s_id = self.createAndAddServiceToHost(h_id, url.scheme, ports=433)
         for vulnerability in parser.invicti.vulnerabilities:
             vuln = {"name": vulnerability.name, "severity": vulnerability.severity,
-                    "confirmed": vulnerability.confirmed, "desc": BeautifulSoup(vulnerability.description).text,
+                    "confirmed": vulnerability.confirmed,
+                    "desc": BeautifulSoup(vulnerability.description, features="lxml").text,
                     "path": vulnerability.url.replace(parser.invicti.target.url, ""),
                     "external_id": vulnerability.look_id,
-                    "resolution": BeautifulSoup(vulnerability.remedial_procedure).text}
+                    "resolution": BeautifulSoup(vulnerability.remedial_procedure, features="lxml").text}
             if vulnerability.classification:
                 references = []
                 if vulnerability.classification.owasp:
@@ -106,12 +107,12 @@ class InvictiPlugin(PluginXMLFormat):
                     references.append("HIPAA" + vulnerability.classification.hipaa)
                 if vulnerability.classification.owasppc:
                     references.append("OWASPPC" + vulnerability.classification.owasppc)
-                if vulnerability.classification.cvss3.node:
+                if vulnerability.classification.cvss3.node is not None:
                     vuln["cvss3"] = {"vector_string": vulnerability.classification.cvss3.vector}
                 vuln["ref"] = references
-            if vulnerability.http_response.node:
+            if vulnerability.http_response.node is not None:
                 vuln["response"] = vulnerability.http_response.content
-            if vulnerability.http_request.node:
+            if vulnerability.http_request.node is not None:
                 vuln["request"] = vulnerability.http_request.content
             self.createAndAddVulnWebToService(h_id, s_id, **vuln)
 
