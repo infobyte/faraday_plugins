@@ -141,7 +141,7 @@ class NexposeFullXmlParser:
                 vuln = {
                     'desc': "",
                     'name': vulnDef.get('title'),
-                    'refs': ["vector: " + vector, vid],
+                    'refs': [],
                     'resolution': "",
                     'severity': "",
                     'tags': list(),
