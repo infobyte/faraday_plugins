@@ -141,7 +141,7 @@ class NexposeFullXmlParser:
                 vuln = {
                     'desc': "",
                     'name': vulnDef.get('title'),
-                    'refs': ["vector: " + vector, vid],
+                    'refs': [],
                     'resolution': "",
                     'severity': "",
                     'tags': list(),
@@ -172,13 +172,19 @@ class NexposeFullXmlParser:
                             vuln['refs'].append(nameMalware)
                     if item.tag == 'references':
                         for ref in list(item):
-                            if ref.text:
-                                rf = ref.text.strip()
-                                check = CVE_regex.search(rf.upper())
-                                if check:
-                                    vuln["CVE"].append(check.group())
-                                else:
-                                    vuln['refs'].append(rf)
+                            if not ref.text:
+                                continue
+                            source = ""
+                            if "source" in ref.attrib:
+                                source = ref.attrib['source'] + ": "
+                            rf = ref.text.strip()
+                            check = CVE_regex.search(rf.upper())
+                            if check:
+                                vuln["CVE"].append(check.group())
+                            else:
+                                if rf.isnumeric():
+                                    rf = source + rf
+                                vuln['refs'].append(rf)
                     if item.tag == 'solution':
                         for htmlType in list(item):
                             vuln['resolution'] += self.parse_html_type(htmlType)
