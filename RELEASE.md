@@ -1,3 +1,14 @@
+1.8.0 [Oct 26th, 2022]:
+---
+ * [Add] Add invicti plugin
+ * [Add] Add nessus_sc plugin
+ * [FIX] Remove cvss_vector from refs in nexpose_full
+ * Add new identifier_tag to nikto plugin
+ * [FIX] Now plugins check if ref field is already a dictionary
+ * [MOD] Improve grype plugin for dockers images and change report_belong_to method for
+json plugins to check if json_keys is a list, in that case iterate the list and try if
+any of them create a match.
+
 1.7.0 [Sep 5th, 2022]:
 ---
  * Add CWE to PluginBase. The plugins that have this implemented are the following:
