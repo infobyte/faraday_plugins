@@ -427,12 +427,14 @@ class PluginBase:
         Change reference struct from list of strings to a list of dicts with the form of {name, type}
         """
         refs = []
-        if ref:
-            for r in ref:
-                if isinstance(r, dict):
-                    refs.append(r)
-                else:
-                    refs.append({'name': r, 'type': 'other'})
+        if not ref:
+            return ref
+        for r in ref:
+            if isinstance(r, dict):
+                refs.append(r)
+            else:
+                if r.strip():
+                    refs.append({'name': r.strip(), 'type': 'other'})
         return refs
 
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=None,
