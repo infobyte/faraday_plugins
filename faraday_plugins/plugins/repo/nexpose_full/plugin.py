@@ -42,6 +42,21 @@ class NexposeFullXmlParser:
             self.items = []
 
     @staticmethod
+    def get_severity_from_report(score):
+        try:
+            if type(score) != float:
+                score = float(score)
+
+            cvss_ranges = [(0.0, 3.4, 'med'),
+                           (3.5, 7.4, 'high'),
+                           (7.5, 10.1, 'critical')]
+            for (lower, upper, severity) in cvss_ranges:
+                if lower <= score < upper:
+                    return severity
+        except ValueError:
+            return 'unclassified'
+
+    @staticmethod
     def parse_xml(xml_output):
         """
         Open and parse an xml file.
@@ -143,7 +158,7 @@ class NexposeFullXmlParser:
                     'name': vulnDef.get('title'),
                     'refs': [],
                     'resolution': "",
-                    'severity': "",
+                    'severity': self.get_severity_from_report(vulnDef.get('severity')),
                     'tags': list(),
                     'is_web': vid.startswith('http-'),
                     'risk': vulnDef.get('riskScore'),
