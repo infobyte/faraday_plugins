@@ -174,7 +174,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                           command_string)
         else:
             return re.sub(arg_match.group(1),
-                          r"--json -irr -o %s" % self._output_file_path,
+                          r" --json -irr -o %s" % self._output_file_path,
                           command_string)
 
     def canParseCommandString(self, current_input):
