@@ -54,7 +54,8 @@ class WPScanPlugin(PluginJsonFormat):
         self.name = "WPscan"
         self.plugin_version = "0.2"
         self.version = "3.4.5"
-        self.json_keys = {"target_url", "effective_url", "interesting_findings"}
+        self.json_keys = [{"target_url", "effective_url", "interesting_findings"},
+                          {"target_url", "effective_url", "plugins"}]
         self._command_regex = re.compile(r'^(sudo wpscan|wpscan)\s+.*?')
         self._use_temp_file = True
         self._temp_file_extension = "json"
@@ -74,16 +75,18 @@ class WPScanPlugin(PluginJsonFormat):
         for user, data in parser.json_data.get('users', {}).items():
             self.createAndAddCredToService(host_id, service_id, user, "")
         main_theme = parser.json_data.get("main_theme", {})
-        for vuln in main_theme.get("vulnerabilities", []):
-            wpvulndb = ",".join(vuln['references'].get('wpvulndb', []))
-            self.createAndAddVulnWebToService(host_id, service_id, vuln['title'], ref=vuln['references'].get('url', []),
-                                              severity='unclassified', external_id=wpvulndb)
+        if main_theme:
+            for vuln in main_theme.get("vulnerabilities", []):
+                wpvulndb = ",".join(vuln['references'].get('wpvulndb', []))
+                self.createAndAddVulnWebToService(host_id, service_id, vuln['title'], ref=vuln['references'].get('url', []),
+                                                  severity='unclassified', external_id=wpvulndb)
         for plugin, plugin_data in parser.json_data.get("plugins", {}).items():
             for vuln in plugin_data['vulnerabilities']:
                 wpvulndb = ",".join(vuln['references'].get('wpvulndb', []))
+                cve = ["CVE-"+ cve for cve in vuln['references'].get('cve')] if vuln['references'].get('cve') else []
                 self.createAndAddVulnWebToService(host_id, service_id, f"{plugin}: {vuln['title']}",
                                                   ref=vuln['references'].get('url', []),
-                                                  severity='unclassified', external_id=wpvulndb)
+                                                  severity='unclassified', external_id=wpvulndb, cve=cve)
         for vuln in parser.json_data.get("interesting_findings", []):
             if vuln['to_s'].startswith('http'):
                 vuln_name = f"{vuln['type']}: {vuln['to_s']}"
