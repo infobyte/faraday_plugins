@@ -97,11 +97,11 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             if cve:
                 cve = [x.upper() for x in cve]
 
-            # TODO CVSSv2, CVSSv3, CWE and CAPEC
-            #cvssv2 = vuln_dict['info'].get('classification', {}).get('cvss-score')
-            #cvssv3 = vuln_dict['info'].get('classification', {}).get('cvss-metrics')
+            vector_string = vuln_dict['info'].get('classification', {}).get('cvss-metrics')
+            cvss3 = {"vector_string": vector_string} if vector_string else None
             cwe = vuln_dict['info'].get('classification', {}).get('cwe-id', [])
-            cwe = [x.upper() for x in cwe]
+            if cwe:
+                cwe = [x.upper() for x in cwe]
             #capec = vuln_dict['info'].get('metadata', {}).get('capec', [])
             #if isinstance(capec, str):
             #    capec = capec.upper().split(',')
@@ -162,7 +162,8 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 path=matched_data.path,
                 data="\n".join(data),
                 external_id=f"NUCLEI-{vuln_dict.get('template-id', '')}",
-                run_date=run_date
+                run_date=run_date,
+                cvss3=cvss3
             )
 
     def processCommandString(self, username, current_path, command_string):
