@@ -300,13 +300,15 @@ class FaradayCSVPlugin(PluginCSVFormat):
                 )
             if item['row_with_vuln']:
                 cvss2 = {
-                    "vector_string": item['cvss2_base_score'],
-                    "base_score": item['cvss2_vector_string'],
+                    "base_score": item['cvss2_base_score'],
                 }
+                if item['cvss2_vector_string']:
+                    cvss2["vector_string"]= item['cvss2_vector_string']
                 cvss3 = {
-                    "vector_string": item['cvss3_base_score'],
-                    "base_score": item['cvss3_vector_string'],
+                    "base_score": item['cvss3_base_score'],
                 }
+                if item['cvss3_vector_string']:
+                    cvss3["vector_string"]= item['cvss3_vector_string']
                 if not item['web_vulnerability'] and not s_id:
                     self.createAndAddVulnToHost(
                         h_id,
