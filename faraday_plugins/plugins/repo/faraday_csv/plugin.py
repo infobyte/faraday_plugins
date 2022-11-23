@@ -50,6 +50,11 @@ class CSVParser:
             "custom_fields",
             "website",
             "path",
+            "cwe",
+            "cvss2_base_score",
+            "cvss2_vector_string",
+            "cvss3_base_score",
+            "cvss3_vector_string",
             "request",
             "response",
             "method",
@@ -294,6 +299,16 @@ class FaradayCSVPlugin(PluginCSVFormat):
                     tags=item['service_tags']
                 )
             if item['row_with_vuln']:
+                cvss2 = {
+                    "base_score": item['cvss2_base_score'],
+                }
+                if item['cvss2_vector_string']:
+                    cvss2["vector_string"]= item['cvss2_vector_string']
+                cvss3 = {
+                    "base_score": item['cvss3_base_score'],
+                }
+                if item['cvss3_vector_string']:
+                    cvss3["vector_string"]= item['cvss3_vector_string']
                 if not item['web_vulnerability'] and not s_id:
                     self.createAndAddVulnToHost(
                         h_id,
@@ -310,6 +325,9 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
                         cve=item['cve'],
+                        cwe=item['cwe'],
+                        cvss2=cvss2,
+                        cvss3=cvss3,
                         custom_fields=item['custom_fields'],
                         tags=item['tags']
                     )
@@ -330,6 +348,9 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
                         cve=item['cve'],
+                        cwe=item['cwe'],
+                        cvss2=cvss2,
+                        cvss3=cvss3,
                         custom_fields=item['custom_fields'],
                         tags=item['tags']
                     )
@@ -358,6 +379,9 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         impact=item['impact'],
                         policyviolations=item['policyviolations'],
                         cve=item['cve'],
+                        cwe=item['cwe'],
+                        cvss2=cvss2,
+                        cvss3=cvss3,
                         status_code=item['status_code'] or None,
                         custom_fields=item['custom_fields'],
                         tags=item['tags']

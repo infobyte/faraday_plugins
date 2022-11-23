@@ -426,9 +426,9 @@ class PluginBase:
         """
         Change reference struct from list of strings to a list of dicts with the form of {name, type}
         """
-        refs = []
         if not ref:
-            return ref
+            return []
+        refs = []
         for r in ref:
             if isinstance(r, dict):
                 refs.append(r)
