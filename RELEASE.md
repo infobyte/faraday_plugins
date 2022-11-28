@@ -1,4 +1,11 @@
-1.8.0 [Oct 26th, 2022]:
+1.8.1 [Nov 28th, 2022]:
+---
+ * [FIX] Nuclei's plugin check if the cwe is null and add retrocompability for newer versions for wpscan plugin
+ * [ADD] Add cvss2/3 and cwe to faraday_csv plugin
+ * [Add] Now nexpose_full plugin use severity from reports
+ * [FIX] Now plugins check if the ref is empty
+
+1.8.0:
 ---
  * [Add] Add invicti plugin
  * [Add] Add nessus_sc plugin
