@@ -494,7 +494,7 @@ class PluginBase:
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=None, severity="", resolution="", data="", external_id=None, run_date=None,
                                   custom_fields=None, policyviolations=None, impact=None, status="",
-                                  confirmed=False, easeofresolution=None, tags=None, cve=None, cwe=None,cvss2=None,
+                                  confirmed=False, easeofresolution=None, tags=None, cve=None, cwe=None, cvss2=None,
                                   cvss3=None):
         ref = self.modify_refs_struct(ref)
         if status == "":
@@ -739,6 +739,7 @@ class PluginJsonFormat(PluginByExtension):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.json_keys = set()
+        self.filter_keys = set()
         self.extension = ".json"
 
     def report_belongs_to(self, file_json_keys=None, **kwargs):
@@ -746,6 +747,8 @@ class PluginJsonFormat(PluginByExtension):
         if super().report_belongs_to(**kwargs):
             if file_json_keys is None:
                 file_json_keys = set()
+            if self.filter_keys & file_json_keys:
+                return match
             if isinstance(self.json_keys, list):
                 for jk in self.json_keys:
                     match = jk.issubset(file_json_keys)
