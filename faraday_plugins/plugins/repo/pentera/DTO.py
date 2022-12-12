@@ -66,7 +66,10 @@ class Vulneravility:
 
     @property
     def description(self) -> str:
-        return self.node.get("summary", "")
+        desc = self.node.get("summary", "")
+        if not desc:
+            desc = self.name
+        return desc
 
     @property
     def found_on(self) -> str:
