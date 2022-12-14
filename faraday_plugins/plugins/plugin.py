@@ -401,7 +401,8 @@ class PluginBase:
                 ports = int(ports[0])
             elif isinstance(ports, str):
                 ports = int(ports)
-
+        if not protocol:
+            protocol = "tcp"
         if status not in VALID_SERVICE_STATUS:
             status = 'open'
         if tags is None:
