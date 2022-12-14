@@ -56,14 +56,14 @@ class CisPlugin(PluginXMLFormat):
                     references = []
                     for ident in rule_result.findall(f"{self.ns['xccdf']}ident"):
                         text = ident.text
-                        if len(text) > 10:
+                        if isinstance(text, str) and len(text) > 10:
                             references.append(text)
                     self.createAndAddVulnToHost(
                         h_id,
                         name=rules[rule_id]["title"],
                         desc=rules[rule_id]["description"],
                         severity="info",
-                        references=references
+                        ref=references
                     )
 
 def createPlugin(*args, **kwargs):
