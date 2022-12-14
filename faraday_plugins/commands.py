@@ -53,7 +53,7 @@ def list_plugins(custom_plugins_folder):
     click.echo(tabulate(
         plugins_data,
         headers="keys",
-        tablefmt="simple",
+        tablefmt="github",
     ))
     click.echo(click.style(f"Loaded Plugins: {len(plugins_data)}", fg="cyan"))
 
