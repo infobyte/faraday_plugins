@@ -4,7 +4,7 @@ Copyright (C) 2020  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-import subprocess
+import subprocess # nosec
 import re
 import sys
 import json
@@ -182,7 +182,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
         can_parse = super().canParseCommandString(current_input)
         if can_parse:
             try:
-                proc = subprocess.Popen([self.command, '-version'], stderr=subprocess.PIPE)
+                proc = subprocess.Popen([self.command, '-version'], stderr=subprocess.PIPE) # nosec
                 output = proc.stderr.read()
                 match = re.search(r"Current Version: ([0-9.]+)", output.decode('UTF-8'))
                 if match:
