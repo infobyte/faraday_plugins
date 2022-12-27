@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import shlex
-import subprocess
+import subprocess # nosec
 import sys
 from pathlib import Path
 
@@ -142,7 +142,7 @@ def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary
         color_message = click.style("Command: ", fg="green")
         click.echo(f"{color_message} {command}")
     else:
-        p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosec
         output = io.StringIO()
         while True:
             retcode = p.poll()

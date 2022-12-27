@@ -49,7 +49,7 @@ class BeefPlugin(PluginBase):
         output being sent is valid.
         """
         try:
-            f = urlopen(self.getSetting("Host") + "/api/hooks?token=" + self.getSetting("Authkey"))
+            f = urlopen(self.getSetting("Host") + "/api/hooks?token=" + self.getSetting("Authkey")) # nosec
             data = json.loads(f.read())
         except Exception:
             self.logger.info("[BeEF] - Connection with api")

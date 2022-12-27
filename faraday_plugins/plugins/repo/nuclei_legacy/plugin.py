@@ -1,4 +1,4 @@
-import subprocess
+import subprocess # nosec
 import re
 import json
 from packaging import version
@@ -138,7 +138,7 @@ class NucleiLegacyPlugin(PluginMultiLineJsonFormat):
         can_parse = super().canParseCommandString(current_input)
         if can_parse:
             try:
-                proc = subprocess.Popen([self.command, '-version'], stderr=subprocess.PIPE)
+                proc = subprocess.Popen([self.command, '-version'], stderr=subprocess.PIPE) # nosec
                 output = proc.stderr.read()
                 match = re.search(r"Current Version: ([0-9.]+)", output.decode('UTF-8'))
                 if match:
