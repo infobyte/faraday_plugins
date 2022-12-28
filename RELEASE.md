@@ -1,3 +1,9 @@
+1.9.0 [Dic 15th, 2022]:
+---
+ * [FIX] Now all plugins check that service protocol is not empty
+ * [ADD] New pentera plugin and now json plugins can have filter_key to filter reports with that keys
+ * [MOD] Change table format for list-plugins to github
+
 1.8.1 [Nov 28th, 2022]:
 ---
  * [FIX] Nuclei's plugin check if the cwe is null and add retrocompability for newer versions for wpscan plugin
@@ -172,12 +178,12 @@ remove [check#] from tittle
 
 1.5.3 [Sep 7th, 2021]:
 ---
- * Adding support for running nuclei through command / faraday-cli 
+ * Adding support for running nuclei through command / faraday-cli
  * Fix missing references in nuclei
 
 1.5.2 [Aug 9th, 2021]:
 ---
- * add new structure acunetix 
+ * add new structure acunetix
 
 1.5.1 [Jul 27th, 2021]:
 ---
@@ -241,7 +247,7 @@ sacar unknown de version=
 ---
  * ADD microsoft baseline security analyzer plugin
  * ADD nextnet plugin
- * ADD openscap plugin 
+ * ADD openscap plugin
  * FIX old versions of Nessus plugins bugs
 
 1.4.0 [Dec 23rd, 2020]:
@@ -255,7 +261,7 @@ sacar unknown de version=
 1.4.0b1 [Dec 14th, 2020]:
 ---
  * Add new plugin base class, for multi line json
- * New ncrack plugin 
+ * New ncrack plugin
  * New nuclei plugin
  * New sslyze json plugin
  * New WhatWeb plugin
@@ -278,11 +284,10 @@ sacar unknown de version=
  * Bug fix: Openvas Plugin - Import xml from OpenVas doesnt work
  * Bug fix: QualysWebApp Plugin, error in get info OPERATING_SYSTEM
  * Fix Hydra plugin to resolve ip address
- * Fix Nessus mod severity HIGH for Low 
+ * Fix Nessus mod severity HIGH for Low
  * Bug Fix: Detect plugins AWS Prowler
  * Fix broken xml on nmap plugin
  * Add new rdpscan plugin
  * UPDATE xml report to appscan
  * Update Readme
  * Fix how ZAP genereate vulns
-
