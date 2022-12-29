@@ -52,6 +52,7 @@ class CisPlugin(PluginXMLFormat):
             for rule_result in rules_results:
                 result = rule_result.find(f"{self.ns['xccdf']}result").text
                 if result != "pass":
+                    severity = rule_result.attrib.get("severity","unclassified")
                     rule_id = rule_result.attrib['idref']
                     references = []
                     for ident in rule_result.findall(f"{self.ns['xccdf']}ident"):
@@ -62,7 +63,7 @@ class CisPlugin(PluginXMLFormat):
                         h_id,
                         name=rules[rule_id]["title"],
                         desc=rules[rule_id]["description"],
-                        severity="info",
+                        severity=severity,
                         ref=references
                     )
 
