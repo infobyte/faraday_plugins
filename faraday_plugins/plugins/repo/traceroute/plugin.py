@@ -41,7 +41,7 @@ class traceroutePlugin(PluginBase):
             int(hostName)
             # No exception => host is the next item.
             hostName = parameters[1]
-        except:
+        except: # nosec
             pass
 
         # Add host and note with output of traceroute.
