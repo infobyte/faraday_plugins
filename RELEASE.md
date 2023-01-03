@@ -1,3 +1,7 @@
+1.9.1 [Jan 3rd, 2023]:
+---
+ * [ADD] Add new CIS plugin
+
 1.9.0 [Dic 15th, 2022]:
 ---
  * [FIX] Now all plugins check that service protocol is not empty
