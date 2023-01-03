@@ -97,7 +97,7 @@ class WebInspectParser():
 
                     faraday_obj_name = map_objects_fields.get(field)[0]
                     faraday_field = map_objects_fields.get(field)[1]
-                except:
+                except: # nosec
                     continue
 
                 if faraday_field == "reference" and value != "":
