@@ -36,10 +36,6 @@ class Acunetix360Plugin(PluginJsonFormat):
         self.framework_version = "1.0.0"
         self._temp_file_extension = "json"
 
-    def report_belongs_to(self, **kwargs):
-        match = super().report_belongs_to(**kwargs)
-        loads()
-
     def parseOutputString(self, output):
         parser = Acunetix360JsonParser(loads(output))
         h_id = self.createAndAddHost(self.resolve_hostname(parser.target.url))
