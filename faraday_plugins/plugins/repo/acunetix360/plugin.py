@@ -66,7 +66,6 @@ class Acunetix360Plugin(PluginJsonFormat):
             resolution = vuln.remedial_actions + "\n" + vuln.remedial_procedure
             data = vuln.impact + "\n POC: " + vuln.proof_of_concept
 
-            print(vuln.classification.cvss31)
             cvss3 = {}
             if vuln.classification.cvss31:
                 cvss3['vector_string'] = vuln.classification.cvss31
