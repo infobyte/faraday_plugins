@@ -157,7 +157,7 @@ class Vulnerability:
 
     @property
     def classification(self) -> Classification:
-        return Classification(self.node.get("Classification"))
+        return Classification(self.node.get("Classification", {}))
 
     @property
     def external_id(self) -> str:
@@ -203,7 +203,7 @@ class Acunetix360JsonParser:
 
     @property
     def target(self) -> Target:
-        return Target(self.node.get('Target'))
+        return Target(self.node.get('Target', {}))
 
     @property
     def vulnerabilities(self) -> List[Vulnerability]:
