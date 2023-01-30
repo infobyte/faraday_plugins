@@ -37,11 +37,13 @@ class Classification:
     def cvss(self) -> str:
         if self.node.get('Cvss'):
             return self.node.get('Cvss').get("Vector", "")
+        return ""
 
     @property
     def cvss31(self) -> str:
         if self.node.get('Cvss31'):
             return self.node.get('Cvss31').get("Vector", "")
+        return ""
 
     @property
     def cwe(self) -> str:
@@ -114,11 +116,11 @@ class Request:
 
     @property
     def method(self) -> str:
-        return self.node.get("Method")
+        return self.node.get("Method", "")
 
     @property
     def content(self) -> str:
-        return self.node.get("Content")
+        return self.node.get("Content", "")
 
 
 class Vulnerability:
@@ -159,7 +161,7 @@ class Vulnerability:
 
     @property
     def external_id(self) -> str:
-        return self.node.get("LookupId")
+        return self.node.get("LookupId", "")
 
     @property
     def remedial_actions(self) -> str:
@@ -192,7 +194,7 @@ class Target:
 
     @property
     def url(self) -> str:
-        return self.node.get('Url')
+        return self.node.get('Url', "")
 
 
 class Acunetix360JsonParser:
