@@ -1,5 +1,5 @@
 from typing import List
-import re
+
 
 class InfoVul:
     def __init__(self, node):
