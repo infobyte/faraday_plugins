@@ -1,3 +1,7 @@
+1.10.0 [Jan 31th, 2023]:
+---
+ * [ADD] Add new acunetix360 plugin #293
+
 1.9.1 [Jan 3rd, 2023]:
 ---
  * [ADD] Add new CIS plugin
