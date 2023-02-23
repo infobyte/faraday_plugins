@@ -115,8 +115,9 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary, outpu
 @click.option('--vuln-tag', help="Vuln tag", default=None)
 @click.option('--service-tag', help="Service tag", default=None)
 @click.option('--host-tag', help="Host tag", default=None)
+@click.option('--force', help="Process the output of the command regardless of the result", is_flag=True)
 def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary, output_file, show_output,
-                    ignore_info, hostname_resolution, vuln_tag, service_tag, host_tag):
+                    ignore_info, hostname_resolution, vuln_tag, service_tag, host_tag, force):
     plugins_manager = PluginsManager(custom_plugins_folder,
                                      ignore_info=ignore_info,
                                      hostname_resolution=hostname_resolution,
@@ -157,7 +158,7 @@ def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary
                 output.writelines(extra_lines)
                 break
         output_value = output.getvalue()
-        if retcode == 0:
+        if retcode == 0 or force:
             plugin.processOutput(output_value)
             if summary:
                 click.echo(json.dumps(plugin.get_summary(), indent=4))
