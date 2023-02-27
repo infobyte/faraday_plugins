@@ -48,8 +48,10 @@ class TrivyJsonPlugin(PluginJsonFormat):
         cvss3 = {}
         cvss2 = {}
         if vulnerability.cvss:
-            cvss3["vector_string"] = vulnerability.cvss.v3score
-            cvss2["vector_string"] = vulnerability.cvss.v2score
+            cvss3["vector_string"] = vulnerability.cvss.v3vector
+            cvss3["base_score"] = vulnerability.cvss.v3score
+            cvss2["vector_string"] = vulnerability.cvss.v3vector
+            cvss2["base_score"] = vulnerability.cvss.v2score
         cwe = []
         if vulnerability.cwe:
             if isinstance(vulnerability.cwe, list):

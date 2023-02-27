@@ -49,7 +49,7 @@ class SyhuntParser:
         desc = vuln.find("description").text
         resolution = vuln.find("solution").text
         cvss2 = self.get_cvss(vuln.find("cvss/cvss2"))
-        cvss3 = self.get_cvss(vuln.find("cvss/cvss3"))
+        cvss3 = self.get_cvss(vuln.find("cvss/cvss3"), prefix="CVSS:3.0/")
         severity = vuln.find("cvss/cvss3/severity").text
         ref = []
         if vuln.find("references/cwe"):
@@ -72,9 +72,9 @@ class SyhuntParser:
         return v
 
     @staticmethod
-    def get_cvss(tree):
+    def get_cvss(tree, prefix=""):
         cvss_vector = tree.find("vector").text
-        return {'vector_stringr': cvss_vector}
+        return {'vector_string': prefix + cvss_vector}
 
     def get_host(self, tree):
         host = {
