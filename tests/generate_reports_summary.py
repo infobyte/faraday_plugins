@@ -52,7 +52,7 @@ def generate_reports_tests(force, debug):
             click.echo(f"{colorama.Fore.YELLOW}Plugin for file: ({report_file_path}) not found")
         else:
             with open(report_file_path, 'rb') as f:
-                m = hashlib.md5(f.read()) # nosec
+                m = hashlib.new("md5", usedforsecurity=False, data=f.read()) # nosec
             file_checksum = m.hexdigest()
             if file_checksum not in REPORTS_CHECKSUM:
                 REPORTS_CHECKSUM.append(file_checksum)
