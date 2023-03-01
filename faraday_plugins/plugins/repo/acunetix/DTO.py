@@ -282,11 +282,17 @@ class Reportitem:
 
     @property
     def cvss(self) -> Cvss:
-        return Cvss(self.node.find('cvss'))
+        cvss = self.node.find('CVSS')
+        if not cvss:
+            cvss = self.node.find('cvss')
+        return Cvss(cvss)
 
     @property
     def cvss3(self) -> Cvss3:
-        return Cvss3(self.node.find('cvss3'))
+        cvss = self.node.find('CVSS3')
+        if not cvss:
+            cvss = self.node.find('cvss3')
+        return Cvss3(cvss)
 
     @property
     def references(self) -> References:
