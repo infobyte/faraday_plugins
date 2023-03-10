@@ -85,12 +85,16 @@ class InvictiPlugin(PluginXMLFormat):
         h_id = self.createAndAddHost(ip)
         s_id = self.createAndAddServiceToHost(h_id, url.scheme, ports=433)
         for vulnerability in parser.invicti.vulnerabilities:
-            vuln = {"name": vulnerability.name, "severity": vulnerability.severity,
-                    "confirmed": vulnerability.confirmed,
-                    "desc": BeautifulSoup(vulnerability.description, features="lxml").text,
-                    "path": vulnerability.url.replace(parser.invicti.target.url, ""),
-                    "external_id": vulnerability.look_id,
-                    "resolution": BeautifulSoup(vulnerability.remedial_procedure, features="lxml").text}
+            vuln = {
+                "name": vulnerability.name,
+                "severity": vulnerability.severity,
+                "confirmed": vulnerability.confirmed,
+                "desc": BeautifulSoup(vulnerability.description, features="lxml").text,
+                "path": vulnerability.url.replace(parser.invicti.target.url, ""),
+                "external_id": vulnerability.look_id
+            }
+            if vulnerability.remedial_procedure:
+                vuln["resolution"] = BeautifulSoup(vulnerability.remedial_procedure, features="lxml").text
             if vulnerability.classification:
                 references = []
                 if vulnerability.classification.owasp:
