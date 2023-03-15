@@ -87,7 +87,10 @@ class Vulnerability:
 
     @property
     def severity(self) -> str:
-        return self.node.find('severity').text
+        sv = self.node.find('severity').text
+        if sv == "BestPractice":
+            sv = "Information"
+        return sv
 
     @property
     def confirmed(self) -> str:
