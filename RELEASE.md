@@ -1,3 +1,11 @@
+1.11.0 [Apr 3rd, 2023]:
+---
+ * [FIX] Change syhunt´s and trivy´s plugins to export cvss vector correctly #292
+ * [ADD] Add force flag to process-command to process the output of the command regardless of the exit code. #294
+ * [MOD] The accunetix plugin now search for CVSS and cvss #296
+ * [ADD] Add semgrep plugin. #297
+ * [FIX] Fix inviti's plugin, check remedial procedures before parsing it with b4f. #298
+
 1.10.0 [Jan 31th, 2023]:
 ---
  * [ADD] Add new acunetix360 plugin #293
