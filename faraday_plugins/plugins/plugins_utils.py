@@ -7,9 +7,10 @@ See the file 'doc/LICENSE' for the license information
 # Standard library imports
 import logging
 import os
-import socket
 import re
 from urllib.parse import urlsplit
+from bs4 import BeautifulSoup
+from markdown import markdown
 
 SERVICE_MAPPER = None
 CVE_regex = re.compile(r'CVE-\d{4}-\d{4,7}')
@@ -123,3 +124,8 @@ def its_cve(cves: list):
 def its_cwe(cwes: list):
     r = [cwe for cwe in cwes if CWE_regex.match(cwe)]
     return r
+
+def markdown2text(text):
+    html = markdown(text)
+    text = ''.join(BeautifulSoup(html).findAll(text=True))
+    return text

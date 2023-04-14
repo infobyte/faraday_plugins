@@ -16,7 +16,8 @@ install_requires = [
     'python-dateutil',
     'colorama',
     'tabulate',
-    'packaging'
+    'packaging',
+    'markdown'
 ]
 
 
