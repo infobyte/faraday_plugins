@@ -127,5 +127,5 @@ def its_cwe(cwes: list):
 
 def markdown2text(text):
     html = markdown(text)
-    text = ''.join(BeautifulSoup(html).findAll(text=True))
+    text = ''.join(BeautifulSoup(html, features="lxml").findAll(text=True))
     return text
