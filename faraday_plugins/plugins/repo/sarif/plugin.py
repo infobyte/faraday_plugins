@@ -80,6 +80,11 @@ class SarifPlugin(PluginJsonFormat):
                             cwe.append(tag)
                         else:
                             tags.append(tag)
+                    if "Snyk Open Source" == tool.strip():
+                        external_id = result.get('ruleId')
+                    else:
+                        external_id = f"{tool} {result.get('ruleId')}"
+
                     self.createAndAddVulnToHost(
                         host_id=h_id,
                         name=name if name else short_description,
@@ -88,7 +93,7 @@ class SarifPlugin(PluginJsonFormat):
                         tags=tags,
                         cwe=cwe,
                         severity=severity,
-                        external_id=f"{tool} {result.get('ruleId')}"
+                        external_id=external_id
                     )
 
 
