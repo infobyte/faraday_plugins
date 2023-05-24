@@ -1,3 +1,7 @@
+1.12.0 [May 24th, 2023]:
+---
+ * [ADD] Add Sarif plugin. #299
+
 1.11.0 [Apr 3rd, 2023]:
 ---
  * [FIX] Change syhunt´s and trivy´s plugins to export cvss vector correctly #292
