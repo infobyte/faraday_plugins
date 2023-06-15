@@ -43,8 +43,8 @@ class AppScanParser:
         fixes = {}
         for item in tree:
             fix_id = item.attrib['id']
-            library = item.find("LibraryName").text
-            location = item.find("Location").text
+            library = item.find("LibraryName").text if item.find("LibraryName") else ""
+            location = item.find("Location").text if item.find("Location") else ""
             fixes[fix_id] = {"library": library, "location": location}
         return fixes
 
@@ -112,9 +112,14 @@ class AppScanParser:
     def get_dast_issues(self, tree):
         dast_issues = []
         for item in tree:
-            entity = self.entities[item.find("entity/ref").text]
-            host = entity["host"].replace('\\','/')
-            port = entity["port"]
+            if not self.entities:
+                entity = list(self.hosts.values())[0]
+                host = entity.get("host").replace('\\', '/')
+                port = entity.get("port")
+            else:
+                entity = self.entities[item.find("entity/ref").text]
+                host = entity["host"].replace('\\','/')
+                port = entity["port"]
             name = self.issue_types[item.find("issue-type/ref").text]
             severity = 0 if item.find("severity-id") is None else int(item.find("severity-id").text)
             resolution = self.remediations[item.find("remediation/ref").text]
@@ -156,8 +161,8 @@ class AppScanParser:
                 "resolution": resolution,
                 "request": request,
                 "response": response,
-                "website": entity['website'],
-                "path": entity['path'],
+                "website": entity.get('website'),
+                "path": entity.get('path'),
                 "cve": [],
                 "cwe": [],
                 "cvss2": {}
@@ -184,7 +189,8 @@ class AppScanParser:
             name = self.issue_types[item.find("issue-type/ref").text]
             source_file = item.attrib["filename"].replace('\\', '/')
             severity = 0 if item.find("severity-id") is None else int(item.find("severity-id").text)
-            description = item.find("fix/item/general/text").text
+            description = "No description provided" \
+                if item.find("fix/item/general/text") is None else item.find("fix/item/general/text").text
             resolution = "" if item.find("variant-group/item/issue-information/fix-resolution-text") is None \
                 else item.find("variant-group/item/issue-information/fix-resolution-text").text
             fix_id = item.attrib.get("fix-group-id")
@@ -202,7 +208,7 @@ class AppScanParser:
             if item.attrib.get("cve"):
                 cve = None if item.find("variant-group/item/issue-information/display-name") is None \
                     else item.find('variant-group/item/issue-information/display-name').text
-                if "CVE" not in cve:
+                if cve and "CVE" not in cve:
                     cve = f"CVE-{cve}"
                 cve_url = item.attrib["cve"]
             else:
