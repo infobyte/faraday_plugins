@@ -1,3 +1,7 @@
+1.12.1 [July 7th, 2023]:
+---
+ * [FIX] Fix Appscan's pluign. #302
+
 1.12.0 [May 24th, 2023]:
 ---
  * [ADD] Add Sarif plugin. #299
