@@ -145,18 +145,15 @@ class QualysWebappPlugin(PluginXMLFormat):
 
         for v in parser.info_results:
             url = urlparse(v.dict_result_vul.get('URL'))
-            if v.dict_result_vul.get('REQUEST') is not none:
-                host_id = self.createAndAddHost(name=url.netloc, os=operating_system, hostnames=hostnames)
-                service_id = self.createAndAddServiceToHost(host_id=host_id, name=url.netloc, protocol='tcp')
-            else:
-                host_id = self.createAndAddHost(name=url.netloc, os=operating_system, hostnames=hostnames)
-
             vuln_scan_id = v.dict_result_vul.get('QID')
 
-            # Data in the xml is in different parts, we look into the glossary
-            if vuln_data.get('REQUEST') is not none:
+            if v.dict_result_vul.get('REQUEST'):
+                host_id = self.createAndAddHost(name=url.netloc, os=operating_system, hostnames=hostnames)
+                service_id = self.createAndAddServiceToHost(host_id=host_id, name=url.netloc, protocol='tcp')
                 vuln_request = v.dict_result_vul.get('REQUEST')
                 vuln_response = v.dict_result_vul.get('RESPONSE')
+            else:
+                host_id = self.createAndAddHost(name=url.netloc, os=operating_system, hostnames=hostnames)
             vuln_data = next((item for item in glossary if item["QID"] == vuln_scan_id), None)
             vuln_name = vuln_data.get('TITLE')
             vuln_desc = vuln_data.get('DESCRIPTION')
@@ -176,17 +173,18 @@ class QualysWebappPlugin(PluginXMLFormat):
             vuln_data_add = f"ID: {v.dict_result_vul.get('ID')}, DETECTION_ID: {v.dict_result_vul.get('DETECTION_ID')}" \
                             f", CATEGORY: {vuln_data.get('CATEGORY')}, GROUP: {vuln_data.get('GROUP')}" \
                             f", URL: {v.dict_result_vul.get('URL')}, IMPACT: {vuln_data.get('IMPACT')}"
+            print(v.dict_result_vul.get('REQUEST'))
 
-            if vuln_request is not none:
-                self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc,
-                                        severity=vuln_severity, resolution=vuln_resolution, run_date=run_date,
-                                        external_id="QUALYS-"+vuln_scan_id, data=vuln_data_add, cwe=vuln_CWE,
-                                        cvss3=cvss3)
-            else:
+            if v.dict_result_vul.get('REQUEST'):
                 self.createAndAddVulnWebToHost(host_id=host_id, service_id=service_id, name=vuln_name, desc=vuln_desc,
                                             severity=vuln_severity, resolution=vuln_resolution, run_date=run_date,
                                             external_id="QUALYS-" + vuln_scan_id, data=vuln_data_add, cwe=vuln_CWE,
                                             cvss3=cvss3, response=vuln_response, request=vuln_request)
+            else:
+                self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc,
+                                        severity=vuln_severity, resolution=vuln_resolution, run_date=run_date,
+                                        external_id="QUALYS-"+vuln_scan_id, data=vuln_data_add, cwe=vuln_CWE,
+                                        cvss3=cvss3)
 
 def createPlugin(*args, **kwargs):
     return QualysWebappPlugin(*args, **kwargs)
