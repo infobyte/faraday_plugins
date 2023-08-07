@@ -442,8 +442,9 @@ class ArachniPlugin(PluginXMLFormat):
             resol = str(issue.remedy_guidance)
 
             references = issue.references
+            cwe = []
             if issue.cwe != 'None':
-                cwe = ['CWE-' + str(issue.cwe)]
+                cwe.append('CWE-' + str(issue.cwe))
             if resol == 'None':
                 resol = ''
 
