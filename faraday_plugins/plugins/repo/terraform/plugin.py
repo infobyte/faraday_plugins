@@ -20,7 +20,7 @@ class TerraformPlugin(PluginJsonFormat):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.id = "TerraformPlugin_Json"
+        self.id = "TerraformPluginJson"
         self.name = "Terraform Plugin JSON Output Plugin"
         self.plugin_version = "1"
         self.version = "1"
