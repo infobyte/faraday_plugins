@@ -101,7 +101,7 @@ def get_all_protocols():
 
 def get_severity_from_cvss(cvss):
     try:
-        if type(cvss) != float:
+        if isinstance(cvss, float):
             cvss = float(cvss)
 
         cvss_ranges = [(0.0, 0.1, 'info'),
