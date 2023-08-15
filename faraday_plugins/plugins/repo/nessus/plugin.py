@@ -20,7 +20,7 @@ __email__ = "bmoyano@infobytesec.com"
 __status__ = "Development"
 
 from faraday_plugins.plugins.repo.nessus.DTO import ReportHost, Report, ReportItem
-
+from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
 
 class NessusParser:
     """
@@ -159,40 +159,43 @@ class NessusPlugin(PluginXMLFormat):
                         continue
                     item_name = item.svc_name_attr
 
-                    _main_data = self.map_item(
+                    main_data = self.map_item(
                         host_id, run_date, vulnerability_name, item)
 
-                    _main_data = self.map_add_ref(_main_data, item)
+                    main_data = self.map_add_ref(main_data, item)
                     if item_name == 'general':
-                        _main_data = self.map_policy_general(_main_data, item)
-                        self.createAndAddVulnToHost(**_main_data)
+                        main_data = self.map_policy_general(main_data, item)
+                        self.createAndAddVulnToHost(**main_data)
                     else:
-                        _main_data["service_id"] = self.createAndAddServiceToHost(
+                        main_data["service_id"] = self.createAndAddServiceToHost(
                             host_id, name=item_name, protocol=item.protocol_attr,
                             ports=item.port_attr)
                         if item_name == 'www' or item_name == 'http':
-                            _main_data.update({"website": website})
-                            self.createAndAddVulnWebToService(**_main_data)
+                            main_data.update({"website": website})
+                            self.createAndAddVulnWebToService(**main_data)
                         else:
-                            self.createAndAddVulnToService(**_main_data)
+                            self.createAndAddVulnToService(**main_data)
 
     @staticmethod
-    def map_add_ref(kwargs, item: ReportItem):
-        kwargs["cvss2"] = {}
-        kwargs["cvss3"] = {}
+    def map_add_ref(main_data, item: ReportItem):
+        main_data["cvss2"] = {}
+        main_data["cvss3"] = {}
         if item.see_also:
-            kwargs["ref"].append(item.see_also)
+            main_data["ref"].append(item.see_also)
         if item.cpe:
-            kwargs["ref"].append(item.cpe)
+            main_data["ref"].append(item.cpe)
         if item.cve:
-            kwargs["cve"] = item.cve
+            main_data["cve"] = item.cve
         if item.cwe:
-            kwargs["cwe"] = item.cwe
+            main_data["cwe"] = item.cwe
         if item.cvss3_vector:
-            kwargs["cvss3"]["vector_string"] = item.cvss3_vector
+            main_data["cvss3"]["vector_string"] = item.cvss3_vector
+        #if has cvss3.base_score use it for severity
+        if item.cvss3_base_score:
+            main_data["severity"] = get_severity_from_cvss(float(item.cvss3_base_score))
         if item.cvss_vector:
-            kwargs["cvss2"]["vector_string"] = item.cvss_vector
-        return kwargs
+            main_data["cvss2"]["vector_string"] = item.cvss_vector
+        return main_data
 
 
 def createPlugin(*args, **kwargs):
