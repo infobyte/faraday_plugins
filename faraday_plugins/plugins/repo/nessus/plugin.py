@@ -192,7 +192,7 @@ class NessusPlugin(PluginXMLFormat):
             main_data["cvss3"]["vector_string"] = item.cvss3_vector
         #if item has cvss3.base_score use it for severity
         if item.cvss3_base_score:
-            main_data["severity"] = get_severity_from_cvss(float(item.cvss3_base_score))
+            main_data["severity"] = get_severity_from_cvss(item.cvss3_base_score)
         if item.cvss_vector:
             main_data["cvss2"]["vector_string"] = item.cvss_vector
         return main_data
