@@ -57,8 +57,8 @@ bandit:
     - apt-get install software-properties-common -y
     - apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com focal main"
     - apt update
+    - echo $FARADAY_URL $FARADAY_USER $FARADAY_PASSWORD
     - pip3 install faraday-cli
-      echo  $FARADAY_URL $FARADAY_USER $FARADAY_PASSWORD
     - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --tag-vuln $CI_PROJECT_NAME --tag-vuln $CI_COMMIT_REF_NAME); else (echo 'no vulns dettected' && exit 0); fi    
     - apt install vault -y
     - setcap cap_ipc_lock= /usr/bin/vault
