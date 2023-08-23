@@ -348,7 +348,7 @@ class PluginBase:
                 self.logger.error(f"Error on delete file: ({filename}) [{e}]")
 
     def processReport(self, filepath: Path, user="faraday"):
-        if type(filepath) == str:  # TODO workaround for compatibility, remove in the future
+        if isinstance(filepath, str):  # TODO workaround for compatibility, remove in the future
             filepath = Path(filepath)
         if filepath.is_file():
             self.vulns_data["command"]["params"] = filepath.name if not self.ignore_info else f"{filepath.name} (Info ignored)"
@@ -705,9 +705,9 @@ class PluginByExtension(PluginBase):
 
     def report_belongs_to(self, extension="", **kwargs):
         match = False
-        if type(self.extension) == str:
+        if isinstance(self.extension, str):
             match = (self.extension == extension)
-        elif type(self.extension) == list:
+        elif isinstance(self.extension, list):
             match = (extension in self.extension)
         self.logger.debug(f"Extension Match: [{extension} =/in {self.extension}] -> {match}")
         return match
@@ -725,9 +725,9 @@ class PluginXMLFormat(PluginByExtension):
     def report_belongs_to(self, main_tag="", main_tag_attributes={}, **kwargs):
         match = False
         if super().report_belongs_to(**kwargs):
-            if type(self.identifier_tag) == str:
+            if isinstance(self.identifier_tag, str):
                 match = (main_tag == self.identifier_tag)
-            elif type(self.identifier_tag) == list:
+            elif isinstance(self.identifier_tag, list):
                 match = (main_tag in self.identifier_tag)
             if self.identifier_tag_attributes:
                 match = self.identifier_tag_attributes.issubset(main_tag_attributes)
