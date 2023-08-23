@@ -40,6 +40,8 @@ class NaabuPlugin(PluginMultiLineJsonFormat):
             ip = host_dict.get('ip')
             port = host_dict.get('port')
             try:
+                if isinstance(port, dict):
+                    port = port.get("Port")
                 service = socket.getservbyport(port)
             except OSError:
                 service = 'Unknown service on port ' + str(port)

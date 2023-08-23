@@ -42,12 +42,18 @@ class SemgrepPlugin(PluginJsonFormat):
             host_id = self.createAndAddHost(
                 name=path
             )
-            line_start = result.get("start",{}).get("line")
-            if line_start:
-                path += str(line_start)
             extra = result.get('extra')
             if not extra:
                 continue
+            line_start = result.get("start",{}).get("line")
+            service_id = self.createAndAddServiceToHost(
+                host_id=host_id,
+                name=f"Line {line_start}",
+                ports=int(line_start)
+            )
+            if line_start:
+                path += str(line_start)
+
             severity = severity_mapper[extra.get("severity", "INFO")]
             lines = extra.get("lines","")
             refs = []
@@ -72,8 +78,9 @@ class SemgrepPlugin(PluginJsonFormat):
             if bandit_code:
                 references.append(f"Bandit code {bandit_code}")
             data = f"Path: {path}\nLines: {lines}"
-            self.createAndAddVulnToHost(
+            self.createAndAddVulnToService(
                 host_id=host_id,
+                service_id=service_id,
                 name=desc[:50],
                 desc=desc,
                 severity=severity,
