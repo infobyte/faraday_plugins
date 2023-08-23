@@ -34,9 +34,10 @@ class TerraformPlugin(PluginJsonFormat):
             self.id = "TFsecPlugin_Json"
             self.name = "TFsec Plugin JSON Output Plugin"
             for result in report.get('results'):
-                host_id = self.createAndAddHost(result.get('locaction', {}).get("filename"))
+                host_id = self.createAndAddHost(result.get('location', {}).get("filename", "No filename"))
                 data = f"Rule Provider: {result.get('rule_provider')}\n"\
-                       f"Rule Service: {result.get('rule_service')}\n" \
+                       f"Rule Service: {result.get('rule_service')}\n"\
+                       f"Rule Impact: {result.get('impact')}\n"\
                        f"Long Id: {result.get('long_id')}\n" \
                        f"Line Start/End: {result.get('location').get('start_line')}"\
                        f"/{result.get('location').get('end_line')}"
@@ -48,7 +49,6 @@ class TerraformPlugin(PluginJsonFormat):
                     data=data,
                     external_id=result.get('rule_id'),
                     ref=result.get('links'),
-                    impact=result.get('impact'),
                     resolution=result.get('resolution')
                 )
         else:
