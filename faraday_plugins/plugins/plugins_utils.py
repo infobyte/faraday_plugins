@@ -16,7 +16,11 @@ SERVICE_MAPPER = None
 CVE_regex = re.compile(r'CVE-\d{4}-\d{4,7}')
 CWE_regex = re.compile(r'CWE-\d{1,4}')
 logger = logging.getLogger(__name__)
-
+CVSS_RANGE = [(0.0, 0.1, 'info'),
+               (0.1, 4.0, 'low'),
+               (4.0, 7.0, 'med'),
+               (7.0, 9.0, 'high'),
+               (9.0, 10.1, 'critical')]
 
 def get_vulnweb_url_fields(url):
     """Given a URL, return kwargs to pass to createAndAddVulnWebToService."""
@@ -104,12 +108,7 @@ def get_severity_from_cvss(cvss):
         if not isinstance(cvss, float):
             cvss = float(cvss)
 
-        cvss_ranges = [(0.0, 0.1, 'info'),
-                       (0.1, 4.0, 'low'),
-                       (4.0, 7.0, 'med'),
-                       (7.0, 9.0, 'high'),
-                       (9.0, 10.1, 'critical')]
-        for (lower, upper, severity) in cvss_ranges:
+        for (lower, upper, severity) in CVSS_RANGE:
             if lower <= cvss < upper:
                 return severity
     except ValueError:
