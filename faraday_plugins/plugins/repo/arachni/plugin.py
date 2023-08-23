@@ -223,6 +223,9 @@ class System:
 
     def getUrl(self):
         sitemap = self.node.find("sitemap/entry")
+        #Fix for the case when no vulns in the report
+        if not sitemap:
+            return self.node.find("options").text.split("url:")[-1].strip(" \n")
         return sitemap.get('url')
 
     def getOptions(self):
