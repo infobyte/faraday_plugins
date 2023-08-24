@@ -44,7 +44,7 @@ class NexposeFullXmlParser:
     @staticmethod
     def get_severity_from_report(score):
         try:
-            if type(score) != float:
+            if not isinstance(score, float):
                 score = float(score)
 
             cvss_ranges = [(0.0, 3.4, 'med'),

@@ -60,7 +60,7 @@ class pasteAnalyzerPlugin(PluginBase):
             for element in data:
 
                 # Is Category
-                if type(element) == str: #TODO bte arrray decode
+                if isinstance(element, str): #TODO bte arrray decode
                     description += element + ": "
 
                 # Is a list with results!
