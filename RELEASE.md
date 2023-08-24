@@ -1,3 +1,10 @@
+1.13.0 [Aug 24th, 2023]:
+---
+ * [FIX] If severity id in an appscan item is greater than 4 set it to 4. #305
+ * [FIX] Update Naabu plugin for the latest version, Semgrep create a new service for each vuln, fix Arachni bug in case the report has no vulns. #306
+ * [ADD] Add Terrascan and TFSec plugins. #310
+ * [FIX] Use cvss_score to calculate severity in nessus plugin. #311
+
 1.12.1 [July 7th, 2023]:
 ---
  * [FIX] Fix Appscan's pluign. #302
