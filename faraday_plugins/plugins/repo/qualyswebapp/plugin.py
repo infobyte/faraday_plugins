@@ -146,15 +146,19 @@ class QualysWebappPlugin(PluginXMLFormat):
         for v in parser.info_results:
             url = urlparse(v.dict_result_vul.get('URL'))
             vuln_scan_id = v.dict_result_vul.get('QID')
+            vuln_data = next((item for item in glossary if item["QID"] == vuln_scan_id), None)
 
             if v.dict_result_vul.get('REQUEST'):
                 host_id = self.createAndAddHost(name=url.netloc, os=operating_system, hostnames=hostnames)
                 service_id = self.createAndAddServiceToHost(host_id=host_id, name=url.netloc, protocol='tcp')
-                vuln_request = v.dict_result_vul.get('REQUEST')
-                vuln_response = v.dict_result_vul.get('RESPONSE')
             else:
                 host_id = self.createAndAddHost(name=url.netloc, os=operating_system, hostnames=hostnames)
-            vuln_data = next((item for item in glossary if item["QID"] == vuln_scan_id), None)
+
+            # Data in the xml is in different parts, we look into the glossary
+            if vuln_data.get('REQUEST'):
+                vuln_request = v.dict_result_vul.get('REQUEST')
+                vuln_response = v.dict_result_vul.get('RESPONSE')
+
             vuln_name = vuln_data.get('TITLE')
             vuln_desc = vuln_data.get('DESCRIPTION')
             vuln_CWE = [vuln_data.get('CWE', '')]
