@@ -6,6 +6,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
+import base64
 
 from dateutil.parser import parse
 
@@ -96,7 +97,9 @@ class Results:
 
     @staticmethod
     def build_request(request):
-        request_data = [f'URL {request.find("URL")}']
+        request_data = []
+        for url in request.find("URL"):
+            request_data.append(f'URL: {url.text}')
         for header in request.findall('HEADERS/HEADER'):
             request_data.append(f'{header.find("key").text}: {header.find("value").text}')
         return '\n'.join(request_data)
@@ -104,16 +107,16 @@ class Results:
     @staticmethod
     def build_response(response):
         response_data = []
-        if response.find('CONTENTS'):
-            response_data.append(response.find('CONTENTS').text)
-        if response.find('EVIDENCE'):
-            response_data.append(response.find('EVIDENCE').text)
+        for contents in response.findall('CONTENTS'):
+            response_data.append(base64.b64decode(contents.text).decode('utf-8'))
+        for evidence in response.findall('EVIDENCE'):
+            response_data.append(base64.b64decode(evidence.text).decode('utf-8'))
         return '\n'.join(response_data)
 
     def get_qid_list(self, vul_list_tags):
         self.dict_result_vul = {}
         for vul in vul_list_tags:
-            if vul.tag == "PAYLOADS":
+            if vul.tag == "PAYLOADS" and vul.find("PAYLOAD"):
                 #TODO chequear que no se pueda hacer un html injection decodeando RESPONSE
                 self.dict_result_vul["REQUEST"] = self.build_request(vul.find("PAYLOAD/REQUEST"))
                 self.dict_result_vul["METHOD"] = vul.find("PAYLOAD/REQUEST/METHOD").text
@@ -195,11 +198,11 @@ class QualysWebappPlugin(PluginXMLFormat):
                 vuln_request = v.dict_result_vul.get('REQUEST')
                 vuln_response = v.dict_result_vul.get('RESPONSE')
                 vuln_method = v.dict_result_vul.get('METHOD')
-                service_id = self.createAndAddServiceToHost(host_id=host_id, name=url.netloc, protocol='tcp')
+                service_id = self.createAndAddServiceToHost(host_id=host_id, name=url.path, protocol='tcp', ports=0)
                 self.createAndAddVulnWebToService(host_id=host_id, service_id=service_id, name=vuln_name, desc=vuln_desc,
                                             severity=vuln_severity, resolution=vuln_resolution, run_date=run_date,
                                             external_id="QUALYS-" + vuln_scan_id, data=vuln_data_add, cwe=vuln_CWE,
-                                            method=vuln_method, response=vuln_response, request=vuln_request)
+                                            method=vuln_method, response=vuln_response, request=vuln_request, path=url.path)
             else:
                 self.createAndAddVulnToHost(host_id=host_id, name=vuln_name, desc=vuln_desc,
                                         severity=vuln_severity, resolution=vuln_resolution, run_date=run_date,
