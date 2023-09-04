@@ -55,8 +55,6 @@ class WindowsDefenderPlugin(PluginJsonFormat):
         self.plugin_version = "1.0"
         self.version = "1.0"
         self.json_keys = {'RbacGroupName'}
-        self.json_arg_re = None
-        self._temp_file_extension = json
 
     def parseOutputString(self, output):
         parser = WindowsDefenderJsonParser(output)
@@ -72,11 +70,10 @@ class WindowsDefenderPlugin(PluginJsonFormat):
                 hostnames=[host_info.get("hostname")]
             )
 
-            self.createAndAddVulnWebToHost(
-                host_id,
+            self.createAndAddVulnToHost(host_id,
                 name=vulnerability.get("name"),
                 severity=vulnerability.get("severity"),
-                description=vulnerability.get("desc")
+                desc=vulnerability.get("desc")
             )
 
 def createPlugin(*args, **kwargs):
