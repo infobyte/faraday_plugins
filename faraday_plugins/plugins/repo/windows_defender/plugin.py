@@ -1,7 +1,7 @@
 import json
-from faraday_plugins.plugins.plugin import PluginJsonFormat
+from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
 
-class WindowsDefenderPlugin(PluginJsonFormat):
+class WindowsDefenderPlugin(PluginMultiLineJsonFormat):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -10,10 +10,9 @@ class WindowsDefenderPlugin(PluginJsonFormat):
         self.plugin_version = "1.0"
         self.version = "1.0"
         self.json_keys = {'LastSeenTimestamp' , 'SecurityUpdateAvailable'}  # Define the relevant JSON keys here
-        self._command_regex = None
-        self.json_arg_re = None
-        self._use_temp_file = False
-        self._temp_file_extension = None
+
+
+
 
     def parseOutputString(self, output):
         try:
