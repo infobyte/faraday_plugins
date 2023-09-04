@@ -27,7 +27,10 @@ class WindowsDefenderPlugin(PluginJsonFormat):
                 cve_id = data.get('CveId', 'Unknown')
                 severity = data.get('VulnerabilitySeverityLevel', 'Unknown')
                 DeviceId = data.get('DeviceId', 'Unknown')
-                key_value_pairs = "\n".join([f"{key}: {value}" for key, value in data.items()])
+                SoftwareName = data.get('SoftwareName', 'Unknown')
+                SoftwareVendor = data.get('SoftwareVendor', 'Unknown')
+
+                key_value_pairs = "\n".join([f"{key}: {value}\n" for key, value in data.items()])
 
 
                 # Build the vulnerability description including all fields
@@ -36,7 +39,7 @@ class WindowsDefenderPlugin(PluginJsonFormat):
                 description += f"CVE ID: {cve_id}\n "
                 description += f"Vulnerability Severity Level: {severity}\n "
                 description += f"Device ID: {severity}\n "
-                description += key_value_pairs
+                description += f"Device ID: {key_value_pairs}\n "
 
 
                 host_id = self.createAndAddHost(
@@ -47,7 +50,8 @@ class WindowsDefenderPlugin(PluginJsonFormat):
 
                 self.createAndAddVulnToHost(
                     host_id,
-                    name=cve_id,
+                    name= f"{SoftwareName}  {SoftwareVendor} Vulnerable",
+                    cve=cve_id,
                     severity=severity,
                     desc=description
                 )
