@@ -35,7 +35,6 @@ class WindowsDefenderPlugin(PluginMultiLineJsonFormat):
                 # Build the vulnerability description including all fields
                 description = f"Device Name: {device_name}\n "
                 description += f"OS Platform: {os_platform}\n "
-                description += f"CVE ID: {cve_id}\n "
                 description += f"Vulnerability Severity Level: {severity}\n "
                 description += f"Device ID: {severity}\n "
                 description += f"Device ID: {key_value_pairs}\n "
