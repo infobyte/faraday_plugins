@@ -1,5 +1,7 @@
+""" Create plugin for windows defender"""
 import json
 from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
+
 
 class WindowsDefenderPlugin(PluginMultiLineJsonFormat):
 
@@ -9,7 +11,7 @@ class WindowsDefenderPlugin(PluginMultiLineJsonFormat):
         self.name = "Windows Defender Json"
         self.plugin_version = "1.0"
         self.version = "1.0"
-        self.json_keys = {'LastSeenTimestamp' , 'SecurityUpdateAvailable'}  # Define the relevant JSON keys here
+        self.json_keys = {'LastSeenTimestamp' , 'SecurityUpdateAvailable'}
 
 
 
@@ -25,19 +27,20 @@ class WindowsDefenderPlugin(PluginMultiLineJsonFormat):
                 os_platform = data.get('OSPlatform', 'Unknown')
                 cve_id = data.get('CveId', 'Unknown')
                 severity = data.get('VulnerabilitySeverityLevel', 'Unknown')
-                DeviceId = data.get('DeviceId', 'Unknown')
-                SoftwareName = data.get('SoftwareName', 'Unknown')
-                SoftwareVendor = data.get('SoftwareVendor', 'Unknown')
+                device_id = data.get('DeviceId', 'Unknown')
+                software_name = data.get('SoftwareName', 'Unknown')
+                software_vendor = data.get('SoftwareVendor', 'Unknown')
 
                 key_value_pairs = "\n".join([f"{key}: {value}\n" for key, value in data.items()])
 
 
                 # Build the vulnerability description including all fields
                 description = f"Device Name: {device_name}\n "
+                description += f"Device ID: {device_id}\n "
                 description += f"OS Platform: {os_platform}\n "
                 description += f"Vulnerability Severity Level: {severity}\n "
-                description += f"Device ID: {severity}\n "
-                description += f"Device ID: {key_value_pairs}\n "
+                description += f"Severity: {severity}\n "
+                description += f"Misc Data of the vulnerability: {key_value_pairs}\n "
 
 
                 host_id = self.createAndAddHost(
@@ -48,7 +51,7 @@ class WindowsDefenderPlugin(PluginMultiLineJsonFormat):
 
                 self.createAndAddVulnToHost(
                     host_id,
-                    name= f"{SoftwareName}  {SoftwareVendor} Vulnerable",
+                    name= f"{software_name}  {software_vendor} Vulnerable",
                     cve=cve_id,
                     severity=severity,
                     desc=description
@@ -56,8 +59,7 @@ class WindowsDefenderPlugin(PluginMultiLineJsonFormat):
 
         except json.JSONDecodeError as e:
             self.logger.error(f"Error decoding JSON data: {str(e)}")
-        except Exception as e:
-            self.logger.error(f"Error parsing JSON data: {str(e)}")
+
 
 def createPlugin(*args, **kwargs):
     return WindowsDefenderPlugin(*args, **kwargs)
