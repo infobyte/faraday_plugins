@@ -26,13 +26,13 @@ class WindowsDefenderPlugin(PluginMultiLineJsonFormat):
             software_name = data.pop('SoftwareName', 'Unknown')
             software_vendor = data.pop('SoftwareVendor', 'Unknown')
             data.pop('CvssScore')
-            key_value_pairs = "\n".join([f"{key}: {value}" for key, value in data.items()])
+            data_info = "\n".join([f"{key}: {value}" for key, value in data.items()])
 
             # Build the vulnerability description including all fields
             description = f"Device Name: {device_name}\n "\
                           f"Device ID: {device_id}\n "\
                           f"OS Platform: {os_platform}\n "\
-                          f"Misc Data of the vulnerability: {key_value_pairs}\n "
+
 
             host_id = self.createAndAddHost(
                 name=device_name,
@@ -45,7 +45,8 @@ class WindowsDefenderPlugin(PluginMultiLineJsonFormat):
                 name= f"{software_name}  {software_vendor} Vulnerable",
                 cve=cve_id,
                 severity=severity,
-                desc=description
+                desc=description,
+                data=data_info
             )
 
 def createPlugin(*args, **kwargs):
