@@ -19,6 +19,8 @@ class WindowsDefenderPlugin(PluginMultiLineJsonFormat):
             data = json.loads(json_str)
 
             device_name = data.pop('DeviceName', 'Unknown')
+            if device_name == "Unknown":
+                device_name = data.pop('DeviceId', 'Unknown')
             os_platform = data.pop('OSPlatform', 'Unknown')
             cve_id = data.pop('CveId', 'Unknown')
             severity = data.pop('VulnerabilitySeverityLevel', 'Unknown')
