@@ -26,12 +26,14 @@ class WindowsDefenderPlugin(PluginMultiLineJsonFormat):
             software_name = data.pop('SoftwareName', 'Unknown')
             software_vendor = data.pop('SoftwareVendor', 'Unknown')
             data.pop('CvssScore')
-            data_info = "\n".join([f"{key}: {value}" for key, value in data.items()])
 
             # Build the vulnerability description including all fields
+            # purposely injecte CVE in desc to bypass the cache
             description = f"Device Name: {device_name}\n "\
                           f"Device ID: {device_id}\n "\
-                          f"OS Platform: {os_platform}\n "\
+                          f"OS Platform: {os_platform}\n" \
+                          f"CVE: {cve_id}"
+            data_info = "\n".join([f"{key}: {value}" for key, value in data.items()])
 
 
             host_id = self.createAndAddHost(
