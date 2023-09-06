@@ -1,3 +1,8 @@
+1.13.2 [Sep 6th, 2023]:
+---
+ * [ADD] Create Plugin for windows defender. #315
+ * [ADD] Extract response and request info in qualyswebapp's plugins. #307
+
 1.13.0 [Aug 24th, 2023]:
 ---
  * [FIX] If severity id in an appscan item is greater than 4 set it to 4. #305
