@@ -92,7 +92,7 @@ flake8:
 
 tests:
   extends: .test_base
-  image: python:3.10
+  image: python:3.11
 
 test_performance:
   extends: .test_base
