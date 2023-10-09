@@ -44,7 +44,7 @@ workflow:
 
 bandit:
   stage: SAST
-  image: python:3.10
+  image: python:3
   tags:
     - faradaytests
   script:
@@ -92,7 +92,7 @@ flake8:
 
 tests:
   extends: .test_base
-  image: python:3
+  image: python:3.10
 
 test_performance:
   extends: .test_base
