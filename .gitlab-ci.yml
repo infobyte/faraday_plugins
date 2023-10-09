@@ -44,7 +44,7 @@ workflow:
 
 bandit:
   stage: SAST
-  image: python:3
+  image: python:3.10
   tags:
     - faradaytests
   script:
