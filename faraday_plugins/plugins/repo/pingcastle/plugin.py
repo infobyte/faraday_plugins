@@ -17,25 +17,6 @@ __version__ = '1.0.0'
 __status__ = 'Development'
 
 
-class AppSpiderParser:
-    def __init__(self, xml_output):
-        self.tree = self.parse_xml(xml_output)
-        if self.tree:
-            self.vuln_list = self.tree.find('VulnList')
-            self.name_scan = self.tree.findtext('ScanName')
-        else:
-            self.tree = None
-
-    @staticmethod
-    def parse_xml(xml_output):
-        try:
-            tree = ET.fromstring(xml_output)
-        except SyntaxError as err:
-            print(f'SyntaxError In xml: {err}. {xml_output}')
-            return None
-        return tree
-
-
 class PingCastlePlugin(PluginXMLFormat):
 
     def __init__(self, *arg, **kwargs):
