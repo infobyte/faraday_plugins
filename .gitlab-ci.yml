@@ -44,7 +44,7 @@ workflow:
 
 bandit:
   stage: SAST
-  image: python:3
+  image: python:3.11
   tags:
     - faradaytests
   script:
@@ -69,7 +69,7 @@ bandit:
     - when: on_success
 
 flake8:
-    image: python:3
+    image: python:3.11
     stage: pre_testing
     before_script:
       - pip install flake8
@@ -96,7 +96,7 @@ tests:
 
 test_performance:
   extends: .test_base
-  image: python:3
+  image: python:3.11
   stage: post_testing
   allow_failure: true
   variables:
@@ -106,7 +106,7 @@ test_performance:
       when: on_success
 
 publish_pypi:
-    image: python:3
+    image: python:3.11
     stage: publish
     script:
       - apt-get update -qy
