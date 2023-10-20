@@ -1,3 +1,7 @@
+1.14.0 [Oct 10th, 2023]:
+---
+ * [ADD] Add Crowdstrike's plugin. #318
+
 1.13.2 [Sep 6th, 2023]:
 ---
  * [ADD] Create Plugin for windows defender. #315
