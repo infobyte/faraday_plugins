@@ -62,7 +62,31 @@ class SonarQubeAPIParser:
             vulns.append(
                 {'name': message, 'description': vuln_description, 'project': project, 'path': path, 'severity': severity, 'status': status, 'tags': tags,
                  'creation_date': creation_date, 'data': "\n".join(data), 'external_id': external_id})
+        from bs4 import BeautifulSoup
+        for issue in json_data['hotspots']:
+            component = issue['component']['key']
+            rule = issue['rule']
+            if component not in components:
+                components[component] = {
+                    'longName': issue['component']['longName']
+                }
+            path = components[component]['longName']
 
+            severity = rule['vulnerabilityProbability'].lower()
+            name = rule['name']
+            vuln_description = issue['message']
+            project = f"Project: {issue['project']['key']}"
+            status = issue['status']
+            tags = issue.get('tags')
+            external_id = issue['rule']['key']
+            creation_date = parse(issue['creationDate'])
+            data = BeautifulSoup(f'''Risk Description: {rule["riskDescription"]}
+            Vulnerability Description: {rule["vulnerabilityDescription"]}
+            ''', features="lxml").get_text()
+            recomendation = BeautifulSoup(rule['fixRecommendations'], features="lxml").get_text()
+            vulns.append(
+                {'name': name, 'description': vuln_description, 'project': project, 'path': path, 'severity': severity, 'status': status, 'tags': tags,
+                 'creation_date': creation_date, 'data': data, 'external_id': external_id})
         return vulns
 
 
