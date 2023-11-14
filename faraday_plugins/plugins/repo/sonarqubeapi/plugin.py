@@ -98,7 +98,7 @@ class SonarQubeAPIParser:
                     'data': data,
                     'external_id': external_id,
                     'resolution': resolution
-                 }
+                }
             )
         return vulns
 
