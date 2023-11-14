@@ -7,6 +7,7 @@ See the file 'doc/LICENSE' for the license information
 import json
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 from dateutil.parser import parse
+from bs4 import BeautifulSoup
 
 VULNERABILITY = "VULNERABILITY"
 
@@ -21,6 +22,7 @@ SEVERITIES = {
 }
 STATUSES = {
     'OPEN': 'open',
+    'TO_REVIEW': 'open',
     'CONFIRMED': 'open',
     'REOPENED': 're-opened',
     'CLOSED': 'closed',
@@ -60,10 +62,9 @@ class SonarQubeAPIParser:
                                        f"of {components[component]['longName']}"
                     data.append(location_message)
             vulns.append(
-                {'name': message, 'description': vuln_description, 'project': project, 'path': path, 'severity': severity, 'status': status, 'tags': tags,
-                 'creation_date': creation_date, 'data': "\n".join(data), 'external_id': external_id})
-        from bs4 import BeautifulSoup
-        for issue in json_data['hotspots']:
+                {'name': message, 'desc': vuln_description, 'project': project, 'path': path, 'severity': severity, 'status': status, 'tags': tags,
+                 'run_date': creation_date, 'data': "\n".join(data), 'external_id': external_id})
+        for issue in json_data.get('hotspots', []):
             component = issue['component']['key']
             rule = issue['rule']
             if component not in components:
@@ -76,17 +77,29 @@ class SonarQubeAPIParser:
             name = rule['name']
             vuln_description = issue['message']
             project = f"Project: {issue['project']['key']}"
-            status = issue['status']
+            status = STATUSES[issue['status']]
             tags = issue.get('tags')
             external_id = issue['rule']['key']
             creation_date = parse(issue['creationDate'])
             data = BeautifulSoup(f'''Risk Description: {rule["riskDescription"]}
             Vulnerability Description: {rule["vulnerabilityDescription"]}
             ''', features="lxml").get_text()
-            recomendation = BeautifulSoup(rule['fixRecommendations'], features="lxml").get_text()
+            resolution = BeautifulSoup(rule['fixRecommendations'], features="lxml").get_text()
             vulns.append(
-                {'name': name, 'description': vuln_description, 'project': project, 'path': path, 'severity': severity, 'status': status, 'tags': tags,
-                 'creation_date': creation_date, 'data': data, 'external_id': external_id})
+                {
+                    'name': name,
+                    'desc': vuln_description,
+                    'project': project,
+                    'path': path,
+                    'severity': severity,
+                    'status': status,
+                    'tags': tags,
+                    'run_date': creation_date,
+                    'data': data,
+                    'external_id': external_id,
+                    'resolution': resolution
+                 }
+            )
         return vulns
 
 
@@ -102,18 +115,10 @@ class SonarQubeAPIPlugin(PluginJsonFormat):
     def parseOutputString(self, output, debug=False):
         parser = SonarQubeAPIParser(output)
         for vuln in parser.vulns:
-            host_id = self.createAndAddHost(vuln['path'], description=vuln['project'])
-
+            host_id = self.createAndAddHost(vuln.pop('path'), description=vuln.pop('project'))
             self.createAndAddVulnToHost(
                 host_id=host_id,
-                name=vuln['name'],
-                desc=vuln['description'],
-                status=vuln['status'],
-                run_date=vuln['creation_date'],
-                severity=vuln['severity'],
-                tags=vuln['tags'],
-                data=vuln['data'],
-                external_id=vuln['external_id']
+                **vuln
             )
 
 
