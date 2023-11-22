@@ -36,7 +36,7 @@ class PingCastlePlugin(PluginXMLFormat):
             return "medium"
         elif score < 31:
             return "high"
-        elif score > 30:
+        else:
             return "critical"
 
     def parseOutputString(self, output):
