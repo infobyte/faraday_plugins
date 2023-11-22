@@ -56,9 +56,5 @@ class PopeyeJsonPlugin(PluginJsonFormat):
                     )
 
 
-
-
-
-
 def createPlugin(*args, **kwargs):
     return PopeyeJsonPlugin(*args, **kwargs)
