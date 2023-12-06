@@ -35,8 +35,6 @@ class AWSInspectorJsonPlugin(PluginJsonFormat):
             name = finding["title"]
             cve = vuln_details.get("vulnerabilityId", None)
             if cve != name:
-                print(cve)
-                print(name)
                 name = name.replace(f"{cve} - ", "")
             vuln = {
                 "name": name,
