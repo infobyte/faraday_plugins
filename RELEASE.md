@@ -1,3 +1,7 @@
+1.15.1 [Dec 22th, 2023]:
+---
+ * [FIX] Filter \x00 in nuclei response. #323
+
 1.15.0 [Dec 12th, 2023]:
 ---
  * [ADD] Add PopEye's plugin. #303
