@@ -1,11 +1,22 @@
+1.15.1 [Dec 22th, 2023]:
+---
+ * [FIX] Filter \x00 in nuclei response. #323
+
+1.15.0 [Dec 12th, 2023]:
+---
+ * [ADD] Add PopEye's plugin. #303
+ * [ADD] Add Ping Castle's plugin. #304
+ * [ADD] Add Kubescape's plugin. #320
+ * [ADD] Add AWS Inspector's plugins. #322
+
 1.14.0 [Oct 10th, 2023]:
 ---
  * [ADD] Add Crowdstrike's plugin. #318
 
 1.13.2 [Sep 6th, 2023]:
 ---
- * [ADD] Create Plugin for windows defender. #315
  * [ADD] Extract response and request info in qualyswebapp's plugins. #307
+ * [ADD] Create Plugin for windows defender. #315
 
 1.13.0 [Aug 24th, 2023]:
 ---
@@ -218,12 +229,12 @@ remove [check#] from tittle
 
 1.5.3 [Sep 7th, 2021]:
 ---
- * Adding support for running nuclei through command / faraday-cli
+ * Adding support for running nuclei through command / faraday-cli 
  * Fix missing references in nuclei
 
 1.5.2 [Aug 9th, 2021]:
 ---
- * add new structure acunetix
+ * add new structure acunetix 
 
 1.5.1 [Jul 27th, 2021]:
 ---
@@ -287,7 +298,7 @@ sacar unknown de version=
 ---
  * ADD microsoft baseline security analyzer plugin
  * ADD nextnet plugin
- * ADD openscap plugin
+ * ADD openscap plugin 
  * FIX old versions of Nessus plugins bugs
 
 1.4.0 [Dec 23rd, 2020]:
@@ -301,7 +312,7 @@ sacar unknown de version=
 1.4.0b1 [Dec 14th, 2020]:
 ---
  * Add new plugin base class, for multi line json
- * New ncrack plugin
+ * New ncrack plugin 
  * New nuclei plugin
  * New sslyze json plugin
  * New WhatWeb plugin
@@ -324,10 +335,11 @@ sacar unknown de version=
  * Bug fix: Openvas Plugin - Import xml from OpenVas doesnt work
  * Bug fix: QualysWebApp Plugin, error in get info OPERATING_SYSTEM
  * Fix Hydra plugin to resolve ip address
- * Fix Nessus mod severity HIGH for Low
+ * Fix Nessus mod severity HIGH for Low 
  * Bug Fix: Detect plugins AWS Prowler
  * Fix broken xml on nmap plugin
  * Add new rdpscan plugin
  * UPDATE xml report to appscan
  * Update Readme
  * Fix how ZAP genereate vulns
+

@@ -155,7 +155,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 #capec=capec,
                 website=host,
                 request=request,
-                response=vuln_dict.get('response', ''),
+                response=vuln_dict.get('response', '').replace('\x00', ''),
                 method=method,
                 query=matched_data.query,
                 params=matched_data.params,
