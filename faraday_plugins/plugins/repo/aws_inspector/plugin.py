@@ -59,16 +59,19 @@ class AWSInspectorJsonPlugin(PluginJsonFormat):
             elif isinstance(source_url, list):
                 vuln["ref"] += source_url
             for resource in finding["resources"]:
-                hostname = f"{finding['awsAccountId']} | {resource['id']}"
-                for ip in resource["details"]["awsEc2Instance"]["ipV4Addresses"]:
-                    h_id = self.createAndAddHost(
-                        name=ip,
-                        hostnames=hostname
-                    )
-                    self.createAndAddVulnToHost(
-                        host_id=h_id,
-                        **vuln
-                    )
+                name = f"{finding['awsAccountId']} | {resource['id']}"
+                hostnames = []
+                for hostname in resource["details"]["awsEc2Instance"]["ipV4Addresses"]:
+                    hostnames.append(hostname)
+                h_id = self.createAndAddHost(
+                    name=name,
+                    hostnames=hostnames
+                )
+                self.createAndAddVulnToHost(
+                    host_id=h_id,
+                    **vuln
+                )
+
 
 def createPlugin(*args, **kwargs):
     return AWSInspectorJsonPlugin(*args, **kwargs)
