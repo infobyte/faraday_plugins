@@ -146,18 +146,18 @@ class ProwlerPlugin(PluginJsonFormat):
             vuln_desc = f"{issue.description}\n{issue.risk}"
             resolution = parse_remediation(issue.remediation)
             self.createAndAddVulnToHost(
-                                        host_id=host_id,
-                                        name=issue.check_title,
-                                        desc=vuln_desc,
-                                        data=f"{issue.status_extended}",
-                                        severity=self.normalize_severity(issue.severity),
-                                        resolution=resolution,
-                                        run_date=issue.timestamp,
-                                        external_id=f"{self.name.upper()}-{issue.check_id}",
-                                        ref=[issue.doc_link],
-                                        policyviolations=parse_compliance(issue.compliance),
-                                        tags=issue.categories,
-                                        )
+                host_id=host_id,
+                name=issue.check_title,
+                desc=vuln_desc,
+                data=f"{issue.status_extended}",
+                severity=self.normalize_severity(issue.severity),
+                resolution=resolution,
+                run_date=issue.timestamp,
+                external_id=f"{self.name.upper()}-{issue.check_id}",
+                ref=[issue.doc_link],
+                policyviolations=parse_compliance(issue.compliance),
+                tags=issue.categories,
+            )
 
 
 def createPlugin(*args, **kwargs):
