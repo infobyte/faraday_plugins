@@ -145,7 +145,7 @@ class ProwlerPlugin(PluginJsonFormat):
 
             vuln_desc = f"{issue.description}\n{issue.risk}"
             resolution = parse_remediation(issue.remediation)
-            self.createAndAddVulnToService(
+            self.createAndAddVulnToHost(
                                         host_id=host_id,
                                         name=issue.check_title,
                                         desc=vuln_desc,
