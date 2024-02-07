@@ -143,19 +143,10 @@ class ProwlerPlugin(PluginJsonFormat):
                                                         f"- Region: {issue.region}\n"
                                                         f"ARN: {issue.resource_arn}")
 
-            service_id = self.createAndAddServiceToHost(
-                host_id,
-                issue.service,
-                '',
-                status='open',
-                version='',
-                description='')
-
             vuln_desc = f"{issue.description}\n{issue.risk}"
             resolution = parse_remediation(issue.remediation)
             self.createAndAddVulnToService(
                                         host_id=host_id,
-                                        service_id=service_id,
                                         name=issue.check_title,
                                         desc=vuln_desc,
                                         data=f"{issue.status_extended}",
