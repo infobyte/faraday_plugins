@@ -5,21 +5,20 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from dateutil.parser import parse
-import re
 import json
 from datetime import datetime
 from dataclasses import dataclass
-from faraday_plugins.plugins.plugin import PluginMultiLineJsonFormat
+from faraday_plugins.plugins.plugin import PluginJsonFormat
 
-__author__ = "Nicolas Rebagliati"
+__author__ = "Diego Nadares"
 __copyright__ = "Copyright (c) 2020, Infobyte LLC"
-__credits__ = ["Nicolas Rebagliati"]
+__credits__ = ["Diego Nadares", "Nicolas Rebagliati"]
 __license__ = ""
 __version__ = "0.0.1"
-__maintainer__ = "Nicolas Rebagliati"
-__email__ = "nrebagliati@faradaysec.com"
+__maintainer__ = "Diego Nadares"
+__email__ = "dnadares@faradaysec.com"
 __status__ = "Development"
-CHECK_NUMBER_REGEX = re.compile(r"^(\[check\d\])")
+
 
 @dataclass
 class Issue:
@@ -28,59 +27,100 @@ class Issue:
     severity: str
     scored: str
     account: str
-    message: str
-    control: str
+    description: str
     status: str
-    level: str
-    control_id: str
+    status_extended: str
+    check_title: str
+    check_id: str
     timestamp: datetime
     compliance: str
+    categories: str
     service: str
-    caf_epic: str
     risk: str
     doc_link: str
     remediation: str
+    resource_arn: str
     resource_id: str
 
 
 class ProwlerJsonParser:
 
     def parse_issues(self, records):
+        records = json.loads(records)
         for record in records:
-            json_data = json.loads(record)
-            region = json_data.get("Region", "AWS_REGION")
-            profile = json_data.get("Profile", "")
-            severity = json_data.get("Severity", "info").lower()
-            scored = json_data.get("Status", "")
-            account = json_data.get("Account Number", "")
-            message = json_data.get("Message", "")
-            control = CHECK_NUMBER_REGEX.sub("", json_data.get("Control", "")).strip()
-            status = json_data.get("Status", "")
-            level = json_data.get("Level", "")
-            control_id = json_data.get("Control ID", "")
-            timestamp = json_data.get("Timestamp", None)
+            region = record.get("Region", "AWS_REGION")
+            profile = record.get("Profile", "")
+            severity = record.get("Severity", "info").lower()
+            scored = record.get("Status", "")
+            account = record.get("AccountId", "")
+            description = record.get("Description", "")
+            status = record.get("Status", "")
+            status_extended = record.get("StatusExtended", "")
+            check_title = record.get("CheckTitle", "")
+            check_id = record.get("CheckID", "")
+            timestamp = record.get("AssessmentStartTime", None)
             if timestamp:
                 timestamp = parse(timestamp)
-            compliance = json_data.get("Compliance", "")
-            service = json_data.get("Service", "")
-            caf_epic = [json_data.get("CAF Epic", "")]
-            risk = json_data.get("Risk", "")
-            doc_link = json_data.get("Doc link", "")
-            remediation = json_data.get("Remediation", "")
-            resource_id = json_data.get("Resource ID", "")
+            compliance = record.get("Compliance", "")
+            categories = record.get("Categories", "")
+            service = record.get("ServiceName", "")
+            risk = record.get("Risk", "")
+            doc_link = record.get("RelatedUrl", "")
+            remediation = record.get("Remediation", "")
+            resource_arn = record.get("ResourceArn", "")
+            resource_id = record.get("ResourceId", "")
             if status == "FAIL":
-                self.issues.append(Issue(region=region, profile=profile, severity=severity, scored=scored,
-                                         account=account, message=message, control=control, status=status,
-                                         level=level, control_id=control_id, timestamp=timestamp, compliance=compliance,
-                                         service=service, caf_epic=caf_epic, risk=risk, doc_link=doc_link,
-                                         remediation=remediation, resource_id=resource_id))
+                self.issues.append(Issue(region=region, profile=profile, severity=severity,
+                                         scored=scored, categories=categories, account=account,
+                                         description=description, status=status, status_extended=status_extended,
+                                         check_title=check_title, check_id=check_id, timestamp=timestamp,
+                                         compliance=compliance, service=service, risk=risk,
+                                         doc_link=doc_link, remediation=remediation, resource_id=resource_id,
+                                         resource_arn=resource_arn)
+                                   )
 
     def __init__(self, json_output):
         self.issues = []
-        self.parse_issues(json_output.splitlines())
+        self.parse_issues(json_output)
 
 
-class ProwlerPlugin(PluginMultiLineJsonFormat):
+def parse_remediation(remediation):
+    recommendation = remediation.get("Recommendation", None)
+    if recommendation:
+        resolution_text = recommendation.get("Text", "")
+        resolution_url = recommendation.get("Url", "")
+
+    code = remediation.get("Code", None)
+    if code:
+        NativeIaC = code.get("NativeIaC", "")
+        Terraform = code.get("Terraform", "")
+        CLI = code.get("CLI", "")
+        Other = code.get("Other", "")
+
+    resolution = f"{resolution_text}"
+    if resolution_url:
+        resolution = f"{resolution}\n{resolution_url}"
+    if NativeIaC:
+        resolution = f"{resolution}\n{NativeIaC}"
+    if Terraform:
+        resolution = f"{resolution}\n{Terraform}"
+    if CLI:
+        resolution = f"{resolution}\n{CLI}"
+    if Other:
+        resolution = f"{resolution}\n{Other}"
+
+    return resolution
+
+
+def parse_compliance(compliance: dict) -> list:
+    compliance_str_list = []
+    for key, value in compliance.items():
+        for item in value:
+            compliance_str_list.append(f"{key}:{item}")
+    return compliance_str_list
+
+
+class ProwlerPlugin(PluginJsonFormat):
     """ Handle the AWS Prowler tool. Detects the output of the tool
     and adds the information to Faraday.
     """
@@ -91,23 +131,42 @@ class ProwlerPlugin(PluginMultiLineJsonFormat):
         self.name = "Prowler"
         self.plugin_version = "0.1"
         self.version = "0.0.1"
-        self.json_keys = {"Profile", "Account Number", "Region"}
+        self.json_keys = {"Profile", "AccountId", "OrganizationsInfo", "Region"}
 
     def parseOutputString(self, output, debug=False):
         parser = ProwlerJsonParser(output)
         for issue in parser.issues:
-            host_name = f"{issue.service}-{issue.account}-{issue.region}"
+            host_name = f"{issue.resource_id}"
             host_id = self.createAndAddHost(name=host_name,
-                                            description=f"AWS Service: {issue.service} - Account: {issue.account}"
-                                                        f" - Region: {issue.region}")
+                                            description=f"AWS Service: {issue.service} "
+                                                        f"- Account: {issue.account} "
+                                                        f"- Region: {issue.region}\n"
+                                                        f"ARN: {issue.resource_arn}")
 
-            vuln_desc = f"{issue.risk}\nCompliance: {issue.compliance}\nMessage: {issue.message}"
-            self.createAndAddVulnToHost(host_id=host_id, name=issue.control, desc=vuln_desc,
-                                        data=f"Resource ID: {issue.resource_id}",
-                                        severity=self.normalize_severity(issue.severity), resolution=issue.remediation,
-                                        run_date=issue.timestamp, external_id=f"{self.name.upper()}-{issue.control_id}",
+            service_id = self.createAndAddServiceToHost(
+                host_id,
+                issue.service,
+                '',
+                status='open',
+                version='',
+                description='')
+
+            vuln_desc = f"{issue.description}\n{issue.risk}"
+            resolution = parse_remediation(issue.remediation)
+            self.createAndAddVulnToService(
+                                        host_id=host_id,
+                                        service_id=service_id,
+                                        name=issue.check_title,
+                                        desc=vuln_desc,
+                                        data=f"{issue.status_extended}",
+                                        severity=self.normalize_severity(issue.severity),
+                                        resolution=resolution,
+                                        run_date=issue.timestamp,
+                                        external_id=f"{self.name.upper()}-{issue.check_id}",
                                         ref=[issue.doc_link],
-                                        policyviolations=issue.caf_epic)
+                                        policyviolations=parse_compliance(issue.compliance),
+                                        tags=issue.categories,
+                                        )
 
 
 def createPlugin(*args, **kwargs):
