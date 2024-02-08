@@ -1,3 +1,10 @@
+1.16.0 [Feb 8th, 2024]:
+---
+ * [ADD] New Snyk plugin added. #314
+ * [ADD] New faraday_json plugin. #324
+ * [ADD] Prowler plugin update in order to support the latest tool output format. Also rename the oldest plugin to prowler_legacy. #328
+ * [MOD] AWS Inspector's plugins modification. #322
+
 1.15.1 [Dec 22th, 2023]:
 ---
  * [FIX] Filter \x00 in nuclei response. #323
