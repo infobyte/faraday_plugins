@@ -1,9 +1,13 @@
+1.17.0 [Mar 12th, 2024]:
+---
+ * [ADD] Add hotspots logic for sonarqube plugin #321
+
 1.16.0 [Feb 8th, 2024]:
 ---
- * [ADD] New Snyk plugin added. #314
- * [ADD] New faraday_json plugin. #324
- * [ADD] Prowler plugin update in order to support the latest tool output format. Also rename the oldest plugin to prowler_legacy. #328
- * [MOD] AWS Inspector's plugins modification. #322
+ * [ADD] Add Snyk plugin. #314
+ * [MOD] Mod AWS Inspector's plugins. #322
+ * [ADD] Add faraday_json plugins. #324
+ * [ADD] Update prowler plugin to support the latest tool output format. Also rename the oldest plugin to prowler_legacy. #328
 
 1.15.1 [Dec 22th, 2023]:
 ---
