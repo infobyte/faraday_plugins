@@ -31,45 +31,65 @@ class AWSInspectorJsonPlugin(PluginJsonFormat):
     def parseOutputString(self, output):
         data = loads(output)
         for finding in data["findings"]:
-            vuln_details = finding["packageVulnerabilityDetails"]
-            name = finding["title"]
-            cve = vuln_details.get("vulnerabilityId", None)
-            if cve != name:
-                name = name.replace(f"{cve} - ", "")
-            vuln = {
-                "name": name,
-                "desc": finding["description"],
-                "ref": [],
-                "severity": finding['severity'].lower().replace("untriaged", "unclassified"),
-                "cve": cve
-            }
+            cve = []
+            refs = []
+            cvss2 = {}
+            cvss3 = {}
+            name = finding.get("title", "")
+            description = finding.get("description", "")
+            severity = finding.get('severity', 'unclassified').lower().replace("untriaged", "unclassified")
+
+            vulnerability_details = finding.get("packageVulnerabilityDetails")
+            if vulnerability_details:
+                cve = vulnerability_details.get("vulnerabilityId", None)
+                if cve != name:
+                    name = name.replace(f"{cve} - ", "")
+
+                refs = vulnerability_details.get("referenceUrls", [])
+                source_url = vulnerability_details.get("sourceUrl", "")
+                if isinstance(source_url, str):
+                    refs.append(source_url)
+                elif isinstance(source_url, list):
+                    refs += source_url
+
             if "inspectorScoreDetails" in finding and "adjustedCvss" in finding["inspectorScoreDetails"]:
-                if "3" in finding["inspectorScoreDetails"]["adjustedCvss"]["version"]:
-                    vuln["cvss3"] = {
-                        "vector_string": finding["inspectorScoreDetails"]["adjustedCvss"]["scoringVector"]
-                    }
-                elif "2" in finding["inspectorScoreDetails"]["adjustedCvss"]["version"]:
-                    vuln["cvss2"] = {
-                        "vector_string": finding["inspectorScoreDetails"]["adjustedCvss"]["scoringVector"]
-                    }
-            vuln["ref"] += vuln_details.get("referenceUrls", [])
-            source_url = vuln_details.get("sourceUrl", "")
-            if isinstance(source_url, str):
-                vuln["ref"].append(source_url)
-            elif isinstance(source_url, list):
-                vuln["ref"] += source_url
-            for resource in finding["resources"]:
-                name = f"{finding['awsAccountId']} | {resource['id']}"
+                version = finding["inspectorScoreDetails"]["adjustedCvss"].get("version")
+                if version:
+                    vector_string = finding["inspectorScoreDetails"]["adjustedCvss"]["scoringVector"]
+                    if "3" in version:
+                        cvss3 = {
+                            "vector_string": vector_string
+                        }
+                    elif "2" in version:
+                        cvss2 = {
+                            "vector_string": vector_string
+                        }
+
+            vulnerability = {
+                "name": name,
+                "desc": description,
+                "ref": refs,
+                "severity": severity,
+                "cve": cve,
+                "cvss2": cvss2,
+                "cvss3": cvss3
+            }
+
+            for resource in finding.get("resources", []):
+                resource_name = f"{finding.get('awsAccountId', '')} | {resource.get('id', '')}"
                 hostnames = []
-                for hostname in resource["details"]["awsEc2Instance"]["ipV4Addresses"]:
-                    hostnames.append(hostname)
-                h_id = self.createAndAddHost(
-                    name=name,
+                resource_details = resource.get("details", {})
+                if "awsEc2Instance" in resource_details:
+                    for hostname in resource_details["awsEc2Instance"].get("ipV4Addresses", []):
+                        hostnames.append(hostname)
+
+                host_id = self.createAndAddHost(
+                    name=resource_name,
                     hostnames=hostnames
                 )
                 self.createAndAddVulnToHost(
-                    host_id=h_id,
-                    **vuln
+                    host_id=host_id,
+                    **vulnerability
                 )
 
 
