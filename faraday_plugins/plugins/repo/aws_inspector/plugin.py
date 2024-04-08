@@ -29,12 +29,19 @@ class AWSInspectorJsonPlugin(PluginJsonFormat):
         self._temp_file_extension = "json"
 
     def parseOutputString(self, output):
+        # Useful docs about aws finding struct: https://docs.aws.amazon.com/inspector/v2/APIReference/API_Finding.html
         data = loads(output)
         for finding in data["findings"]:
             cve = []
             refs = []
             cvss2 = {}
             cvss3 = {}
+            status = finding.get("status", "ACTIVE")
+
+            # AWS possible status are ACTIVE | SUPPRESSED | CLOSED
+            if status != 'ACTIVE':
+                continue
+
             name = finding.get("title", "")
             description = finding.get("description", "")
             severity = finding.get('severity', 'unclassified').lower().replace("untriaged", "unclassified")
@@ -72,7 +79,7 @@ class AWSInspectorJsonPlugin(PluginJsonFormat):
                 "severity": severity,
                 "cve": cve,
                 "cvss2": cvss2,
-                "cvss3": cvss3
+                "cvss3": cvss3,
             }
 
             for resource in finding.get("resources", []):
