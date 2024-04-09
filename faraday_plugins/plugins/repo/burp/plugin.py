@@ -7,7 +7,7 @@ See the file 'doc/LICENSE' for the license information
 import base64
 import distutils.util  # pylint: disable=import-error
 import re
-import xml.etree.ElementTree as ET
+import lxml.etree as ET
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup, Comment
