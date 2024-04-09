@@ -17,7 +17,7 @@ from faraday_plugins.plugins.plugins_utils import CVE_regex, CWE_regex
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
-__credits__ = ["Francisco Amato", "Micaela Ranea Sanchez"]
+__credits__ = ["Francisco Amato", "Micaela Ranea Sanchez", "Dante Acosta"]
 __license__ = ""
 __version__ = "1.1.0"
 __maintainer__ = "Francisco Amato"
@@ -43,7 +43,7 @@ class BurpXmlParser:
         self.host = None
 
         tree = self.parse_xml(xml_output)
-        if tree:
+        if tree is not None:
             self.items = [data for data in self.get_items(tree)]
         else:
             self.items = []
