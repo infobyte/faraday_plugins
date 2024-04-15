@@ -4,11 +4,11 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+import re
 import base64
 import distutils.util  # pylint: disable=import-error
-import re
-import lxml.etree as ET
 from urllib.parse import urlsplit
+import lxml.etree as ET
 
 from bs4 import BeautifulSoup, Comment
 
@@ -17,7 +17,7 @@ from faraday_plugins.plugins.plugins_utils import CVE_regex, CWE_regex
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
-__credits__ = ["Francisco Amato", "Micaela Ranea Sanchez"]
+__credits__ = ["Francisco Amato", "Micaela Ranea Sanchez", "Dante Acosta"]
 __license__ = ""
 __version__ = "1.1.0"
 __maintainer__ = "Francisco Amato"
@@ -110,7 +110,7 @@ class Item:
         remediation = self.do_clean(item_node.find('remediationBackground'))
         background = self.do_clean(item_node.find('issueBackground'))
         self.references = self.do_clean(item_node.find('references'))
-        self.vulnClass = self.do_clean(item_node.find('vulnerabilityClassifications'))
+        self.vuln_class = self.do_clean(item_node.find('vulnerabilityClassifications'))
         self.cve = []
         if background:
             cve = CVE_regex.search(background)
@@ -220,8 +220,8 @@ class BurpPlugin(PluginXMLFormat):
             if item.references:
                 ref += self.get_url(item.references)
             cwe = []
-            if item.vulnClass:
-                for cwe_ref in self.get_ref(item.vulnClass):
+            if item.vuln_class:
+                for cwe_ref in self.get_ref(item.vuln_class):
                     if CWE_regex.search(cwe_ref):
                         cwe.append(CWE_regex.search(cwe_ref).group())
             resolution = self.removeHtml(item.remediation) if item.remediation else ""
