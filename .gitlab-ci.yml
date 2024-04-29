@@ -48,6 +48,9 @@ bandit:
   tags:
     - faradaytests
   script:
+    - pip3 install virtualenv
+    - virtualenv -p python3 faraday_venv
+    - source faraday_venv/bin/activate
     - pip3 install bandit
     - mkdir /results
     - "bandit -r ${CI_PROJECT_DIR} -o /results/output.xml -f xml --skip B101,B104,B410,B405,B314,B320"
@@ -58,13 +61,17 @@ bandit:
     - apt-get install software-properties-common -y
     - apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com focal main"
     - apt update
+    - apt install vault -y
+    - !reference [ .get_secrets, script ]
+    - setcap cap_ipc_lock= /usr/bin/vault
     - pip3 install faraday-cli
-    - faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --vuln-tag "$CI_PROJECT_NAME" --tag-vuln "$CI_COMMIT_REF_NAME"
+    - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE ); else (echo 'no vulns dettected' && exit 0); fi
+    #- faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --vuln-tag "$CI_PROJECT_NAME" --tag-vuln "$CI_COMMIT_REF_NAME"
     #- faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --tag-vuln $CI_PROJECT_NAME,$CI_COMMIT_REF_NAME
     #- if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --tag-vuln $CI_PROJECT_NAME --tag-vuln $CI_COMMIT_REF_NAME); else (echo 'no vulns dettected' && exit 0); fi    
     # - apt install vault -y
     # - setcap cap_ipc_lock= /usr/bin/vault
-    - !reference [ .get_secrets, script ]
+    #- !reference [ .get_secrets, script ]
   rules:
     - when: on_success
 
