@@ -56,10 +56,12 @@ bandit:
     - "bandit -r ${CI_PROJECT_DIR} -o /results/output.xml -f xml --skip B101,B104,B410,B405,B314,B320"
     - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (cat /results/output.xml); fi
   after_script:
-    - curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+    - wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    #- curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
     - apt update
     - apt-get install software-properties-common -y
-    - apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com focal main"
+    - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+    #- apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com focal main"
     - apt update
     - apt install vault -y
     - !reference [ .get_secrets, script ]
