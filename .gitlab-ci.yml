@@ -64,12 +64,12 @@ bandit:
     #- apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com focal main"
     - apt update
     - apt install vault -y
-    - !reference [ .get_secrets, script ]
-    #- setcap cap_ipc_lock= /usr/bin/vault
     - setcap -r /usr/bin/vault
     - ls -la /usr/bin/vault 
     - id
     - chmod +x /usr/bin/vault
+    - !reference [ .get_secrets, script ]
+    #- setcap cap_ipc_lock= /usr/bin/vault
     #- setcap cap_ipc_lock=+ep /usr/bin/vault
     - pip3 install faraday-cli
     - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE ); else (echo 'no vulns dettected' && exit 0); fi
