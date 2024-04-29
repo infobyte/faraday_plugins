@@ -63,16 +63,9 @@ bandit:
     - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" |  tee /etc/apt/sources.list.d/hashicorp.list
     - apt update &&  apt install vault
     - setcap -r /usr/bin/vault
-    #- setcap cap_ipc_lock= /usr/bin/vault
-    -  pip3 install faraday-cli
-    #- if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE ); else (echo 'no vulns dettected' && exit 0); fi
-    #- faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --vuln-tag "$CI_PROJECT_NAME" --tag-vuln "$CI_COMMIT_REF_NAME"
-    #- faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --tag-vuln $CI_PROJECT_NAME,$CI_COMMIT_REF_NAME
-    #- if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --tag-vuln $CI_PROJECT_NAME --tag-vuln $CI_COMMIT_REF_NAME); else (echo 'no vulns dettected' && exit 0); fi    
-    # - apt install vault -y
-    # - setcap cap_ipc_lock= /usr/bin/vault
+    - pip3 install faraday-cli
     - !reference [ .get_secrets, script ]
-    - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE ); else (echo 'no vulns dettected' && exit 0); fi
+    - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --tag-vuln $CI_PROJECT_NAME --tag-vuln $CI_COMMIT_REF_NAME); else (echo 'no vulns detected' && exit 0); fi
   rules:
     - when: on_success
 
