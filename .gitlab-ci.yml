@@ -67,6 +67,8 @@ bandit:
     - !reference [ .get_secrets, script ]
     #- setcap cap_ipc_lock= /usr/bin/vault
     - setcap -r /usr/bin/vault
+    - ls -la /usr/bin/vault 
+    - id
     - chmod +x /usr/bin/vault
     #- setcap cap_ipc_lock=+ep /usr/bin/vault
     - pip3 install faraday-cli
