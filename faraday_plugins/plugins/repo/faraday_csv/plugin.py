@@ -208,7 +208,7 @@ class CSVParser:
         }
 
         if "web_vulnerability" in row:
-            self.data['web_vulnerability'] = True if row['web_vulnerability'] == "True" else False
+            self.data['web_vulnerability'] = True if row['web_vulnerability'].capitalize() == "True" else False
         else:
             self.data['web_vulnerability'] = False
 
@@ -216,9 +216,11 @@ class CSVParser:
             if item in row:
                 if "impact_" in item:
                     impact = re.match(r"impact_(\w+)", item).group(1)
-                    impact_dict[impact] = True if row[item] == "True" else False
+                    impact_dict[impact] = True if row[item].capitalize() == "True" else False
                 elif item in ["refs", "policyviolations", "cve", "tags"]:
                     self.data[item] = literal_eval(row[item])
+                if "confirmed" in item:
+                    self.data[item] = True if row[item].capitalize() == "True" else False
                 else:
                     self.data[item] = row[item]
             else:
@@ -319,7 +321,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         resolution=item['resolution'],
                         data=item['data'],
                         external_id=item['external_id'],
-                        confirmed=item['confirmed'] or False,
+                        confirmed=item['confirmed'],
                         status=item['status'] or "",
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
@@ -342,7 +344,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         resolution=item['resolution'],
                         data=item['data'],
                         external_id=item['external_id'],
-                        confirmed=item['confirmed'] or False,
+                        confirmed=item['confirmed'],
                         status=item['status'] or "",
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
@@ -373,7 +375,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         query=item['query'],
                         data=item['data'],
                         external_id=item['external_id'],
-                        confirmed=item['confirmed'] or False,
+                        confirmed=item['confirmed'],
                         status=item['status'] or "",
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
