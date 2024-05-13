@@ -219,7 +219,7 @@ class CSVParser:
                     impact_dict[impact] = True if row[item].capitalize() == "True" else False
                 elif item in ["refs", "policyviolations", "cve", "tags"]:
                     self.data[item] = literal_eval(row[item])
-                if "confirmed" in item:
+                elif "confirmed" in item:
                     self.data[item] = True if row[item].capitalize() == "True" else False
                 else:
                     self.data[item] = row[item]
