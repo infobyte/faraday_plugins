@@ -1,3 +1,9 @@
+1.18.0 [May 22th, 2024]:
+---
+ * [FIX] Fix key error when `packageVulnerabilityDetails` key was not in the file. #331
+ * [FIX] Addressed a bug where Burp plugin output would display null data in cases of encountering a malformed XML token from the report. #333
+ * [FIX] Previously, CSV files edited in tools like Mac Numbers would transform boolean values to uppercase. This issue has been addressed within the faraday_csv plugin, ensuring accurate comparison. #336
+
 1.17.0 [Mar 12th, 2024]:
 ---
  * [ADD] Add hotspots logic for sonarqube plugin #321
@@ -240,12 +246,12 @@ remove [check#] from tittle
 
 1.5.3 [Sep 7th, 2021]:
 ---
- * Adding support for running nuclei through command / faraday-cli 
+ * Adding support for running nuclei through command / faraday-cli
  * Fix missing references in nuclei
 
 1.5.2 [Aug 9th, 2021]:
 ---
- * add new structure acunetix 
+ * add new structure acunetix
 
 1.5.1 [Jul 27th, 2021]:
 ---
@@ -309,7 +315,7 @@ sacar unknown de version=
 ---
  * ADD microsoft baseline security analyzer plugin
  * ADD nextnet plugin
- * ADD openscap plugin 
+ * ADD openscap plugin
  * FIX old versions of Nessus plugins bugs
 
 1.4.0 [Dec 23rd, 2020]:
@@ -323,7 +329,7 @@ sacar unknown de version=
 1.4.0b1 [Dec 14th, 2020]:
 ---
  * Add new plugin base class, for multi line json
- * New ncrack plugin 
+ * New ncrack plugin
  * New nuclei plugin
  * New sslyze json plugin
  * New WhatWeb plugin
@@ -346,11 +352,10 @@ sacar unknown de version=
  * Bug fix: Openvas Plugin - Import xml from OpenVas doesnt work
  * Bug fix: QualysWebApp Plugin, error in get info OPERATING_SYSTEM
  * Fix Hydra plugin to resolve ip address
- * Fix Nessus mod severity HIGH for Low 
+ * Fix Nessus mod severity HIGH for Low
  * Bug Fix: Detect plugins AWS Prowler
  * Fix broken xml on nmap plugin
  * Add new rdpscan plugin
  * UPDATE xml report to appscan
  * Update Readme
  * Fix how ZAP genereate vulns
-
