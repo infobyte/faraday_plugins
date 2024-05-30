@@ -30,7 +30,7 @@ class NaabuPlugin(PluginMultiLineJsonFormat):
         self.name = 'Naabu'
         self.plugin_version = '0.1'
         self.version = '2.0.3'
-        self.json_keys = {'host', 'ip', 'port'}
+        self.json_keys = {'tls', 'protocol'}
         self._command_regex = re.compile(r'^(sudo naabu|naabu|\.\/nmap)\s+.*?')
 
     def parseOutputString(self, output, debug=False):
