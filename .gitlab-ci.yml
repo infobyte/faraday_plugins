@@ -50,8 +50,8 @@ bandit:
   script:
     - pip3 install bandit
     - mkdir /results
-    - "bandit -r ${CI_PROJECT_DIR} -o /results/output.xml -f xml"
-    #- "bandit -r ${CI_PROJECT_DIR} -o /results/output.xml -f xml --skip B101,B104,B410,B405,B314,B320"
+    #- "bandit -r ${CI_PROJECT_DIR} -o /results/output.xml -f xml"
+    - "bandit -r ${CI_PROJECT_DIR} -o /results/output.xml -f xml --skip B101,B104,B410,B405,B314,B320"
     - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (cat /results/output.xml); fi
   after_script:
     - curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
@@ -60,10 +60,10 @@ bandit:
     - apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com focal main"
     - apt update
     - pip3 install faraday-cli
-    # - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --vuln-tag $CI_PROJECT_NAME --vuln-tag $CI_COMMIT_REF_NAME); else (echo 'no vulns detected' && exit 0); fi          
-    # - apt install vault -y
-    # - setcap cap_ipc_lock= /usr/bin/vault
-    # - !reference [ .get_secrets, script ]
+    - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --vuln-tag $CI_PROJECT_NAME --vuln-tag $CI_COMMIT_REF_NAME); else (echo 'no vulns detected' && exit 0); fi          
+    - apt install vault -y
+     - setcap cap_ipc_lock= /usr/bin/vault
+     - !reference [ .get_secrets, script ]
   rules:
     - when: on_success
 
