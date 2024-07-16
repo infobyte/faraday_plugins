@@ -1,3 +1,7 @@
+1.18.1 [Jul 11th, 2024]:
+---
+ * [MOD] Naabu reports changed their JSON structure, so new keys were added to detect the new report structure. #339
+
 1.18.0 [May 22th, 2024]:
 ---
  * [FIX] Fix key error when `packageVulnerabilityDetails` key was not in the file. #331
