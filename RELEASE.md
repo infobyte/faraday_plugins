@@ -1,3 +1,7 @@
+1.18.2 [Jul 24th, 2024]:
+---
+ * [FIX] Added validations for empty lines and multiple fields including lists. #343
+
 1.18.1 [Jul 11th, 2024]:
 ---
  * [MOD] Naabu reports changed their JSON structure, so new keys were added to detect the new report structure. #339
