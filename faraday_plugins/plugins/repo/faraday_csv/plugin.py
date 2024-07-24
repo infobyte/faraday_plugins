@@ -84,6 +84,10 @@ class CSVParser:
                 'row_with_service': False,
                 'row_with_vuln': False
             }
+            # verify at least one field has data
+            if not any(row.values()):
+                self.logger.warning("Row with empty data found. Skipping...")
+                continue
             self.build_host(row)
             if "service" in obj_to_import:
                 if row['port'] and row['protocol']:
@@ -174,7 +178,7 @@ class CSVParser:
 
             if item in row:
                 if item == "host_tags":
-                    self.data[item] = literal_eval(row[item])
+                    self.data[item] = literal_eval(row[item] if row[item] else '[]')
                 else:
                     self.data[item] = row[item]
             else:
@@ -208,7 +212,7 @@ class CSVParser:
         }
 
         if "web_vulnerability" in row:
-            self.data['web_vulnerability'] = True if row['web_vulnerability'] == "True" else False
+            self.data['web_vulnerability'] = True if row['web_vulnerability'].capitalize() == "True" else False
         else:
             self.data['web_vulnerability'] = False
 
@@ -216,9 +220,11 @@ class CSVParser:
             if item in row:
                 if "impact_" in item:
                     impact = re.match(r"impact_(\w+)", item).group(1)
-                    impact_dict[impact] = True if row[item] == "True" else False
+                    impact_dict[impact] = True if row[item].capitalize() == "True" else False
                 elif item in ["refs", "policyviolations", "cve", "tags"]:
-                    self.data[item] = literal_eval(row[item])
+                    self.data[item] = literal_eval(row[item] if row[item] else '[]')
+                elif "confirmed" in item:
+                    self.data[item] = True if row[item].capitalize() == "True" else False
                 else:
                     self.data[item] = row[item]
             else:
@@ -250,6 +256,8 @@ class CSVParser:
 
     @staticmethod
     def parse_custom_fields(row, custom_fields_names):
+        if not row:
+            return {}
         custom_fields = {}
         for cf_name in custom_fields_names:
             cf_value = row["cf_" + cf_name]
@@ -319,7 +327,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         resolution=item['resolution'],
                         data=item['data'],
                         external_id=item['external_id'],
-                        confirmed=item['confirmed'] or False,
+                        confirmed=item['confirmed'],
                         status=item['status'] or "",
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
@@ -342,7 +350,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         resolution=item['resolution'],
                         data=item['data'],
                         external_id=item['external_id'],
-                        confirmed=item['confirmed'] or False,
+                        confirmed=item['confirmed'],
                         status=item['status'] or "",
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
@@ -373,7 +381,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         query=item['query'],
                         data=item['data'],
                         external_id=item['external_id'],
-                        confirmed=item['confirmed'] or False,
+                        confirmed=item['confirmed'],
                         status=item['status'] or "",
                         easeofresolution=item['easeofresolution'] or None,
                         impact=item['impact'],
