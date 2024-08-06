@@ -14,11 +14,11 @@ from faraday_plugins.plugins.plugin import PluginCSVFormat
 
 
 severity_map = {
-        'CRITICAL': 'critical',
-        'HIGH': 'high',
-        'MEDIUM': 'medium',
-        'LOW': 'low'
-    }
+    'CRITICAL': 'critical',
+    'HIGH': 'high',
+    'MEDIUM': 'medium',
+    'LOW': 'low'
+}
 
 
 class owaspDependencyCheckPlugin(PluginCSVFormat):
