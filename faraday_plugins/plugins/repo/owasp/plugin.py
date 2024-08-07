@@ -59,7 +59,7 @@ class owaspDependencyCheckPlugin(PluginCSVFormat):
             # Create vulnerability
             self.createAndAddVulnToHost(host_id,
                                         name=vulnerability_name,
-                                        desc=description,
+                                        desc=f"{description} - DependencyName: {dep_name}, DependencyPath: {dep_path}",
                                         severity=severity_map.get(severity, 'info'),
                                         cve=cve,
                                         cwe=cwe,
