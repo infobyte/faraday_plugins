@@ -4,15 +4,13 @@ Copyright (c) 2021 Faraday Security LLC (https://www.faradaysec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-import socket
 import json
-import re
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 
 
 class GitleaksPlugin(PluginJsonFormat):
     """
-    Parse Naabu (from Project Discovery) scanner JSON output
+    Parse gitleaks JSON output
     """
 
     def __init__(self, *arg, **kwargs):
