@@ -45,16 +45,16 @@ class GitleaksPlugin(PluginJsonFormat):
         for leak in json_output:
 
             description = json.dumps({
-                    'Match': leak.get('Match'),
-                    'Secret': leak.get('Secret'),
-                    'Commit': leak.get('Commit'),
-                    'Author': leak.get('Author'),
-                    'Email': leak.get('Email'),
-                    'Date': leak.get('Date'),
-                    'Tags': leak.get('Tags'),
-                    'RuleID': leak.get('RuleID'),
-                    'Fingerprint': leak.get('Fingerprint'),
-                })
+                'Match': leak.get('Match'),
+                'Secret': leak.get('Secret'),
+                'Commit': leak.get('Commit'),
+                'Author': leak.get('Author'),
+                'Email': leak.get('Email'),
+                'Date': leak.get('Date'),
+                'Tags': leak.get('Tags'),
+                'RuleID': leak.get('RuleID'),
+                'Fingerprint': leak.get('Fingerprint'),
+            })
 
             host_id = self.createAndAddHost(
                 name=leak.get('File'),
