@@ -44,27 +44,26 @@ class GitleaksPlugin(PluginJsonFormat):
         json_output = json.loads(output)
         for leak in json_output:
 
-            description = json.dumps({
-                'Match': leak.get('Match'),
-                'Secret': leak.get('Secret'),
-                'Commit': leak.get('Commit'),
-                'Author': leak.get('Author'),
-                'Email': leak.get('Email'),
-                'Date': leak.get('Date'),
-                'Tags': leak.get('Tags'),
-                'RuleID': leak.get('RuleID'),
-                'Fingerprint': leak.get('Fingerprint'),
-            })
+            description = f"Match: {leak.get('Match')}\n" \
+                          f"Secret: {leak.get('Secret')}\n" \
+                          f"Commit: {leak.get('Commit')}\n" \
+                          f"Author: {leak.get('Author')}\n" \
+                          f"Email: {leak.get('Email')}\n" \
+                          f"Date: {leak.get('Date')}\n" \
+                          f"RuleID: {leak.get('RuleID')}\n" \
+                          f"Fingerprint: {leak.get('Fingerprint')}\n"
 
             host_id = self.createAndAddHost(
                 name=leak.get('File'),
-                hostnames=[leak.get('File')])
+            )
+            # TODO SEVERITY
             self.createAndAddVulnToHost(
                 host_id,
                 name=leak.get('Description'),
                 desc=description,
                 severity='high',
                 status='confirmed',
+                tags=leak.get('Tags'),
             )
 
 
