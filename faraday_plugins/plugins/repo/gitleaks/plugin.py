@@ -19,7 +19,26 @@ class GitleaksPlugin(PluginJsonFormat):
         self.name = 'Gitleaks'
         self.plugin_version = '0.1'
         self.version = '1.0.0'
-        self.json_keys = {'Match', 'Secret', 'Commit', 'Author', 'Email', 'Date', 'RuleID', 'Fingerprint', 'File', 'Description'}
+        self.json_keys = {
+            'Description',
+            'StartLine',
+            'EndLine',
+            'StartColumn',
+            'EndColumn',
+            'Match',
+            'Secret',
+            'File',
+            'SyslinkFile',
+            'Commit',
+            'Entropy',
+            'Author,'
+            'Email',
+            'Date',
+            'Message',
+            'Tags',
+            'RuleID',
+            'Fingerprint',
+        }
 
     def parseOutputString(self, output, debug=False):
         json_output = json.loads(output)
@@ -37,12 +56,14 @@ class GitleaksPlugin(PluginJsonFormat):
             host_id = self.createAndAddHost(
                 name=leak.get('File'),
             )
+            # TODO SEVERITY
             self.createAndAddVulnToHost(
                 host_id,
                 name=leak.get('Description'),
                 desc=description,
-                severity='informational',
-                status='open',
+                severity='high',
+                status='confirmed',
+                tags=leak.get('Tags'),
             )
 
 
