@@ -49,8 +49,8 @@ class owaspDependencyCheckPlugin(PluginCSVFormat):
             cve = row.get('CVE')
             cwe = row.get('CWE')
             severity = row.get('CVSSv3_BaseSeverity')
-            cvss3_base = row.get('CVSSv3_BaseScore')
-            cvss2_score = row.get('CVSSv2_Score')
+            cvss3 = row.get('CVSSv3')
+            cvss2 = row.get('CVSSv2')
             vulnerability_name = row.get('Vulnerability')
 
             # Create host
@@ -59,12 +59,12 @@ class owaspDependencyCheckPlugin(PluginCSVFormat):
             # Create vulnerability
             self.createAndAddVulnToHost(host_id,
                                         name=vulnerability_name,
-                                        desc=f"{description} - DependencyName: {dep_name}, DependencyPath: {dep_path}",
+                                        desc=f"{description}\nDependencyName: {dep_name}\nDependencyPath: {dep_path}",
                                         severity=severity_map.get(severity, 'info'),
                                         cve=cve,
                                         cwe=cwe,
-                                        cvss3={"base_score": cvss3_base},
-                                        cvss2={"base_score": cvss2_score},
+                                        cvss3={"vector_string": cvss3},
+                                        cvss2={"vector_string": cvss2},
                                         )
 
 
