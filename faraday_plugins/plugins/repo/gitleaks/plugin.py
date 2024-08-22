@@ -19,6 +19,7 @@ class GitleaksPlugin(PluginJsonFormat):
         self.name = 'Gitleaks'
         self.plugin_version = '0.1'
         self.version = '1.0.0'
+        self.json_keys = {'Match', 'Secret', 'Commit', 'Author', 'Email', 'Date', 'RuleID', 'Fingerprint', 'File', 'Description'}
 
     def parseOutputString(self, output, debug=False):
         json_output = json.loads(output)
