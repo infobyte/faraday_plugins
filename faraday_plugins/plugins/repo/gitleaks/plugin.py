@@ -37,7 +37,6 @@ class GitleaksPlugin(PluginJsonFormat):
             host_id = self.createAndAddHost(
                 name=leak.get('File'),
             )
-            # TODO SEVERITY
             self.createAndAddVulnToHost(
                 host_id,
                 name=leak.get('Description'),
