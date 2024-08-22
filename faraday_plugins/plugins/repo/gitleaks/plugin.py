@@ -41,7 +41,7 @@ class GitleaksPlugin(PluginJsonFormat):
                 host_id,
                 name=leak.get('Description'),
                 desc=description,
-                severity='high',
+                severity='informational',
                 status='open',
             )
 
