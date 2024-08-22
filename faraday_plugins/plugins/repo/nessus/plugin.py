@@ -144,6 +144,9 @@ class NessusPlugin(PluginXMLFormat):
         except Exception as e:
             self.logger.error(str(e))
             return None
+        if not parser.report:
+            self.logger.error('Parser did not find any reports')
+            return 1  # this value is used to exit the execution of the executor. Can't use False or None because if this function doesn't fail, it returns none
         report_hosts = parser.report.report_hosts
         if report_hosts:
             for host in report_hosts:
