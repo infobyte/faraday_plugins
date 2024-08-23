@@ -1,3 +1,9 @@
+1.19.0 [Aug 23rd, 2024]:
+---
+ * [ADD] Added owasp dependency check. #100
+ * [ADD] Added gitleaks plugin. #342
+ * [FIX] Nessus plugin crashed when parsing tenableio reports without vulnerabilities, so a check for that was added. #341
+
 1.18.2 [Jul 24th, 2024]:
 ---
  * [FIX] Added validations for empty lines and multiple fields including lists. #343
