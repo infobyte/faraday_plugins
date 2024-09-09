@@ -6,6 +6,8 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import json
+from typing import Callable
+
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 
 __author__ = "Blas Moyano"
@@ -20,8 +22,9 @@ __status__ = "Development"
 
 class SslyzeJsonParser:
 
-    def __init__(self, json_output, resolve_hostname):
-        self.resolve_hostname = resolve_hostname
+    def __init__(self, json_output, hostname_resolution, hostname_resolver: Callable[[str], str] = None):
+        self.hostname_resolution = hostname_resolution
+        self.resolve_hostname = hostname_resolver
         json_sslyze = json.loads(json_output)
         scan_result = json_sslyze.get('server_scan_results')
         self.list_vul = self.get_vuln(scan_result)
@@ -197,7 +200,7 @@ class SslyzePlugin(PluginJsonFormat):
         self._temp_file_extension = "json"
 
     def parseOutputString(self, output):
-        parser = SslyzeJsonParser(output, self.resolve_hostname)
+        parser = SslyzeJsonParser(output, self.hostname_resolution, hostname_resolver=self.resolve_hostname)
 
         for info_sslyze in parser.list_vul:
             info_sslyze['host_info'].get('hostname')
