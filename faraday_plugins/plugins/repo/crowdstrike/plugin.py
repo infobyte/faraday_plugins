@@ -37,7 +37,7 @@ class Crowdstrike(PluginJsonFormat):
     def parseOutputString(self, output):
         parser = loads(output)
         for site in parser:
-            site_name = site.get('site_name')
+            site_name = site.get('local_ip')
             hostname = site.get('hostname')
             host_tags = site.get('host_tags')
             os_version = site.get('os_version')
