@@ -1,3 +1,9 @@
+1.19.1 [Sep 20th, 2024]:
+---
+ * [MOD] Updated the SSLyze JSON parser to support and correctly process scan results from SSLyze version 6. #349
+ * [FIX] Crowdstrike IP resolution for asset. #350
+ * [FIX] Corrected a hostname resolution issue that was causing traceback errors and malfunctioning of the plugin. This fix ensures proper hostname resolution and stabilizes plugin performance. #351
+
 1.19.0 [Aug 23rd, 2024]:
 ---
  * [ADD] Added owasp dependency check. #100
