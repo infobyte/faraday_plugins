@@ -214,7 +214,6 @@ class BurpPlugin(PluginXMLFormat):
             desc = self.removeHtml(desc)
             data = ""
             if item.detail:
-                desc += self.removeHtml(item.detail)
                 data = self.removeHtml(item.detail)
             ref = []
             if item.references:
