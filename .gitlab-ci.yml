@@ -48,6 +48,8 @@ bandit:
   allow_failure: true
   tags:
     - faradaytests
+  extends:
+    - .get-secrets
   script:
     - pip3 install virtualenv
     - virtualenv -p python3 faraday_venv
