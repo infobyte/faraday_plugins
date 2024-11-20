@@ -50,7 +50,7 @@ bandit:
   tags:
     - faradaytests
   extends:
-    - .get-secrets
+    - .gitlab/ci/get-secrets
   script:
     - pip3 install virtualenv
     - virtualenv -p python3 faraday_venv
