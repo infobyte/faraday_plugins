@@ -1,10 +1,11 @@
 variables:
-    VAULT_ROLE: 'python-sast-readonly'
-    VAULT_ADDR: 'https://tluav-lb.faradaysec.com'
-    VAULT_SECRET_PATH: 'gitlab/SAST'
+  VAULT_ROLE: 'python-sast-readonly'
+  VAULT_ADDR: 'https://tluav-lb.faradaysec.com'
+  VAULT_SECRET_PATH: 'gitlab/SAST'
 
 
 include:
+  - local: .gitlab/ci/get-secrets.yml
   - local: .gitlab/ci/fetch-secrets.yml
 
 stages:
@@ -67,7 +68,6 @@ bandit:
     - apt update &&  apt install vault
     - setcap -r /usr/bin/vault
     - pip3 install faraday-cli
-    - !reference [ .get_secrets, script ]
     - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --vuln-tag $CI_PROJECT_NAME --vuln-tag $CI_COMMIT_REF_NAME); else (echo 'no vulns detected' && exit 0); fi
   rules:
     - when: on_success
@@ -110,13 +110,13 @@ test_performance:
       when: on_success
 
 publish_pypi:
-    image: python:3.11
-    stage: publish
-    script:
-      - apt-get update -qy
-      - apt-get install twine -y
-      - python setup.py sdist bdist_wheel
-      - twine upload -u $PYPI_USER -p $PYPI_PASS dist/* --verbose
-    rules:
-      - if: '$CI_COMMIT_TAG'
-        when: on_success
+  image: python:3.11
+  stage: publish
+  script:
+    - apt-get update -qy
+    - apt-get install twine -y
+    - python setup.py sdist bdist_wheel
+    - twine upload -u $PYPI_USER -p $PYPI_PASS dist/* --verbose
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: on_success
