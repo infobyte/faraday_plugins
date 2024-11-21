@@ -1,3 +1,7 @@
+1.20.0 [Nov 21st, 2024]:
+---
+ * [FIX] Duplicate detection vulnerability in the Burp plugin.  #354
+
 1.19.1 [Sep 20th, 2024]:
 ---
  * [MOD] Updated the SSLyze JSON parser to support and correctly process scan results from SSLyze version 6. #349
