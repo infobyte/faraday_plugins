@@ -1,11 +1,11 @@
 variables:
-    VAULT_ROLE: 'python-sast-readonly'
-    VAULT_ADDR: 'https://tluav-lb.faradaysec.com'
-    VAULT_SECRET_PATH: 'gitlab/SAST'
+  VAULT_SERVER_URL: https://tluav-lb.faradaysec.com
+  VAULT_AUTH_ROLE: python-sast-readonly
+  VAULT_AUTH_PATH: jwt
 
 
 include:
-  - local: .gitlab/ci/fetch-secrets.yml
+  - local: .gitlab/ci/get-secrets.yml
 
 stages:
   - SAST
@@ -23,6 +23,12 @@ workflow:
     - if: $CI_MERGE_REQUEST_ID
       when: never
     - when: always
+
+.parse-secrets: &parse-secrets
+- DEVSECOPS_WORKSPACE=$(cat $DEVSECOPS_WORKSPACE)
+- FARADAY_PASSWORD=$(cat $FARADAY_PASSWORD)
+- FARADAY_URL=$(cat $FARADAY_URL)
+- FARADAY_USER=$(cat $FARADAY_USER)
 
 .install_faraday_venv: &install_faraday_venv
 - pip3 install virtualenv
@@ -45,27 +51,28 @@ workflow:
 bandit:
   stage: SAST
   image: python:3.11
-  allow_failure: true
   tags:
     - faradaytests
+  extends:
+    - .get-secrets
   script:
     - pip3 install virtualenv
     - virtualenv -p python3 faraday_venv
     - source faraday_venv/bin/activate
     - pip3 install bandit
     - mkdir /results
-    - "bandit -r ${CI_PROJECT_DIR} -o /results/output.xml -f xml --skip B101,B104,B410,B405,B314,B320"
+    - "bandit -r ${CI_PROJECT_DIR}/faraday-plugins -o /results/output.xml -f xml --skip B101,B104,B410,B405,B314,B320"
     - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (cat /results/output.xml); fi
   after_script:
+    - *parse-secrets
     - apt update && apt-get install lsb-release gpg wget -y
     - apt-get install software-properties-common -y
     - wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
     - gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint
-    - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" |  tee /etc/apt/sources.list.d/hashicorp.list
-    - apt update &&  apt install vault
-    - setcap -r /usr/bin/vault
+    - echo "deb [ signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg ] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+    - apt update &&  apt install vault -y
+    - setcap cap_ipc_lock= /usr/bin/vault
     - pip3 install faraday-cli
-    - !reference [ .get_secrets, script ]
     - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD && faraday-cli tool report /results/output.xml -w $DEVSECOPS_WORKSPACE --vuln-tag $CI_PROJECT_NAME --vuln-tag $CI_COMMIT_REF_NAME); else (echo 'no vulns detected' && exit 0); fi
   rules:
     - when: on_success
@@ -108,13 +115,13 @@ test_performance:
       when: on_success
 
 publish_pypi:
-    image: python:3.11
-    stage: publish
-    script:
-      - apt-get update -qy
-      - apt-get install twine -y
-      - python setup.py sdist bdist_wheel
-      - twine upload -u $PYPI_USER -p $PYPI_PASS dist/* --verbose
-    rules:
-      - if: '$CI_COMMIT_TAG'
-        when: on_success
+  image: python:3.11
+  stage: publish
+  script:
+    - apt-get update -qy
+    - apt-get install twine -y
+    - python setup.py sdist bdist_wheel
+    - twine upload -u $PYPI_USER -p $PYPI_PASS dist/* --verbose
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: on_success
