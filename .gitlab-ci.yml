@@ -14,7 +14,7 @@ stages:
   - post_testing
   - publish
 
-before_scriptº:
+before_script:
   - apt-get update -qy
   - pip install pip -U
 
