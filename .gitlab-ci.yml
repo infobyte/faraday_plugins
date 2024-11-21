@@ -6,7 +6,6 @@ variables:
 
 include:
   - local: .gitlab/ci/get-secrets.yml
-  - local: .gitlab/ci/fetch-secrets.yml
 
 stages:
   - SAST
@@ -15,7 +14,13 @@ stages:
   - post_testing
   - publish
 
-before_script:
+.parse-secrets: &parse-secrets
+- DEVSECOPS_WORKSPACE=$(cat $DEVSECOPS_WORKSPACE)
+- FARADAY_PASSWORD=$(cat $FARADAY_PASSWORD)
+- FARADAY_URL=$(cat $FARADAY_URL)
+- FARADAY_USER=$(cat $FARADAY_USER)
+
+before_scriptº:
   - apt-get update -qy
   - pip install pip -U
 
@@ -52,6 +57,7 @@ bandit:
   extends:
     - .get-secrets
   script:
+    - *parse-secrets
     - pip3 install virtualenv
     - virtualenv -p python3 faraday_venv
     - source faraday_venv/bin/activate
