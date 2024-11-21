@@ -14,12 +14,6 @@ stages:
   - post_testing
   - publish
 
-.parse-secrets: &parse-secrets
-- DEVSECOPS_WORKSPACE=$(cat $DEVSECOPS_WORKSPACE)
-- FARADAY_PASSWORD=$(cat $FARADAY_PASSWORD)
-- FARADAY_URL=$(cat $FARADAY_URL)
-- FARADAY_USER=$(cat $FARADAY_USER)
-
 before_scriptº:
   - apt-get update -qy
   - pip install pip -U
@@ -29,6 +23,12 @@ workflow:
     - if: $CI_MERGE_REQUEST_ID
       when: never
     - when: always
+
+.parse-secrets: &parse-secrets
+- DEVSECOPS_WORKSPACE=$(cat $DEVSECOPS_WORKSPACE)
+- FARADAY_PASSWORD=$(cat $FARADAY_PASSWORD)
+- FARADAY_URL=$(cat $FARADAY_URL)
+- FARADAY_USER=$(cat $FARADAY_USER)
 
 .install_faraday_venv: &install_faraday_venv
 - pip3 install virtualenv
