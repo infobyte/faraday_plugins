@@ -1,7 +1,4 @@
 variables:
-  #VAULT_ROLE: 'python-sast-readonly'
-  #VAULT_ADDR: 'https://tluav-lb.faradaysec.com'
-  #VAULT_SECRET_PATH: 'gitlab/SAST'
   VAULT_SERVER_URL: https://tluav-lb.faradaysec.com
   VAULT_AUTH_ROLE: python-sast-readonly
   VAULT_AUTH_PATH: jwt
@@ -54,7 +51,6 @@ workflow:
 bandit:
   stage: SAST
   image: python:3.11
-  allow_failure: true
   tags:
     - faradaytests
   extends:
