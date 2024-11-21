@@ -60,7 +60,6 @@ bandit:
   extends:
     - .get-secrets
   script:
-    - *parse-secrets
     - pip3 install virtualenv
     - virtualenv -p python3 faraday_venv
     - source faraday_venv/bin/activate
@@ -69,6 +68,7 @@ bandit:
     - "bandit -r ${CI_PROJECT_DIR} -o /results/output.xml -f xml --skip B101,B104,B410,B405,B314,B320"
     - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (cat /results/output.xml); fi
   after_script:
+    - *parse-secrets
     - apt update && apt-get install lsb-release gpg wget -y
     - apt-get install software-properties-common -y
     - wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
