@@ -1,7 +1,10 @@
 variables:
-  VAULT_ROLE: 'python-sast-readonly'
-  VAULT_ADDR: 'https://tluav-lb.faradaysec.com'
+  #VAULT_ROLE: 'python-sast-readonly'
+  #VAULT_ADDR: 'https://tluav-lb.faradaysec.com'
   VAULT_SECRET_PATH: 'gitlab/SAST'
+  VAULT_SERVER_URL: https://tluav-lb.faradaysec.com
+  VAULT_AUTH_ROLE: faraday-discovery
+  VAULT_AUTH_PATH: jwt
 
 
 include:
