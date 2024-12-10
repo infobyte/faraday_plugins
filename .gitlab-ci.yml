@@ -118,8 +118,7 @@ publish_pypi:
   image: python:3.11
   stage: publish
   script:
-    - apt-get update -qy
-    - apt-get install twine -y
+    - pip install twine
     - python setup.py sdist bdist_wheel
     - twine upload -u $PYPI_USER -p $PYPI_PASS dist/* --verbose
   rules:
