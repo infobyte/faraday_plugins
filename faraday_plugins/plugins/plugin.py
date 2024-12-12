@@ -621,7 +621,7 @@ class PluginBase:
                          "confirmed": confirmed, "status": status, "easeofresolution": easeofresolution,
                          "impact": impact, "policyviolations": policyviolations, "cve": cve,  "cvss3": cvss3,
                          "cvss2": cvss2, "status_code": status_code, "custom_fields": custom_fields, "tags": tags,
-                         "cwe": cwe, cvss4: cvss4}
+                         "cwe": cwe, "cvss4": cvss4}
         if run_date:
             vulnerability["run_date"] = self.get_utctimestamp(run_date)
         vulnerability_id = self.save_service_vuln_cache(host_id, service_id, vulnerability)
