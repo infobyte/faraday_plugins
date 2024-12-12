@@ -6,22 +6,25 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import json
+from typing import Callable
+
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 
 __author__ = "Blas Moyano"
 __copyright__ = "Copyright (c) 2020, Infobyte LLC"
-__credits__ = ["Blas Moyano"]
+__credits__ = ["Blas Moyano", "David Kraus"]
 __license__ = ""
-__version__ = "0.0.1"
-__maintainer__ = "Blas Moyano"
-__email__ = "bmoyano@infobytesec.com"
+__version__ = "0.0.2"
+__maintainer__ = "David Kraus"
+__email__ = "dkraus@faradaysec.com"
 __status__ = "Development"
 
 
 class SslyzeJsonParser:
 
-    def __init__(self, json_output, resolve_hostname):
-        self.resolve_hostname = resolve_hostname
+    def __init__(self, json_output, hostname_resolution, hostname_resolver: Callable[[str], str] = None):
+        self.hostname_resolution = hostname_resolution
+        self.resolve_hostname = hostname_resolver
         json_sslyze = json.loads(json_output)
         scan_result = json_sslyze.get('server_scan_results')
         self.list_vul = self.get_vuln(scan_result)
@@ -34,6 +37,7 @@ class SslyzeJsonParser:
                 host = self.get_host(server_info) if server_info else {}
 
                 scan_commands_results = scan.get('scan_commands_results', scan.get("scan_result", {}))
+                scan_commands_results = scan_commands_results if scan_commands_results else {}
 
                 if len(scan_commands_results) > 0:
                     commands = []
@@ -47,6 +51,7 @@ class SslyzeJsonParser:
 
                 certificate_info = scan_commands_results.get('certificate_info')
                 certif = self.get_certification(certificate_info) if certificate_info else {}
+                print(certif)
 
                 heartbleed_reulsts = scan_commands_results.get('heartbleed')
                 heartbleed = self.get_heartbleed(heartbleed_reulsts) if heartbleed_reulsts else {}
@@ -87,7 +92,9 @@ class SslyzeJsonParser:
     def get_certification(self, certificate):
         certif_deploy = certificate.get('certificate_deployments', certificate.get('result'))
         certif_deploy = certif_deploy.get('certificate_deployments', [{}]) if isinstance(certif_deploy, dict) else [{}]
-        send_certif = certif_deploy[0].get('leaf_certificate_subject_matches_hostname', True)
+
+        path_validation_results = certif_deploy[0].get('path_validation_results', [{}])
+        send_certif = any(result.get('was_validation_successful', True) for result in path_validation_results)
 
         if not send_certif:
             subject = certif_deploy[0]['received_certificate_chain'][0]['subject']
@@ -193,7 +200,7 @@ class SslyzePlugin(PluginJsonFormat):
         self._temp_file_extension = "json"
 
     def parseOutputString(self, output):
-        parser = SslyzeJsonParser(output, self.resolve_hostname)
+        parser = SslyzeJsonParser(output, self.hostname_resolution, hostname_resolver=self.resolve_hostname)
 
         for info_sslyze in parser.list_vul:
             info_sslyze['host_info'].get('hostname')
