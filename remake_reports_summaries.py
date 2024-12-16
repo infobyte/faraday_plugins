@@ -1,0 +1,25 @@
+# first loop all folders in .report-collection/faraday_plugins_tests
+# then loop all files in each folder
+# if the file ends in summary.json look for a file with the same name but without the summary.json
+import os
+from pathlib import Path
+
+for plugin_folder in os.listdir('./report-collection/faraday_plugins_tests'):
+
+    summaries_to_remake = []
+
+    for filename in os.listdir(f'./report-collection/faraday_plugins_tests/{plugin_folder}'):
+        if filename.endswith('_summary.json'):
+            report_file_name = filename.replace('_summary.json', '')
+            summaries_to_remake.append(report_file_name)
+            # delete the summary file
+            # os.remove(f'./report-collection/faraday_plugins_tests/{plugin_folder}/{filename}')
+
+    for filename in os.listdir(f'./report-collection/faraday_plugins_tests/{plugin_folder}'):
+        filename_no_ext = Path(filename).stem
+
+        if filename_no_ext in summaries_to_remake:
+            # execute os command
+            print(f"Creating summary for {filename}")
+
+            os.system(f'faraday-plugins process-report --summary "./report-collection/faraday_plugins_tests/{plugin_folder}/{filename}" > "./report-collection/faraday_plugins_tests/{plugin_folder}/{filename_no_ext}_summary.json"')
