@@ -35,22 +35,22 @@ class SaintPlugin(PluginCSVFormat):
     def parseOutputString(self, output):
         try:
             reader = csv.DictReader(io.StringIO(output))
-        except:
-            print("Error parsing output")
+        except Exception as e:
+            print(f"Error parsing output {e}")
             return None
 
         for row in reader:
             host_id = self.createAndAddHost(
-                name=row["IP Address"],
-                os=row["System Class"] or "unknown",
-                hostnames=[row["Hostname"]] or []
+                name=row.get("IP Address", ""),
+                os=row.get("System Class") or "unknown",
+                hostnames=[row.get("Hostname")] or []
             )
             self.createAndAddVulnToHost(
                 host_id,
-                name=row["Tutorial"],
-                desc=row["Description"],
-                severity=get_severity_from_cvss(float(row["CVSS Score"])),
-                confirmed=True if row["Confirmed"] == "Yes" else False
+                name=row.get("Tutorial"),
+                desc=row.get("Description"),
+                severity=get_severity_from_cvss(row.get("CVSS Score", "")),
+                confirmed=True if row.get("Confirmed", "").lower() == "yes" else False
             )
 
 
