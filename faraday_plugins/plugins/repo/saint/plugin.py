@@ -43,7 +43,7 @@ class SaintPlugin(PluginCSVFormat):
             host_id = self.createAndAddHost(
                 name=row.get("IP Address", ""),
                 os=row.get("System Class") or "unknown",
-                hostnames=[row.get("Hostname")] or []
+                hostnames=[row.get("Hostname")] or [] #  TODO: this will overwrite existing hostname if host already exists.
             )
             self.createAndAddVulnToHost(
                 host_id,

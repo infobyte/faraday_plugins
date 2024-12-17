@@ -25,10 +25,8 @@ def test_missing_fields():
 
 
 def get_host(search: str, hosts: dict) -> dict:
-    print(search)
     for host in hosts:
         if search == host.get("ip"):
-            print("found")
             return host
     return {}
 
@@ -48,7 +46,12 @@ def test_all_fields():
     plugin_json = json.loads(plugin.get_json())
 
     assert len(plugin_json['hosts']) == 3
+
     assert set(["127.0.0.1", "127.0.0.2", "127.0.0.3"]) == {host['ip'] for host in plugin_json['hosts']}
+
+    assert "127.0.0.1" in get_host("127.0.0.1", plugin_json['hosts']).get("hostnames")
+    assert "127.0.0.1" in  get_host("127.0.0.2", plugin_json['hosts']).get("hostnames")
+    assert len(get_host("127.0.0.3", plugin_json['hosts']).get("hostnames")) == 0
 
     assert len(get_host("127.0.0.1", plugin_json['hosts']).get("vulnerabilities", [])) == 2
     assert len(get_host("127.0.0.2", plugin_json['hosts']).get("vulnerabilities", [])) == 1
