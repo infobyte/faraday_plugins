@@ -33,6 +33,7 @@ class owaspDependencyCheckPlugin(PluginCSVFormat):
         self.plugin_version = "1.0.0"
         self.version = "1.0.0"
         self.framework_version = "1.0.0"
+        self.csv_headers = {"Project", "ScanDate", "DependencyName", "DependencyPath", "Description"}
 
     def parseOutputString(self, output):
         try:
