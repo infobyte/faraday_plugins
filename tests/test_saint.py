@@ -50,7 +50,7 @@ def test_all_fields():
     assert set(["127.0.0.1", "127.0.0.2", "127.0.0.3"]) == {host['ip'] for host in plugin_json['hosts']}
 
     assert "127.0.0.1" in get_host("127.0.0.1", plugin_json['hosts']).get("hostnames")
-    assert "127.0.0.1" in  get_host("127.0.0.2", plugin_json['hosts']).get("hostnames")
+    assert "127.0.0.1" in get_host("127.0.0.2", plugin_json['hosts']).get("hostnames")
     assert len(get_host("127.0.0.3", plugin_json['hosts']).get("hostnames")) == 0
 
     assert len(get_host("127.0.0.1", plugin_json['hosts']).get("vulnerabilities", [])) == 2
