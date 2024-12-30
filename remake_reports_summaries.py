@@ -17,4 +17,4 @@ for plugin_folder in os.listdir('./report-collection/faraday_plugins_tests'):
             # execute os command
             print(f"Creating summary for {filename}")
 
-            os.system(f'faraday-plugins process-report --summary "./report-collection/faraday_plugins_tests/{plugin_folder}/{filename}" > "./report-collection/faraday_plugins_tests/{plugin_folder}/{filename_no_ext}_summary.json"')
+            os.system(f'faraday-plugins process-report --summary -drh "./report-collection/faraday_plugins_tests/{plugin_folder}/{filename}" > "./report-collection/faraday_plugins_tests/{plugin_folder}/{filename_no_ext}_summary.json"')
