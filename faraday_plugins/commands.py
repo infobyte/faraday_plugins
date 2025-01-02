@@ -97,7 +97,8 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary, outpu
             if not summary_file:
                 click.echo(json.dumps(plugin.get_summary(), indent=4))
             else:
-                click.echo(json.dumps(plugin.get_summary(), indent=4), file=click.open_file(summary_file, "w"))
+                with click.open_file(summary_file, "w") as f:
+                    click.echo(json.dumps(plugin.get_summary(), indent=4), file=f)
         else:
             if output_file:
                 with open(output_file, "w") as f:
