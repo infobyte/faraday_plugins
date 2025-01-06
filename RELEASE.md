@@ -1,3 +1,7 @@
+1.21.0 [Jan 6th, 2025]:
+---
+ * [ADD] Added Saint CSV report processor.  #353
+
 1.20.0 [Nov 21st, 2024]:
 ---
  * [FIX] Duplicate detection vulnerability in the Burp plugin.  #354
