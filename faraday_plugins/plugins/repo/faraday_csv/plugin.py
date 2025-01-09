@@ -55,6 +55,8 @@ class CSVParser:
             "cvss2_vector_string",
             "cvss3_base_score",
             "cvss3_vector_string",
+            "cvss4_base_score",
+            "cvss4_vector_string",
             "request",
             "response",
             "method",
@@ -317,6 +319,12 @@ class FaradayCSVPlugin(PluginCSVFormat):
                 }
                 if item['cvss3_vector_string']:
                     cvss3["vector_string"]= item['cvss3_vector_string']
+                cvss4 = {
+                    "base_score": item['cvss4_base_score'],
+                }
+                if item['cvss4_vector_string']:
+                    cvss4["vector_string"]= item['cvss4_vector_string']
+
                 if not item['web_vulnerability'] and not s_id:
                     self.createAndAddVulnToHost(
                         h_id,
@@ -336,6 +344,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         cwe=item['cwe'],
                         cvss2=cvss2,
                         cvss3=cvss3,
+                        cvss4=cvss4,
                         custom_fields=item['custom_fields'],
                         tags=item['tags']
                     )
@@ -359,6 +368,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         cwe=item['cwe'],
                         cvss2=cvss2,
                         cvss3=cvss3,
+                        cvss4=cvss4,
                         custom_fields=item['custom_fields'],
                         tags=item['tags']
                     )
@@ -390,6 +400,7 @@ class FaradayCSVPlugin(PluginCSVFormat):
                         cwe=item['cwe'],
                         cvss2=cvss2,
                         cvss3=cvss3,
+                        cvss4=cvss4,
                         status_code=item['status_code'] or None,
                         custom_fields=item['custom_fields'],
                         tags=item['tags']

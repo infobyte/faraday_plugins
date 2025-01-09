@@ -69,8 +69,9 @@ def list_plugins(custom_plugins_folder):
 @click.option('--vuln-tag', help="Vuln tag", default=None)
 @click.option('--service-tag', help="Service tag", default=None)
 @click.option('--host-tag', help="Host tag", default=None)
+@click.option('--summary-file', help="summary file to create", default=None, type=str)
 def process_report(report_file, plugin_id, custom_plugins_folder, summary, output_file, ignore_info,
-                   dont_resolve_hostname, vuln_tag, service_tag, host_tag):
+                   dont_resolve_hostname, vuln_tag, service_tag, host_tag, summary_file):
     if not os.path.isfile(report_file):
         click.echo(click.style(f"File {report_file} Don't Exists", fg="red"), err=True)
     else:
@@ -93,7 +94,11 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary, outpu
                 return
         plugin.processReport(Path(report_file), getpass.getuser())
         if summary:
-            click.echo(json.dumps(plugin.get_summary(), indent=4))
+            if not summary_file:
+                click.echo(json.dumps(plugin.get_summary(), indent=4))
+            else:
+                with click.open_file(summary_file, "w") as f:
+                    click.echo(json.dumps(plugin.get_summary(), indent=4), file=f)
         else:
             if output_file:
                 with open(output_file, "w") as f:
