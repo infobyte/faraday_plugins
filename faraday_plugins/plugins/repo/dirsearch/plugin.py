@@ -56,7 +56,7 @@ class DirsearchPlugin(PluginBase):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self.id = "dirsearch"
-        self.name = "dirsearch"
+        self.name = "old dirsearch Plugin for JSON output"
         self.plugin_version = "0.0.1"
         self.version = "0.0.1"
         self._command_regex = re.compile(r'^(sudo )?(python[0-9\.]? )?(dirsearch\.py)\s+?')
