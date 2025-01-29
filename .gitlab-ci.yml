@@ -61,7 +61,7 @@ bandit:
     - source faraday_venv/bin/activate
     - pip3 install bandit
     - mkdir /results
-    - "bandit -r ${CI_PROJECT_DIR}/faraday-plugins -o /results/output.xml -f xml --skip B101,B104,B410,B405,B314,B320"
+    - "bandit -r ${CI_PROJECT_DIR}/faraday-plugins -o /results/output.xml -f xml --skip B101,B104,B405,B314"
     - if [[ $(grep -c testcase /results/output.xml) -gt 0 ]]; then (cat /results/output.xml); fi
   after_script:
     - *parse-secrets
