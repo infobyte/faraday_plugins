@@ -1,3 +1,8 @@
+1.22.0 [Jan 30th, 2025]:
+---
+ * [ADD] Added support for cvss4 in faraday cvs. #355
+ * [FIX] Fixed description and CI Bandit update. #361
+
 1.21.0 [Jan 6th, 2025]:
 ---
  * [ADD] Added Saint CSV report processor.  #353
