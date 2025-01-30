@@ -7,9 +7,6 @@ with open('faraday_plugins/__init__.py', encoding='utf8') as f:
 with open("README.md") as readme_file:
     readme = readme_file.read()
 
-with open("RELEASE.md") as history_file:
-    history = history_file.read()
-
 install_requires = [
     'Click',
     'simplejson',
@@ -32,7 +29,7 @@ setup(
     packages=find_packages(include=['faraday_plugins', 'faraday_plugins.*']),
     url='',
     license="GNU General Public License v3",
-    long_description=readme + "\n\n" + history,
+    long_description=readme,
     long_description_content_type="text/markdown",
     author='Faradaysec',
     author_email='devel@faradaysec.com',
