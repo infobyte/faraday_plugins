@@ -75,7 +75,7 @@ class DirsearchPluginJSON(PluginJsonFormat):
             if status is None or floor(status/100) == 4:
                 continue
 
-            if not loc in regex_map:
+            if loc not in regex_map:
                 reguex_res = re.findall("((?:http|https):\\/\\/(\\S*?)(?::[0-9]*|)(?:\\/|$))", loc)
                 if (isinstance(reguex_res, list) and len(reguex_res) > 0 and isinstance(reguex_res[0], tuple) and
                         len(reguex_res[0]) == 2 and reguex_res[0][1]):
