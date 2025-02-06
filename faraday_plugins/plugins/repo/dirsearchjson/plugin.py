@@ -72,7 +72,10 @@ class DirsearchPluginJSON(PluginJsonFormat):
                 continue
 
             status = result.get('status', None)
-            if status is None or floor(status/100) == 4:
+            if status is None:
+                continue
+            status_round = floor(status / 100) * 100
+            if status_round == 400:
                 continue
 
             if loc not in regex_map:
@@ -83,18 +86,17 @@ class DirsearchPluginJSON(PluginJsonFormat):
                 if not regex_map[loc] in data_regroup:
                     data_regroup[regex_map[loc]] = {}
 
-            if status not in data_regroup[regex_map[loc]]:
-                data_regroup[regex_map[loc]][status] = (
-                    f"One or more endpoints returned **{status}"
-                    f"{(': '+code_map[status]+'**') if status in code_map else '**'}: \n"
+            if status_round not in data_regroup[regex_map[loc]]:
+                data_regroup[regex_map[loc]][status_round] = (
+                    f"One or more endpoints returned **{int(status_round/100)}xx** :\n"
                 )
 
             cl = result.get('content-length', None)
             ct = result.get('content-type', None)
             red = result.get('redirect') or None
 
-            data_regroup[regex_map[loc]][status] += (
-                f"- **{loc}**{(' with content type *'+ct+'*') if ct is not None else ''}"
+            data_regroup[regex_map[loc]][status_round] += (
+                f"- [{status}] **{loc}**{(' with content type *'+ct+'*') if ct is not None else ''}"
                 f"{(' ('+str(cl)+' bytes)') if cl is not None else ''}"
                 f"{(' redirects to ['+red+']('+red+')') if red is not None else ''}\n"
             )
@@ -103,7 +105,7 @@ class DirsearchPluginJSON(PluginJsonFormat):
             for code in data_regroup[host]:
                 self.createAndAddVulnToHost(
                     h,
-                    f"Returned {code}",
+                    f"Returned {int(code/100)}xx",
                     desc=data_regroup[host][code],
                     severity="info",
                     confirmed=True
