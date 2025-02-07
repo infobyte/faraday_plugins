@@ -14,7 +14,7 @@ from faraday_plugins.plugins.plugin import PluginXMLFormat
 
 __author__ = 'Blas Moyano'
 __copyright__ = 'Copyright 2020, Faraday Project'
-__credits__ = ['Blas Moyano']
+__credits__ = ['Blas Moyano', 'Dante Acosta']
 __license__ = ''
 __version__ = '1.0.0'
 __status__ = 'Development'
@@ -108,9 +108,11 @@ class Results:
     def build_response(response):
         response_data = []
         for contents in response.findall('CONTENTS'):
-            response_data.append(base64.b64decode(contents.text).decode('utf-8'))
+            if contents.text is not None:
+                response_data.append(base64.b64decode(contents.text).decode('utf-8'))
         for evidence in response.findall('EVIDENCE'):
-            response_data.append(base64.b64decode(evidence.text).decode('utf-8'))
+            if evidence.text is not None:
+                response_data.append(base64.b64decode(evidence.text).decode('utf-8'))
         return '\n'.join(response_data)
 
     def get_qid_list(self, vul_list_tags):
