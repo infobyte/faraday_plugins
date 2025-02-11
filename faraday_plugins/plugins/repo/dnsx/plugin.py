@@ -20,7 +20,7 @@ class DNSXPlugin(PluginMultiLineJsonFormat):
         self.id = "dnsx"
         self.name = "DNSX Multiline JSON Plugin"
         self.plugin_version = "1.2.2"
-        self.json_keys = {"host"}
+        self.json_keys = {"host", "ttl", "timestamp"}
         self.vuln_tag = vuln_tag
         self.service_tag = service_tag
         self.host_tag = host_tag
