@@ -130,3 +130,6 @@ dmypy.json
 
 #project settings
 *.project
+
+# extras for testing
+report-collection
