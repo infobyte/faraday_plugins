@@ -19,7 +19,8 @@ install_requires = [
     'colorama',
     'tabulate',
     'packaging',
-    'markdown'
+    'markdown',
+    'tldextract'
 ]
 
 
