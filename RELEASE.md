@@ -1,3 +1,14 @@
+1.23.0 [Mar 13th, 2025]:
+---
+ * [ADD] Added DNSX Multiline JSON Plugin. #360
+ * [ADD] Added extra DirSearch plugin compatible with dirsearch 0.4.3. #362
+ * [ADD] Added Subfinder Plugin. #364
+ * [FIX] Fixed Qualys WebAPP to accept vulns with no evidence. #363
+
+1.22.1 [Jan 30th, 2025]:
+---
+ * [FIX] Remove release history from setup. #999
+
 1.22.0 [Jan 30th, 2025]:
 ---
  * [ADD] Added support for cvss4 in faraday cvs. #355
