@@ -25,7 +25,7 @@ install_requires = [
 
 
 setup(
-    name='faraday-plugins',
+    name='faraday_plugins',
     version=version,
     packages=find_packages(include=['faraday_plugins', 'faraday_plugins.*']),
     url='',
