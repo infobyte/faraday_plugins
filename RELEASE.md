@@ -1,3 +1,7 @@
+1.24.0 [Apr 24th, 2025]:
+---
+ * [ADD] Added Tenable IO JSON Vuln Export Plugin. #365
+
 1.23.0 [Mar 13th, 2025]:
 ---
  * [ADD] Added DNSX Multiline JSON Plugin. #360
