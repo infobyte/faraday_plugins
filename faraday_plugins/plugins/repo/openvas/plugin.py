@@ -185,6 +185,7 @@ class Item:
         self.description = ''
         self.resolution = ''
         self.cvss_vector = ''
+        self.cvss3_vector = ''
         self.tags = self.get_text_from_subnode('tags')
         self.data = self.get_text_from_subnode('description')
         self.data += f'\n\nid {item_node.attrib.get("id")}'
@@ -192,7 +193,10 @@ class Item:
             tags_data = self.get_data_from_tags(self.tags)
             self.description = tags_data['description']
             self.resolution = tags_data['solution']
-            self.cvss_vector = tags_data['cvss_base_vector']
+            if "CVSS:3" in tags_data['cvss_base_vector']:
+                self.cvss3_vector = tags_data['cvss_base_vector']
+            else:
+                self.cvss_vector = tags_data['cvss_base_vector']
             if tags_data['impact']:
                 self.data += f'\n\nImpact: {tags_data["impact"]}'
 
@@ -347,6 +351,7 @@ class OpenvasPlugin(PluginXMLFormat):
                 ref = []
                 cve = []
                 cvss2 = {}
+                cvss3 = {}
                 if item.cve:
                     cves = item.cve.split(',')
                     for i in cves:
@@ -359,6 +364,8 @@ class OpenvasPlugin(PluginXMLFormat):
                     ref.append(item.xref)
                 if item.tags and item.cvss_vector:
                     cvss2["vector_string"] = item.cvss_vector
+                if item.tags and item.cvss3_vector:
+                    cvss3["vector_string"] = item.cvss3_vector
                 if item.cpe:
                     ref.append(f"{item.cpe}")
                 if item.severity_nr:
@@ -390,7 +397,8 @@ class OpenvasPlugin(PluginXMLFormat):
                             data=item.data,
                             cve=cve,
                             cwe=item.cwe,
-                            cvss2=cvss2
+                            cvss2=cvss2,
+                            cvss3=cvss3
                         )
                 else:
                     if item.service:
@@ -425,7 +433,8 @@ class OpenvasPlugin(PluginXMLFormat):
                                 data=item.data,
                                 cve=cve,
                                 cwe=item.cwe,
-                                cvss2=cvss2
+                                cvss2=cvss2,
+                                cvss3=cvss3
                             )
                     elif item.severity not in self.ignored_severities:
                         self.createAndAddVulnToService(
@@ -440,7 +449,8 @@ class OpenvasPlugin(PluginXMLFormat):
                             data=item.data,
                             cve=cve,
                             cwe=item.cwe,
-                            cvss2=cvss2
+                            cvss2=cvss2,
+                            cvss3=cvss3
                         )
         del parser
 
