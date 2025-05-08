@@ -9,6 +9,8 @@ import xml.etree.ElementTree as ET
 
 from dateutil.parser import parse
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import CVE_regex
+from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
 
 __author__ = "Blas"
 __copyright__ = "Copyright (c) 2019, Infobyte LLC"
@@ -20,7 +22,6 @@ __email__ = "bmoyano@infobytesec.com"
 __status__ = "Development"
 
 from faraday_plugins.plugins.repo.nessus.DTO import ReportHost, Report, ReportItem
-from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
 
 class NessusParser:
     """
@@ -183,21 +184,52 @@ class NessusPlugin(PluginXMLFormat):
     def map_add_ref(main_data, item: ReportItem):
         main_data["cvss2"] = {}
         main_data["cvss3"] = {}
+        
+        found_cves = set()
+
+        # Process item.cve - assuming item.cve can be a string or list
+        if item.cve:
+            if isinstance(item.cve, str):
+                # If item.cve is a string, parse it for CVEs
+                cves_in_item_cve_field = CVE_regex.findall(item.cve)
+                found_cves.update(cves_in_item_cve_field)
+            elif isinstance(item.cve, list):
+                # If item.cve is a list, add its elements
+                for c_val in item.cve:
+                    if isinstance(c_val, str): # Ensure elements are strings
+                        found_cves.add(c_val)
+        
         if item.see_also:
-            main_data["ref"].append(item.see_also)
+            main_data["ref"].append(item.see_also) # Keep original see_also in references
+            # Extract CVEs from see_also string
+            cves_from_see_also = CVE_regex.findall(item.see_also)
+            found_cves.update(cves_from_see_also)
+
+        if found_cves:
+            main_data["cve"] = sorted(list(found_cves))
+        
         if item.cpe:
             main_data["ref"].append(item.cpe)
-        if item.cve:
-            main_data["cve"] = item.cve
+        # item.cve is now handled by the found_cves logic above
         if item.cwe:
-            main_data["cwe"] = item.cwe
+            main_data["cwe"] = item.cwe # Assuming item.cwe is correctly formatted
+
+        # CVSSv3 vector normalization
         if item.cvss3_vector:
-            main_data["cvss3"]["vector_string"] = item.cvss3_vector
-        #if item has cvss3.base_score use it for severity
+            cvss3_vector_string = item.cvss3_vector
+            # Prepend "CVSS:3.0/" if no "CVSS:3.x" prefix exists, similar to Nessus SC plugin
+            if not cvss3_vector_string.startswith("CVSS:3."):
+                cvss3_vector_string = "CVSS:3.0/" + cvss3_vector_string
+            main_data["cvss3"]["vector_string"] = cvss3_vector_string
+        
+        # Severity: Prioritize CVSSv3 base score. This logic was already present.
         if item.cvss3_base_score:
             main_data["severity"] = get_severity_from_cvss(item.cvss3_base_score)
+        
+        # CVSSv2 vector
         if item.cvss_vector:
             main_data["cvss2"]["vector_string"] = item.cvss_vector
+        
         return main_data
 
 
