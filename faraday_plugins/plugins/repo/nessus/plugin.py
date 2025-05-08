@@ -222,13 +222,19 @@ class NessusPlugin(PluginXMLFormat):
                 cvss3_vector_string = "CVSS:3.0/" + cvss3_vector_string
             main_data["cvss3"]["vector_string"] = cvss3_vector_string
         
-        # Severity: Prioritize CVSSv3 base score. This logic was already present.
         if item.cvss3_base_score:
+            main_data["cvss3"]["base_score"] = item.cvss3_base_score
             main_data["severity"] = get_severity_from_cvss(item.cvss3_base_score)
         
         # CVSSv2 vector
         if item.cvss_vector:
             main_data["cvss2"]["vector_string"] = item.cvss_vector
+        
+        if item.cvss2_base_score: # Changed from cvss_base_score to cvss2_base_score
+            main_data["cvss2"]["base_score"] = item.cvss2_base_score
+            # If CVSSv3 score is not present, use CVSSv2 score for severity
+            if not item.cvss3_base_score:
+                main_data["severity"] = get_severity_from_cvss(item.cvss2_base_score) # Changed from cvss_base_score to cvss2_base_score
         
         return main_data
 
