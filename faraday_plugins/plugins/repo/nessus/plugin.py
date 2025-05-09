@@ -210,7 +210,6 @@ class NessusPlugin(PluginXMLFormat):
         
         if item.cpe:
             main_data["ref"].append(item.cpe)
-        # item.cve is now handled by the found_cves logic above
         if item.cwe:
             main_data["cwe"] = item.cwe # Assuming item.cwe is correctly formatted
 
@@ -230,11 +229,11 @@ class NessusPlugin(PluginXMLFormat):
         if item.cvss_vector:
             main_data["cvss2"]["vector_string"] = item.cvss_vector
         
-        if item.cvss2_base_score: # Changed from cvss_base_score to cvss2_base_score
+        if item.cvss2_base_score:
             main_data["cvss2"]["base_score"] = item.cvss2_base_score
             # If CVSSv3 score is not present, use CVSSv2 score for severity
             if not item.cvss3_base_score:
-                main_data["severity"] = get_severity_from_cvss(item.cvss2_base_score) # Changed from cvss_base_score to cvss2_base_score
+                main_data["severity"] = get_severity_from_cvss(item.cvss2_base_score)
         
         return main_data
 
