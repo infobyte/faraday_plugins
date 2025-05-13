@@ -40,7 +40,7 @@ class VulnerabilitySeverity(Enum):
         CRITICAL (int): Represents a vulnerability with a very high impact, often leading to severe consequences.
     """
     UNCLASSIFIED = 0
-    INFORMATIONAL = 1
+    INFO = 1
     LOW = 2
     MEDIUM = 3
     HIGH = 4

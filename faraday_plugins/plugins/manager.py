@@ -165,7 +165,7 @@ class PluginsManager:
                 try:
                     plugin_module = import_module(f"faraday_plugins.plugins.repo.{name}.plugin")
                     if hasattr(plugin_module, "createPlugin"):
-                        plugin_instance = plugin_module.createPlugin()
+                        plugin_instance = plugin_module.createPlugin(**self.kwargs)
                         plugin_id = plugin_instance.id.lower()
                         if not plugin_instance.auto_load:
                             logger.debug("Skip load plugin [%s]", plugin_id)
@@ -194,7 +194,7 @@ class PluginsManager:
                                     if name not in self.plugin_modules:
                                         loader = SourceFileLoader(name, module_filename)
                                         plugin_module = loader.load_module()
-                                        plugin_instance = plugin_module.createPlugin()
+                                        plugin_instance = plugin_module.createPlugin(**self.kwargs)
                                         plugin_id = plugin_instance.id.lower()
                                         if not plugin_instance.auto_load:
                                             logger.info("Skip load plugin [%s]", plugin_id)
