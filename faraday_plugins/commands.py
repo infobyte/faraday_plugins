@@ -71,8 +71,10 @@ def list_plugins(custom_plugins_folder):
 @click.option('--service-tag', help="Service tag", default=None)
 @click.option('--host-tag', help="Host tag", default=None)
 @click.option('--summary-file', help="summary file to create", default=None, type=str)
+@click.option('--min-severity', help="Minimum severity to process the output", type=click.Choice([s.name for s in VulnerabilitySeverity], case_sensitive=False), default=None)
+@click.option('--max-severity', help="Maximum severity to process the output", type=click.Choice([s.name for s in VulnerabilitySeverity], case_sensitive=False), default=None)
 def process_report(report_file, plugin_id, custom_plugins_folder, summary, output_file, ignore_info,
-                   dont_resolve_hostname, vuln_tag, service_tag, host_tag, summary_file):
+                   dont_resolve_hostname, vuln_tag, service_tag, host_tag, summary_file, min_severity, max_severity):
     if not os.path.isfile(report_file):
         click.echo(click.style(f"File {report_file} Don't Exists", fg="red"), err=True)
     else:
@@ -81,7 +83,9 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary, outpu
                                          hostname_resolution=not dont_resolve_hostname,
                                          vuln_tag=vuln_tag,
                                          service_tag=service_tag,
-                                         host_tag=host_tag)
+                                         host_tag=host_tag,
+                                         min_severity=min_severity,
+                                         max_severity=max_severity)
         analyzer = ReportAnalyzer(plugins_manager)
         if plugin_id:
             plugin = plugins_manager.get_plugin(plugin_id)

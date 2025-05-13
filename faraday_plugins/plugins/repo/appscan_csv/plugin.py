@@ -98,5 +98,5 @@ class Appscan_CSV_Plugin(PluginCSVFormat):
                 data=" \n".join(data)
             )
 
-def createPlugin(*args, **kargs):
-    return Appscan_CSV_Plugin(*args, **kargs)
+def createPlugin(*args, **kwargs):
+    return Appscan_CSV_Plugin(*args, **kwargs)
