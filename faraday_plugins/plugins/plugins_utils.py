@@ -11,6 +11,7 @@ import re
 from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 from markdown import markdown
+from enum import Enum
 
 SERVICE_MAPPER = None
 CVE_regex = re.compile(r'CVE-\d{4}-\d{4,7}')
@@ -21,6 +22,29 @@ CVSS_RANGE = [(0.0, 0.1, 'info'),
                (4.0, 7.0, 'med'),
                (7.0, 9.0, 'high'),
                (9.0, 10.1, 'critical')]
+
+class VulnerabilitySeverity(Enum):
+    """
+    Enumeration for vulnerability severity levels.
+
+    This Enum defines a set of standardized severity levels for vulnerabilities,
+    ranging from unclassified to critical. Each level is associated with an
+    integer value, facilitating comparison and ordering.
+
+    Attributes:
+        UNCLASSIFIED (int): Represents a vulnerability whose severity has not yet been determined.
+        INFORMATIONAL (int): Represents a finding that does not pose a direct security risk but provides useful information.
+        LOW (int): Represents a vulnerability with a low impact or difficulty to exploit.
+        MEDIUM (int): Represents a vulnerability with a moderate impact and/or ease of exploitation.
+        HIGH (int): Represents a vulnerability with a high impact and/or ease of exploitation.
+        CRITICAL (int): Represents a vulnerability with a very high impact, often leading to severe consequences.
+    """
+    UNCLASSIFIED = 0
+    INFORMATIONAL = 1
+    LOW = 2
+    MEDIUM = 3
+    HIGH = 4
+    CRITICAL = 5
 
 def get_vulnweb_url_fields(url):
     """Given a URL, return kwargs to pass to createAndAddVulnWebToService."""
