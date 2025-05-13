@@ -14,6 +14,7 @@ from tabulate import tabulate
 from faraday_plugins import __version__
 from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer, CommandAnalyzer
 from faraday_plugins.plugins.plugin import PluginByExtension
+from faraday_plugins.plugins.plugins_utils import VulnerabilitySeverity
 
 root_logger = logging.getLogger("faraday")
 if not root_logger.handlers:
@@ -121,14 +122,18 @@ def process_report(report_file, plugin_id, custom_plugins_folder, summary, outpu
 @click.option('--service-tag', help="Service tag", default=None)
 @click.option('--host-tag', help="Host tag", default=None)
 @click.option('--force', help="Process the output of the command regardless of the result", is_flag=True)
+@click.option('--min-severity', help="Minimum severity to process the output", type=click.Choice([s.name for s in VulnerabilitySeverity], case_sensitive=False), default=None)
+@click.option('--max-severity', help="Maximum severity to process the output", type=click.Choice([s.name for s in VulnerabilitySeverity], case_sensitive=False), default=None)
 def process_command(command, plugin_id, custom_plugins_folder, dont_run, summary, output_file, show_output,
-                    ignore_info, hostname_resolution, vuln_tag, service_tag, host_tag, force):
+                    ignore_info, hostname_resolution, vuln_tag, service_tag, host_tag, force, min_severity, max_severity):
     plugins_manager = PluginsManager(custom_plugins_folder,
                                      ignore_info=ignore_info,
                                      hostname_resolution=hostname_resolution,
                                      vuln_tag=vuln_tag,
                                      service_tag=service_tag,
-                                     host_tag=host_tag)
+                                     host_tag=host_tag,
+                                     min_severity=min_severity,
+                                     max_severity=max_severity)
     analyzer = CommandAnalyzer(plugins_manager)
     if plugin_id:
         plugin = plugins_manager.get_plugin(plugin_id)
