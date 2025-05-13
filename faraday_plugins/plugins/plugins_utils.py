@@ -41,7 +41,6 @@ class VulnerabilitySeverity(Enum):
     """
     UNCLASSIFIED = 0
     INFO = 1
-    INFORMATIONAL = 1
     LOW = 2
     MEDIUM = 3
     HIGH = 4
