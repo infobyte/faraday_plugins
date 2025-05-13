@@ -35,14 +35,14 @@ class VulnerabilitySeverity(Enum):
         UNCLASSIFIED (int): Represents a vulnerability whose severity has not yet been determined.
         INFO (int): Represents a finding that does not pose a direct security risk but provides useful information.
         LOW (int): Represents a vulnerability with a low impact or difficulty to exploit.
-        MEDIUM (int): Represents a vulnerability with a moderate impact and/or ease of exploitation.
+        MED (int): Represents a vulnerability with a moderate impact and/or ease of exploitation.
         HIGH (int): Represents a vulnerability with a high impact and/or ease of exploitation.
         CRITICAL (int): Represents a vulnerability with a very high impact, often leading to severe consequences.
     """
     UNCLASSIFIED = 0
     INFO = 1
     LOW = 2
-    MEDIUM = 3
+    MED = 3
     HIGH = 4
     CRITICAL = 5
 
