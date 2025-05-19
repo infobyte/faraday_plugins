@@ -109,6 +109,47 @@ def test_process_report_ignore_info():
     assert summary['services_vulns'] == 0
 
 
+def test_process_report_min_severity():
+    report_file = os.path.join('./report-collection', 'faraday_plugins_tests', 'Nmap', 'nmap_5.21.xml')
+    runner = CliRunner()
+    result = runner.invoke(process_report, args=[report_file, '--summary', '--min-severity=MED'])
+    assert result.exit_code == 0
+    summary = json.loads(result.output.strip())
+    assert summary['hosts'] == 256
+    assert summary['services'] == 69
+    # Only vulnerabilities with severity MED or higher should be included
+    assert 'INFO' not in summary['severity_vulns']
+    assert 'LOW' not in summary['severity_vulns']
+
+
+def test_process_report_max_severity():
+    report_file = os.path.join('./report-collection', 'faraday_plugins_tests', 'Nmap', 'nmap_5.21.xml')
+    runner = CliRunner()
+    result = runner.invoke(process_report, args=[report_file, '--summary', '--max-severity=LOW'])
+    assert result.exit_code == 0
+    summary = json.loads(result.output.strip())
+    assert summary['hosts'] == 256
+    assert summary['services'] == 69
+    # Only vulnerabilities with severity LOW or lower should be included
+    assert 'MED' not in summary['severity_vulns']
+    assert 'HIGH' not in summary['severity_vulns']
+    assert 'CRITICAL' not in summary['severity_vulns']
+
+
+def test_process_report_min_max_severity():
+    report_file = os.path.join('./report-collection', 'faraday_plugins_tests', 'Nmap', 'nmap_5.21.xml')
+    runner = CliRunner()
+    result = runner.invoke(process_report, args=[report_file, '--summary', '--min-severity=LOW', '--max-severity=MED'])
+    assert result.exit_code == 0
+    summary = json.loads(result.output.strip())
+    assert summary['hosts'] == 256
+    assert summary['services'] == 69
+    # Only vulnerabilities with severity between LOW and MED should be included
+    assert 'INFO' not in summary['severity_vulns']
+    assert 'HIGH' not in summary['severity_vulns']
+    assert 'CRITICAL' not in summary['severity_vulns']
+
+
 def test_process_report_tags():
     report_file = os.path.join('./report-collection', 'faraday_plugins_tests', 'Acunetix', 'acunetix_valid_dummy.xml')
     runner = CliRunner()
