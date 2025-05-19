@@ -1,3 +1,7 @@
+1.24.1 [May 19th, 2025]:
+---
+ * [FIX] CVSS3 in openvas plugin. #345
+
 1.24.0 [Apr 24th, 2025]:
 ---
  * [ADD] Added Tenable IO JSON Vuln Export Plugin. #365
