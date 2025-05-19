@@ -119,7 +119,9 @@ def test_process_report_min_severity():
     assert summary['services'] == 69
     # Only vulnerabilities with severity MED or higher should be included
     assert 'INFO' not in summary['severity_vulns']
+    assert 'info' not in summary['severity_vulns']
     assert 'LOW' not in summary['severity_vulns']
+    assert 'low' not in summary['severity_vulns']
 
 
 def test_process_report_max_severity():
@@ -132,8 +134,11 @@ def test_process_report_max_severity():
     assert summary['services'] == 69
     # Only vulnerabilities with severity LOW or lower should be included
     assert 'MED' not in summary['severity_vulns']
+    assert 'med' not in summary['severity_vulns']
     assert 'HIGH' not in summary['severity_vulns']
+    assert 'high' not in summary['severity_vulns']
     assert 'CRITICAL' not in summary['severity_vulns']
+    assert 'critical' not in summary['severity_vulns']
 
 
 def test_process_report_min_max_severity():
@@ -146,8 +151,11 @@ def test_process_report_min_max_severity():
     assert summary['services'] == 69
     # Only vulnerabilities with severity between LOW and MED should be included
     assert 'INFO' not in summary['severity_vulns']
+    assert 'info' not in summary['severity_vulns']
     assert 'HIGH' not in summary['severity_vulns']
+    assert 'high' not in summary['severity_vulns']
     assert 'CRITICAL' not in summary['severity_vulns']
+    assert 'critical' not in summary['severity_vulns']
 
 
 def test_process_report_tags():
