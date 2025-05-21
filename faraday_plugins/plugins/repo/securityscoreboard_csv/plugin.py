@@ -41,9 +41,9 @@ class SecScoreCard_CSV(PluginCSVFormat):
             for _, row in df.iterrows():
                 # Get path from different possible columns
                 path = (
-                    row.get("FINAL URL", "")
-                    or row.get("IP ADDRESS", "")
-                    or row.get("HOSTNAME", "")
+                    row.get("FINAL URL", "") or
+                    row.get("IP ADDRESS", "") or
+                    row.get("HOSTNAME", "")
                 )
 
                 name = row.get("ISSUE TYPE TITLE", "")
