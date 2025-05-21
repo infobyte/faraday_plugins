@@ -18,7 +18,7 @@ __email__ = "erodriguez@faradaysec.com"
 __status__ = "Development"
 
 
-class SecScoreBoard_CSV(PluginCSVFormat):
+class SecScoreCard_CSV(PluginCSVFormat):
     """
     Example plugin to parse SecScoreBoard_CSV output.
     """
@@ -26,8 +26,8 @@ class SecScoreBoard_CSV(PluginCSVFormat):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self.csv_headers = [{"LABEL"}, {"PROVIDER"}]
-        self.id = "SecScoreBoard_CSV"
-        self.name = "SecScoreBoard_CSV Output Plugin"
+        self.id = "SecScoreCard_CSV"
+        self.name = "SecScoreCard_CSV Output Plugin"
         self.plugin_version = "0.0.1"
         self.version = "0.0.1"
         self.framework_version = "1.0.1"
@@ -76,4 +76,4 @@ class SecScoreBoard_CSV(PluginCSVFormat):
 
 
 def createPlugin(*args, **kargs):
-    return SecScoreBoard_CSV(*args, **kargs)
+    return SecScoreCard_CSV(*args, **kargs)
