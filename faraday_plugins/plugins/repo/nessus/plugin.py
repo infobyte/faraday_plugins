@@ -197,7 +197,7 @@ class NessusPlugin(PluginXMLFormat):
                         found_cves.add(c_val)
         
         if item.see_also:
-            main_data["ref"].append(item.see_also) # Keep original see_also in references
+            main_data["ref"].append(item.see_also)
             # Extract CVEs from see_also string
             cves_from_see_also = CVE_regex.findall(item.see_also)
             found_cves.update(cves_from_see_also)
@@ -208,9 +208,8 @@ class NessusPlugin(PluginXMLFormat):
         if item.cpe:
             main_data["ref"].append(item.cpe)
         if item.cwe:
-            main_data["cwe"] = item.cwe # Assuming item.cwe is correctly formatted
+            main_data["cwe"] = item.cwe
 
-        # CVSSv3 vector normalization
         if item.cvss3_vector:
             cvss3_vector_string = item.cvss3_vector
             # Prepend "CVSS:3.0/" if no "CVSS:3.x" prefix exists, similar to Nessus SC plugin
@@ -222,7 +221,6 @@ class NessusPlugin(PluginXMLFormat):
             main_data["cvss3"]["base_score"] = item.cvss3_base_score
             main_data["severity"] = get_severity_from_cvss(item.cvss3_base_score)
         
-        # CVSSv2 vector
         if item.cvss_vector:
             main_data["cvss2"]["vector_string"] = item.cvss_vector
         
