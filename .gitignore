@@ -133,3 +133,6 @@ dmypy.json
 
 # extras for testing
 report-collection
+
+#vscode
+.vscode/
