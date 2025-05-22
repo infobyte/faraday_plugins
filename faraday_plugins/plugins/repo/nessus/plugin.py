@@ -187,16 +187,13 @@ class NessusPlugin(PluginXMLFormat):
         
         found_cves = set()
 
-        # Process item.cve - assuming item.cve can be a string or list
         if item.cve:
             if isinstance(item.cve, str):
-                # If item.cve is a string, parse it for CVEs
                 cves_in_item_cve_field = CVE_regex.findall(item.cve)
                 found_cves.update(cves_in_item_cve_field)
             elif isinstance(item.cve, list):
-                # If item.cve is a list, add its elements
                 for c_val in item.cve:
-                    if isinstance(c_val, str): # Ensure elements are strings
+                    if isinstance(c_val, str):
                         found_cves.add(c_val)
         
         if item.see_also:
