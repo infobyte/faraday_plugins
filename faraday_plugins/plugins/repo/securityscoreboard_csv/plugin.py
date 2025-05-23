@@ -18,7 +18,7 @@ __email__ = "erodriguez@faradaysec.com"
 __status__ = "Development"
 
 
-class SecScoreCard_CSV(PluginCSVFormat):
+class SecScoreCard(PluginCSVFormat):
     """
     Example plugin to parse SecScoreBoard_CSV output.
     """
@@ -76,4 +76,4 @@ class SecScoreCard_CSV(PluginCSVFormat):
 
 
 def createPlugin(*args, **kargs):
-    return SecScoreCard_CSV(*args, **kargs)
+    return SecScoreCard(*args, **kargs)
