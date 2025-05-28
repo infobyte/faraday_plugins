@@ -18,7 +18,7 @@ __email__ = "erodriguez@faradaysec.com"
 __status__ = "Development"
 
 
-class SecScoreCard_CSV(PluginCSVFormat):
+class SecScoreCard(PluginCSVFormat):
     """
     Example plugin to parse SecScoreBoard_CSV output.
     """
@@ -41,14 +41,9 @@ class SecScoreCard_CSV(PluginCSVFormat):
             for _, row in df.iterrows():
                 # Get path from different possible columns
                 path = (
-                    row.get("FINAL URL", "")
-                    or row.get("IP ADDRESS", "")
-                    or row.get("HOSTNAME", "")
-                )
-                ip = (
-                    row.get("FINAL URL", "")
-                    or row.get("IP ADDRESS", "")
-                    or row.get("HOSTNAME", "")
+                    row.get("FINAL URL", "") or
+                    row.get("IP ADDRESS", "") or
+                    row.get("HOSTNAME", "")
                 )
 
                 name = row.get("ISSUE TYPE TITLE", "")
@@ -62,7 +57,7 @@ class SecScoreCard_CSV(PluginCSVFormat):
                 desc = str(row.get("DESCRIPTION", ""))
 
                 # Create host and vulnerability
-                h_id = self.createAndAddHost(name=f"{path}")
+                h_id = self.createAndAddHost(name=path)
                 self.createAndAddVulnToHost(
                     h_id,
                     name=name,
@@ -81,4 +76,4 @@ class SecScoreCard_CSV(PluginCSVFormat):
 
 
 def createPlugin(*args, **kargs):
-    return SecScoreCard_CSV(*args, **kargs)
+    return SecScoreCard(*args, **kargs)
