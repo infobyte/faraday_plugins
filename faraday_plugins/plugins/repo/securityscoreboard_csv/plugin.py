@@ -45,6 +45,11 @@ class SecScoreCard_CSV(PluginCSVFormat):
                     or row.get("IP ADDRESS", "")
                     or row.get("HOSTNAME", "")
                 )
+                ip = (
+                    row.get("FINAL URL", "")
+                    or row.get("IP ADDRESS", "")
+                    or row.get("HOSTNAME", "")
+                )
 
                 name = row.get("ISSUE TYPE TITLE", "")
 
@@ -57,7 +62,7 @@ class SecScoreCard_CSV(PluginCSVFormat):
                 desc = str(row.get("DESCRIPTION", ""))
 
                 # Create host and vulnerability
-                h_id = self.createAndAddHost(name=path)
+                h_id = self.createAndAddHost(name=f"{path}")
                 self.createAndAddVulnToHost(
                     h_id,
                     name=name,
