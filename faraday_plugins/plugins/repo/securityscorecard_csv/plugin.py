@@ -4,9 +4,11 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 
+import sys
+import io
 from faraday_plugins.plugins.plugin import PluginCSVFormat
-import pandas as pd
-from io import StringIO
+import csv
+
 
 __author__ = "Erodriguez"
 __copyright__ = "Copyright (c) 2019, Infobyte LLC"
@@ -34,37 +36,45 @@ class SecScoreCard(PluginCSVFormat):
 
     def parseOutputString(self, output):
         try:
-            # Read CSV into a DataFrame
-            df = pd.read_csv(StringIO(output))
+            csv.field_size_limit(sys.maxsize)
+            print(str(output))
+            csv_file = io.StringIO(output)
+            reader = csv.DictReader(csv_file, delimiter=",")
+            for row in reader:
+                path = row.get("FINAL URL", "")
+                if not path:
+                    path = row.get("IP ADDRESS", "")
+                if not path:
+                    path = row.get("HOSTNAME", "")
+                if not path:
+                    continue
 
-            # Iterate through DataFrame rows
-            for _, row in df.iterrows():
-                # Get path from different possible columns
-                path = (
-                    row.get("FINAL URL", "") or
-                    row.get("IP ADDRESS", "") or
-                    row.get("HOSTNAME", "")
-                )
+                # Skip if HOSTNAME is empty or not a valid IP
+                hostname = row.get("HOSTNAME", "")
 
                 name = row.get("ISSUE TYPE TITLE", "")
 
                 # Handle references
                 references = []
-                if pd.notna(row.get("CVE")):
-                    references.append(row["CVE"])
+                cve = row.get("CVE", "")
+                if cve:
+                    references.append(cve)
 
                 # Handle description
-                desc = str(row.get("DESCRIPTION", ""))
+                desc = row.get("DESCRIPTION", "")
 
                 # Create host and vulnerability
-                h_id = self.createAndAddHost(name=path)
+                h_id = self.createAndAddHost(
+                    name=path,
+                    hostnames=hostname,
+                )
                 self.createAndAddVulnToHost(
-                    h_id,
+                    host_id=h_id,
                     name=name,
                     desc=desc,
                     resolution=str(row.get("ISSUE RECOMMENDATION", "")),
                     external_id=str(row.get("ISSUE ID", "")),
-                    cve=str(row.get("CVE", "")),
+                    cve=str(cve),
                     severity=str(row.get("ISSUE TYPE SEVERITY", "")),
                     ref=references,
                     data=str(row.get("DATA", "")),
