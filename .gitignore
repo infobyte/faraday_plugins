@@ -136,3 +136,6 @@ report-collection
 
 #vscode
 .vscode/
+
+# Macos files
+.DS_Store
