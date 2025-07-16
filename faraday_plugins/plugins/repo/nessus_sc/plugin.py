@@ -47,6 +47,7 @@ class NessusScPlugin(PluginCSVFormat):
             h_id = self.createAndAddHost(name=ip, hostnames=hostname)
             protocol = row['Protocol']
             port = row['Port']
+            data = row['Plugin Output']
             s_id = self.createAndAddServiceToHost(h_id, name=port, protocol=protocol, ports=port, status="open")
             name = row['Plugin Name']
             severity = row['Severity']
