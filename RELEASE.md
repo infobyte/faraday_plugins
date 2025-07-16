@@ -1,3 +1,8 @@
+1.25.0 [Jul 16th, 2025]:
+---
+ * [ADD] Security Score Card Support CSV Plugin. #372
+ * [FIX] CVSS values in nessus plugin. #367
+
 1.24.1 [May 19th, 2025]:
 ---
  * [FIX] CVSS3 in openvas plugin. #345
