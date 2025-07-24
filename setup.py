@@ -20,7 +20,8 @@ install_requires = [
     'tabulate',
     'packaging',
     'markdown',
-    'tldextract'
+    'tldextract',
+    'pandas'
 ]
 
 
