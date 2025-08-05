@@ -24,7 +24,7 @@ import pytz
 import simplejson as json
 
 # Local application imports
-from faraday_plugins.plugins.plugins_utils import its_cve, its_cwe
+from faraday_plugins.plugins.plugins_utils import its_cve, its_cwe, VulnerabilitySeverity
 
 logger = logging.getLogger("faraday").getChild(__name__)
 
@@ -41,6 +41,8 @@ class PluginBase:
         # an existent plugin with the same id.
         # TODO: Make script that list current ids.
         self.ignore_info = kwargs.get("ignore_info", False)
+        self.min_severity = kwargs.get("min_severity", None)
+        self.max_severity = kwargs.get("max_severity", None)
         self.hostname_resolution = kwargs.get("hostname_resolution", True)
         self.vuln_tag = kwargs.get("vuln_tag", None)
         self.host_tag = kwargs.get("host_tag", None)
@@ -172,34 +174,49 @@ class PluginBase:
         else:
             obj_uuid = self._service_cache[cache_id]
         return obj_uuid
+    
+    def _should_ignore_check(self, vuln):
+        # Ignore Info
+        if self.ignore_info and vuln['severity'] == 'info':
+            return True
+        
+        # Severity Range check
+        if self.min_severity and VulnerabilitySeverity[vuln['severity'].upper()].value < VulnerabilitySeverity[self.min_severity.upper()].value:
+            return True
+        if self.max_severity and VulnerabilitySeverity[vuln['severity'].upper()].value > VulnerabilitySeverity[self.max_severity.upper()].value:
+            return True
+        
+        return False
 
     def save_service_vuln_cache(self, host_id, service_id, vuln):
-        if self.ignore_info and vuln['severity'] == 'info':
+
+        if self._should_ignore_check(vuln):
             return None
+        
+        cache_id = self.get_service_vuln_cache_id(host_id, service_id, vuln)
+        if cache_id not in self._vulns_cache:
+            obj_uuid = self.save_cache(vuln)
+            service = self.get_from_cache(service_id)
+            service["vulnerabilities"].append(vuln)
+            self._vulns_cache[cache_id] = obj_uuid
         else:
-            cache_id = self.get_service_vuln_cache_id(host_id, service_id, vuln)
-            if cache_id not in self._vulns_cache:
-                obj_uuid = self.save_cache(vuln)
-                service = self.get_from_cache(service_id)
-                service["vulnerabilities"].append(vuln)
-                self._vulns_cache[cache_id] = obj_uuid
-            else:
-                obj_uuid = self._vulns_cache[cache_id]
-            return obj_uuid
+            obj_uuid = self._vulns_cache[cache_id]
+        return obj_uuid
 
     def save_host_vuln_cache(self, host_id, vuln):
-        if self.ignore_info and vuln['severity'] == 'info':
+
+        if self._should_ignore_check(vuln):
             return None
+        
+        cache_id = self.get_host_vuln_cache_id(host_id, vuln)
+        if cache_id not in self._vulns_cache:
+            obj_uuid = self.save_cache(vuln)
+            host = self.get_from_cache(host_id)
+            host["vulnerabilities"].append(vuln)
+            self._vulns_cache[cache_id] = obj_uuid
         else:
-            cache_id = self.get_host_vuln_cache_id(host_id, vuln)
-            if cache_id not in self._vulns_cache:
-                obj_uuid = self.save_cache(vuln)
-                host = self.get_from_cache(host_id)
-                host["vulnerabilities"].append(vuln)
-                self._vulns_cache[cache_id] = obj_uuid
-            else:
-                obj_uuid = self._vulns_cache[cache_id]
-            return obj_uuid
+            obj_uuid = self._vulns_cache[cache_id]
+        return obj_uuid
 
     @staticmethod
     def _get_dict_hash(d, keys):

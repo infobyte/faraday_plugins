@@ -60,5 +60,5 @@ class DNSXPlugin(PluginMultiLineJsonFormat):
                         self.createAndAddNoteToHost(h_id, name="Vulnerability Tag", text=self.vuln_tag)
 
 
-def createPlugin(ignore_info=False, hostname_resolution=True, vuln_tag=None, service_tag=None, host_tag=None):
+def createPlugin(ignore_info=False, hostname_resolution=True, vuln_tag=None, service_tag=None, host_tag=None, *args, **kwargs):
     return DNSXPlugin(ignore_info=ignore_info, hostname_resolution=hostname_resolution, vuln_tag=vuln_tag, service_tag=service_tag, host_tag=host_tag)
