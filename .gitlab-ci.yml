@@ -46,7 +46,7 @@ workflow:
   - cd report-collection
   - |
     SUFFIX="${CI_COMMIT_BRANCH#*_}"
-    MATCH_BRANCH=$(git branch -r --list "*_reports_for_${SUFFIX}" | sed 's|origin/||' | head -n 1)
+    MATCH_BRANCH=$(git branch -r --list "*_reports_for_${SUFFIX}" | sed 's|origin/||' | head -n 1 | xargs)
     if [ -n "$MATCH_BRANCH" ]; then
         echo "Using branch from report-collection: $MATCH_BRANCH"
         REPORT_REF="$MATCH_BRANCH"
