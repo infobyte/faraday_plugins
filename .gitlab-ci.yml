@@ -42,11 +42,20 @@ workflow:
 - cd ..
 
 .clone_reports: &clone_reports
-- git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
-- cd report-collection
-- (git branch -a | grep $CI_COMMIT_BRANCH) && export REPORT_REF=$CI_COMMIT_BRANCH || export REPORT_REF=master
-- git checkout $REPORT_REF
-- cd ..
+  - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/support/report-collection.git
+  - cd report-collection
+  - |
+    SUFFIX="${CI_COMMIT_BRANCH#*_}"
+    MATCH_BRANCH=$(git branch -r --list "*_reports_for_${SUFFIX}" | sed 's|origin/||' | head -n 1)
+    if [ -n "$MATCH_BRANCH" ]; then
+        echo "Using branch from report-collection: $MATCH_BRANCH"
+        REPORT_REF="$MATCH_BRANCH"
+    else
+        echo "Can't find branch *_reports_for_${SUFFIX}, will use master"
+        REPORT_REF="master"
+    fi
+    git checkout "$REPORT_REF"
+  - cd ..
 
 bandit:
   stage: SAST
