@@ -12,11 +12,11 @@ from faraday_plugins.plugins.plugin import PluginCSVFormat
 class AssetCSVPlugin(PluginCSVFormat):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.id = "asset_csv"
-        self.name = "Asset CSV Importer"
+        self.id = "faradayasset_csv"
+        self.name = "Faraday Asset CSV Importer"
         self.plugin_version = "1.0"
         self._schema_version = "1.0"
-        self.required_headers = {"asset", "description", "os", "mac_address"}
+        self.csv_headers = [{"asset", "description", "os", "mac_address"}]
 
     def parseOutputString(self, output):
         # Clean the input string by removing outer quotes and extra whitespace
@@ -39,7 +39,7 @@ class AssetCSVPlugin(PluginCSVFormat):
             headers = [h.strip().lower() for h in headers]
 
             # Validate required headers
-            missing_headers = self.required_headers - set(headers)
+            missing_headers = self.csv_headers[0] - set(headers)
             if missing_headers:
                 self.logger.error(
                     f"Missing required headers: {', '.join(missing_headers)}"
