@@ -9,7 +9,6 @@ import json
 
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 
-
 __author__ = "Dante Acosta"
 __copyright__ = "Copyright (c) 2025, Infobyte LLC"
 __credits__ = ["Dante Acosta"]
@@ -36,23 +35,49 @@ class TenableIOJSONExport(PluginJsonFormat):
             return
 
         for vuln in data:
-            if not {"id", "name"}.issubset(vuln.get("asset", {}).keys()):
+            # Validate asset object
+            asset_info = vuln.get("asset")
+            
+            # Skip if asset is None or not a dictionary
+            if not isinstance(asset_info, dict):
+                self.logger.error(f"Omitting vulnerability {vuln.get('id', 'unknown')}: "
+                                f"required field asset is missing or invalid")
+                continue
+            
+            # Validate display_ipv4_address is present and not empty
+            display_ipv4 = asset_info.get("display_ipv4_address")
+            if not display_ipv4 or (isinstance(display_ipv4, str) and not display_ipv4.strip()):
+                self.logger.error(f"Omitting vulnerability {vuln.get('id', 'unknown')}: "
+                                f"required field asset.display_ipv4_address is missing")
                 continue
 
-            if not {"id", "name", "description"}.issubset(vuln.get("definition", {}).keys()):
+            # Validate definition object - only id and name are truly required
+            definition = vuln.get("definition", {})
+            if not {"id", "name"}.issubset(definition.keys()):
+                self.logger.error(f"Omitting vulnerability {vuln.get('id', 'unknown')}: "
+                                f"definition object is missing required fields")
                 continue
 
-            asset_info = vuln.get("asset", {})
+            # Build hostname list with priority logic
+            hostnames = []
+            host_name = asset_info.get("host_name")
+            display_fqdn = asset_info.get("display_fqdn")
+            
+            if host_name:
+                hostnames.append(host_name)
+            if display_fqdn and display_fqdn != host_name:  # Avoid duplicates
+                hostnames.append(display_fqdn)
 
-            host = self.createAndAddHost(
-                name=next((asset_info.get(field) for field in ["name", "netbios_name", "id"] if
-                           asset_info.get(field) is not None), "unknown"),
+            # Create host with display_ipv4_address as the ASSET field
+            host_id = self.createAndAddHost(
+                name=display_ipv4.strip(),  # ASSET field must show IP
                 os=asset_info.get("operating_system", "unknown"),
-                hostnames=asset_info.get("host_name", None),
+                hostnames=hostnames,  # Always pass as list, even if empty
             )
 
             vdef = vuln.get("definition", {})
 
+            # Process references
             refs = vdef.get("see_also", [])
             for i in range(len(refs)):
                 refs[i] = {
@@ -60,6 +85,7 @@ class TenableIOJSONExport(PluginJsonFormat):
                     "type": "other"
                 }
 
+            # Status mapping
             status_map = {
                 "ACTIVE": "open",
                 "FIXED": "closed",
@@ -67,6 +93,7 @@ class TenableIOJSONExport(PluginJsonFormat):
                 "RESURFACED": "open"
             }
 
+            # Severity mapping
             severity_map = {
                 1: "low",
                 2: "medium",
@@ -74,27 +101,74 @@ class TenableIOJSONExport(PluginJsonFormat):
                 4: "critical"
             }
 
+            # Process CVSS objects
             cvss_objs = [{}, {}, {}]  # for 2, 3 & 4
             for i in range(3):
-                if vdef.get("cvss"+str(i+2), None):
-                    cvss_obj = vdef.get("cvss"+str(i+2), {})
+                if vdef.get("cvss" + str(i + 2), None):
+                    cvss_obj = vdef.get("cvss" + str(i + 2), {})
                     cvss_objs[i]["vector_string"] = (("CVSS:3.1/" if i == 1 else ("CVSS:4.0/" if i == 2 else "")) +
                                                      cvss_obj.get("base_vector", ""))
 
-            print(cvss_objs)
-            self.createAndAddVulnToHost(
-                host_id=host,
-                name=vdef.get("name", "Vulnerability"),
-                desc=vdef.get("description", "No description provided."),
-                ref=refs,
-                severity=severity_map.get(vuln.get("severity", 1), "low"),
-                external_id=vuln.get("id", None),
-                status=status_map.get(vuln.get("state", "ACTIVE"), "open"),
-                cve=vdef.get("cve", []),
-                cvss2=cvss_objs[0],
-                cvss3=cvss_objs[1],
-                cvss4=cvss_objs[2]
-            )
+            # Process output field for Technical Details → Data
+            output_content = vuln.get("output", "")
+            if output_content:
+                # Truncate to 10,000 characters and strip whitespace
+                output_content = output_content.strip()[:10000]
+            else:
+                output_content = "N/A"
+
+            # Port and service vulnerability logic
+            port = vuln.get("port")
+            protocol = vuln.get("protocol", "tcp").lower()  # Default to tcp if not specified
+            
+            # Validate port - must be integer between 1-65535
+            is_valid_port = False
+            port_int = None
+            if port is not None:
+                try:
+                    port_int = int(port)
+                    if 1 <= port_int <= 65535:
+                        is_valid_port = True
+                except (ValueError, TypeError):
+                    is_valid_port = False
+
+            # Common vulnerability data
+            vuln_data = {
+                "name": vdef.get("name", "Vulnerability"),
+                "desc": vdef.get("description", vdef.get("solution", "No description provided.")),  # Use solution if no description
+                "ref": refs,
+                "severity": severity_map.get(vuln.get("severity", 1), "low"),
+                "external_id": vuln.get("id", None),
+                "status": status_map.get(vuln.get("state", "ACTIVE"), "open"),
+                "cve": vdef.get("cve", []),
+                "cvss2": cvss_objs[0],
+                "cvss3": cvss_objs[1],
+                "cvss4": cvss_objs[2],
+                "data": output_content  # Technical Details → Data
+            }
+
+            if is_valid_port:
+                # Create service vulnerability
+                service_name = f"{protocol}/{port_int}"  # Use validated integer
+                service_id = self.createAndAddServiceToHost(
+                    host_id=host_id,
+                    name=service_name,
+                    protocol=protocol,
+                    ports=[port_int],  # Use validated integer
+                    status="open"
+                )
+                
+                self.createAndAddVulnToService(
+                    host_id=host_id,
+                    service_id=service_id,
+                    **vuln_data
+                )
+            else:
+                # Create host vulnerability
+                self.createAndAddVulnToHost(
+                    host_id=host_id,
+                    **vuln_data
+                )
 
 
 def createPlugin(*args, **kwargs):
