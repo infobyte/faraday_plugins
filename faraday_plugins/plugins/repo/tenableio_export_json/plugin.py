@@ -19,7 +19,24 @@ __status__ = "Development"
 
 
 class TenableIOJSONExport(PluginJsonFormat):
-    def __init__(self, *arg, **kwargs):
+    # Class-level constants (created once, not per vulnerability)
+    STATUS_MAP = {
+        "ACTIVE": "open",
+        "FIXED": "closed",
+        "NEW": "open",
+        "RESURFACED": "open"
+    }
+    
+    SEVERITY_MAP = {
+        1: "low",
+        2: "medium",
+        3: "high",
+        4: "critical"
+    }
+    
+    CVSS_PREFIXES = ["", "CVSS:3.1/", "CVSS:4.0/"]
+    
+    def __init__(self, *arg, **kwargs) -> None:
         super().__init__(*arg, **kwargs)
         self.id = "tenableio_export_json"
         self.name = "Tenable IO JSON Vuln Export Plugin"
@@ -28,7 +45,7 @@ class TenableIOJSONExport(PluginJsonFormat):
         self.json_keys = {'asset', 'definition', 'asset_cloud_resource', 'container_image'}
         self._temp_file_extension = "json"
 
-    def parseOutputString(self, output):
+    def parseOutputString(self, output: str) -> None:
         try:
             data = json.loads(output)
         except json.JSONDecodeError:
@@ -75,51 +92,24 @@ class TenableIOJSONExport(PluginJsonFormat):
                 hostnames=hostnames,  # Always pass as list, even if empty
             )
 
-            vdef = vuln.get("definition", {})
+            # Process references with list comprehension (more efficient)
+            refs = [{"name": ref, "type": "other"} for ref in definition.get("see_also", [])]
 
-            # Process references
-            refs = vdef.get("see_also", [])
-            for i in range(len(refs)):
-                refs[i] = {
-                    "name": refs[i],
-                    "type": "other"
-                }
-
-            # Status mapping
-            status_map = {
-                "ACTIVE": "open",
-                "FIXED": "closed",
-                "NEW": "open",
-                "RESURFACED": "open"
-            }
-
-            # Severity mapping
-            severity_map = {
-                1: "low",
-                2: "medium",
-                3: "high",
-                4: "critical"
-            }
-
-            # Process CVSS objects
+            # Process CVSS objects with optimized lookup
             cvss_objs = [{}, {}, {}]  # for 2, 3 & 4
             for i in range(3):
-                if vdef.get("cvss" + str(i + 2), None):
-                    cvss_obj = vdef.get("cvss" + str(i + 2), {})
-                    cvss_objs[i]["vector_string"] = (("CVSS:3.1/" if i == 1 else ("CVSS:4.0/" if i == 2 else "")) +
-                                                     cvss_obj.get("base_vector", ""))
+                cvss_key = f"cvss{i + 2}"
+                if cvss_obj := definition.get(cvss_key):
+                    base_vector = cvss_obj.get("base_vector", "")
+                    cvss_objs[i]["vector_string"] = f"{self.CVSS_PREFIXES[i]}{base_vector}"
 
             # Process output field for Technical Details → Data
             output_content = vuln.get("output", "")
-            if output_content:
-                # Truncate to 10,000 characters and strip whitespace
-                output_content = output_content.strip()[:10000]
-            else:
-                output_content = "N/A"
+            output_content = output_content.strip()[:10000] if output_content else "N/A"
 
-            # Port and service vulnerability logic
+            # Port and service vulnerability logic with optimized validation
             port = vuln.get("port")
-            protocol = vuln.get("protocol", "tcp").lower()  # Default to tcp if not specified
+            protocol = vuln.get("protocol", "tcp").lower()
             
             # Validate port - must be integer between 1-65535
             is_valid_port = False
@@ -127,24 +117,23 @@ class TenableIOJSONExport(PluginJsonFormat):
             if port is not None:
                 try:
                     port_int = int(port)
-                    if 1 <= port_int <= 65535:
-                        is_valid_port = True
+                    is_valid_port = 1 <= port_int <= 65535
                 except (ValueError, TypeError):
-                    is_valid_port = False
+                    pass
 
-            # Common vulnerability data
+            # Common vulnerability data using class constants
             vuln_data = {
-                "name": vdef.get("name", "Vulnerability"),
-                "desc": vdef.get("description", vdef.get("solution", "No description provided.")),  # Use solution if no description
+                "name": definition.get("name", "Vulnerability"),
+                "desc": definition.get("description") or definition.get("solution") or "No description provided.",
                 "ref": refs,
-                "severity": severity_map.get(vuln.get("severity", 1), "low"),
-                "external_id": vuln.get("id", None),
-                "status": status_map.get(vuln.get("state", "ACTIVE"), "open"),
-                "cve": vdef.get("cve", []),
+                "severity": self.SEVERITY_MAP.get(vuln.get("severity", 1), "low"),
+                "external_id": vuln.get("id"),
+                "status": self.STATUS_MAP.get(vuln.get("state", "ACTIVE"), "open"),
+                "cve": definition.get("cve", []),
                 "cvss2": cvss_objs[0],
                 "cvss3": cvss_objs[1],
                 "cvss4": cvss_objs[2],
-                "data": output_content  # Technical Details → Data
+                "data": output_content
             }
 
             if is_valid_port:
@@ -171,5 +160,5 @@ class TenableIOJSONExport(PluginJsonFormat):
                 )
 
 
-def createPlugin(*args, **kwargs):
+def createPlugin(*args, **kwargs) -> TenableIOJSONExport:
     return TenableIOJSONExport(*args, **kwargs)
