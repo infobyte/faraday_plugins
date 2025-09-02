@@ -1,3 +1,7 @@
+1.26.0 [Aug 27th, 2025]:
+---
+ * [ADD] Added severity range filtering. #371
+
 1.25.0 [Jul 16th, 2025]:
 ---
  * [ADD] Security Score Card Support CSV Plugin. #372
