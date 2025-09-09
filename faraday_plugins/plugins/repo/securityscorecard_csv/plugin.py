@@ -14,7 +14,7 @@ __author__ = "Erodriguez"
 __copyright__ = "Copyright (c) 2019, Infobyte LLC"
 __credits__ = ["Erodriguez"]
 __license__ = ""
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __maintainer__ = "Erodriguez"
 __email__ = "erodriguez@faradaysec.com"
 __status__ = "Development"
@@ -41,9 +41,9 @@ class SecScoreCard(PluginCSVFormat):
             csv_file = io.StringIO(output)
             reader = csv.DictReader(csv_file, delimiter=",")
             for row in reader:
-                path = row.get("FINAL URL", "")
+                path = row.get("IP ADDRESS")
                 if not path:
-                    path = row.get("IP ADDRESS", "")
+                    path = row.get("FINAL URL")
                 if not path:
                     path = row.get("HOSTNAME", "")
                 if not path:
