@@ -32,13 +32,48 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
         super().__init__(*arg, **kwargs)
         self.id = "nuclei"
         self.name = "Nuclei"
-        self.plugin_version = "1.0.3"
-        self.version = "2.5.5"
+        self.plugin_version = "1.1.0"
+        self.version = "3.4.10"
         self.json_keys = {"matched-at", "template-id", "host"}
         self._command_regex = re.compile(r'^(sudo nuclei|nuclei|\.\/nuclei|^.*?nuclei)\s+.*?')
         self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
         self._use_temp_file = True
         self._temp_file_extension = "json"
+
+    def _detect_nuclei_version(self, vuln_dict: dict) -> str:
+        """Detect Nuclei version based on JSON structure.
+
+        Returns:
+            "3.x" if Nuclei 3.x format detected, "2.x" otherwise
+        """
+        info = vuln_dict.get('info', {})
+        has_top_level_impact = 'impact' in info
+        has_top_level_remediation = 'remediation' in info
+
+        return "3.x" if (has_top_level_impact or has_top_level_remediation) else "2.x"
+
+    def _extract_impact_v2(self, info: dict) -> dict:
+        """Extract impact from Nuclei 2.x format (comma-separated tags)."""
+        impact = {}
+        impacted = info.get('metadata', {}).get('impact')
+        if isinstance(impacted, str):
+            for tag in impacted.split(','):
+                impact[tag.strip()] = True
+        return impact
+
+    def _extract_impact_v3(self, info: dict) -> dict:
+        """Extract impact from Nuclei 3.x format (descriptive text)."""
+        impact = {}
+        impacted = info.get('impact')
+        if isinstance(impacted, str) and impacted.strip():
+            impact['Impact Description'] = True
+        return impact
+
+    def _extract_resolution_v2(self, info: dict) -> str:
+        return info.get('metadata', {}).get('resolution', '')
+
+    def _extract_resolution_v3(self, info: dict) -> str:
+        return info.get('remediation', '')
 
     def parseOutputString(self, output, debug=False):
         for vuln_json in filter(lambda x: x != '', output.split("\n")):
@@ -74,7 +109,9 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             else:
                 print('Version not supported, use nuclei 2.5.3 or higher')
                 sys.exit(1)
-            reference = vuln_dict["info"].get('reference', [])
+            info = vuln_dict['info']
+
+            reference = info.get('reference', [])
             if not reference:
                 reference = []
             else:
@@ -83,7 +120,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                         reference = list(filter(None, [re.sub('^- ', '', elem) for elem in reference.split('\n')]))
                     else:
                         reference = [reference]
-            references = vuln_dict["info"].get('references', [])
+            references = info.get('references', [])
             if references:
                 if isinstance(references, str):
                     if re.match('^- ', references):
@@ -93,13 +130,13 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             else:
                 references = []
 
-            cve = vuln_dict['info'].get('classification', {}).get('cve-id', [])
+            cve = info.get('classification', {}).get('cve-id', [])
             if cve:
                 cve = [x.upper() for x in cve]
 
-            vector_string = vuln_dict['info'].get('classification', {}).get('cvss-metrics')
+            vector_string = info.get('classification', {}).get('cvss-metrics')
             cvss3 = {"vector_string": vector_string} if vector_string else None
-            cwe = vuln_dict['info'].get('classification', {}).get('cwe-id', [])
+            cwe = info.get('classification', {}).get('cwe-id', [])
             if cwe:
                 cwe = [x.upper() for x in cwe]
             #capec = vuln_dict['info'].get('metadata', {}).get('capec', [])
@@ -108,19 +145,19 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
 
             refs = sorted(list(set(reference + references)))
             refs = list(filter(None, refs))
-
-            tags = vuln_dict['info'].get('tags', [])
+            tags = info.get('tags', [])
             if isinstance(tags, str):
                 tags = tags.split(',')
 
-            impact = {}
-            impacted = vuln_dict['info'].get('metadata', {}).get('impact')
-            if isinstance(impacted, str):
-                for x in impacted.split(','):
-                    impact[x] = True
 
-            resolution = vuln_dict['info'].get('metadata', {}).get('resolution', '')
-            easeofresolution = vuln_dict['info'].get('metadata', {}).get('easeofresolution', None)
+            nuclei_version = self._detect_nuclei_version(vuln_dict)
+            if nuclei_version == "3.x":
+                impact = self._extract_impact_v3(info)
+                resolution = self._extract_resolution_v3(info)
+            else:  # 2.x format
+                impact = self._extract_impact_v2(info)
+                resolution = self._extract_resolution_v2(info)
+            easeofresolution = info.get('metadata', {}).get('easeofresolution', None)
 
             request = vuln_dict.get('request', '')
             if request:
@@ -129,10 +166,10 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 method = ""
 
             data = [f"Matched: {vuln_dict.get('matched-at')}",
-                    f"Tags: {vuln_dict['info'].get('tags', '')}",
+                    f"Tags: {info.get('tags', '')}",
                     f"Template ID: {vuln_dict.get('template-id', '')}"]
 
-            name = vuln_dict["info"].get("name")
+            name = info.get("name")
             run_date = vuln_dict.get('timestamp')
             if run_date:
                 run_date = parse(run_date)
@@ -140,9 +177,9 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 host_id,
                 service_id,
                 name=name,
-                desc=vuln_dict["info"].get("description", name),
+                desc=info.get("description", name),
                 ref=refs,
-                severity=vuln_dict["info"].get('severity'),
+                severity=info.get('severity'),
                 tags=tags,
                 impact=impact,
                 resolution=resolution,
