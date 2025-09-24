@@ -1,7 +1,9 @@
 import pytest
+import json
+import sys
 from pathlib import Path
-from unittest.mock import Mock
-from faraday_plugins.plugins.repo.nuclei.plugin import NucleiPlugin
+from unittest.mock import Mock, patch
+from faraday_plugins.plugins.repo.nuclei.plugin import NucleiPlugin, createPlugin
 
 
 class TestNuclei3x:
@@ -96,3 +98,263 @@ class TestNuclei3x:
             }
         }
         assert plugin._detect_nuclei_version(vuln_2x) == "2.x"
+
+    def test_impact_extraction_v2_with_tags(self):
+        """Test _extract_impact_v2 with comma-separated tags"""
+        plugin = NucleiPlugin()
+
+        # Test with comma-separated impact tags
+        info = {
+            "metadata": {
+                "impact": "high,rce,critical"
+            }
+        }
+        result = plugin._extract_impact_v2(info)
+        assert result == {"high": True, "rce": True, "critical": True}
+
+        # Test with no impact
+        info_no_impact = {"metadata": {}}
+        result_empty = plugin._extract_impact_v2(info_no_impact)
+        assert result_empty == {}
+
+        # Test with non-string impact
+        info_non_string = {"metadata": {"impact": 123}}
+        result_non_string = plugin._extract_impact_v2(info_non_string)
+        assert result_non_string == {}
+
+    def test_impact_extraction_v3_edge_cases(self):
+        """Test _extract_impact_v3 with edge cases"""
+        plugin = NucleiPlugin()
+
+        # Test with empty/whitespace impact
+        info_empty = {"impact": "   "}
+        result_empty = plugin._extract_impact_v3(info_empty)
+        assert result_empty == {}
+
+        # Test with no impact field
+        info_no_impact = {}
+        result_no_impact = plugin._extract_impact_v3(info_no_impact)
+        assert result_no_impact == {}
+
+    def test_parseOutputString_missing_matched_at(self):
+        """Test parseOutputString with missing matched-at field"""
+        plugin = NucleiPlugin()
+        plugin.logger = Mock()
+
+        # Create test data without matched-at field
+        vuln_data = {
+            "template-id": "test-template",
+            "host": "https://example.com",
+            "info": {
+                "name": "Test Vuln",
+                "severity": "medium"
+            }
+        }
+
+        with patch('builtins.print') as mock_print, \
+             patch('sys.exit') as mock_exit:
+            mock_exit.side_effect = SystemExit(1)  # Make sys.exit actually raise
+            with pytest.raises(SystemExit):
+                plugin.parseOutputString(json.dumps(vuln_data))
+            mock_print.assert_called_with('Version not supported, use nuclei 2.5.3 or higher')
+            mock_exit.assert_called_with(1)
+
+    def test_parseOutputString_with_reference_formatting(self):
+        """Test parseOutputString with various reference formats"""
+        plugin = NucleiPlugin()
+        plugin.logger = Mock()
+        plugin.createAndAddHost = Mock(return_value="host_id")
+        plugin.createAndAddServiceToHost = Mock(return_value="service_id")
+        plugin.createAndAddVulnWebToService = Mock()
+        plugin.resolve_hostname = Mock(return_value="192.168.1.1")
+
+        # Test with reference string starting with "- "
+        vuln_data = {
+            "template-id": "test-template",
+            "host": "https://example.com",
+            "matched-at": "https://example.com/test",
+            "info": {
+                "name": "Test Vuln",
+                "severity": "medium",
+                "reference": "- https://example1.com\n- https://example2.com\n",
+                "references": "- https://ref1.com\n- https://ref2.com"
+            }
+        }
+
+        plugin.parseOutputString(json.dumps(vuln_data))
+
+        # Verify vulnerability was created
+        assert plugin.createAndAddVulnWebToService.called
+        call_kwargs = plugin.createAndAddVulnWebToService.call_args[1]
+        refs = call_kwargs.get('ref', [])
+
+        # Should contain processed references
+        assert 'https://example1.com' in refs
+        assert 'https://example2.com' in refs
+        assert 'https://ref1.com' in refs
+        assert 'https://ref2.com' in refs
+
+    def test_parseOutputString_with_simple_references(self):
+        """Test parseOutputString with simple string references"""
+        plugin = NucleiPlugin()
+        plugin.logger = Mock()
+        plugin.createAndAddHost = Mock(return_value="host_id")
+        plugin.createAndAddServiceToHost = Mock(return_value="service_id")
+        plugin.createAndAddVulnWebToService = Mock()
+        plugin.resolve_hostname = Mock(return_value="192.168.1.1")
+
+        # Test with simple string references
+        vuln_data = {
+            "template-id": "test-template",
+            "host": "https://example.com",
+            "matched-at": "https://example.com/test",
+            "info": {
+                "name": "Test Vuln",
+                "severity": "medium",
+                "reference": "https://simple-ref.com",
+                "references": "https://simple-refs.com"
+            }
+        }
+
+        plugin.parseOutputString(json.dumps(vuln_data))
+
+        assert plugin.createAndAddVulnWebToService.called
+        call_kwargs = plugin.createAndAddVulnWebToService.call_args[1]
+        refs = call_kwargs.get('ref', [])
+
+        assert 'https://simple-ref.com' in refs
+        assert 'https://simple-refs.com' in refs
+
+    def test_parseOutputString_with_string_tags(self):
+        """Test parseOutputString with string tags (comma-separated)"""
+        plugin = NucleiPlugin()
+        plugin.logger = Mock()
+        plugin.createAndAddHost = Mock(return_value="host_id")
+        plugin.createAndAddServiceToHost = Mock(return_value="service_id")
+        plugin.createAndAddVulnWebToService = Mock()
+        plugin.resolve_hostname = Mock(return_value="192.168.1.1")
+
+        vuln_data = {
+            "template-id": "test-template",
+            "host": "https://example.com",
+            "matched-at": "https://example.com/test",
+            "info": {
+                "name": "Test Vuln",
+                "severity": "medium",
+                "tags": "cve,rce,critical"
+            }
+        }
+
+        plugin.parseOutputString(json.dumps(vuln_data))
+
+        assert plugin.createAndAddVulnWebToService.called
+        call_kwargs = plugin.createAndAddVulnWebToService.call_args[1]
+        tags = call_kwargs.get('tags', [])
+
+        assert 'cve' in tags
+        assert 'rce' in tags
+        assert 'critical' in tags
+
+    def test_processCommandString_without_output_arg(self):
+        """Test processCommandString when no output arg is present"""
+        plugin = NucleiPlugin()
+
+        command = "nuclei -t templates/ -u example.com"
+        result = plugin.processCommandString("user", "/path", command)
+
+        # Check that the command was modified correctly (dynamic output path)
+        assert "--json -irr -o" in result
+        assert result.startswith("nuclei --json -irr -o")
+        assert "-t templates/ -u example.com" in result
+
+    def test_processCommandString_with_existing_output_arg(self):
+        """Test processCommandString when output arg already exists"""
+        plugin = NucleiPlugin()
+
+        command = "nuclei -t templates/ -o existing.json -u example.com"
+        result = plugin.processCommandString("user", "/path", command)
+
+        # Check that existing output arg was replaced
+        assert "--json -irr -o" in result
+        assert "existing.json" not in result
+        assert "-t templates/" in result
+        assert "-u example.com" in result
+
+    @patch('subprocess.Popen')
+    def test_canParseCommandString_success(self, mock_popen):
+        """Test canParseCommandString with successful version check"""
+        plugin = NucleiPlugin()
+        plugin.command = "nuclei"
+
+        # Mock successful subprocess call
+        mock_process = Mock()
+        mock_process.stderr.read.return_value = b"Current Version: 2.6.0\n"
+        mock_popen.return_value = mock_process
+
+        with patch.object(plugin, 'canParseCommandString', wraps=plugin.canParseCommandString) as mock_super:
+            # Mock the super() call to return True
+            type(plugin).__bases__[0].canParseCommandString = Mock(return_value=True)
+
+            result = plugin.canParseCommandString("nuclei -t test")
+            assert result is True
+
+    @patch('subprocess.Popen')
+    def test_canParseCommandString_version_too_old(self, mock_popen):
+        """Test canParseCommandString with old version"""
+        plugin = NucleiPlugin()
+        plugin.command = "nuclei"
+
+        mock_process = Mock()
+        mock_process.stderr.read.return_value = b"Current Version: 2.4.0\n"
+        mock_popen.return_value = mock_process
+
+        type(plugin).__bases__[0].canParseCommandString = Mock(return_value=True)
+
+        result = plugin.canParseCommandString("nuclei -t test")
+        assert result is False
+
+    @patch('subprocess.Popen')
+    def test_canParseCommandString_no_version_match(self, mock_popen):
+        """Test canParseCommandString when version regex doesn't match"""
+        plugin = NucleiPlugin()
+        plugin.command = "nuclei"
+
+        mock_process = Mock()
+        mock_process.stderr.read.return_value = b"Some other output\n"
+        mock_popen.return_value = mock_process
+
+        type(plugin).__bases__[0].canParseCommandString = Mock(return_value=True)
+
+        result = plugin.canParseCommandString("nuclei -t test")
+        assert result is False
+
+    @patch('subprocess.Popen')
+    def test_canParseCommandString_exception(self, mock_popen):
+        """Test canParseCommandString when subprocess raises exception"""
+        plugin = NucleiPlugin()
+        plugin.command = "nuclei"
+
+        mock_popen.side_effect = Exception("Command not found")
+
+        type(plugin).__bases__[0].canParseCommandString = Mock(return_value=True)
+
+        result = plugin.canParseCommandString("nuclei -t test")
+        assert result is False
+
+    def test_canParseCommandString_super_returns_false(self):
+        """Test canParseCommandString when super().canParseCommandString returns False"""
+        plugin = NucleiPlugin()
+
+        with patch('faraday_plugins.plugins.plugin.PluginMultiLineJsonFormat.canParseCommandString') as mock_super:
+            mock_super.return_value = False
+            result = plugin.canParseCommandString("invalid command")
+            assert result is None
+
+    def test_createPlugin_factory_function(self):
+        """Test the createPlugin factory function"""
+        plugin = createPlugin()
+        assert isinstance(plugin, NucleiPlugin)
+
+        # Test with arguments
+        plugin_with_args = createPlugin("arg1", kwarg1="value1")
+        assert isinstance(plugin_with_args, NucleiPlugin)
