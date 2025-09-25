@@ -3,7 +3,12 @@ import json
 import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
-from faraday_plugins.plugins.repo.nuclei.plugin import NucleiPlugin, createPlugin
+from faraday_plugins.plugins.repo.nuclei.plugin import (
+    NucleiPlugin,
+    NucleiV2Parser,
+    NucleiV3Parser,
+    createPlugin
+)
 
 
 class TestNuclei3x:
@@ -76,20 +81,21 @@ class TestNuclei3x:
         # Should have created vulnerabilities
         assert plugin.createAndAddVulnWebToService.called, "Should create vulnerabilities from 2.x format"
 
-    def test_version_detection(self):
-        """Test the version detection logic"""
-        plugin = NucleiPlugin()
+    def test_parser_selection(self):
+        """Test the parser selection logic"""
+        from faraday_plugins.plugins.repo.nuclei.plugin import _get_parser
 
-        # Test Nuclei 3.x detection
+        # Test Nuclei 3.x parser selection
         vuln_3x = {
             "info": {
                 "impact": "This is a 3.x impact field",
                 "metadata": {}
             }
         }
-        assert plugin._detect_nuclei_version(vuln_3x) == "3.x"
+        parser_3x = _get_parser(vuln_3x)
+        assert isinstance(parser_3x, NucleiV3Parser)
 
-        # Test Nuclei 2.x detection
+        # Test Nuclei 2.x parser selection (fallback)
         vuln_2x = {
             "info": {
                 "metadata": {
@@ -97,43 +103,55 @@ class TestNuclei3x:
                 }
             }
         }
-        assert plugin._detect_nuclei_version(vuln_2x) == "2.x"
+        parser_2x = _get_parser(vuln_2x)
+        assert isinstance(parser_2x, NucleiV2Parser)
 
     def test_impact_extraction_v2_with_tags(self):
-        """Test _extract_impact_v2 with comma-separated tags"""
-        plugin = NucleiPlugin()
-
+        """Test NucleiV2Parser with comma-separated tags"""
         # Test with comma-separated impact tags
-        info = {
-            "metadata": {
-                "impact": "high,rce,critical"
+        vuln_dict = {
+            "info": {
+                "metadata": {
+                    "impact": "high,rce,critical"
+                }
             }
         }
-        result = plugin._extract_impact_v2(info)
+        parser = NucleiV2Parser(vuln_dict)
+        result = parser.get_impact()
         assert result == {"high": True, "rce": True, "critical": True}
 
         # Test with no impact
-        info_no_impact = {"metadata": {}}
-        result_empty = plugin._extract_impact_v2(info_no_impact)
+        vuln_no_impact = {
+            "info": {"metadata": {}}
+        }
+        parser_empty = NucleiV2Parser(vuln_no_impact)
+        result_empty = parser_empty.get_impact()
         assert result_empty == {}
 
         # Test with non-string impact
-        info_non_string = {"metadata": {"impact": 123}}
-        result_non_string = plugin._extract_impact_v2(info_non_string)
+        vuln_non_string = {
+            "info": {"metadata": {"impact": 123}}
+        }
+        parser_non_string = NucleiV2Parser(vuln_non_string)
+        result_non_string = parser_non_string.get_impact()
         assert result_non_string == {}
 
     def test_impact_extraction_v3_edge_cases(self):
-        """Test _extract_impact_v3 with edge cases"""
-        plugin = NucleiPlugin()
-
+        """Test NucleiV3Parser with edge cases"""
         # Test with empty/whitespace impact
-        info_empty = {"impact": "   "}
-        result_empty = plugin._extract_impact_v3(info_empty)
+        vuln_empty = {
+            "info": {"impact": "   "}
+        }
+        parser_empty = NucleiV3Parser(vuln_empty)
+        result_empty = parser_empty.get_impact()
         assert result_empty == {}
 
         # Test with no impact field
-        info_no_impact = {}
-        result_no_impact = plugin._extract_impact_v3(info_no_impact)
+        vuln_no_impact = {
+            "info": {}
+        }
+        parser_no_impact = NucleiV3Parser(vuln_no_impact)
+        result_no_impact = parser_no_impact.get_impact()
         assert result_no_impact == {}
 
     def test_parseOutputString_missing_matched_at(self):

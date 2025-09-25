@@ -8,6 +8,8 @@ import subprocess # nosec
 import re
 import sys
 import json
+from abc import ABC, abstractmethod
+from typing import Dict, Any
 from dateutil.parser import parse
 from urllib.parse import urlparse
 from packaging import version
@@ -21,6 +23,96 @@ __version__ = "1.0.0"
 __maintainer__ = "Nicolas Rebagliati"
 __email__ = "nrebagliati@infobytesec.com"
 __status__ = "Development"
+
+
+class NucleiReportParser(ABC):
+    """Abstract base class for Nuclei report parsers."""
+
+    def __init__(self, vuln_dict: Dict[str, Any]):
+        self.vuln_dict = vuln_dict
+        self.info = vuln_dict.get('info', {})
+
+    @abstractmethod
+    def get_impact(self) -> Dict[str, bool]:
+        """Extract impact information from the vulnerability."""
+        pass
+
+    @abstractmethod
+    def get_resolution(self) -> str:
+        """Extract resolution information from the vulnerability."""
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def can_parse(vuln_dict: Dict[str, Any]) -> bool:
+        """Check if this parser can handle the given vulnerability format."""
+        pass
+
+
+class NucleiV3Parser(NucleiReportParser):
+    """Parser for Nuclei v3.x JSON format."""
+
+    def get_impact(self) -> Dict[str, bool]:
+        """Extract impact from Nuclei 3.x format (descriptive text)."""
+        impact = {}
+        impacted_text = self.info.get('impact')
+        if isinstance(impacted_text, str) and impacted_text.strip():
+            impact['Impact Description'] = True
+        return impact
+
+    def get_resolution(self) -> str:
+        """Extract resolution from top-level remediation field."""
+        return self.info.get('remediation', '')
+
+    @staticmethod
+    def can_parse(vuln_dict: Dict[str, Any]) -> bool:
+        """Check for Nuclei 3.x specific fields."""
+        info = vuln_dict.get('info', {})
+        return 'impact' in info or 'remediation' in info
+
+
+class NucleiV2Parser(NucleiReportParser):
+    """Parser for Nuclei v2.x JSON format."""
+
+    def get_impact(self) -> Dict[str, bool]:
+        """Extract impact from Nuclei 2.x format (comma-separated tags)."""
+        impact = {}
+        metadata = self.info.get('metadata', {})
+        impacted_str = metadata.get('impact')
+        if isinstance(impacted_str, str):
+            for tag in impacted_str.split(','):
+                impact[tag.strip()] = True
+        return impact
+
+    def get_resolution(self) -> str:
+        """Extract resolution from metadata field."""
+        metadata = self.info.get('metadata', {})
+        return metadata.get('resolution', '')
+
+    @staticmethod
+    def can_parse(vuln_dict: Dict[str, Any]) -> bool:
+        """Default parser - can handle any format as fallback."""
+        return True
+
+
+def _get_parser(vuln_dict: Dict[str, Any]) -> NucleiReportParser:
+    """Factory method to select the appropriate Nuclei parser.
+
+    Args:
+        vuln_dict: The vulnerability dictionary from Nuclei output
+
+    Returns:
+        An instance of the appropriate parser for the detected version
+    """
+
+    parsers = [NucleiV3Parser, NucleiV2Parser]
+
+    for parser_class in parsers:
+        if parser_class.can_parse(vuln_dict):
+            return parser_class(vuln_dict)
+
+    # Fallback to V2 parser if no specific parser matches
+    return NucleiV2Parser(vuln_dict)
 
 
 class NucleiPlugin(PluginMultiLineJsonFormat):
@@ -39,41 +131,6 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
         self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
         self._use_temp_file = True
         self._temp_file_extension = "json"
-
-    def _detect_nuclei_version(self, vuln_dict: dict) -> str:
-        """Detect Nuclei version based on JSON structure.
-
-        Returns:
-            "3.x" if Nuclei 3.x format detected, "2.x" otherwise
-        """
-        info = vuln_dict.get('info', {})
-        has_top_level_impact = 'impact' in info
-        has_top_level_remediation = 'remediation' in info
-
-        return "3.x" if (has_top_level_impact or has_top_level_remediation) else "2.x"
-
-    def _extract_impact_v2(self, info: dict) -> dict:
-        """Extract impact from Nuclei 2.x format (comma-separated tags)."""
-        impact = {}
-        impacted = info.get('metadata', {}).get('impact')
-        if isinstance(impacted, str):
-            for tag in impacted.split(','):
-                impact[tag.strip()] = True
-        return impact
-
-    def _extract_impact_v3(self, info: dict) -> dict:
-        """Extract impact from Nuclei 3.x format (descriptive text)."""
-        impact = {}
-        impacted = info.get('impact')
-        if isinstance(impacted, str) and impacted.strip():
-            impact['Impact Description'] = True
-        return impact
-
-    def _extract_resolution_v2(self, info: dict) -> str:
-        return info.get('metadata', {}).get('resolution', '')
-
-    def _extract_resolution_v3(self, info: dict) -> str:
-        return info.get('remediation', '')
 
     def parseOutputString(self, output, debug=False):
         for vuln_json in filter(lambda x: x != '', output.split("\n")):
@@ -150,13 +207,12 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 tags = tags.split(',')
 
 
-            nuclei_version = self._detect_nuclei_version(vuln_dict)
-            if nuclei_version == "3.x":
-                impact = self._extract_impact_v3(info)
-                resolution = self._extract_resolution_v3(info)
-            else:  # 2.x format
-                impact = self._extract_impact_v2(info)
-                resolution = self._extract_resolution_v2(info)
+
+            parser = _get_parser(vuln_dict)
+            impact = parser.get_impact()
+            resolution = parser.get_resolution()
+
+            # Common fields across all versions
             easeofresolution = info.get('metadata', {}).get('easeofresolution', None)
 
             request = vuln_dict.get('request', '')
