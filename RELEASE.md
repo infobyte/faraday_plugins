@@ -1,3 +1,9 @@
+1.27.0 [Oct 3rd, 2025]:
+---
+ * [ADD] Faraday Asset Import CSV Plugin. #375
+ * [FIX] Fixed incorrect field mapping in Tenable IO JSON import plugin. #377
+ * [FIX] Resolved typo in the scorecard plugin where the asset name was incorrectly displayed. #378
+
 1.26.0 [Aug 27th, 2025]:
 ---
  * [ADD] Added severity range filtering. #371
