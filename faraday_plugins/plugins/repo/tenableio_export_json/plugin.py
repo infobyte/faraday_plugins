@@ -8,6 +8,7 @@ See the file 'doc/LICENSE' for the license information
 import json
 
 from faraday_plugins.plugins.plugin import PluginJsonFormat
+from faraday_plugins.plugins.plugins_utils import filter_services
 
 __author__ = "Dante Acosta"
 __copyright__ = "Copyright (c) 2025, Infobyte LLC"
@@ -116,10 +117,11 @@ class TenableIOJSONExport(PluginJsonFormat):
 
             vuln_data = {
                 "name": definition.get("name", "Vulnerability"),
-                "desc": definition.get("description") or definition.get("solution") or "No description provided.",
+                "desc": definition.get("description", ""),
+                "resolution": definition.get("solution", ""),
                 "ref": refs,
                 "severity": self.SEVERITY_MAP.get(vuln.get("severity", 1), "low"),
-                "external_id": vuln.get("id"),
+                "external_id": f"NESSUS-{vuln.get('id')}",
                 "status": self.STATUS_MAP.get(vuln.get("state", "ACTIVE"), "open"),
                 "cve": definition.get("cve", []),
                 "data": output_content
@@ -129,7 +131,15 @@ class TenableIOJSONExport(PluginJsonFormat):
             vuln_data.update(cvss_data)
 
             if is_valid_port:
-                service_name = f"{protocol}/{port_int}"
+                services_mapper = filter_services()
+
+                service_name = "Unknown"
+
+                for service in services_mapper:
+                    if service[0] == str(port_int):
+                        service_name = service[1]
+                        break
+                
                 service_id = self.createAndAddServiceToHost(
                     host_id=host_id,
                     name=service_name,

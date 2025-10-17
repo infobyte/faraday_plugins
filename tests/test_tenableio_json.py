@@ -4,7 +4,7 @@ Test cases for Tenable IO JSON Export Plugin
 
 import json
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 from faraday_plugins.plugins.repo.tenableio_export_json.plugin import TenableIOJSONExport
 
 
@@ -22,8 +22,15 @@ class TestTenableIOJSONExport:
         self.plugin.createAndAddVulnToHost = Mock()
         self.plugin.createAndAddVulnToService = Mock()
 
-    def test_valid_vulnerability_with_port(self):
+    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
+    def test_valid_vulnerability_with_port(self, mock_filter_services):
         """Test parsing a valid vulnerability with port (should create service vulnerability)"""
+        mock_filter_services.return_value = [
+            ('22', 'ssh'),
+            ('80', 'http'),
+            ('443', 'https')
+        ]
+        
         test_data = [{
             "id": "vuln_001",
             "asset": {
@@ -53,13 +60,12 @@ class TestTenableIOJSONExport:
         call_args = self.plugin.createAndAddHost.call_args[1]
         assert call_args["name"] == "192.168.1.100"
         assert call_args["os"] == "Linux"
-        # Set doesn't guarantee order, so check both hostnames are present
         assert set(call_args["hostnames"]) == {"webserver01", "webserver01.example.com"}
 
-        # Verify service creation
+        # Verify service creation with mapped service name
         self.plugin.createAndAddServiceToHost.assert_called_once_with(
             host_id="host_id_123",
-            name="tcp/22",
+            name="ssh",
             protocol="tcp",
             ports=[22],
             status="open"
@@ -265,13 +271,21 @@ class TestTenableIOJSONExport:
         # Internal formatting preserved, external whitespace stripped
         assert vuln_call["data"] == test_output
 
-    def test_service_name_format(self):
-        """Test that service name follows the format protocol/port"""
+    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
+    def test_service_name_format(self, mock_filter_services):
+        """Test that service names are mapped from port numbers using filter_services"""
+        mock_filter_services.return_value = [
+            ('80', 'http'),
+            ('443', 'https'),
+            ('53', 'domain'),
+            ('22', 'ssh')
+        ]
+        
         test_cases = [
-            {"protocol": "TCP", "port": 80, "expected": "tcp/80"},
-            {"protocol": "UDP", "port": 53, "expected": "udp/53"},
-            {"protocol": "tcp", "port": 443, "expected": "tcp/443"},
-            {"port": 8080, "expected": "tcp/8080"}  # Default to tcp
+            {"protocol": "TCP", "port": 80, "expected_name": "http", "expected_protocol": "tcp"},
+            {"protocol": "UDP", "port": 53, "expected_name": "domain", "expected_protocol": "udp"},
+            {"protocol": "tcp", "port": 443, "expected_name": "https", "expected_protocol": "tcp"},
+            {"port": 8080, "expected_name": "Unknown", "expected_protocol": "tcp"},  # Unmapped port
         ]
 
         for test_case in test_cases:
@@ -289,10 +303,47 @@ class TestTenableIOJSONExport:
 
             self.plugin.parseOutputString(json.dumps([vuln_data]))
 
-            # Verify service name format
             call_args = self.plugin.createAndAddServiceToHost.call_args[1]
-            assert call_args["name"] == test_case["expected"]
-            assert call_args["protocol"] == test_case["expected"].split("/")[0]
+            assert call_args["name"] == test_case["expected_name"]
+            assert call_args["protocol"] == test_case["expected_protocol"]
+
+    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
+    def test_service_mapping_with_common_ports(self, mock_filter_services):
+        """Test service mapping for common well-known ports"""
+        mock_filter_services.return_value = [
+            ('21', 'ftp'),
+            ('22', 'ssh'),
+            ('23', 'telnet'),
+            ('25', 'smtp'),
+            ('80', 'http'),
+            ('443', 'https'),
+            ('3306', 'mysql'),
+            ('5432', 'postgresql'),
+        ]
+
+        common_ports = [
+            (21, 'ftp'),
+            (22, 'ssh'),
+            (80, 'http'),
+            (443, 'https'),
+            (3306, 'mysql'),
+        ]
+
+        for port, expected_service in common_ports:
+            self.plugin.createAndAddServiceToHost.reset_mock()
+
+            test_data = [{
+                "id": f"test_port_{port}",
+                "asset": {"display_ipv4_address": "10.0.0.1"},
+                "definition": {"id": 1, "name": "Test", "description": "Test"},
+                "port": port
+            }]
+
+            self.plugin.parseOutputString(json.dumps(test_data))
+
+            call_args = self.plugin.createAndAddServiceToHost.call_args[1]
+            assert call_args["name"] == expected_service
+            assert call_args["ports"] == [port]
 
     def test_state_mapping(self):
         """Test vulnerability state mapping"""
@@ -347,8 +398,14 @@ class TestTenableIOJSONExport:
             vuln_call = self.plugin.createAndAddVulnToHost.call_args[1]
             assert vuln_call["severity"] == expected_severity
 
-    def test_example_json_from_user_story(self):
+    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
+    def test_example_json_from_user_story(self, mock_filter_services):
         """Test with the example JSON from the user story"""
+        mock_filter_services.return_value = [
+            ('445', 'microsoft-ds'),
+            ('139', 'netbios-ssn')
+        ]
+        
         test_data = [{
             "id": "000c9326-cc6d-5c4f-b20c-32ab5937cee6",
             "asset": {
@@ -373,15 +430,14 @@ class TestTenableIOJSONExport:
 
         # Verify correct host creation
         call_args = self.plugin.createAndAddHost.call_args[1]
-        assert call_args["name"] == "192.168.1.1"  # ASSET field shows IP
+        assert call_args["name"] == "192.168.1.1"
         assert call_args["os"] == "unknown"
-        # Set doesn't guarantee order
         assert set(call_args["hostnames"]) == {"rtp-ipl10", "rtp-ipl10.lpm.org.example"}
 
-        # Verify service vulnerability created (port exists and is valid)
+        # Verify service vulnerability created with mapped name
         self.plugin.createAndAddServiceToHost.assert_called_once_with(
             host_id="host_id_123",
-            name="tcp/445",
+            name="microsoft-ds",
             protocol="tcp",
             ports=[445],
             status="open"
@@ -390,8 +446,8 @@ class TestTenableIOJSONExport:
         # Verify vulnerability details
         vuln_call = self.plugin.createAndAddVulnToService.call_args[1]
         assert vuln_call["severity"] == "medium"
-        assert vuln_call["status"] == "closed"  # FIXED maps to closed
-        assert vuln_call["data"] == "N/A"  # No output field in example
+        assert vuln_call["status"] == "closed"
+        assert vuln_call["data"] == "N/A"
 
 
     def test_json_decode_error(self):
@@ -464,8 +520,8 @@ class TestTenableIOJSONExport:
         assert vuln_call["cvss3"]["vector_string"] == "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
         assert vuln_call["cvss4"]["vector_string"] == "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N"
 
-    def test_missing_description_uses_solution(self):
-        """Test that when description is missing, solution field is used instead"""
+    def test_missing_description_uses_empty_string(self):
+        """Test that when description is missing, empty string is used"""
         test_data = [{
             "id": "vuln_no_desc",
             "asset": {
@@ -475,16 +531,100 @@ class TestTenableIOJSONExport:
                 "id": 12345,
                 "name": "Test Vulnerability",
                 "solution": "Apply the latest security patches"
-                # No description field
             },
             "severity": 2
         }]
 
         self.plugin.parseOutputString(json.dumps(test_data))
 
-        # Verify solution is used as description
         vuln_call = self.plugin.createAndAddVulnToHost.call_args[1]
-        assert vuln_call["desc"] == "Apply the latest security patches"
+        assert vuln_call["desc"] == ""
+        assert vuln_call["resolution"] == "Apply the latest security patches"
+
+    def test_external_id_format(self):
+        """Test that external_id is properly formatted with NESSUS- prefix"""
+        test_cases = [
+            ("vuln_123", "NESSUS-vuln_123"),
+            ("abc-def-ghi", "NESSUS-abc-def-ghi"),
+            ("12345", "NESSUS-12345"),
+            ("000c9326-cc6d-5c4f-b20c-32ab5937cee6", "NESSUS-000c9326-cc6d-5c4f-b20c-32ab5937cee6"),
+        ]
+
+        for vuln_id, expected_external_id in test_cases:
+            self.plugin.createAndAddVulnToHost.reset_mock()
+
+            test_data = [{
+                "id": vuln_id,
+                "asset": {
+                    "display_ipv4_address": "192.168.1.100"
+                },
+                "definition": {
+                    "id": 1,
+                    "name": "Test Vulnerability",
+                    "description": "Test description"
+                }
+            }]
+
+            self.plugin.parseOutputString(json.dumps(test_data))
+
+            vuln_call = self.plugin.createAndAddVulnToHost.call_args[1]
+            assert vuln_call["external_id"] == expected_external_id
+
+    def test_service_mapping_real_filter_services(self):
+        """Test service mapping with actual filter_services() without mocking"""
+        from faraday_plugins.plugins.plugins_utils import filter_services
+        
+        services_map = filter_services()
+        port_to_service = {port: service for port, service in services_map}
+        
+        well_known_ports = [
+            (21, 'ftp'),
+            (22, 'ssh'),
+            (23, 'telnet'),
+            (25, 'smtp'),
+            (53, 'domain'),
+            (80, 'http'),
+            (110, 'pop3'),
+            (143, 'imap'),
+            (443, 'https'),
+            (3306, 'mysql'),
+            (5432, 'postgresql'),
+            (8080, 'http-proxy'),
+        ]
+        
+        for port, expected_service in well_known_ports:
+            if str(port) in port_to_service:
+                self.plugin.createAndAddServiceToHost.reset_mock()
+                
+                test_data = [{
+                    "id": f"test_real_port_{port}",
+                    "asset": {"display_ipv4_address": "10.0.0.1"},
+                    "definition": {"id": 1, "name": "Test Vuln", "description": "Test"},
+                    "port": port
+                }]
+                
+                self.plugin.parseOutputString(json.dumps(test_data))
+                
+                call_args = self.plugin.createAndAddServiceToHost.call_args[1]
+                actual_service = port_to_service[str(port)]
+                assert call_args["name"] == actual_service
+                assert call_args["ports"] == [port]
+        
+        self.plugin.createAndAddServiceToHost.reset_mock()
+        unmapped_port = 54321
+        test_data = [{
+            "id": "test_unmapped_port",
+            "asset": {"display_ipv4_address": "10.0.0.1"},
+            "definition": {"id": 1, "name": "Test Vuln", "description": "Test"},
+            "port": unmapped_port
+        }]
+        
+        self.plugin.parseOutputString(json.dumps(test_data))
+        
+        if str(unmapped_port) not in port_to_service:
+            call_args = self.plugin.createAndAddServiceToHost.call_args[1]
+            assert call_args["name"] == "Unknown"
+            assert call_args["ports"] == [unmapped_port]
 
     def test_create_plugin_function(self):
         """Test the createPlugin factory function (covers line 174)"""
