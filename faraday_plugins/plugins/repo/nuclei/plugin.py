@@ -166,7 +166,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             else:
                 print('Version not supported, use nuclei 2.5.3 or higher')
                 sys.exit(1)
-            info = vuln_dict['info']
+            info = vuln_dict.get('info', {})
 
             reference = info.get('reference', [])
             if not reference:
@@ -212,7 +212,6 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             impact = parser.get_impact()
             resolution = parser.get_resolution()
 
-            # Common fields across all versions
             easeofresolution = info.get('metadata', {}).get('easeofresolution', None)
 
             request = vuln_dict.get('request', '')
