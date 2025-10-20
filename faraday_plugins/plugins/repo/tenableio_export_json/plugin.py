@@ -60,12 +60,8 @@ class TenableIOJSONExport(PluginJsonFormat):
                 self.logger.error(f"Omitting vulnerability {vuln.get('id', 'unknown')}: "
                                 f"required field asset is missing or invalid")
                 continue
-
-            display_ipv4 = asset_info.get("display_ipv4_address")
-            if not display_ipv4 or (isinstance(display_ipv4, str) and not display_ipv4.strip()):
-                self.logger.error(f"Omitting vulnerability {vuln.get('id', 'unknown')}: "
-                                f"required field asset.display_ipv4_address is missing")
-                continue
+            
+            display_ipv4 = asset_info.get("ipv4_addresses")[0] if isinstance(asset_info.get("ipv4_addresses"), list) and asset_info.get("ipv4_addresses") else ""
 
             definition = vuln.get("definition", {})
             if not {"id", "name"}.issubset(definition.keys()):

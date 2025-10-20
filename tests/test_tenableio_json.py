@@ -35,7 +35,7 @@ class TestTenableIOJSONExport:
             "id": "vuln_001",
             "asset": {
                 "id": "asset_001",
-                "display_ipv4_address": "192.168.1.100",
+                "ipv4_addresses": ["192.168.1.100"],
                 "host_name": "webserver01",
                 "display_fqdn": "webserver01.example.com",
                 "operating_system": "Linux"
@@ -87,7 +87,7 @@ class TestTenableIOJSONExport:
         test_data = [{
             "id": "vuln_002",
             "asset": {
-                "display_ipv4_address": "10.0.0.50",
+                "ipv4_addresses": ["10.0.0.50"],
                 "host_name": "desktop01"
             },
             "definition": {
@@ -128,7 +128,7 @@ class TestTenableIOJSONExport:
             vuln_data = {
                 "id": f"vuln_{test_case.get('desc', 'no_port')}",
                 "asset": {
-                    "display_ipv4_address": "172.16.0.1"
+                    "ipv4_addresses": ["172.16.0.1"]
                 },
                 "definition": {
                     "id": 111,
@@ -152,18 +152,6 @@ class TestTenableIOJSONExport:
             {
                 "data": {"id": "test1", "asset": None},
                 "error_msg": "Omitting vulnerability test1: required field asset is missing or invalid"
-            },
-            {
-                "data": {"id": "test2", "asset": {"host_name": "server"}},
-                "error_msg": "Omitting vulnerability test2: required field asset.display_ipv4_address is missing"
-            },
-            {
-                "data": {"id": "test3", "asset": {"display_ipv4_address": ""}},
-                "error_msg": "Omitting vulnerability test3: required field asset.display_ipv4_address is missing"
-            },
-            {
-                "data": {"id": "test4", "asset": {"display_ipv4_address": "   "}},
-                "error_msg": "Omitting vulnerability test4: required field asset.display_ipv4_address is missing"
             },
             {
                 "data": {"id": "test5", "asset": "not_a_dict"},
@@ -193,7 +181,7 @@ class TestTenableIOJSONExport:
         test_cases = [
             {
                 "asset": {
-                    "display_ipv4_address": "192.168.1.1",
+                    "ipv4_addresses": ["192.168.1.1"],
                     "host_name": "server01",
                     "display_fqdn": "server01.domain.com"
                 },
@@ -201,21 +189,21 @@ class TestTenableIOJSONExport:
             },
             {
                 "asset": {
-                    "display_ipv4_address": "192.168.1.2",
+                    "ipv4_addresses": ["192.168.1.2"],
                     "display_fqdn": "server02.domain.com"
                 },
                 "expected_hostnames": ["server02.domain.com"]
             },
             {
                 "asset": {
-                    "display_ipv4_address": "192.168.1.3",
+                    "ipv4_addresses": ["192.168.1.3"],
                     "host_name": "server03"
                 },
                 "expected_hostnames": ["server03"]
             },
             {
                 "asset": {
-                    "display_ipv4_address": "192.168.1.4"
+                    "ipv4_addresses": ["192.168.1.4"]
                 },
                 "expected_hostnames": []  # No hostnames - empty list
             }
@@ -243,7 +231,7 @@ class TestTenableIOJSONExport:
         long_output = "A" * 15000
         test_data = [{
             "id": "test_output",
-            "asset": {"display_ipv4_address": "10.0.0.1"},
+            "asset": {"ipv4_addresses": ["10.0.0.1"]},
             "definition": {"id": 1, "name": "Test", "description": "Test"},
             "output": f"  {long_output}  "  # With leading/trailing whitespace
         }]
@@ -260,7 +248,7 @@ class TestTenableIOJSONExport:
         test_output = "Line 1\n\tIndented line 2\n  Spaced line 3"
         test_data = [{
             "id": "test_formatting",
-            "asset": {"display_ipv4_address": "10.0.0.2"},
+            "asset": {"ipv4_addresses": ["10.0.0.2"]},
             "definition": {"id": 1, "name": "Test", "description": "Test"},
             "output": f"  {test_output}  "  # With external whitespace
         }]
@@ -293,7 +281,7 @@ class TestTenableIOJSONExport:
 
             vuln_data = {
                 "id": "test_service",
-                "asset": {"display_ipv4_address": "10.0.0.3"},
+                "asset": {"ipv4_addresses": ["10.0.0.3"]},
                 "definition": {"id": 1, "name": "Test", "description": "Test"},
                 "port": test_case["port"]
             }
@@ -334,7 +322,7 @@ class TestTenableIOJSONExport:
 
             test_data = [{
                 "id": f"test_port_{port}",
-                "asset": {"display_ipv4_address": "10.0.0.1"},
+                "asset": {"ipv4_addresses": ["10.0.0.1"]},
                 "definition": {"id": 1, "name": "Test", "description": "Test"},
                 "port": port
             }]
@@ -360,7 +348,7 @@ class TestTenableIOJSONExport:
 
             test_data = [{
                 "id": f"test_state_{input_state}",
-                "asset": {"display_ipv4_address": "10.0.0.4"},
+                "asset": {"ipv4_addresses": ["10.0.0.4"]},
                 "definition": {"id": 1, "name": "Test", "description": "Test"},
                 "state": input_state
             }]
@@ -386,7 +374,7 @@ class TestTenableIOJSONExport:
 
             test_data = [{
                 "id": f"test_severity_{input_severity}",
-                "asset": {"display_ipv4_address": "10.0.0.5"},
+                "asset": {"ipv4_addresses": ["10.0.0.5"]},
                 "definition": {"id": 1, "name": "Test", "description": "Test"}
             }]
 
@@ -411,7 +399,7 @@ class TestTenableIOJSONExport:
             "asset": {
                 "id": "f3d3e5e3-abb4-41e3-ad3b-6adf7a3b51dc",
                 "name": "rtp-ipl10",
-                "display_ipv4_address": "192.168.1.1",
+                "ipv4_addresses": ["192.168.1.1"],
                 "display_fqdn": "rtp-ipl10.lpm.org.example",
                 "host_name": "rtp-ipl10"
             },
@@ -467,7 +455,7 @@ class TestTenableIOJSONExport:
         test_data = [{
             "id": "vuln_missing_def",
             "asset": {
-                "display_ipv4_address": "192.168.1.100",
+                "ipv4_addresses": ["192.168.1.100"],
                 "host_name": "test-host"
             },
             "definition": {
@@ -489,7 +477,7 @@ class TestTenableIOJSONExport:
         test_data = [{
             "id": "vuln_with_cvss",
             "asset": {
-                "display_ipv4_address": "192.168.1.100"
+                "ipv4_addresses": ["192.168.1.100"]
             },
             "definition": {
                 "id": 12345,
@@ -525,7 +513,7 @@ class TestTenableIOJSONExport:
         test_data = [{
             "id": "vuln_no_desc",
             "asset": {
-                "display_ipv4_address": "192.168.1.100"
+                "ipv4_addresses": ["192.168.1.100"]
             },
             "definition": {
                 "id": 12345,
@@ -556,7 +544,7 @@ class TestTenableIOJSONExport:
             test_data = [{
                 "id": vuln_id,
                 "asset": {
-                    "display_ipv4_address": "192.168.1.100"
+                    "ipv4_addresses": ["192.168.1.100"]
                 },
                 "definition": {
                     "id": 1,
@@ -598,7 +586,7 @@ class TestTenableIOJSONExport:
                 
                 test_data = [{
                     "id": f"test_real_port_{port}",
-                    "asset": {"display_ipv4_address": "10.0.0.1"},
+                    "asset": {"ipv4_addresses": ["10.0.0.1"]},
                     "definition": {"id": 1, "name": "Test Vuln", "description": "Test"},
                     "port": port
                 }]
@@ -614,7 +602,7 @@ class TestTenableIOJSONExport:
         unmapped_port = 54321
         test_data = [{
             "id": "test_unmapped_port",
-            "asset": {"display_ipv4_address": "10.0.0.1"},
+            "asset": {"ipv4_addresses": ["10.0.0.1"]},
             "definition": {"id": 1, "name": "Test Vuln", "description": "Test"},
             "port": unmapped_port
         }]
@@ -625,6 +613,78 @@ class TestTenableIOJSONExport:
             call_args = self.plugin.createAndAddServiceToHost.call_args[1]
             assert call_args["name"] == "Unknown"
             assert call_args["ports"] == [unmapped_port]
+
+    def test_ipv4_addresses_list_first_element(self):
+        """Test that the first IP from ipv4_addresses list is used as host name"""
+        test_cases = [
+            {
+                "ipv4_addresses": ["192.168.1.100"],
+                "expected_ip": "192.168.1.100",
+                "desc": "single IP in list"
+            },
+            {
+                "ipv4_addresses": ["10.0.0.1", "10.0.0.2", "10.0.0.3"],
+                "expected_ip": "10.0.0.1",
+                "desc": "multiple IPs - should use first"
+            },
+            {
+                "ipv4_addresses": ["172.16.50.100", "192.168.1.1"],
+                "expected_ip": "172.16.50.100",
+                "desc": "two IPs - should use first"
+            },
+        ]
+
+        for test_case in test_cases:
+            self.plugin.createAndAddHost.reset_mock()
+
+            test_data = [{
+                "id": f"test_{test_case['desc']}",
+                "asset": {
+                    "ipv4_addresses": test_case["ipv4_addresses"],
+                    "host_name": "testhost"
+                },
+                "definition": {"id": 1, "name": "Test", "description": "Test"}
+            }]
+
+            self.plugin.parseOutputString(json.dumps(test_data))
+
+            call_args = self.plugin.createAndAddHost.call_args[1]
+            assert call_args["name"] == test_case["expected_ip"]
+
+    def test_ipv4_addresses_empty_or_invalid(self):
+        """Test handling of empty or invalid ipv4_addresses field"""
+        test_cases = [
+            {
+                "asset": {"ipv4_addresses": []},
+                "desc": "empty list"
+            },
+            {
+                "asset": {"ipv4_addresses": None},
+                "desc": "None value"
+            },
+            {
+                "asset": {"ipv4_addresses": "not_a_list"},
+                "desc": "string instead of list"
+            },
+            {
+                "asset": {"host_name": "testhost"},
+                "desc": "missing ipv4_addresses field"
+            },
+        ]
+
+        for test_case in test_cases:
+            self.plugin.createAndAddHost.reset_mock()
+
+            test_data = [{
+                "id": f"test_{test_case['desc']}",
+                "asset": test_case["asset"],
+                "definition": {"id": 1, "name": "Test", "description": "Test"}
+            }]
+
+            self.plugin.parseOutputString(json.dumps(test_data))
+
+            call_args = self.plugin.createAndAddHost.call_args[1]
+            assert call_args["name"] == ""
 
     def test_create_plugin_function(self):
         """Test the createPlugin factory function (covers line 174)"""
