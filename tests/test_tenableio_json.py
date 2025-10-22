@@ -16,11 +16,11 @@ class TestTenableIOJSONExport:
         self.plugin = TenableIOJSONExport()
         self.plugin.logger = Mock()
 
-        # Mock the host/service/vuln creation methods
         self.plugin.createAndAddHost = Mock(return_value="host_id_123")
         self.plugin.createAndAddServiceToHost = Mock(return_value="service_id_456")
         self.plugin.createAndAddVulnToHost = Mock()
         self.plugin.createAndAddVulnToService = Mock()
+        self.plugin.createAndAddVulnWebToService = Mock()
 
     @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
     def test_valid_vulnerability_with_port(self, mock_filter_services):
@@ -686,11 +686,122 @@ class TestTenableIOJSONExport:
             call_args = self.plugin.createAndAddHost.call_args[1]
             assert call_args["name"] == ""
 
+    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
+    def test_web_service_creates_web_vulnerability(self, mock_filter_services):
+        """Test that web services (http, https) create VulnerabilityWeb instead of regular Vulnerability"""
+        mock_filter_services.return_value = [
+            ('80', 'http'),
+            ('443', 'https'),
+            ('8080', 'http-proxy'),
+            ('22', 'ssh'),
+        ]
+
+        web_service_tests = [
+            (80, 'http', 'webserver.example.com'),
+            (443, 'https', 'secure.example.com'),
+            (8080, 'http-proxy', 'proxy.example.com'),
+        ]
+
+        for port, expected_service, fqdn in web_service_tests:
+            self.plugin.createAndAddVulnWebToService.reset_mock()
+            self.plugin.createAndAddVulnToService.reset_mock()
+
+            test_data = [{
+                "id": f"vuln_web_{port}",
+                "asset": {
+                    "ipv4_addresses": ["192.168.1.10"],
+                    "display_fqdn": fqdn,
+                },
+                "definition": {
+                    "id": 12345,
+                    "name": "Web Vulnerability",
+                    "description": "A web-related vulnerability"
+                },
+                "port": port,
+                "protocol": "TCP"
+            }]
+
+            self.plugin.parseOutputString(json.dumps(test_data))
+
+            self.plugin.createAndAddVulnWebToService.assert_called_once()
+            self.plugin.createAndAddVulnToService.assert_not_called()
+
+            vuln_call = self.plugin.createAndAddVulnWebToService.call_args[1]
+            assert vuln_call["website"] == fqdn
+            assert vuln_call["name"] == "Web Vulnerability"
+
+    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
+    def test_non_web_service_creates_regular_vulnerability(self, mock_filter_services):
+        """Test that non-web services create regular Vulnerability, not VulnerabilityWeb"""
+        mock_filter_services.return_value = [
+            ('22', 'ssh'),
+            ('3306', 'mysql'),
+            ('5432', 'postgresql'),
+        ]
+
+        non_web_service_tests = [
+            (22, 'ssh'),
+            (3306, 'mysql'),
+            (5432, 'postgresql'),
+        ]
+
+        for port, expected_service in non_web_service_tests:
+            self.plugin.createAndAddVulnWebToService.reset_mock()
+            self.plugin.createAndAddVulnToService.reset_mock()
+
+            test_data = [{
+                "id": f"vuln_non_web_{port}",
+                "asset": {
+                    "ipv4_addresses": ["192.168.1.20"],
+                    "display_fqdn": "database.example.com",
+                },
+                "definition": {
+                    "id": 54321,
+                    "name": "Non-Web Vulnerability",
+                    "description": "A non-web vulnerability"
+                },
+                "port": port,
+                "protocol": "TCP"
+            }]
+
+            self.plugin.parseOutputString(json.dumps(test_data))
+
+            self.plugin.createAndAddVulnToService.assert_called_once()
+            self.plugin.createAndAddVulnWebToService.assert_not_called()
+
+            vuln_call = self.plugin.createAndAddVulnToService.call_args[1]
+            assert vuln_call["name"] == "Non-Web Vulnerability"
+            assert "website" not in vuln_call
+
+    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
+    def test_web_service_without_fqdn_uses_ip(self, mock_filter_services):
+        """Test that web services without FQDN fall back to IP for website field"""
+        mock_filter_services.return_value = [('80', 'http')]
+
+        test_data = [{
+            "id": "vuln_web_no_fqdn",
+            "asset": {
+                "ipv4_addresses": ["10.0.0.50"],
+            },
+            "definition": {
+                "id": 99999,
+                "name": "Web Vuln No FQDN",
+                "description": "Test"
+            },
+            "port": 80,
+            "protocol": "TCP"
+        }]
+
+        self.plugin.parseOutputString(json.dumps(test_data))
+
+        self.plugin.createAndAddVulnWebToService.assert_called_once()
+        vuln_call = self.plugin.createAndAddVulnWebToService.call_args[1]
+        assert vuln_call["website"] == "10.0.0.50"
+
     def test_create_plugin_function(self):
         """Test the createPlugin factory function (covers line 174)"""
         from faraday_plugins.plugins.repo.tenableio_export_json.plugin import createPlugin
 
-        # Test that createPlugin returns a TenableIOJSONExport instance
         plugin_instance = createPlugin()
         assert isinstance(plugin_instance, TenableIOJSONExport)
         assert plugin_instance.id == "tenableio_export_json"

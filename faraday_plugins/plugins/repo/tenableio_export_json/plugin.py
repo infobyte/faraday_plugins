@@ -20,7 +20,6 @@ __status__ = "Development"
 
 
 class TenableIOJSONExport(PluginJsonFormat):
-    # Class-level constants (created once, not per vulnerability)
     STATUS_MAP = {
         "ACTIVE": "open",
         "FIXED": "closed",
@@ -36,7 +35,8 @@ class TenableIOJSONExport(PluginJsonFormat):
     }
 
     CVSS_PREFIXES = ["", "CVSS:3.1/", "CVSS:4.0/"]
-    OUTPUT_MAX_LENGTH = 10000  # Maximum characters for output field
+    OUTPUT_MAX_LENGTH = 10000
+    WEB_SERVICES = {'http', 'https', 'www', 'http-alt', 'http-proxy', 'https-alt'}
 
     def __init__(self, *arg, **kwargs) -> None:
         super().__init__(*arg, **kwargs)
@@ -144,11 +144,20 @@ class TenableIOJSONExport(PluginJsonFormat):
                     status="open"
                 )
 
-                self.createAndAddVulnToService(
-                    host_id=host_id,
-                    service_id=service_id,
-                    **vuln_data
-                )
+                if service_name in self.WEB_SERVICES:
+                    website = display_fqdn if display_fqdn else display_ipv4
+                    vuln_data["website"] = website
+                    self.createAndAddVulnWebToService(
+                        host_id=host_id,
+                        service_id=service_id,
+                        **vuln_data
+                    )
+                else:
+                    self.createAndAddVulnToService(
+                        host_id=host_id,
+                        service_id=service_id,
+                        **vuln_data
+                    )
             else:
                 self.createAndAddVulnToHost(
                     host_id=host_id,
