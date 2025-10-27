@@ -563,7 +563,6 @@ class TestTenableIOJSONExport:
         from faraday_plugins.plugins.plugins_utils import filter_services
         
         services_map = filter_services()
-        port_to_service = {port: service for port, service in services_map}
         
         well_known_ports = [
             (21, 'ftp'),
@@ -573,30 +572,28 @@ class TestTenableIOJSONExport:
             (53, 'domain'),
             (80, 'http'),
             (110, 'pop3'),
-            (143, 'imap'),
+            (143, 'imap2'),
             (443, 'https'),
             (3306, 'mysql'),
             (5432, 'postgresql'),
-            (8080, 'http-proxy'),
+            (8080, 'http-alt')
         ]
         
         for port, expected_service in well_known_ports:
-            if str(port) in port_to_service:
-                self.plugin.createAndAddServiceToHost.reset_mock()
-                
-                test_data = [{
-                    "id": f"test_real_port_{port}",
-                    "asset": {"ipv4_addresses": ["10.0.0.1"]},
-                    "definition": {"id": 1, "name": "Test Vuln", "description": "Test"},
-                    "port": port
-                }]
-                
-                self.plugin.parseOutputString(json.dumps(test_data))
-                
-                call_args = self.plugin.createAndAddServiceToHost.call_args[1]
-                actual_service = port_to_service[str(port)]
-                assert call_args["name"] == actual_service
-                assert call_args["ports"] == [port]
+            self.plugin.createAndAddServiceToHost.reset_mock()
+            
+            test_data = [{
+                "id": f"test_real_port_{port}",
+                "asset": {"ipv4_addresses": ["10.0.0.1"]},
+                "definition": {"id": 1, "name": "Test Vuln", "description": "Test"},
+                "port": port
+            }]
+            
+            self.plugin.parseOutputString(json.dumps(test_data))
+            
+            call_args = self.plugin.createAndAddServiceToHost.call_args[1]
+            assert call_args["name"] == expected_service
+            assert call_args["ports"] == [port]
         
         self.plugin.createAndAddServiceToHost.reset_mock()
         unmapped_port = 54321
@@ -609,10 +606,9 @@ class TestTenableIOJSONExport:
         
         self.plugin.parseOutputString(json.dumps(test_data))
         
-        if str(unmapped_port) not in port_to_service:
-            call_args = self.plugin.createAndAddServiceToHost.call_args[1]
-            assert call_args["name"] == "Unknown"
-            assert call_args["ports"] == [unmapped_port]
+        call_args = self.plugin.createAndAddServiceToHost.call_args[1]
+        assert call_args["name"] == "Unknown"
+        assert call_args["ports"] == [unmapped_port]
 
     def test_ipv4_addresses_list_first_element(self):
         """Test that the first IP from ipv4_addresses list is used as host name"""
