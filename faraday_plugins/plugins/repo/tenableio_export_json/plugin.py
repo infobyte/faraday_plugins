@@ -132,7 +132,7 @@ class TenableIOJSONExport(PluginJsonFormat):
                 service_name = "Unknown"
 
                 for service in services_mapper:
-                    if service[0] == str(port_int):
+                    if service[0].split("/")[0] == str(port_int):
                         service_name = service[1]
                         break
                 
