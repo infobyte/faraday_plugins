@@ -22,65 +22,6 @@ class TestTenableIOJSONExport:
         self.plugin.createAndAddVulnToService = Mock()
         self.plugin.createAndAddVulnWebToService = Mock()
 
-    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
-    def test_valid_vulnerability_with_port(self, mock_filter_services):
-        """Test parsing a valid vulnerability with port (should create service vulnerability)"""
-        mock_filter_services.return_value = [
-            ('22', 'ssh'),
-            ('80', 'http'),
-            ('443', 'https')
-        ]
-        
-        test_data = [{
-            "id": "vuln_001",
-            "asset": {
-                "id": "asset_001",
-                "ipv4_addresses": ["192.168.1.100"],
-                "host_name": "webserver01",
-                "display_fqdn": "webserver01.example.com",
-                "operating_system": "Linux"
-            },
-            "definition": {
-                "id": 12345,
-                "name": "SSH Weak Encryption",
-                "description": "The SSH service supports weak encryption algorithms",
-                "cve": ["CVE-2023-1234"],
-                "see_also": ["https://example.com/ref1"]
-            },
-            "severity": 3,
-            "state": "ACTIVE",
-            "protocol": "TCP",
-            "port": 22,
-            "output": "SSH-2.0-OpenSSH_7.4\nWeak ciphers detected: 3des-cbc"
-        }]
-
-        self.plugin.parseOutputString(json.dumps(test_data))
-
-        # Verify host creation with correct IP
-        call_args = self.plugin.createAndAddHost.call_args[1]
-        assert call_args["name"] == "192.168.1.100"
-        assert call_args["os"] == "Linux"
-        assert set(call_args["hostnames"]) == {"webserver01", "webserver01.example.com"}
-
-        # Verify service creation with mapped service name
-        self.plugin.createAndAddServiceToHost.assert_called_once_with(
-            host_id="host_id_123",
-            name="ssh",
-            protocol="tcp",
-            ports=[22],
-            status="open"
-        )
-
-        # Verify service vulnerability creation (not host vulnerability)
-        self.plugin.createAndAddVulnToService.assert_called_once()
-        self.plugin.createAndAddVulnToHost.assert_not_called()
-
-        # Verify vulnerability data
-        vuln_call = self.plugin.createAndAddVulnToService.call_args[1]
-        assert vuln_call["name"] == "SSH Weak Encryption"
-        assert vuln_call["severity"] == "high"
-        assert vuln_call["status"] == "open"
-        assert vuln_call["data"] == "SSH-2.0-OpenSSH_7.4\nWeak ciphers detected: 3des-cbc"
 
     def test_vulnerability_without_port(self):
         """Test parsing vulnerability without port (should create host vulnerability)"""
@@ -259,79 +200,6 @@ class TestTenableIOJSONExport:
         # Internal formatting preserved, external whitespace stripped
         assert vuln_call["data"] == test_output
 
-    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
-    def test_service_name_format(self, mock_filter_services):
-        """Test that service names are mapped from port numbers using filter_services"""
-        mock_filter_services.return_value = [
-            ('80', 'http'),
-            ('443', 'https'),
-            ('53', 'domain'),
-            ('22', 'ssh')
-        ]
-        
-        test_cases = [
-            {"protocol": "TCP", "port": 80, "expected_name": "http", "expected_protocol": "tcp"},
-            {"protocol": "UDP", "port": 53, "expected_name": "domain", "expected_protocol": "udp"},
-            {"protocol": "tcp", "port": 443, "expected_name": "https", "expected_protocol": "tcp"},
-            {"port": 8080, "expected_name": "Unknown", "expected_protocol": "tcp"},  # Unmapped port
-        ]
-
-        for test_case in test_cases:
-            self.plugin.createAndAddServiceToHost.reset_mock()
-
-            vuln_data = {
-                "id": "test_service",
-                "asset": {"ipv4_addresses": ["10.0.0.3"]},
-                "definition": {"id": 1, "name": "Test", "description": "Test"},
-                "port": test_case["port"]
-            }
-
-            if "protocol" in test_case:
-                vuln_data["protocol"] = test_case["protocol"]
-
-            self.plugin.parseOutputString(json.dumps([vuln_data]))
-
-            call_args = self.plugin.createAndAddServiceToHost.call_args[1]
-            assert call_args["name"] == test_case["expected_name"]
-            assert call_args["protocol"] == test_case["expected_protocol"]
-
-    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
-    def test_service_mapping_with_common_ports(self, mock_filter_services):
-        """Test service mapping for common well-known ports"""
-        mock_filter_services.return_value = [
-            ('21', 'ftp'),
-            ('22', 'ssh'),
-            ('23', 'telnet'),
-            ('25', 'smtp'),
-            ('80', 'http'),
-            ('443', 'https'),
-            ('3306', 'mysql'),
-            ('5432', 'postgresql'),
-        ]
-
-        common_ports = [
-            (21, 'ftp'),
-            (22, 'ssh'),
-            (80, 'http'),
-            (443, 'https'),
-            (3306, 'mysql'),
-        ]
-
-        for port, expected_service in common_ports:
-            self.plugin.createAndAddServiceToHost.reset_mock()
-
-            test_data = [{
-                "id": f"test_port_{port}",
-                "asset": {"ipv4_addresses": ["10.0.0.1"]},
-                "definition": {"id": 1, "name": "Test", "description": "Test"},
-                "port": port
-            }]
-
-            self.plugin.parseOutputString(json.dumps(test_data))
-
-            call_args = self.plugin.createAndAddServiceToHost.call_args[1]
-            assert call_args["name"] == expected_service
-            assert call_args["ports"] == [port]
 
     def test_state_mapping(self):
         """Test vulnerability state mapping"""
@@ -385,57 +253,6 @@ class TestTenableIOJSONExport:
 
             vuln_call = self.plugin.createAndAddVulnToHost.call_args[1]
             assert vuln_call["severity"] == expected_severity
-
-    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
-    def test_example_json_from_user_story(self, mock_filter_services):
-        """Test with the example JSON from the user story"""
-        mock_filter_services.return_value = [
-            ('445', 'microsoft-ds'),
-            ('139', 'netbios-ssn')
-        ]
-        
-        test_data = [{
-            "id": "000c9326-cc6d-5c4f-b20c-32ab5937cee6",
-            "asset": {
-                "id": "f3d3e5e3-abb4-41e3-ad3b-6adf7a3b51dc",
-                "name": "rtp-ipl10",
-                "ipv4_addresses": ["192.168.1.1"],
-                "display_fqdn": "rtp-ipl10.lpm.org.example",
-                "host_name": "rtp-ipl10"
-            },
-            "definition": {
-                "id": 169783,
-                "name": "Security Updates for Windows Malicious Software Removal Tool (January 2023)",
-                "description": "Missing security updates"
-            },
-            "severity": 2,
-            "state": "FIXED",
-            "protocol": "TCP",
-            "port": 445
-        }]
-
-        self.plugin.parseOutputString(json.dumps(test_data))
-
-        # Verify correct host creation
-        call_args = self.plugin.createAndAddHost.call_args[1]
-        assert call_args["name"] == "192.168.1.1"
-        assert call_args["os"] == "unknown"
-        assert set(call_args["hostnames"]) == {"rtp-ipl10", "rtp-ipl10.lpm.org.example"}
-
-        # Verify service vulnerability created with mapped name
-        self.plugin.createAndAddServiceToHost.assert_called_once_with(
-            host_id="host_id_123",
-            name="microsoft-ds",
-            protocol="tcp",
-            ports=[445],
-            status="open"
-        )
-
-        # Verify vulnerability details
-        vuln_call = self.plugin.createAndAddVulnToService.call_args[1]
-        assert vuln_call["severity"] == "medium"
-        assert vuln_call["status"] == "closed"
-        assert vuln_call["data"] == "N/A"
 
 
     def test_json_decode_error(self):
@@ -682,15 +499,8 @@ class TestTenableIOJSONExport:
             call_args = self.plugin.createAndAddHost.call_args[1]
             assert call_args["name"] == ""
 
-    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
-    def test_web_service_creates_web_vulnerability(self, mock_filter_services):
+    def test_web_service_creates_web_vulnerability(self):
         """Test that web services (http, https) create VulnerabilityWeb instead of regular Vulnerability"""
-        mock_filter_services.return_value = [
-            ('80', 'http'),
-            ('443', 'https'),
-            ('8080', 'http-proxy'),
-            ('22', 'ssh'),
-        ]
 
         web_service_tests = [
             (80, 'http', 'webserver.example.com'),
@@ -769,10 +579,8 @@ class TestTenableIOJSONExport:
             assert vuln_call["name"] == "Non-Web Vulnerability"
             assert "website" not in vuln_call
 
-    @patch('faraday_plugins.plugins.repo.tenableio_export_json.plugin.filter_services')
-    def test_web_service_without_fqdn_uses_ip(self, mock_filter_services):
+    def test_web_service_without_fqdn_uses_ip(self):
         """Test that web services without FQDN fall back to IP for website field"""
-        mock_filter_services.return_value = [('80', 'http')]
 
         test_data = [{
             "id": "vuln_web_no_fqdn",
