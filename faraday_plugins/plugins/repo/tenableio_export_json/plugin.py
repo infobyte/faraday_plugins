@@ -6,6 +6,7 @@ See the file 'doc/LICENSE' for the license information
 """
 
 import json
+import re
 
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 from faraday_plugins.plugins.plugins_utils import filter_services
@@ -36,7 +37,8 @@ class TenableIOJSONExport(PluginJsonFormat):
 
     CVSS_PREFIXES = ["", "CVSS:3.1/", "CVSS:4.0/"]
     OUTPUT_MAX_LENGTH = 10000
-    WEB_SERVICES = {'http', 'https', 'www', 'http-alt', 'http-proxy', 'https-alt'}
+    WEB_SERVICES = {'http', 'https', 'www', 'http-alt', 'http-proxy', 'https-alt', 'web', 'www-http', 'ssl'}
+    URL_PATTERN = re.compile(r'https?://[^\s]+', re.IGNORECASE)
 
     def __init__(self, *arg, **kwargs) -> None:
         super().__init__(*arg, **kwargs)
@@ -46,6 +48,15 @@ class TenableIOJSONExport(PluginJsonFormat):
         self.version = "1.0.0"
         self.json_keys = {'asset', 'definition', 'asset_cloud_resource', 'container_image'}
         self._temp_file_extension = "json"
+
+    def detect_web_vulnerability(self, data_content: str) -> bool:
+        """
+        Detect if vulnerability data contains URLs indicating it's a web vulnerability.
+        Returns True if http:// or https:// URLs are found in the data.
+        """
+        if not data_content:
+            return False
+        return bool(self.URL_PATTERN.search(data_content))
 
     def parseOutputString(self, output: str) -> None:
         try:
@@ -84,6 +95,9 @@ class TenableIOJSONExport(PluginJsonFormat):
                 hostnames=list(hostnames),
             )
 
+            # Calculate website field once for potential use in web vulnerabilities
+            website = display_fqdn if display_fqdn else display_ipv4
+
             refs = [{"name": ref, "type": "other"} for ref in definition.get("see_also", [])]
 
             # Build CVSS objects only when data exists
@@ -117,9 +131,10 @@ class TenableIOJSONExport(PluginJsonFormat):
                 "resolution": definition.get("solution", ""),
                 "ref": refs,
                 "severity": self.SEVERITY_MAP.get(vuln.get("severity", 1), "low"),
-                "external_id": f"NESSUS-{vuln.get('id')}",
+                "external_id": f"NESSUS-{definition.get('id', 'unknown')}",
                 "status": self.STATUS_MAP.get(vuln.get("state", "ACTIVE"), "open"),
                 "cve": definition.get("cve", []),
+                "cwe": definition.get("cwe", []),
                 "data": output_content
             }
 
@@ -139,7 +154,9 @@ class TenableIOJSONExport(PluginJsonFormat):
                     if _port == str(port_int):
                         service_name = service[1]
                         break
-                
+
+                self.logger.debug(f"Port {port_int} mapped to service: {service_name}")
+
                 service_id = self.createAndAddServiceToHost(
                     host_id=host_id,
                     name=service_name,
@@ -148,8 +165,13 @@ class TenableIOJSONExport(PluginJsonFormat):
                     status="open"
                 )
 
-                if service_name in self.WEB_SERVICES:
-                    website = display_fqdn if display_fqdn else display_ipv4
+                # Check if it's a web vulnerability by service name OR by URL detection in data
+                is_web_service = service_name.lower() in self.WEB_SERVICES
+                has_url_in_data = self.detect_web_vulnerability(output_content)
+
+                if is_web_service or has_url_in_data:
+                    if has_url_in_data and not is_web_service:
+                        self.logger.debug(f"Detected web vulnerability via URL pattern in data (service: {service_name})")
                     vuln_data["website"] = website
                     self.createAndAddVulnWebToService(
                         host_id=host_id,
