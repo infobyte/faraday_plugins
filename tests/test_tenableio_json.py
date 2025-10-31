@@ -347,24 +347,24 @@ class TestTenableIOJSONExport:
         assert vuln_call["resolution"] == "Apply the latest security patches"
 
     def test_external_id_format(self):
-        """Test that external_id is properly formatted with NESSUS- prefix"""
+        """Test that external_id is properly formatted with NESSUS- prefix using definition.id"""
         test_cases = [
-            ("vuln_123", "NESSUS-vuln_123"),
-            ("abc-def-ghi", "NESSUS-abc-def-ghi"),
-            ("12345", "NESSUS-12345"),
-            ("000c9326-cc6d-5c4f-b20c-32ab5937cee6", "NESSUS-000c9326-cc6d-5c4f-b20c-32ab5937cee6"),
+            (123, "NESSUS-123"),
+            (456, "NESSUS-456"),
+            (12345, "NESSUS-12345"),
+            ("plugin-id-789", "NESSUS-plugin-id-789"),
         ]
 
-        for vuln_id, expected_external_id in test_cases:
+        for definition_id, expected_external_id in test_cases:
             self.plugin.createAndAddVulnToHost.reset_mock()
 
             test_data = [{
-                "id": vuln_id,
+                "id": "vuln_instance_id",
                 "asset": {
                     "ipv4_addresses": ["192.168.1.100"]
                 },
                 "definition": {
-                    "id": 1,
+                    "id": definition_id,
                     "name": "Test Vulnerability",
                     "description": "Test description"
                 }
