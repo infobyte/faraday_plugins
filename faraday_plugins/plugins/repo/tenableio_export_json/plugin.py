@@ -71,8 +71,11 @@ class TenableIOJSONExport(PluginJsonFormat):
                 self.logger.error(f"Omitting vulnerability {vuln.get('id', 'unknown')}: "
                                 f"required field asset is missing or invalid")
                 continue
-            
-            display_ipv4 = asset_info.get("ipv4_addresses")[0] if isinstance(asset_info.get("ipv4_addresses"), list) and asset_info.get("ipv4_addresses") else ""
+
+            ipv4_list = asset_info.get("ipv4_addresses")
+            display_ipv4 = ""
+            if isinstance(ipv4_list, list) and len(ipv4_list) > 0:
+                display_ipv4 = ipv4_list[0] if isinstance(ipv4_list[0], str) else ""
 
             definition = vuln.get("definition", {})
             if not {"id", "name"}.issubset(definition.keys()):
@@ -96,8 +99,13 @@ class TenableIOJSONExport(PluginJsonFormat):
             )
 
             # Calculate website field once for potential use in web vulnerabilities
-            website = display_fqdn or host_name or display_ipv4
-            website = website if isinstance(website, str) else None
+            website = None
+            if isinstance(display_fqdn, str) and display_fqdn:
+                website = display_fqdn
+            elif isinstance(host_name, str) and host_name:
+                website = host_name
+            elif isinstance(display_ipv4, str) and display_ipv4:
+                website = display_ipv4
 
             refs = [{"name": ref, "type": "other"} for ref in definition.get("see_also", [])]
 
