@@ -97,6 +97,7 @@ class TenableIOJSONExport(PluginJsonFormat):
 
             # Calculate website field once for potential use in web vulnerabilities
             website = display_fqdn or host_name or display_ipv4
+            website = website if isinstance(website, str) else None
 
             refs = [{"name": ref, "type": "other"} for ref in definition.get("see_also", [])]
 
