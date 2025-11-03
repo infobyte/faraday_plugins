@@ -602,6 +602,56 @@ class TestTenableIOJSONExport:
         vuln_call = self.plugin.createAndAddVulnWebToService.call_args[1]
         assert vuln_call["website"] == "10.0.0.50"
 
+    def test_website_field_priority(self):
+        """Test website field priority: display_fqdn > host_name > display_ipv4"""
+
+        # Test 1: display_fqdn takes priority when all fields present
+        test_data_all_fields = [{
+            "id": "vuln_all_fields",
+            "asset": {
+                "ipv4_addresses": ["10.0.0.1"],
+                "display_fqdn": "server.example.com",
+                "host_name": "server"
+            },
+            "definition": {"id": 1, "name": "Test", "description": "Test"},
+            "port": 80
+        }]
+
+        self.plugin.parseOutputString(json.dumps(test_data_all_fields))
+        vuln_call = self.plugin.createAndAddVulnWebToService.call_args[1]
+        assert vuln_call["website"] == "server.example.com"
+
+        # Test 2: host_name used when display_fqdn is missing/empty
+        self.plugin.createAndAddVulnWebToService.reset_mock()
+        test_data_no_fqdn = [{
+            "id": "vuln_no_fqdn",
+            "asset": {
+                "ipv4_addresses": ["10.0.0.2"],
+                "host_name": "hostname.local"
+            },
+            "definition": {"id": 2, "name": "Test", "description": "Test"},
+            "port": 443
+        }]
+
+        self.plugin.parseOutputString(json.dumps(test_data_no_fqdn))
+        vuln_call = self.plugin.createAndAddVulnWebToService.call_args[1]
+        assert vuln_call["website"] == "hostname.local"
+
+        # Test 3: IP used as last resort when both hostname fields missing
+        self.plugin.createAndAddVulnWebToService.reset_mock()
+        test_data_ip_only = [{
+            "id": "vuln_ip_only",
+            "asset": {
+                "ipv4_addresses": ["10.0.0.3"]
+            },
+            "definition": {"id": 3, "name": "Test", "description": "Test"},
+            "port": 8080
+        }]
+
+        self.plugin.parseOutputString(json.dumps(test_data_ip_only))
+        vuln_call = self.plugin.createAndAddVulnWebToService.call_args[1]
+        assert vuln_call["website"] == "10.0.0.3"
+
     def test_create_plugin_function(self):
         """Test the createPlugin factory function (covers line 174)"""
         from faraday_plugins.plugins.repo.tenableio_export_json.plugin import createPlugin
