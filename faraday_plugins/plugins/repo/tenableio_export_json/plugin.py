@@ -39,6 +39,7 @@ class TenableIOJSONExport(PluginJsonFormat):
     OUTPUT_MAX_LENGTH = 10000
     WEB_SERVICES = {'http', 'https', 'www', 'http-alt', 'http-proxy', 'https-alt', 'web', 'www-http', 'ssl'}
     URL_PATTERN = re.compile(r'https?://[^\s]+', re.IGNORECASE)
+    WEB_FAMILY_STRINGS = ["web", "http", "https", "ssl", "www"]
 
     def __init__(self, *arg, **kwargs) -> None:
         super().__init__(*arg, **kwargs)
@@ -177,10 +178,12 @@ class TenableIOJSONExport(PluginJsonFormat):
                 # Check if it's a web vulnerability by service name OR by URL detection in data
                 is_web_service = service_name.lower() in self.WEB_SERVICES
                 has_url_in_data = self.detect_web_vulnerability(output_content)
+                # Get family for additional web vulnerability detection
+                family = definition.get("family", "").lower()
 
-                if is_web_service or has_url_in_data:
-                    if has_url_in_data and not is_web_service:
-                        self.logger.debug(f"Detected web vulnerability via URL pattern in data (service: {service_name})")
+                if is_web_service \
+                     or has_url_in_data \
+                     or any(_family_string in family for _family_string in self.WEB_FAMILY_STRINGS):
                     vuln_data["website"] = website
                     self.createAndAddVulnWebToService(
                         host_id=host_id,
