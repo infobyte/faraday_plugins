@@ -39,7 +39,7 @@ class TenableIOJSONExport(PluginJsonFormat):
     OUTPUT_MAX_LENGTH = 10000
     WEB_SERVICES = {'http', 'https', 'www', 'http-alt', 'http-proxy', 'https-alt', 'web', 'www-http', 'ssl'}
     URL_PATTERN = re.compile(r'https?://[^\s]+', re.IGNORECASE)
-    WEB_FAMILY_STRINGS = ["web", "http", "https", "ssl", "www"]
+    WEB_FAMILY_STRINGS = ["web", "http", "https", "ssl", "www", "cgi", "dns"]
 
     def __init__(self, *arg, **kwargs) -> None:
         super().__init__(*arg, **kwargs)
