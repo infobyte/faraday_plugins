@@ -16,7 +16,7 @@ class TestTenableIOJSONExport:
         self.plugin = TenableIOJSONExport()
         self.plugin.logger = Mock()
 
-        self.plugin.createAndAddHost = Mock(return_value="host_id_123")
+        self.plugin.createAndAddHost = Mock(return_value=("host_id_123", {"hostnames": []}))
         self.plugin.createAndAddServiceToHost = Mock(return_value="service_id_456")
         self.plugin.createAndAddVulnToHost = Mock()
         self.plugin.createAndAddVulnToService = Mock()
