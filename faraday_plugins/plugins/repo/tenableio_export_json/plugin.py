@@ -100,20 +100,14 @@ class TenableIOJSONExport(PluginJsonFormat):
                 full_return=True
             )
 
-            host_hostname = host.get("hostnames", [])
-            if len(host_hostname) > 0:
-                host_hostname = host_hostname[0]
-
             # Calculate website field once for potential use in web vulnerabilities
-            website = None
+            website = "ALL FAILED TO DETERMINE"
             if isinstance(display_fqdn, str) and display_fqdn:
-                website = display_fqdn
+                website = display_fqdn + " DISPLAY_FQDN"
             elif isinstance(host_name, str) and host_name:
-                website = host_name
-            elif isinstance(host_hostname, str) and host_hostname:
-                website = host_hostname
+                website = host_name + " HOST_NAME"
             elif isinstance(display_ipv4, str) and display_ipv4:
-                website = display_ipv4
+                website = display_ipv4 + " IPV4"
 
             refs = [{"name": ref, "type": "other"} for ref in definition.get("see_also", [])]
 
