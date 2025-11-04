@@ -117,8 +117,8 @@ class TenableIOJSONExport(PluginJsonFormat):
                 website = display_fqdn + " HOST_FQDN"
             elif isinstance(host_name, str) and host_name:
                 website = host_name + " HOST_NAME"
-            elif self.get_hostname_from_host(host_id, host):
-                website = self.get_hostname_from_host(host_id, host) + " HOST_HOSTNAME"
+            elif self.get_hostname_from_host(host_id, hosts_hostnames):
+                website = self.get_hostname_from_host(host_id, hosts_hostnames) + " HOST_HOSTNAME"
             elif isinstance(display_ipv4, str) and display_ipv4:
                 website = display_ipv4 + " IPV4"
 
