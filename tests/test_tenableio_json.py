@@ -652,6 +652,72 @@ class TestTenableIOJSONExport:
         vuln_call = self.plugin.createAndAddVulnWebToService.call_args[1]
         assert vuln_call["website"] == "10.0.0.3"
 
+    def test_hostname_from_previous_vuln(self):
+        """Test that when a vuln has no hostname but a previous vuln created the host with hostname,
+        it uses the hostname from hosts_hostnames dict for the website field"""
+        
+        hosts_by_ip = {}
+        
+        def mock_create_host(**kwargs):
+            ip_address = kwargs.get("name", "")
+            
+            if ip_address in hosts_by_ip:
+                host_id = hosts_by_ip[ip_address]["id"]
+                existing_host = hosts_by_ip[ip_address]["host"]
+                return host_id, existing_host
+            
+            host_id = f"host_id_{ip_address.replace('.', '_')}"
+            hostnames = kwargs.get("hostnames", [])
+            host_dict = {"hostnames": hostnames}
+            
+            hosts_by_ip[ip_address] = {
+                "id": host_id,
+                "host": host_dict
+            }
+            
+            return host_id, host_dict
+        
+        self.plugin.createAndAddHost = Mock(side_effect=mock_create_host)
+        
+        test_data = [
+            {
+                "id": "vuln_with_hostname",
+                "asset": {
+                    "ipv4_addresses": ["192.168.1.100"],
+                    "display_fqdn": "server.example.com",
+                    "host_name": "server"
+                },
+                "definition": {
+                    "id": 1,
+                    "name": "First Vulnerability",
+                    "description": "First vulnerability with hostname"
+                },
+                "port": 80
+            },
+            {
+                "id": "vuln_without_hostname",
+                "asset": {
+                    "ipv4_addresses": ["192.168.1.100"]
+                },
+                "definition": {
+                    "id": 2,
+                    "name": "Second Vulnerability",
+                    "description": "Second vulnerability without hostname on same host"
+                },
+                "port": 443
+            }
+        ]
+        
+        self.plugin.parseOutputString(json.dumps(test_data))
+        
+        assert self.plugin.createAndAddVulnWebToService.call_count == 2
+        
+        first_vuln_call = self.plugin.createAndAddVulnWebToService.call_args_list[0][1]
+        assert first_vuln_call["website"] == "server.example.com"
+        
+        second_vuln_call = self.plugin.createAndAddVulnWebToService.call_args_list[1][1]
+        assert second_vuln_call["website"] in ["server.example.com", "server"]
+
     def test_create_plugin_function(self):
         """Test the createPlugin factory function (covers line 174)"""
         from faraday_plugins.plugins.repo.tenableio_export_json.plugin import createPlugin
