@@ -39,7 +39,7 @@ class TenableIOJSONExport(PluginJsonFormat):
     OUTPUT_MAX_LENGTH = 10000
     WEB_SERVICES = {'http', 'https', 'www', 'http-alt', 'http-proxy', 'https-alt', 'web', 'www-http', 'ssl'}
     URL_PATTERN = re.compile(r'https?://[^\s]+', re.IGNORECASE)
-    WEB_FAMILY_STRINGS = ["web", "http", "https", "ssl", "www", "cgi", "dns"]
+    WEB_FAMILY_STRINGS = ["web", "http", "https", "ssl", "www"]
 
     def __init__(self, *arg, **kwargs) -> None:
         super().__init__(*arg, **kwargs)
@@ -59,11 +59,19 @@ class TenableIOJSONExport(PluginJsonFormat):
             return False
         return bool(self.URL_PATTERN.search(data_content))
 
+    def get_hostname_from_host(self, host_id: int, host_dict: dict) -> str:
+        hostnames = host_dict.get(host_id)
+        if hostnames:
+            return hostnames[0]
+        return None
+
     def parseOutputString(self, output: str) -> None:
         try:
             data = json.loads(output)
         except json.JSONDecodeError:
             return
+
+        hosts_hostnames = dict()
 
         for vuln in data:
             asset_info = vuln.get("asset")
@@ -100,12 +108,17 @@ class TenableIOJSONExport(PluginJsonFormat):
                 full_return=True
             )
 
+            if host.get("hostnames"):
+                hosts_hostnames[host_id] = host.get("hostnames")
+
             # Calculate website field once for potential use in web vulnerabilities
-            website = "ALL FAILED TO DETERMINE"
+            website = None
             if isinstance(display_fqdn, str) and display_fqdn:
-                website = display_fqdn + " DISPLAY_FQDN"
+                website = display_fqdn + " HOST_FQDN"
             elif isinstance(host_name, str) and host_name:
                 website = host_name + " HOST_NAME"
+            elif self.get_hostname_from_host(host_id, host):
+                website = self.get_hostname_from_host(host_id, host) + " HOST_HOSTNAME"
             elif isinstance(display_ipv4, str) and display_ipv4:
                 website = display_ipv4 + " IPV4"
 
