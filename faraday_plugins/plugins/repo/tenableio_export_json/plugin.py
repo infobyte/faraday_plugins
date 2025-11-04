@@ -93,11 +93,16 @@ class TenableIOJSONExport(PluginJsonFormat):
             if display_fqdn:
                 hostnames.add(display_fqdn)
 
-            host_id = self.createAndAddHost(
+            host_id, host = self.createAndAddHost(
                 name=display_ipv4.strip(),
                 os=asset_info.get("operating_system", "unknown"),
                 hostnames=list(hostnames),
+                full_return=True
             )
+
+            host_hostname = host.get("hostnames", [])
+            if len(host_hostname) > 0:
+                host_hostname = host_hostname[0]
 
             # Calculate website field once for potential use in web vulnerabilities
             website = None
@@ -105,6 +110,8 @@ class TenableIOJSONExport(PluginJsonFormat):
                 website = display_fqdn
             elif isinstance(host_name, str) and host_name:
                 website = host_name
+            elif isinstance(host_hostname, str) and host_hostname:
+                website = host_hostname
             elif isinstance(display_ipv4, str) and display_ipv4:
                 website = display_ipv4
 
