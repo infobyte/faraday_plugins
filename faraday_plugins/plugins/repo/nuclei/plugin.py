@@ -33,8 +33,8 @@ class NucleiReportParser(ABC):
         self.info = vuln_dict.get('info', {})
 
     @abstractmethod
-    def get_impact(self) -> Dict[str, bool]:
-        """Extract impact information from the vulnerability."""
+    def get_impact(self) -> str:
+        """Extract impact information from the vulnerability as text for technical data."""
         pass
 
     @abstractmethod
@@ -52,13 +52,12 @@ class NucleiReportParser(ABC):
 class NucleiV3Parser(NucleiReportParser):
     """Parser for Nuclei v3.x JSON format."""
 
-    def get_impact(self) -> Dict[str, bool]:
-        """Extract impact from Nuclei 3.x format (descriptive text)."""
-        impact = {}
-        impacted_text = self.info.get('impact')
-        if isinstance(impacted_text, str) and impacted_text.strip():
-            impact['Impact Description'] = True
-        return impact
+    def get_impact(self) -> str:
+        """Extract impact from Nuclei 3.x format (descriptive text) for technical data."""
+        impacted_text = self.info.get('impact', '')
+        if isinstance(impacted_text, str):
+            return impacted_text.strip()
+        return ''
 
     def get_resolution(self) -> str:
         """Extract resolution from top-level remediation field."""
@@ -74,15 +73,13 @@ class NucleiV3Parser(NucleiReportParser):
 class NucleiV2Parser(NucleiReportParser):
     """Parser for Nuclei v2.x JSON format."""
 
-    def get_impact(self) -> Dict[str, bool]:
-        """Extract impact from Nuclei 2.x format (comma-separated tags)."""
-        impact = {}
+    def get_impact(self) -> str:
+        """Extract impact from Nuclei 2.x format for technical data."""
         metadata = self.info.get('metadata', {})
-        impacted_str = metadata.get('impact')
+        impacted_str = metadata.get('impact', '')
         if isinstance(impacted_str, str):
-            for tag in impacted_str.split(','):
-                impact[tag.strip()] = True
-        return impact
+            return impacted_str.strip()
+        return ''
 
     def get_resolution(self) -> str:
         """Extract resolution from metadata field."""
@@ -224,6 +221,10 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                     f"Tags: {info.get('tags', '')}",
                     f"Template ID: {vuln_dict.get('template-id', '')}"]
 
+            # Add impact to technical data if present
+            if impact:
+                data.append(f"Impact: {impact}")
+
             name = info.get("name")
             run_date = vuln_dict.get('timestamp')
             if run_date:
@@ -236,7 +237,6 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 ref=refs,
                 severity=info.get('severity'),
                 tags=tags,
-                impact=impact,
                 resolution=resolution,
                 easeofresolution=easeofresolution,
                 cve=cve,

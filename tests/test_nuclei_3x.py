@@ -44,10 +44,13 @@ class TestNuclei3x:
 
         assert log4j_call is not None, "Log4j vulnerability should be created"
 
-        # Fixed implementation should correctly get impact from Nuclei 3.x format
-        impact = log4j_call.get('impact', {})
-        assert impact != {}, "Fixed implementation should find impact in 3.x format"
-        assert 'Impact Description' in impact, "Impact should contain descriptive text entry"
+        # Impact should now be in technical data (data field), not in impact parameter
+        data = log4j_call.get('data', '')
+        assert data != '', "Technical data should be present"
+        assert 'Impact:' in data, "Impact should be in technical data"
+        # Verify the actual impact text is present
+        assert any(text in data for text in ["remote code execution", "system compromise"]), \
+            "Impact descriptive text should be in technical data"
 
         # Fixed implementation should correctly get remediation from Nuclei 3.x format
         resolution = log4j_call.get('resolution', '')
@@ -106,9 +109,9 @@ class TestNuclei3x:
         parser_2x = _get_parser(vuln_2x)
         assert isinstance(parser_2x, NucleiV2Parser)
 
-    def test_impact_extraction_v2_with_tags(self):
-        """Test NucleiV2Parser with comma-separated tags"""
-        # Test with comma-separated impact tags
+    def test_impact_extraction_v2_returns_string(self):
+        """Test NucleiV2Parser returns impact as string for technical data"""
+        # Test with comma-separated impact tags (now returned as string)
         vuln_dict = {
             "info": {
                 "metadata": {
@@ -118,7 +121,8 @@ class TestNuclei3x:
         }
         parser = NucleiV2Parser(vuln_dict)
         result = parser.get_impact()
-        assert result == {"high": True, "rce": True, "critical": True}
+        assert isinstance(result, str), "Impact should be a string"
+        assert result == "high,rce,critical"
 
         # Test with no impact
         vuln_no_impact = {
@@ -126,7 +130,7 @@ class TestNuclei3x:
         }
         parser_empty = NucleiV2Parser(vuln_no_impact)
         result_empty = parser_empty.get_impact()
-        assert result_empty == {}
+        assert result_empty == ''
 
         # Test with non-string impact
         vuln_non_string = {
@@ -134,17 +138,26 @@ class TestNuclei3x:
         }
         parser_non_string = NucleiV2Parser(vuln_non_string)
         result_non_string = parser_non_string.get_impact()
-        assert result_non_string == {}
+        assert result_non_string == ''
 
-    def test_impact_extraction_v3_edge_cases(self):
-        """Test NucleiV3Parser with edge cases"""
+    def test_impact_extraction_v3_returns_string(self):
+        """Test NucleiV3Parser returns impact as string for technical data"""
+        # Test with descriptive impact text
+        vuln_with_impact = {
+            "info": {"impact": "This vulnerability allows remote code execution"}
+        }
+        parser = NucleiV3Parser(vuln_with_impact)
+        result = parser.get_impact()
+        assert isinstance(result, str), "Impact should be a string"
+        assert result == "This vulnerability allows remote code execution"
+
         # Test with empty/whitespace impact
         vuln_empty = {
             "info": {"impact": "   "}
         }
         parser_empty = NucleiV3Parser(vuln_empty)
         result_empty = parser_empty.get_impact()
-        assert result_empty == {}
+        assert result_empty == ''
 
         # Test with no impact field
         vuln_no_impact = {
@@ -152,7 +165,7 @@ class TestNuclei3x:
         }
         parser_no_impact = NucleiV3Parser(vuln_no_impact)
         result_no_impact = parser_no_impact.get_impact()
-        assert result_no_impact == {}
+        assert result_no_impact == ''
 
     def test_parseOutputString_missing_matched_at(self):
         """Test parseOutputString with missing matched-at field"""
