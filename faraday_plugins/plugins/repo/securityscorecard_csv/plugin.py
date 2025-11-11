@@ -41,7 +41,7 @@ class SecScoreCard(PluginCSVFormat):
             csv_file = io.StringIO(output)
             reader = csv.DictReader(csv_file, delimiter=",")
             for row in reader:
-                path = row.get("IP ADDRESS")
+                path = row.get("IP ADDRESSES")
                 if not path:
                     path = row.get("FINAL URL")
                 if not path:
