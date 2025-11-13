@@ -59,19 +59,16 @@ class TenableIOJSONExport(PluginJsonFormat):
             return False
         return bool(self.URL_PATTERN.search(data_content))
 
-    def get_hostname_from_host(self, host_id: int, host_dict: dict) -> str:
-        hostnames = host_dict.get(host_id)
-        if hostnames:
-            return hostnames[0]
-        return None
+    def get_hostname_from_host(self, ip: str) -> str:
+        for host in self.vulns_data["hosts"]:
+            if ip in host.get("ip", []):
+                return host.get("hostnames", "")[0]
 
     def parseOutputString(self, output: str) -> None:
         try:
             data = json.loads(output)
         except json.JSONDecodeError:
             return
-
-        hosts_hostnames = dict()
 
         for vuln in data:
             asset_info = vuln.get("asset")
@@ -108,17 +105,14 @@ class TenableIOJSONExport(PluginJsonFormat):
                 full_return=True
             )
 
-            if host.get("hostnames"):
-                hosts_hostnames[host_id] = host.get("hostnames")
-
             # Calculate website field once for potential use in web vulnerabilities
             website = None
             if isinstance(display_fqdn, str) and display_fqdn:
                 website = display_fqdn
             elif isinstance(host_name, str) and host_name:
                 website = host_name
-            elif self.get_hostname_from_host(host_id, hosts_hostnames):
-                website = self.get_hostname_from_host(host_id, hosts_hostnames)
+            elif self.get_hostname_from_host(display_ipv4.strip()):
+                website = self.get_hostname_from_host(display_ipv4.strip())
             elif isinstance(display_ipv4, str) and display_ipv4:
                 website = display_ipv4
 
