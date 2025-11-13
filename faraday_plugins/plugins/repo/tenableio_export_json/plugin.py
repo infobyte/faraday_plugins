@@ -101,11 +101,10 @@ class TenableIOJSONExport(PluginJsonFormat):
             if display_fqdn:
                 hostnames.add(display_fqdn)
 
-            host_id, host = self.createAndAddHost(
+            host_id = self.createAndAddHost(
                 name=display_ipv4.strip(),
                 os=asset_info.get("operating_system", "unknown"),
-                hostnames=list(hostnames),
-                full_return=True
+                hostnames=list(hostnames)
             )
 
             # Calculate website field once for potential use in web vulnerabilities
