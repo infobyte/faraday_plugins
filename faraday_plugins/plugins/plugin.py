@@ -174,25 +174,25 @@ class PluginBase:
         else:
             obj_uuid = self._service_cache[cache_id]
         return obj_uuid
-    
+
     def _should_ignore_check(self, vuln):
         # Ignore Info
         if self.ignore_info and vuln['severity'] == 'info':
             return True
-        
+
         # Severity Range check
         if self.min_severity and VulnerabilitySeverity[vuln['severity'].upper()].value < VulnerabilitySeverity[self.min_severity.upper()].value:
             return True
         if self.max_severity and VulnerabilitySeverity[vuln['severity'].upper()].value > VulnerabilitySeverity[self.max_severity.upper()].value:
             return True
-        
+
         return False
 
     def save_service_vuln_cache(self, host_id, service_id, vuln):
 
         if self._should_ignore_check(vuln):
             return None
-        
+
         cache_id = self.get_service_vuln_cache_id(host_id, service_id, vuln)
         if cache_id not in self._vulns_cache:
             obj_uuid = self.save_cache(vuln)
@@ -207,7 +207,7 @@ class PluginBase:
 
         if self._should_ignore_check(vuln):
             return None
-        
+
         cache_id = self.get_host_vuln_cache_id(host_id, vuln)
         if cache_id not in self._vulns_cache:
             obj_uuid = self.save_cache(vuln)
@@ -385,7 +385,7 @@ class PluginBase:
         """
         raise NotImplementedError('This method must be implemented.')
 
-    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None, description="", tags=None, full_return=False):
+    def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None, description="", tags=None):
 
         if not hostnames:
             hostnames = []
@@ -407,8 +407,6 @@ class PluginBase:
         host = {"ip": name, "os": os, "hostnames": hostnames, "description": description, "mac": mac,
                 "credentials": [], "services": [], "vulnerabilities": [], "tags": tags}
         host_id = self.save_host_cache(host)
-        if full_return:
-            return host_id, host
         return host_id
 
     def createAndAddServiceToHost(self, host_id, name,
