@@ -1,47 +1,19 @@
-"""
-Faraday Penetration Test IDE
-Copyright (C) 2025  Infobyte LLC (https://faradaysec.com/)
-See the file 'doc/LICENSE' for the license information
-
-"""
-
 import json
 import re
-
 from faraday_plugins.plugins.plugin import PluginJsonFormat
 from faraday_plugins.plugins.plugins_utils import filter_services
 
-__author__ = "Dante Acosta"
-__copyright__ = "Copyright (c) 2025, Infobyte LLC"
-__credits__ = ["Dante Acosta"]
-__version__ = "1.0.0"
-__maintainer__ = "Dante Acosta"
-__email__ = "dacosta@faradaysec.com"
-__status__ = "Development"
-
 
 class TenableIOJSONExport(PluginJsonFormat):
-    STATUS_MAP = {
-        "ACTIVE": "open",
-        "FIXED": "closed",
-        "NEW": "open",
-        "RESURFACED": "open"
-    }
-
-    SEVERITY_MAP = {
-        1: "low",
-        2: "medium",
-        3: "high",
-        4: "critical"
-    }
-
+    STATUS_MAP = {"ACTIVE": "open", "FIXED": "closed", "NEW": "open", "RESURFACED": "open"}
+    SEVERITY_MAP = {1: "low", 2: "medium", 3: "high", 4: "critical"}
     CVSS_PREFIXES = ["", "CVSS:3.1/", "CVSS:4.0/"]
     OUTPUT_MAX_LENGTH = 10000
     WEB_SERVICES = {'http', 'https', 'www', 'http-alt', 'http-proxy', 'https-alt', 'web', 'www-http', 'ssl'}
     URL_PATTERN = re.compile(r'https?://[^\s]+', re.IGNORECASE)
     WEB_FAMILY_STRINGS = ["web", "http", "https", "ssl", "www", "cgi"]
 
-    def __init__(self, *arg, **kwargs) -> None:
+    def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self.id = "tenableio_export_json"
         self.name = "Tenable IO JSON Vuln Export Plugin"
@@ -49,91 +21,92 @@ class TenableIOJSONExport(PluginJsonFormat):
         self.version = "1.0.0"
         self.json_keys = {'asset', 'definition', 'asset_cloud_resource', 'container_image'}
         self._temp_file_extension = "json"
+        self._assets_collection = {}
+        self._hostname_to_ip = {}
+        self._vulns_buffer = []
 
-    def detect_web_vulnerability(self, data_content: str) -> bool:
-        """
-        Detect if vulnerability data contains URLs indicating it's a web vulnerability.
-        Returns True if http:// or https:// URLs are found in the data.
-        """
-        if not data_content:
-            return False
-        return bool(self.URL_PATTERN.search(data_content))
+    def parseOutputString(self, output):
+        del self._vulns_buffer[:]
+        self._assets_collection.clear()
+        self._hostname_to_ip.clear()
 
-    def get_hostname_from_host(self, host_id: int, host_dict: dict) -> str:
-        hostnames = host_dict.get(host_id)
-        if hostnames:
-            return hostnames[0]
-        return None
-
-    def parseOutputString(self, output: str) -> None:
         try:
-            data = json.loads(output)
+            data = json.loads(output)  # NOSEC
         except json.JSONDecodeError:
             return
 
-        hosts_hostnames = dict()
+        for i, vuln in enumerate(data):
+            if i % 100 == 0 and i > 0:
+                self._process_batch()
 
-        for vuln in data:
             asset_info = vuln.get("asset")
-
-            if not isinstance(asset_info, dict):
-                self.logger.error(f"Omitting vulnerability {vuln.get('id', 'unknown')}: "
-                                f"required field asset is missing or invalid")
+            if not asset_info:
                 continue
-
-            ipv4_list = asset_info.get("ipv4_addresses")
-            display_ipv4 = ""
-            if isinstance(ipv4_list, list) and len(ipv4_list) > 0:
-                display_ipv4 = ipv4_list[0] if isinstance(ipv4_list[0], str) else ""
 
             definition = vuln.get("definition", {})
-            if not {"id", "name"}.issubset(definition.keys()):
-                self.logger.error(f"Omitting vulnerability {vuln.get('id', 'unknown')}: "
-                                f"definition object is missing required fields (id and/or name)")
+            if not definition.get("id") or not definition.get("name"):
                 continue
 
-            hostnames = set()
+            ipv4_list = asset_info.get("ipv4_addresses", [])
+            primary_ip = ipv4_list[0] if ipv4_list else None
             host_name = asset_info.get("host_name")
             display_fqdn = asset_info.get("display_fqdn")
 
+            hostnames = set()
             if host_name:
-                hostnames.add(host_name)
+                hostnames.add(host_name.strip().lower())
             if display_fqdn:
-                hostnames.add(display_fqdn)
+                hostnames.add(display_fqdn.strip().lower())
 
-            host_id, host = self.createAndAddHost(
-                name=display_ipv4.strip(),
-                os=asset_info.get("operating_system", "unknown"),
-                hostnames=list(hostnames),
-                full_return=True
+            asset_key = primary_ip
+            if not asset_key and hostnames:
+                asset_key = next(iter(hostnames))
+
+            if not asset_key:
+                continue
+
+            for hostname in hostnames:
+                existing_ip = self._hostname_to_ip.get(hostname)
+                if existing_ip and existing_ip != asset_key:
+                    # TODO: Implement merge strategy for hostname conflicts
+                    if existing_ip in self._assets_collection:
+                        self._assets_collection[existing_ip]['hostnames'].update(hostnames)
+                    asset_key = existing_ip
+                self._hostname_to_ip[hostname] = asset_key
+
+            if asset_key not in self._assets_collection:
+                self._assets_collection[asset_key] = {
+                    'hostnames': hostnames,
+                    'os': asset_info.get("operating_system", "unknown"),
+                    'ip': primary_ip
+                }
+            else:
+                self._assets_collection[asset_key]['hostnames'].update(hostnames)
+
+            self._vulns_buffer.append((asset_key, vuln))
+
+        self._process_batch()
+
+    def _process_batch(self):
+        if not self._vulns_buffer:
+            return
+
+        created_hosts = {}
+        for asset_key, asset_data in self._assets_collection.items():
+            host_id = self.createAndAddHost(
+                name=asset_data['ip'] or asset_key,
+                os=asset_data['os'],
+                hostnames=list(asset_data['hostnames'])
             )
+            created_hosts[asset_key] = host_id
 
-            if host.get("hostnames"):
-                hosts_hostnames[host_id] = host.get("hostnames")
+        for asset_key, vuln in self._vulns_buffer:
+            if asset_key not in created_hosts:
+                continue
 
-            # Calculate website field once for potential use in web vulnerabilities
-            website = None
-            if isinstance(display_fqdn, str) and display_fqdn:
-                website = display_fqdn
-            elif isinstance(host_name, str) and host_name:
-                website = host_name
-            elif self.get_hostname_from_host(host_id, hosts_hostnames):
-                website = self.get_hostname_from_host(host_id, hosts_hostnames)
-            elif isinstance(display_ipv4, str) and display_ipv4:
-                website = display_ipv4
-
-            refs = [{"name": ref, "type": "other"} for ref in definition.get("see_also", [])]
-
-            # Build CVSS objects only when data exists
-            cvss_data = {}
-            for i, version in enumerate([2, 3, 4]):
-                cvss_key = f"cvss{version}"
-                if cvss_obj := definition.get(cvss_key):
-                    base_vector = cvss_obj.get("base_vector", "")
-                    if base_vector:
-                        prefix = self.CVSS_PREFIXES[i] if i < len(self.CVSS_PREFIXES) else ""
-                        cvss_data[cvss_key] = {"vector_string": f"{prefix}{base_vector}"}
-
+            host_id = created_hosts[asset_key]
+            asset_data = self._assets_collection[asset_key]
+            definition = vuln.get("definition", {})
             output_content = vuln.get("output", "")
             output_content = output_content.strip()[:self.OUTPUT_MAX_LENGTH] if output_content else "N/A"
 
@@ -149,6 +122,20 @@ class TenableIOJSONExport(PluginJsonFormat):
                 except (ValueError, TypeError):
                     pass
 
+            refs = []
+            for ref in definition.get("see_also", []):
+                refs.append({"name": ref, "type": "other"})
+
+            cvss_data = {}
+            for i, version in enumerate([2, 3, 4]):
+                cvss_key = f"cvss{version}"
+                cvss_obj = definition.get(cvss_key)
+                if cvss_obj:
+                    base_vector = cvss_obj.get("base_vector", "")
+                    if base_vector:
+                        prefix = self.CVSS_PREFIXES[i] if i < len(self.CVSS_PREFIXES) else ""
+                        cvss_data[cvss_key] = {"vector_string": f"{prefix}{base_vector}"}
+
             vuln_data = {
                 "name": definition.get("name", "Vulnerability"),
                 "desc": definition.get("description", ""),
@@ -161,25 +148,26 @@ class TenableIOJSONExport(PluginJsonFormat):
                 "cwe": definition.get("cwe", []),
                 "data": output_content
             }
-
-
             vuln_data.update(cvss_data)
 
+            website = None
+            if asset_data['hostnames']:
+                for hostname in asset_data['hostnames']:
+                    if '.' in hostname:
+                        website = hostname
+                        break
+                if not website:
+                    website = next(iter(asset_data['hostnames']))
+            elif asset_data['ip']:
+                website = asset_data['ip']
+
             if is_valid_port:
-                services_mapper = filter_services()
-
                 service_name = "Unknown"
-
-                for service in services_mapper:
-                    _splitted_service = service[0].split("/")
-                    if len(_splitted_service) != 2:
-                        continue
-                    _port, _protocol = _splitted_service
-                    if _port == str(port_int):
+                for service in filter_services():
+                    parts = service[0].split("/")
+                    if len(parts) == 2 and parts[0] == str(port_int):
                         service_name = service[1]
                         break
-
-                self.logger.debug(f"Port {port_int} mapped to service: {service_name}")
 
                 service_id = self.createAndAddServiceToHost(
                     host_id=host_id,
@@ -189,15 +177,12 @@ class TenableIOJSONExport(PluginJsonFormat):
                     status="open"
                 )
 
-                # Check if it's a web vulnerability by service name OR by URL detection in data
                 is_web_service = service_name.lower() in self.WEB_SERVICES
-                has_url_in_data = self.detect_web_vulnerability(output_content)
-                # Get family for additional web vulnerability detection
+                has_url_in_data = bool(self.URL_PATTERN.search(output_content)) if output_content else False
                 family = definition.get("family", "").lower()
+                is_web_family = any(fam in family for fam in self.WEB_FAMILY_STRINGS)
 
-                if is_web_service \
-                     or has_url_in_data \
-                     or any(_family_string in family for _family_string in self.WEB_FAMILY_STRINGS):
+                if is_web_service or has_url_in_data or is_web_family:
                     vuln_data["website"] = website
                     self.createAndAddVulnWebToService(
                         host_id=host_id,
@@ -216,6 +201,8 @@ class TenableIOJSONExport(PluginJsonFormat):
                     **vuln_data
                 )
 
+        self._vulns_buffer.clear()
 
-def createPlugin(*args, **kwargs) -> TenableIOJSONExport:
+
+def createPlugin(*args, **kwargs):
     return TenableIOJSONExport(*args, **kwargs)
