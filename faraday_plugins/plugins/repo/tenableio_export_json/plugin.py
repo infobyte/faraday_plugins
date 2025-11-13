@@ -62,7 +62,7 @@ class TenableIOJSONExport(PluginJsonFormat):
     def get_hostname_from_host(self, ip: str) -> str:
         for host in self.vulns_data["hosts"]:
             if ip in host.get("ip", []):
-                return host.get("hostnames", "")[0]
+                return host.get("hostnames", [""])[0]
 
     def parseOutputString(self, output: str) -> None:
         try:
