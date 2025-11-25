@@ -379,6 +379,8 @@
 6346/udp	gnutella-svc
 6347/tcp	gnutella-rtr
 6347/udp	gnutella-rtr
+6443/tcp	https-alt
+6443/udp	https-alt
 6444/tcp	sge-qmaster
 6444/udp	sge-qmaster
 6445/tcp	sge-execd
@@ -405,8 +407,10 @@
 7008/udp	afs3-update
 7009/tcp	afs3-rmtsys
 7009/udp	afs3-rmtsys
-7100/tcp	font-service
-7100/udp	font-service
+7100/tcp    font-service
+7100/udp    font-service
+7443/udp	https-alt
+7443/udp	https-alt
 8080/tcp	http-alt
 8080/udp	http-alt
 8443/udp	https-alt
