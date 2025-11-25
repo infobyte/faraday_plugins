@@ -409,12 +409,16 @@
 7100/udp	font-service
 8080/tcp	http-alt
 8080/udp	http-alt
+8443/udp	https-alt
+8443/tcp	https-alt
 9101/tcp	bacula-dir
 9101/udp	bacula-dir
 9102/tcp	bacula-fd
 9102/udp	bacula-fd
 9103/tcp	bacula-sd
 9103/udp	bacula-sd
+9443/tcp	https-alt
+9443/udp	https-alt
 9667/tcp	xmms2
 9667/udp	xmms2
 10809/tcp	nbd
