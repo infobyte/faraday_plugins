@@ -8,6 +8,8 @@ import subprocess # nosec
 import re
 import sys
 import json
+from abc import ABC, abstractmethod
+from typing import Dict, Any
 from dateutil.parser import parse
 from urllib.parse import urlparse
 from packaging import version
@@ -23,6 +25,93 @@ __email__ = "nrebagliati@infobytesec.com"
 __status__ = "Development"
 
 
+class NucleiReportParser(ABC):
+    """Abstract base class for Nuclei report parsers."""
+
+    def __init__(self, vuln_dict: Dict[str, Any]):
+        self.vuln_dict = vuln_dict
+        self.info = vuln_dict.get('info', {})
+
+    @abstractmethod
+    def get_impact(self) -> str:
+        """Extract impact information from the vulnerability as text for technical data."""
+        pass
+
+    @abstractmethod
+    def get_resolution(self) -> str:
+        """Extract resolution information from the vulnerability."""
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def can_parse(vuln_dict: Dict[str, Any]) -> bool:
+        """Check if this parser can handle the given vulnerability format."""
+        pass
+
+
+class NucleiV3Parser(NucleiReportParser):
+    """Parser for Nuclei v3.x JSON format."""
+
+    def get_impact(self) -> str:
+        """Extract impact from Nuclei 3.x format (descriptive text) for technical data."""
+        impacted_text = self.info.get('impact', '')
+        if isinstance(impacted_text, str):
+            return impacted_text.strip()
+        return ''
+
+    def get_resolution(self) -> str:
+        """Extract resolution from top-level remediation field."""
+        return self.info.get('remediation', '')
+
+    @staticmethod
+    def can_parse(vuln_dict: Dict[str, Any]) -> bool:
+        """Check for Nuclei 3.x specific fields."""
+        info = vuln_dict.get('info', {})
+        return 'impact' in info or 'remediation' in info
+
+
+class NucleiV2Parser(NucleiReportParser):
+    """Parser for Nuclei v2.x JSON format."""
+
+    def get_impact(self) -> str:
+        """Extract impact from Nuclei 2.x format for technical data."""
+        metadata = self.info.get('metadata', {})
+        impacted_str = metadata.get('impact', '')
+        if isinstance(impacted_str, str):
+            return impacted_str.strip()
+        return ''
+
+    def get_resolution(self) -> str:
+        """Extract resolution from metadata field."""
+        metadata = self.info.get('metadata', {})
+        return metadata.get('resolution', '')
+
+    @staticmethod
+    def can_parse(vuln_dict: Dict[str, Any]) -> bool:
+        """Default parser - can handle any format as fallback."""
+        return True
+
+
+def _get_parser(vuln_dict: Dict[str, Any]) -> NucleiReportParser:
+    """Factory method to select the appropriate Nuclei parser.
+
+    Args:
+        vuln_dict: The vulnerability dictionary from Nuclei output
+
+    Returns:
+        An instance of the appropriate parser for the detected version
+    """
+
+    parsers = [NucleiV3Parser, NucleiV2Parser]
+
+    for parser_class in parsers:
+        if parser_class.can_parse(vuln_dict):
+            return parser_class(vuln_dict)
+
+    # Fallback to V2 parser if no specific parser matches
+    return NucleiV2Parser(vuln_dict)
+
+
 class NucleiPlugin(PluginMultiLineJsonFormat):
     """ Handle the Nuclei tool. Detects the output of the tool
     and adds the information to Faraday.
@@ -32,8 +121,8 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
         super().__init__(*arg, **kwargs)
         self.id = "nuclei"
         self.name = "Nuclei"
-        self.plugin_version = "1.0.3"
-        self.version = "2.5.5"
+        self.plugin_version = "1.1.0"
+        self.version = "3.4.10"
         self.json_keys = {"matched-at", "template-id", "host"}
         self._command_regex = re.compile(r'^(sudo nuclei|nuclei|\.\/nuclei|^.*?nuclei)\s+.*?')
         self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
@@ -74,7 +163,9 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             else:
                 print('Version not supported, use nuclei 2.5.3 or higher')
                 sys.exit(1)
-            reference = vuln_dict["info"].get('reference', [])
+            info = vuln_dict.get('info', {})
+
+            reference = info.get('reference', [])
             if not reference:
                 reference = []
             else:
@@ -83,7 +174,7 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                         reference = list(filter(None, [re.sub('^- ', '', elem) for elem in reference.split('\n')]))
                     else:
                         reference = [reference]
-            references = vuln_dict["info"].get('references', [])
+            references = info.get('references', [])
             if references:
                 if isinstance(references, str):
                     if re.match('^- ', references):
@@ -93,13 +184,13 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
             else:
                 references = []
 
-            cve = vuln_dict['info'].get('classification', {}).get('cve-id', [])
+            cve = info.get('classification', {}).get('cve-id', [])
             if cve:
                 cve = [x.upper() for x in cve]
 
-            vector_string = vuln_dict['info'].get('classification', {}).get('cvss-metrics')
+            vector_string = info.get('classification', {}).get('cvss-metrics')
             cvss3 = {"vector_string": vector_string} if vector_string else None
-            cwe = vuln_dict['info'].get('classification', {}).get('cwe-id', [])
+            cwe = info.get('classification', {}).get('cwe-id', [])
             if cwe:
                 cwe = [x.upper() for x in cwe]
             #capec = vuln_dict['info'].get('metadata', {}).get('capec', [])
@@ -108,19 +199,17 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
 
             refs = sorted(list(set(reference + references)))
             refs = list(filter(None, refs))
-
-            tags = vuln_dict['info'].get('tags', [])
+            tags = info.get('tags', [])
             if isinstance(tags, str):
                 tags = tags.split(',')
 
-            impact = {}
-            impacted = vuln_dict['info'].get('metadata', {}).get('impact')
-            if isinstance(impacted, str):
-                for x in impacted.split(','):
-                    impact[x] = True
 
-            resolution = vuln_dict['info'].get('metadata', {}).get('resolution', '')
-            easeofresolution = vuln_dict['info'].get('metadata', {}).get('easeofresolution', None)
+
+            parser = _get_parser(vuln_dict)
+            impact = parser.get_impact()
+            resolution = parser.get_resolution()
+
+            easeofresolution = info.get('metadata', {}).get('easeofresolution', None)
 
             request = vuln_dict.get('request', '')
             if request:
@@ -129,10 +218,14 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 method = ""
 
             data = [f"Matched: {vuln_dict.get('matched-at')}",
-                    f"Tags: {vuln_dict['info'].get('tags', '')}",
+                    f"Tags: {info.get('tags', '')}",
                     f"Template ID: {vuln_dict.get('template-id', '')}"]
 
-            name = vuln_dict["info"].get("name")
+            # Add impact to technical data if present
+            if impact:
+                data.append(f"Impact: {impact}")
+
+            name = info.get("name")
             run_date = vuln_dict.get('timestamp')
             if run_date:
                 run_date = parse(run_date)
@@ -140,11 +233,10 @@ class NucleiPlugin(PluginMultiLineJsonFormat):
                 host_id,
                 service_id,
                 name=name,
-                desc=vuln_dict["info"].get("description", name),
+                desc=info.get("description", name),
                 ref=refs,
-                severity=vuln_dict["info"].get('severity'),
+                severity=info.get('severity'),
                 tags=tags,
-                impact=impact,
                 resolution=resolution,
                 easeofresolution=easeofresolution,
                 cve=cve,
