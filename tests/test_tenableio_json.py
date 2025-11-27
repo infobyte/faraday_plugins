@@ -3,10 +3,14 @@ Test cases for Tenable IO JSON Export Plugin
 """
 
 import json
+import os
+from pathlib import Path
+
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from faraday_plugins.plugins.repo.tenableio_export_json.plugin import TenableIOJSONExport
 
+DUMMY_FILES_FOLDER = Path.cwd() / "tests" / "data" / "tenableio"
 
 class TestTenableIOJSONExport:
     """Test suite for Tenable IO JSON Export Plugin"""
@@ -378,9 +382,9 @@ class TestTenableIOJSONExport:
     def test_service_mapping_real_filter_services(self):
         """Test service mapping with actual filter_services() without mocking"""
         from faraday_plugins.plugins.plugins_utils import filter_services
-        
+
         services_map = filter_services()
-        
+
         well_known_ports = [
             (21, 'ftp'),
             (22, 'ssh'),
@@ -395,23 +399,23 @@ class TestTenableIOJSONExport:
             (5432, 'postgresql'),
             (8080, 'http-alt')
         ]
-        
+
         for port, expected_service in well_known_ports:
             self.plugin.createAndAddServiceToHost.reset_mock()
-            
+
             test_data = [{
                 "id": f"test_real_port_{port}",
                 "asset": {"ipv4_addresses": ["10.0.0.1"]},
                 "definition": {"id": 1, "name": "Test Vuln", "description": "Test"},
                 "port": port
             }]
-            
+
             self.plugin.parseOutputString(json.dumps(test_data))
-            
+
             call_args = self.plugin.createAndAddServiceToHost.call_args[1]
             assert call_args["name"] == expected_service
             assert call_args["ports"] == [port]
-        
+
         self.plugin.createAndAddServiceToHost.reset_mock()
         unmapped_port = 54321
         test_data = [{
@@ -420,9 +424,9 @@ class TestTenableIOJSONExport:
             "definition": {"id": 1, "name": "Test Vuln", "description": "Test"},
             "port": unmapped_port
         }]
-        
+
         self.plugin.parseOutputString(json.dumps(test_data))
-        
+
         call_args = self.plugin.createAndAddServiceToHost.call_args[1]
         assert call_args["name"] == "Unknown"
         assert call_args["ports"] == [unmapped_port]
@@ -653,70 +657,21 @@ class TestTenableIOJSONExport:
         assert vuln_call["website"] == "10.0.0.3"
 
     def test_hostname_from_previous_vuln(self):
-        """Test that when a vuln has no hostname but a previous vuln created the host with hostname,
-        it uses the hostname from hosts_hostnames dict for the website field"""
-        
-        hosts_by_ip = {}
-        
-        def mock_create_host(**kwargs):
-            ip_address = kwargs.get("name", "")
-            
-            if ip_address in hosts_by_ip:
-                host_id = hosts_by_ip[ip_address]["id"]
-                existing_host = hosts_by_ip[ip_address]["host"]
-                return host_id, existing_host
-            
-            host_id = f"host_id_{ip_address.replace('.', '_')}"
-            hostnames = kwargs.get("hostnames", [])
-            host_dict = {"hostnames": hostnames}
-            
-            hosts_by_ip[ip_address] = {
-                "id": host_id,
-                "host": host_dict
-            }
-            
-            return host_id, host_dict
-        
-        self.plugin.createAndAddHost = Mock(side_effect=mock_create_host)
-        
-        test_data = [
-            {
-                "id": "vuln_with_hostname",
-                "asset": {
-                    "ipv4_addresses": ["192.168.1.100"],
-                    "display_fqdn": "server.example.com",
-                    "host_name": "server"
-                },
-                "definition": {
-                    "id": 1,
-                    "name": "First Vulnerability",
-                    "description": "First vulnerability with hostname"
-                },
-                "port": 80
-            },
-            {
-                "id": "vuln_without_hostname",
-                "asset": {
-                    "ipv4_addresses": ["192.168.1.100"]
-                },
-                "definition": {
-                    "id": 2,
-                    "name": "Second Vulnerability",
-                    "description": "Second vulnerability without hostname on same host"
-                },
-                "port": 443
-            }
-        ]
-        
-        self.plugin.parseOutputString(json.dumps(test_data))
-        
-        assert self.plugin.createAndAddVulnWebToService.call_count == 2
-        
-        first_vuln_call = self.plugin.createAndAddVulnWebToService.call_args_list[0][1]
-        assert first_vuln_call["website"] == "server.example.com"
-        
-        second_vuln_call = self.plugin.createAndAddVulnWebToService.call_args_list[1][1]
-        assert second_vuln_call["website"] in ["server.example.com", "server"]
+        """Test that hostname is properly set from previous VulnerabilityWeb"""
+
+        report_filename = DUMMY_FILES_FOLDER / "tenableio_json.json"
+        assert os.path.isfile(report_filename) is True
+
+        # Mocks make this test brake if we use self here.
+        plugin = TenableIOJSONExport()
+        plugin.processReport(report_filename)
+        plugin_json = json.loads(plugin.get_json())
+
+        assert len(plugin_json["hosts"]) == 1
+        assert set(plugin_json["hosts"][0]["hostnames"]) == {"server.example.com", "server"}
+        assert len(plugin_json["hosts"][0]["services"]) == 2
+        assert plugin_json["hosts"][0]["services"][0]["vulnerabilities"][0]["website"] == "server.example.com"
+        assert plugin_json["hosts"][0]["services"][1]["vulnerabilities"][0]["website"] in ["server.example.com", "server"]
 
     def test_create_plugin_function(self):
         """Test the createPlugin factory function (covers line 174)"""
