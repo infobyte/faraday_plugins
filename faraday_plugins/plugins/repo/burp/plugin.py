@@ -59,7 +59,7 @@ class BurpXmlParser:
         @return xml_tree An xml tree instance. None if error.
         """
         try:
-            parser = ET.XMLParser(recover=True)
+            parser = ET.XMLParser(recover=True, huge_tree=True)
             tree = ET.fromstring(xml_output, parser=parser)
         except ET.XMLSyntaxError as err:
             print(f"XMLSyntaxError: {err}. {xml_output}")
