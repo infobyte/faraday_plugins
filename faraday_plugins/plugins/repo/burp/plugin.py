@@ -159,7 +159,9 @@ class Item:
         if node is not None:
             encoded = distutils.util.strtobool(node.get('base64', 'false'))
             if encoded:
-                res = base64.b64decode(node.text).decode('utf-8', errors="backslashreplace")
+                text = node.text or ""
+                text += "=" * (-len(text) % 4)
+                res = base64.b64decode(text, validate=False).decode('utf-8', errors="backslashreplace")
             else:
                 res = node.text
             return "".join([ch for ch in res if ord(ch) <= 128])
