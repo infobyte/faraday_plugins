@@ -4,6 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+import binascii
 import re
 import base64
 import distutils.util  # pylint: disable=import-error
@@ -161,7 +162,10 @@ class Item:
             if encoded:
                 text = node.text or ""
                 text += "=" * (-len(text) % 4)
-                res = base64.b64decode(text, validate=False).decode('utf-8', errors="backslashreplace")
+                try:
+                    res = base64.b64decode(text, validate=False).decode('utf-8', errors="backslashreplace")
+                except binascii.Error:
+                    res = "Truncated Base64 data: unable to decode. Raw content:\n" + text
             else:
                 res = node.text
             return "".join([ch for ch in res if ord(ch) <= 128])
