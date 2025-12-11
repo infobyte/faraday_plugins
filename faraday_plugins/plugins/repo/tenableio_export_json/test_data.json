@@ -1,0 +1,32 @@
+[
+  {
+    "id": "vuln_with_hostname",
+    "asset": {
+      "ipv4_addresses": [
+        "192.168.1.100"
+      ],
+      "display_fqdn": "server.example.com",
+      "host_name": "server"
+    },
+    "definition": {
+      "id": 1,
+      "name": "First Vulnerability",
+      "description": "First vulnerability with hostname"
+    },
+    "port": 80
+  },
+  {
+    "id": "vuln_without_hostname",
+    "asset": {
+      "ipv4_addresses": [
+        "192.168.1.100"
+      ]
+    },
+    "definition": {
+      "id": 2,
+      "name": "Second Vulnerability",
+      "description": "Second vulnerability without hostname on same host"
+    },
+    "port": 443
+  }
+]

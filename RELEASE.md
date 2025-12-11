@@ -1,3 +1,10 @@
+1.27.1 [Dec 11th, 2025]:
+---
+ * [MOD] Changed behaviour of TenableIOJSONExport plugin to better represent the vulnerabilities and assets. #384
+ * [FIX] Fixed Nuclei plugin to correctly parse impact and remediation fields from Nuclei 3.x JSON format while maintaining backward compatibility with 2.x. #379
+ * [FIX] Fixed Burp plugin crash on Python >= 3.11 by using non-strict Base64 decoding. #385
+ * [FIX] Secure Score Card IP Field. #386
+
 1.27.0 [Oct 3rd, 2025]:
 ---
  * [ADD] Faraday Asset Import CSV Plugin. #375
