@@ -174,25 +174,25 @@ class PluginBase:
         else:
             obj_uuid = self._service_cache[cache_id]
         return obj_uuid
-    
+
     def _should_ignore_check(self, vuln):
         # Ignore Info
         if self.ignore_info and vuln['severity'] == 'info':
             return True
-        
+
         # Severity Range check
         if self.min_severity and VulnerabilitySeverity[vuln['severity'].upper()].value < VulnerabilitySeverity[self.min_severity.upper()].value:
             return True
         if self.max_severity and VulnerabilitySeverity[vuln['severity'].upper()].value > VulnerabilitySeverity[self.max_severity.upper()].value:
             return True
-        
+
         return False
 
     def save_service_vuln_cache(self, host_id, service_id, vuln):
 
         if self._should_ignore_check(vuln):
             return None
-        
+
         cache_id = self.get_service_vuln_cache_id(host_id, service_id, vuln)
         if cache_id not in self._vulns_cache:
             obj_uuid = self.save_cache(vuln)
@@ -207,7 +207,7 @@ class PluginBase:
 
         if self._should_ignore_check(vuln):
             return None
-        
+
         cache_id = self.get_host_vuln_cache_id(host_id, vuln)
         if cache_id not in self._vulns_cache:
             obj_uuid = self.save_cache(vuln)
