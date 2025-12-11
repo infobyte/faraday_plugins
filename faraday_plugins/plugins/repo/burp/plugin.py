@@ -4,6 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+import binascii
 import re
 import base64
 import distutils.util  # pylint: disable=import-error
@@ -58,7 +59,7 @@ class BurpXmlParser:
         @return xml_tree An xml tree instance. None if error.
         """
         try:
-            parser = ET.XMLParser(recover=True)
+            parser = ET.XMLParser(recover=True, huge_tree=True)
             tree = ET.fromstring(xml_output, parser=parser)
         except ET.XMLSyntaxError as err:
             print(f"XMLSyntaxError: {err}. {xml_output}")
@@ -159,7 +160,12 @@ class Item:
         if node is not None:
             encoded = distutils.util.strtobool(node.get('base64', 'false'))
             if encoded:
-                res = base64.b64decode(node.text).decode('utf-8', errors="backslashreplace")
+                text = node.text or ""
+                text += "=" * (-len(text) % 4)
+                try:
+                    res = base64.b64decode(text, validate=False).decode('utf-8', errors="backslashreplace")
+                except binascii.Error:
+                    res = "Truncated Base64 data: unable to decode. Raw content:\n" + text
             else:
                 res = node.text
             return "".join([ch for ch in res if ord(ch) <= 128])
