@@ -58,10 +58,29 @@ class DirsearchPluginJSON(PluginJsonFormat):
         self.json_keys = {'results', 'info'}
         self._temp_file_extension = "json"
 
+    def _clean_json_report(self, json_report):
+        """
+        Cleans a JSON report by limiting the number of occurrences of specific
+        content-type and content-length combinations in the results. Ensures
+        that there are no more than six occurrences of any unique combination
+        while retaining the structure of the input report.
+        """
+        count = {}
+        clean_results = []
+        for res in json_report.get("results", []):
+            key = (res.get("content-type", ""), res.get("content-length", ""))
+            count[key] = count.get(key, 0) + 1
+            if count[key] <= 6:
+                clean_results.append(res)
+        json_report["results"] = clean_results
+        return json_report
+
     def parseOutputString(self, output):
         json_report = json.loads(output)
         if not json_report:
-            return None
+            return
+
+        json_report = self._clean_json_report(json_report)
 
         regex_map = {}
         data_regroup = {}
@@ -106,10 +125,18 @@ class DirsearchPluginJSON(PluginJsonFormat):
                 self.createAndAddVulnToHost(
                     h,
                     f"Returned {int(code/100)}xx",
-                    desc=data_regroup[host][code],
+                    desc=f"The exposure of directories or files on a web server represents a security weakness whose "
+                         f"impact depends on the context and the type of information disclosed.\n\n"
+                         f"While it may result in low or medium impact when only non-sensitive information is exposed, "
+                         f"it can become a high-severity issue if sensitive data such as credentials, configuration "
+                         f"files, or internal resources are accessible.\n\n"
+                         f"This type of exposure is considered a poor security practice and often indicates "
+                         f"misconfigurations or insufficient access controls.",
+                    data=data_regroup[host][code],
                     severity="info",
                     confirmed=True
                 )
+        return
 
 def createPlugin(*args, **kwargs):
     return DirsearchPluginJSON(*args, **kwargs)
