@@ -125,13 +125,15 @@ class DirsearchPluginJSON(PluginJsonFormat):
                 self.createAndAddVulnToHost(
                     h,
                     f"Returned {int(code/100)}xx",
-                    desc=f"The exposure of directories or files on a web server represents a security weakness whose "
-                         f"impact depends on the context and the type of information disclosed.\n\n"
-                         f"While it may result in low or medium impact when only non-sensitive information is exposed, "
-                         f"it can become a high-severity issue if sensitive data such as credentials, configuration "
-                         f"files, or internal resources are accessible.\n\n"
-                         f"This type of exposure is considered a poor security practice and often indicates "
-                         f"misconfigurations or insufficient access controls.",
+                    desc=(
+                        "The exposure of directories or files on a web server represents a security weakness whose "
+                        "impact depends on the context and the type of information disclosed.\n\n"
+                        "While it may result in low or medium impact when only non-sensitive information is exposed, "
+                        "it can become a high-severity issue if sensitive data such as credentials, configuration "
+                        "files, or internal resources are accessible.\n\n"
+                        "This type of exposure is considered a poor security practice and often indicates "
+                        "misconfigurations or insufficient access controls."
+                    ),
                     data=data_regroup[host][code],
                     severity="info",
                     confirmed=True
