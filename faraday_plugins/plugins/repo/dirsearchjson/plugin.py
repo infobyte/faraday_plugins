@@ -46,6 +46,18 @@ code_map = {
     511: "Network Authentication Required",
 }
 
+VULN_DESCRIPTION = (
+    "The exposure of directories or files on a web server represents a security weakness whose "
+    "impact depends on the context and the type of information disclosed.\n\n"
+    "While it may result in low or medium impact when only non-sensitive information is exposed, "
+    "it can become a high-severity issue if sensitive data such as credentials, configuration "
+    "files, or internal resources are accessible.\n\n"
+    "This type of exposure is considered a poor security practice and often indicates "
+    "misconfigurations or insufficient access controls."
+)
+
+OCCURRENCES_THRESHOLD = 6
+
 
 class DirsearchPluginJSON(PluginJsonFormat):
 
@@ -70,7 +82,7 @@ class DirsearchPluginJSON(PluginJsonFormat):
         for res in json_report.get("results", []):
             key = (res.get("content-type", ""), res.get("content-length", ""))
             count[key] = count.get(key, 0) + 1
-            if count[key] <= 6:
+            if count[key] <= OCCURRENCES_THRESHOLD:
                 clean_results.append(res)
         json_report["results"] = clean_results
         return json_report
@@ -115,7 +127,7 @@ class DirsearchPluginJSON(PluginJsonFormat):
             red = result.get('redirect') or None
 
             data_regroup[regex_map[loc]][status_round] += (
-                f"- [{status}] **{loc}**{(' with content type *'+ct+'*') if ct is not None else ''}"
+                f"- [{status}] **[{loc}]({loc})**{(' with content type *'+ct+'*') if ct is not None else ''}"
                 f"{(' ('+str(cl)+' bytes)') if cl is not None else ''}"
                 f"{(' redirects to ['+red+']('+red+')') if red is not None else ''}\n"
             )
@@ -125,15 +137,7 @@ class DirsearchPluginJSON(PluginJsonFormat):
                 self.createAndAddVulnToHost(
                     h,
                     f"Returned {int(code/100)}xx",
-                    desc=(
-                        "The exposure of directories or files on a web server represents a security weakness whose "
-                        "impact depends on the context and the type of information disclosed.\n\n"
-                        "While it may result in low or medium impact when only non-sensitive information is exposed, "
-                        "it can become a high-severity issue if sensitive data such as credentials, configuration "
-                        "files, or internal resources are accessible.\n\n"
-                        "This type of exposure is considered a poor security practice and often indicates "
-                        "misconfigurations or insufficient access controls."
-                    ),
+                    desc=VULN_DESCRIPTION,
                     data=data_regroup[host][code],
                     severity="info",
                     confirmed=True
