@@ -52,8 +52,6 @@ VULN_DESCRIPTION = (
     "of all identified resources can be found in the **technical details** section."
 )
 
-OCCURRENCES_THRESHOLD = 6
-
 
 class DirsearchPluginJSON(PluginJsonFormat):
 
