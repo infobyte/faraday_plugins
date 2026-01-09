@@ -46,6 +46,12 @@ code_map = {
     511: "Network Authentication Required",
 }
 
+VULN_DESCRIPTION = (
+    "Exposed files were detected in the application, which may pose a "
+    "security risk if sensitive information is disclosed. The details "
+    "of all identified resources can be found in the **technical details** section."
+)
+
 
 class DirsearchPluginJSON(PluginJsonFormat):
 
@@ -58,10 +64,11 @@ class DirsearchPluginJSON(PluginJsonFormat):
         self.json_keys = {'results', 'info'}
         self._temp_file_extension = "json"
 
+
     def parseOutputString(self, output):
         json_report = json.loads(output)
         if not json_report:
-            return None
+            return
 
         regex_map = {}
         data_regroup = {}
@@ -96,7 +103,7 @@ class DirsearchPluginJSON(PluginJsonFormat):
             red = result.get('redirect') or None
 
             data_regroup[regex_map[loc]][status_round] += (
-                f"- [{status}] **{loc}**{(' with content type *'+ct+'*') if ct is not None else ''}"
+                f"- [{status}] **[{loc}]({loc})**{(' with content type *'+ct+'*') if ct is not None else ''}"
                 f"{(' ('+str(cl)+' bytes)') if cl is not None else ''}"
                 f"{(' redirects to ['+red+']('+red+')') if red is not None else ''}\n"
             )
@@ -106,10 +113,12 @@ class DirsearchPluginJSON(PluginJsonFormat):
                 self.createAndAddVulnToHost(
                     h,
                     f"Returned {int(code/100)}xx",
-                    desc=data_regroup[host][code],
+                    desc=VULN_DESCRIPTION,
+                    data=data_regroup[host][code],
                     severity="info",
                     confirmed=True
                 )
+        return
 
 def createPlugin(*args, **kwargs):
     return DirsearchPluginJSON(*args, **kwargs)
