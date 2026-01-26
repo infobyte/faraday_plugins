@@ -1,3 +1,7 @@
+1.27.2 [Jan 26th, 2026]:
+---
+ * [MOD] Improved DirsearchJSON plugin functionality. #387
+
 1.27.1 [Dec 11th, 2025]:
 ---
  * [MOD] Changed behaviour of TenableIOJSONExport plugin to better represent the vulnerabilities and assets. #384
