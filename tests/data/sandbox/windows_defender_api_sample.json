@@ -1,0 +1,35 @@
+{
+  "@odata.context": "https://api.securitycenter.microsoft.com/api/$metadata#Vulnerabilities",
+  "value": [
+    {
+      "id": "machine-001-_-CVE-2024-0001-_-vendor-_-package-_-1.0.0-_-",
+      "cveId": "CVE-2024-0001",
+      "machineId": "machine-001",
+      "fixingKbId": null,
+      "productName": "package",
+      "productVendor": "vendor",
+      "productVersion": "1.0.0",
+      "severity": "High"
+    },
+    {
+      "id": "machine-001-_-CVE-2024-0002-_-vendor-_-package-_-1.0.0-_-",
+      "cveId": "CVE-2024-0002",
+      "machineId": "machine-001",
+      "fixingKbId": "KB123456",
+      "productName": "package",
+      "productVendor": "vendor",
+      "productVersion": "1.0.0",
+      "severity": "Medium"
+    },
+    {
+      "id": "machine-002-_-CVE-2024-0003-_-microsoft-_-windows-_-10.0.19045-_-",
+      "cveId": "CVE-2024-0003",
+      "machineId": "machine-002",
+      "fixingKbId": "KB789012",
+      "productName": "windows",
+      "productVendor": "microsoft",
+      "productVersion": "10.0.19045",
+      "severity": "Critical"
+    }
+  ]
+}

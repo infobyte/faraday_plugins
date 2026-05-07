@@ -1,0 +1,46 @@
+{
+  "findings": [
+    {
+      "scan_type": "SCA",
+      "description": "Lodash before 4.17.21 is vulnerable to Prototype Pollution.",
+      "count": 1,
+      "context_type": "APPLICATION",
+      "context_guid": "ctx-001",
+      "violates_policy": true,
+      "issue_id": "issue-001",
+      "finding_status": {
+        "first_found_date": "2026-01-15T10:00:00Z",
+        "status": "OPEN",
+        "resolution": "UNRESOLVED",
+        "new": true,
+        "last_seen_date": "2026-01-15T10:00:00Z"
+      },
+      "finding_details": {
+        "severity": 4,
+        "cwe": {"id": 1321, "name": "Prototype Pollution"},
+        "component_id": "comp-001",
+        "component_filename": "lodash-4.17.4.tgz",
+        "cve": {
+          "name": "CVE-2020-8203",
+          "cvss3": {"vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H", "score": 7.5}
+        }
+      }
+    },
+    {
+      "scan_type": "SCA",
+      "description": "jQuery before 3.4.0 has Object.prototype pollution.",
+      "count": 1,
+      "issue_id": "issue-002",
+      "finding_status": {"status": "OPEN"},
+      "finding_details": {
+        "severity": 3,
+        "cwe": {"id": 79, "name": "XSS"},
+        "component_filename": "jquery-2.2.4.js",
+        "cve": {
+          "name": "CVE-2019-11358",
+          "cvss3": {"vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N", "score": 6.1}
+        }
+      }
+    }
+  ]
+}

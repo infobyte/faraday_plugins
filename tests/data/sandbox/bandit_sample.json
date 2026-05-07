@@ -1,0 +1,53 @@
+{
+  "errors": [],
+  "generated_at": "2026-01-15T10:00:00Z",
+  "metrics": {
+    "_totals": {
+      "loc": 120,
+      "nosec": 0,
+      "SEVERITY.HIGH": 1,
+      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.LOW": 1
+    }
+  },
+  "results": [
+    {
+      "code": "1 import subprocess\n2 subprocess.call('ls', shell=True)\n",
+      "filename": "app/utils.py",
+      "issue_confidence": "HIGH",
+      "issue_severity": "HIGH",
+      "issue_text": "subprocess call with shell=True identified, security issue.",
+      "issue_cwe": {"id": 78, "link": "https://cwe.mitre.org/data/definitions/78.html"},
+      "line_number": 2,
+      "line_range": [2],
+      "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b602_subprocess_popen_with_shell_equals_true.html",
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true"
+    },
+    {
+      "code": "1 import hashlib\n2 hashlib.md5(b'data')\n",
+      "filename": "app/auth.py",
+      "issue_confidence": "HIGH",
+      "issue_severity": "MEDIUM",
+      "issue_text": "Use of weak MD5 hash for security. Consider usedforsecurity=False.",
+      "issue_cwe": {"id": 327},
+      "line_number": 2,
+      "line_range": [2],
+      "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b303_md5.html",
+      "test_id": "B303",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "1 password = 'admin'\n",
+      "filename": "app/config.py",
+      "issue_confidence": "MEDIUM",
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'admin'",
+      "line_number": 1,
+      "line_range": [1],
+      "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    }
+  ]
+}

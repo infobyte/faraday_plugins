@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<document SSLyzeVersion="2.1.4" SSLyzeWeb="https://github.com/nabla-c0d3/sslyze">
+  <invalidTargets/>
+  <results httpsTunnel="None" startTLS="None" totalScanTime="3.21">
+    <target host="badssl.com" ip="104.154.89.105" port="443">
+      <sslv2 isProtocolSupported="False"/>
+      <sslv3 isProtocolSupported="False"/>
+      <tlsv1 isProtocolSupported="True">
+        <preferredCipherSuite>
+          <cipherSuite name="TLS_RSA_WITH_3DES_EDE_CBC_SHA" connectionStatus="Accepted"/>
+        </preferredCipherSuite>
+        <acceptedCipherSuites>
+          <cipherSuite name="TLS_RSA_WITH_3DES_EDE_CBC_SHA"/>
+          <cipherSuite name="TLS_RSA_WITH_AES_128_CBC_SHA"/>
+        </acceptedCipherSuites>
+      </tlsv1>
+      <tlsv1_1 isProtocolSupported="True"/>
+      <tlsv1_2 isProtocolSupported="True"/>
+      <tlsv1_3 isProtocolSupported="False"/>
+      <heartbleed exception="" title="OpenSSL Heartbleed">
+        <openSslHeartbleed isVulnerable="False"/>
+      </heartbleed>
+      <openssl_ccs exception="" title="OpenSSL CCS Injection">
+        <openSslCcsInjection isVulnerable="False"/>
+      </openssl_ccs>
+    </target>
+  </results>
+</document>

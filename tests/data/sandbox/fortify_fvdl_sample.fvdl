@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FVDL xmlns="xmlns://www.fortifysoftware.com/schema/fvdl" version="1.12">
+  <CreatedTS date="2026-01-15" time="10:00:00"/>
+  <Build>
+    <Project>synthetic-app</Project>
+    <Version>1.0.0</Version>
+    <BuildID>synth-001</BuildID>
+    <NumberFiles>2</NumberFiles>
+  </Build>
+  <Vulnerabilities>
+    <Vulnerability>
+      <ClassInfo>
+        <ClassID>9876543210ABCDEF</ClassID>
+        <Kingdom>Input Validation and Representation</Kingdom>
+        <Type>SQL Injection</Type>
+        <Subtype/>
+        <AnalyzerName>dataflow</AnalyzerName>
+        <DefaultSeverity>4.0</DefaultSeverity>
+      </ClassInfo>
+      <InstanceInfo>
+        <InstanceID>SQLI-001</InstanceID>
+        <InstanceSeverity>4.0</InstanceSeverity>
+        <Confidence>5.0</Confidence>
+      </InstanceInfo>
+      <AnalysisInfo>
+        <Unified>
+          <Trace>
+            <Primary>
+              <Entry>
+                <Node>
+                  <SourceLocation path="src/main/java/Login.java" line="42" lineEnd="42" colStart="10" colEnd="20"/>
+                </Node>
+              </Entry>
+            </Primary>
+          </Trace>
+        </Unified>
+      </AnalysisInfo>
+    </Vulnerability>
+    <Vulnerability>
+      <ClassInfo>
+        <ClassID>AABBCCDDEEFF1234</ClassID>
+        <Kingdom>Encapsulation</Kingdom>
+        <Type>Poor Logging Practice</Type>
+        <Subtype>Use of System.out</Subtype>
+        <AnalyzerName>structural</AnalyzerName>
+        <DefaultSeverity>1.0</DefaultSeverity>
+      </ClassInfo>
+      <InstanceInfo>
+        <InstanceID>LOG-001</InstanceID>
+        <InstanceSeverity>1.0</InstanceSeverity>
+        <Confidence>5.0</Confidence>
+      </InstanceInfo>
+      <AnalysisInfo>
+        <Unified>
+          <Trace>
+            <Primary>
+              <Entry>
+                <Node>
+                  <SourceLocation path="src/main/java/Login.java" line="58" lineEnd="58" colStart="9" colEnd="22"/>
+                </Node>
+              </Entry>
+            </Primary>
+          </Trace>
+        </Unified>
+      </AnalysisInfo>
+    </Vulnerability>
+  </Vulnerabilities>
+  <Description classID="9876543210ABCDEF" contentType="text/html">
+    <Abstract>SQL injection allows attackers to execute arbitrary SQL.</Abstract>
+    <Explanation>The application concatenates user input directly into a SQL query.</Explanation>
+    <Recommendations>Use parameterised queries.</Recommendations>
+  </Description>
+  <Description classID="AABBCCDDEEFF1234" contentType="text/html">
+    <Abstract>Use a proper logging facility instead of System.out.</Abstract>
+    <Explanation>System.out logging cannot be controlled at runtime.</Explanation>
+    <Recommendations>Use the project's logging library (e.g. SLF4J).</Recommendations>
+  </Description>
+  <EngineData>
+    <RuleInfo>
+      <Rule id="9876543210ABCDEF">
+        <MetaInfo>
+          <Group name="Probability">3.0</Group>
+          <Group name="Impact">5.0</Group>
+          <Group name="Accuracy">5.0</Group>
+        </MetaInfo>
+      </Rule>
+      <Rule id="AABBCCDDEEFF1234">
+        <MetaInfo>
+          <Group name="Probability">2.0</Group>
+          <Group name="Impact">1.0</Group>
+          <Group name="Accuracy">5.0</Group>
+        </MetaInfo>
+      </Rule>
+    </RuleInfo>
+  </EngineData>
+</FVDL>

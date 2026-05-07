@@ -1,0 +1,56 @@
+<?xml version="1.0" ?>
+<report type="security">
+  <report_infos>
+    <info name="generatorName">wapiti</info>
+    <info name="generatorVersion">Wapiti 3.1.7</info>
+    <info name="scope">folder</info>
+    <info name="dateOfScan">Thu, 15 Jan 2026 10:00:00 +0000</info>
+    <info name="target">http://target.example.com/</info>
+  </report_infos>
+  <vulnerabilities>
+    <vulnerability name="Cross Site Scripting">
+      <description><![CDATA[Reflected XSS in the search parameter.]]></description>
+      <solution><![CDATA[Encode user input.]]></solution>
+      <references>
+        <reference>
+          <title>OWASP XSS</title>
+          <url>https://owasp.org/www-community/attacks/xss</url>
+        </reference>
+        <reference>
+          <title>CWE-79</title>
+          <url>https://cwe.mitre.org/data/definitions/79.html</url>
+        </reference>
+      </references>
+      <entries>
+        <entry>
+          <method>GET</method>
+          <path>/search</path>
+          <level>3</level>
+          <parameter>q</parameter>
+          <http_request>GET /search?q=&lt;script&gt;alert(1)&lt;/script&gt; HTTP/1.1</http_request>
+          <curl_command>curl 'http://target.example.com/search?q=&lt;script&gt;alert(1)&lt;/script&gt;'</curl_command>
+        </entry>
+      </entries>
+    </vulnerability>
+    <vulnerability name="Server-side Header Information Disclosure">
+      <description><![CDATA[]]></description>
+      <solution></solution>
+      <references>
+        <reference>
+          <title>Information disclosure</title>
+          <url>https://example.com/info</url>
+        </reference>
+      </references>
+      <entries>
+        <entry>
+          <method>HEAD</method>
+          <path>/</path>
+          <level>1</level>
+          <parameter></parameter>
+          <http_request></http_request>
+          <curl_command></curl_command>
+        </entry>
+      </entries>
+    </vulnerability>
+  </vulnerabilities>
+</report>

@@ -1,0 +1,5 @@
+# Amap v5.4 started at Mon Jan 15 10:00:00 2026
+192.0.2.10:22:tcp:open:ssh:OpenSSH 8.2p1:SSH-2.0-OpenSSH_8.2p1
+192.0.2.10:80:tcp:open:http:Apache httpd:HTTP/1.1 200 OK
+192.0.2.10:443:tcp:open:http-ssl:Apache mod_ssl:HTTP/1.1 200 OK
+192.0.2.11:21:tcp:open:ftp:vsFTPd 3.0.3:220 (vsFTPd 3.0.3)

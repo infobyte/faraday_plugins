@@ -1,0 +1,57 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "synthetic-sarif-tool",
+          "version": "1.0.0",
+          "rules": [
+            {
+              "id": "RULE001",
+              "name": "DangerousFunctionCall",
+              "shortDescription": {"text": "Use of dangerous function"},
+              "fullDescription": {"text": "Calling exec/eval with untrusted input is dangerous."},
+              "help": {"text": "Replace with a safe equivalent."},
+              "properties": {"tags": ["security", "cwe-78"]}
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "RULE001",
+          "level": "error",
+          "message": {"text": "Dangerous function call detected"},
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {"uri": "src/runner.py"},
+                "region": {"startLine": 7}
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "RULE_MISSING_FROM_DRIVER",
+          "level": "warning",
+          "message": {"text": "Issue without a corresponding rule entry"},
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {"uri": "src/runner.py"},
+                "region": {"startLine": 18}
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "RULE_NO_LOCATION",
+          "level": "note",
+          "message": {"text": "Run-level finding without a location"}
+        }
+      ]
+    }
+  ]
+}

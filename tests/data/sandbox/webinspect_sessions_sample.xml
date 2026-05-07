@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Sessions>
+  <Session requestId="SYNTH-WI-0001">
+    <URL>https://target.example.com:443/login</URL>
+    <Scheme>https</Scheme>
+    <Host>target.example.com</Host>
+    <Port>443</Port>
+    <Issues>
+      <Issue id="100001">
+        <Name>SQL Injection</Name>
+        <Severity>3</Severity>
+        <CheckTypeID>Vulnerability</CheckTypeID>
+        <VulnerabilityID>89</VulnerabilityID>
+        <ReportSection>
+          <Name>Summary</Name>
+          <SectionText>Boolean-based blind SQL injection in 'username' parameter.</SectionText>
+        </ReportSection>
+        <ReportSection>
+          <Name>Implication</Name>
+          <SectionText>An attacker can read arbitrary data from the database.</SectionText>
+        </ReportSection>
+        <ReportSection>
+          <Name>Fix</Name>
+          <SectionText>Use parameterised queries.</SectionText>
+        </ReportSection>
+      </Issue>
+      <Issue id="100002">
+        <Name>Cross-Site Scripting</Name>
+        <Severity>2</Severity>
+        <CheckTypeID>Vulnerability</CheckTypeID>
+        <VulnerabilityID>79</VulnerabilityID>
+        <ReportSection>
+          <Name>Summary</Name>
+          <SectionText>Reflected XSS in the search parameter.</SectionText>
+        </ReportSection>
+      </Issue>
+    </Issues>
+  </Session>
+  <Session requestId="SYNTH-WI-0002">
+    <URL>https://target.example.com:443/admin</URL>
+    <Scheme>https</Scheme>
+    <Host>target.example.com</Host>
+    <Port>443</Port>
+    <Issues>
+      <Issue id="100003">
+        <Name>Insecure Direct Object Reference</Name>
+        <Severity>3</Severity>
+        <CheckTypeID>Vulnerability</CheckTypeID>
+        <VulnerabilityID>639</VulnerabilityID>
+        <ReportSection>
+          <Name>Summary</Name>
+          <SectionText>The /admin endpoint is reachable without authentication.</SectionText>
+        </ReportSection>
+      </Issue>
+    </Issues>
+  </Session>
+</Sessions>

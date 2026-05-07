@@ -1,0 +1,32 @@
+libraries.FileLoader: CRITICAL __load_py_from_file. Filename: /Users/0x1gab/Desktop/Clients/Faraday/fixPlugins/sandbox/venv-wfuzz/lib/python3.9/site-packages/wfuzz/plugins/payloads/bing.py Exception, msg=No module named 'shodan'
+libraries.FileLoader: CRITICAL __load_py_from_file. Filename: /Users/0x1gab/Desktop/Clients/Faraday/fixPlugins/sandbox/venv-wfuzz/lib/python3.9/site-packages/wfuzz/plugins/payloads/shodanp.py Exception, msg=No module named 'shodan'
+
+Warning: Pycurl is not compiled against Openssl. Wfuzz might not work correctly when fuzzing SSL sites. Check Wfuzz's documentation for more information.
+
+default
+default
+********************************************************
+* Wfuzz 2.4.5 - The Web Fuzzer                         *
+********************************************************
+
+Target: http://127.0.0.1:8770/FUZZ
+Total requests: 10
+
+===================================================================
+ID        [0m   Response[0m   Lines [0m   Word  [0m   Chars    [0m   Payload        [0m
+===================================================================
+
+[0K000000002:[0m   301     [0m   0 L   [0m   0 W   [0m   0 Ch     [0m   "api"          [0m
+[0K000000001:[0m   301     [0m   0 L   [0m   0 W   [0m   0 Ch     [0m   "admin"        [0m
+[0K000000003:[0m   301     [0m   0 L   [0m   0 W   [0m   0 Ch     [0m   "login"        [0m
+[0K000000004:[0m   301     [0m   0 L   [0m   0 W   [0m   0 Ch     [0m   "backup"       [0m
+[0K000000005:[0m   301     [0m   0 L   [0m   0 W   [0m   0 Ch     [0m   "config"       [0m
+[0K000000006:[0m   301     [0m   0 L   [0m   0 W   [0m   0 Ch     [0m   "secret"       [0m
+[0K000000007:[0m   301     [0m   0 L   [0m   0 W   [0m   0 Ch     [0m   "reports"      [0m
+[0K000000008:[0m   404     [0m   13 L  [0m   32 W  [0m   335 Ch   [0m   "test"         [0m[0K000000009:[0m   404     [0m   13 L  [0m   32 W  [0m   335 Ch   [0m   "hello"        [0m[0K000000010:[0m   404     [0m   13 L  [0m   32 W  [0m   335 Ch   [0m   "robots.txt"   [0m[0K[1A
+
+Total time: 0.019773
+Processed Requests: 10
+Filtered Requests: 3
+Requests/sec.: 505.7399
+

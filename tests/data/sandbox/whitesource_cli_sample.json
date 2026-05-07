@@ -1,0 +1,48 @@
+{
+  "projectVitals": {
+    "name": "synthetic-project",
+    "creationDate": "2026-01-15"
+  },
+  "policyStatistics": {},
+  "vulnerabilityStatistics": {"high": 1, "medium": 1},
+  "libraries": [
+    {
+      "keyId": 1,
+      "name": "lodash-4.17.4.tgz",
+      "type": "NODE_PACKAGED_MODULE",
+      "languages": "javascript/Node.js",
+      "matchType": "SHA1",
+      "vulnerabilities": [
+        {
+          "name": "CVE-2020-8203",
+          "score": 7.4,
+          "scoreMetadataVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+          "severity": "high",
+          "description": "Prototype Pollution in lodash before 4.17.21.",
+          "topFix": {
+            "url": "https://github.com/lodash/lodash/pull/4759",
+            "fixResolution": "Upgrade to lodash 4.17.21"
+          }
+        }
+      ]
+    },
+    {
+      "keyId": 2,
+      "name": "no-vuln-package-1.0.tgz",
+      "type": "NODE_PACKAGED_MODULE"
+    },
+    {
+      "keyId": 3,
+      "name": "jackson-databind-2.13.3.jar",
+      "type": "MAVEN_ARTIFACT",
+      "vulnerabilities": [
+        {
+          "name": "CVE-2022-42004",
+          "score": 7.5,
+          "severity": "medium",
+          "description": "Resource exhaustion in jackson-databind."
+        }
+      ]
+    }
+  ]
+}

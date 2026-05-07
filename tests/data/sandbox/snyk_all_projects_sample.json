@@ -1,0 +1,64 @@
+[
+  {
+    "vulnerabilities": [
+      {
+        "id": "SNYK-JS-LODASH-001",
+        "title": "Prototype Pollution in lodash",
+        "description": "Versions of lodash prior to 4.17.21 are vulnerable to Prototype Pollution.",
+        "severity": "high",
+        "CVSSv3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+        "cvssScore": 7.5,
+        "identifiers": {"cve": ["CVE-2020-8203"], "cwe": ["CWE-1321"]},
+        "references": [
+          {"title": "GitHub PR", "url": "https://github.com/lodash/lodash/pull/4759"}
+        ]
+      }
+    ],
+    "ok": false,
+    "dependencyCount": 12,
+    "org": "test-org",
+    "policy": "...",
+    "isPrivate": true,
+    "licensesPolicy": null,
+    "packageManager": "npm",
+    "displayTargetFile": "frontend/package.json",
+    "path": "/repo/frontend"
+  },
+  {
+    "vulnerabilities": [
+      {
+        "id": "SNYK-PYTHON-DJANGO-001",
+        "title": "SQL Injection in Django",
+        "description": "Django before 3.2.18 has SQL injection in QuerySet.annotate().",
+        "severity": "critical",
+        "CVSSv3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+        "cvssScore": 9.8,
+        "identifiers": {"cve": ["CVE-2023-12345"], "cwe": ["CWE-89"]},
+        "references": []
+      },
+      {
+        "id": "SNYK-PYTHON-REQUESTS-001",
+        "title": "Information Exposure",
+        "description": "requests <2.31.0 leaks credentials.",
+        "severity": "medium",
+        "identifiers": {"cve": ["CVE-2023-32681"], "cwe": ["CWE-200"]},
+        "references": []
+      }
+    ],
+    "ok": false,
+    "dependencyCount": 30,
+    "org": "test-org",
+    "displayTargetFile": "backend/requirements.txt",
+    "path": "/repo/backend",
+    "packageManager": "pip"
+  },
+  {
+    "vulnerabilities": [],
+    "ok": true,
+    "dependencyCount": 5,
+    "org": "test-org",
+    "displayTargetFile": "infra/Pipfile",
+    "path": "/repo/infra",
+    "packageManager": "pip"
+  }
+]

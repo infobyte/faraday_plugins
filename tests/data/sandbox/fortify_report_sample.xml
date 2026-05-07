@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ReportDefinition type="standard">
+  <TemplateName>Fortify Security Report</TemplateName>
+  <ReportSection enabled="true">
+    <Title>Issue Listing</Title>
+    <SubSection enabled="true">
+      <Title>Issues</Title>
+      <IssueListing listing="true">
+        <Issue iid="SYNTH-FORTIFY-001" ruleID="rule-sqli">
+          <Category>SQL Injection</Category>
+          <Folder>Critical</Folder>
+          <Kingdom>Input Validation and Representation</Kingdom>
+          <Abstract>SQL injection allows attackers to execute arbitrary SQL on the database.</Abstract>
+          <Friority>Critical</Friority>
+          <Primary>
+            <FileName>Login.java</FileName>
+            <FilePath>src/main/java/Login.java</FilePath>
+            <LineStart>42</LineStart>
+            <Snippet>String query = "SELECT * FROM users WHERE name='" + userInput + "'";</Snippet>
+            <TargetFunction>Statement.execute()</TargetFunction>
+          </Primary>
+        </Issue>
+        <Issue iid="SYNTH-FORTIFY-002" ruleID="rule-xss">
+          <Category>Cross-Site Scripting: Reflected</Category>
+          <Folder>High</Folder>
+          <Kingdom>Input Validation and Representation</Kingdom>
+          <Abstract>The application echoes user input without encoding.</Abstract>
+          <Friority>High</Friority>
+          <Primary>
+            <FileName>SearchServlet.java</FileName>
+            <FilePath>src/main/java/SearchServlet.java</FilePath>
+            <LineStart>76</LineStart>
+            <Snippet>response.getWriter().println("Hello " + name);</Snippet>
+            <TargetFunction>PrintWriter.println()</TargetFunction>
+          </Primary>
+        </Issue>
+      </IssueListing>
+    </SubSection>
+  </ReportSection>
+</ReportDefinition>
