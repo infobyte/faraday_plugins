@@ -39,24 +39,31 @@ class SslyzeJsonParser:
                 scan_commands_results = scan.get('scan_commands_results', scan.get("scan_result", {}))
                 scan_commands_results = scan_commands_results if scan_commands_results else {}
 
+                # In sslyze >=5, each command sits under {status, error_reason, result}.
+                # Older sslyze put the data directly under the command key.
+                def unwrap(node):
+                    if isinstance(node, dict) and "result" in node and isinstance(node["result"], dict):
+                        return node["result"]
+                    return node or {}
+
                 if len(scan_commands_results) > 0:
                     commands = []
-                    for command in scan_commands_results:
-                        if command.find("cipher") >= 0 and scan_commands_results[command].get('result', True):
+                    flat_results = {}
+                    for command, node in scan_commands_results.items():
+                        flat_results[command] = unwrap(node)
+                        if "cipher" in command and flat_results[command]:
                             commands.append(command)
-                    ciphers = self.get_cipher(scan_commands_results, commands)
+                    ciphers = self.get_cipher(flat_results, commands)
                 else:
                     ciphers = {}
 
-
-                certificate_info = scan_commands_results.get('certificate_info')
+                certificate_info = unwrap(scan_commands_results.get('certificate_info'))
                 certif = self.get_certification(certificate_info) if certificate_info else {}
-                print(certif)
 
-                heartbleed_reulsts = scan_commands_results.get('heartbleed')
-                heartbleed = self.get_heartbleed(heartbleed_reulsts) if heartbleed_reulsts else {}
+                heartbleed_results = unwrap(scan_commands_results.get('heartbleed'))
+                heartbleed = self.get_heartbleed(heartbleed_results) if heartbleed_results else {}
 
-                openssl_ccs_injection = scan_commands_results.get('openssl_ccs_injection')
+                openssl_ccs_injection = unwrap(scan_commands_results.get('openssl_ccs_injection'))
                 openssl_ccs = self.get_openssl_ccs(openssl_ccs_injection) if openssl_ccs_injection else {}
                 json_vuln = {
                     "host_info": host,
@@ -156,8 +163,13 @@ class SslyzeJsonParser:
 
     def get_heartbleed(self, heartbleed):
         json_heartbleed = {}
-        vulnerable_to_heartbleed = heartbleed.get('is_vulnerable_to_heartbleed', heartbleed.get('result', False))
-        vulnerable_to_heartbleed = vulnerable_to_heartbleed.get('is_vulnerable_to_heartbleed') if vulnerable_to_heartbleed else False
+        # In sslyze <5 the field was a bool at the top level; in 5.x+ it's
+        # nested inside a `result` block. Handle both shapes without crashing.
+        node = heartbleed.get('is_vulnerable_to_heartbleed', heartbleed.get('result', False))
+        if isinstance(node, dict):
+            vulnerable_to_heartbleed = node.get('is_vulnerable_to_heartbleed', False)
+        else:
+            vulnerable_to_heartbleed = bool(node)
         if vulnerable_to_heartbleed:
             json_heartbleed = {
                 "name": "OpenSSL Heartbleed",
@@ -171,8 +183,11 @@ class SslyzeJsonParser:
 
     def get_openssl_ccs(self, openssl_ccs):
         json_openssl_ccs = {}
-        is_vulnerable_to_ccs_injection = openssl_ccs.get('is_vulnerable_to_ccs_injection', openssl_ccs.get('result', False))
-        is_vulnerable_to_ccs_injection = is_vulnerable_to_ccs_injection.get('is_vulnerable_to_ccs_injection', False) if is_vulnerable_to_ccs_injection else False
+        node = openssl_ccs.get('is_vulnerable_to_ccs_injection', openssl_ccs.get('result', False))
+        if isinstance(node, dict):
+            is_vulnerable_to_ccs_injection = node.get('is_vulnerable_to_ccs_injection', False)
+        else:
+            is_vulnerable_to_ccs_injection = bool(node)
         if is_vulnerable_to_ccs_injection:
             json_openssl_ccs = {
                 "name": "OpenSSL CCS Injection",

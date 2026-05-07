@@ -77,10 +77,21 @@ class CmdWhoisPlugin(PluginBase):
             matches = re.findall(r"nserver:\s*(.*)\s*", output)
 
         if not matches:
-            ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', self.command_string)
+            # When loaded from a file the plugin has no command_string; fall
+            # back to extracting the queried domain from the output itself.
+            cmd = getattr(self, "command_string", "") or ""
+            ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', cmd)
             if not ip:
-                url = self.command_string.replace('whois ', '')
-                ip = [self.resolve_hostname(url)]
+                if cmd:
+                    url = cmd.replace('whois ', '').strip()
+                else:
+                    domain_match = re.search(r"^domain:\s*(\S+)", output,
+                                             flags=re.IGNORECASE | re.MULTILINE)
+                    url = domain_match.group(1) if domain_match else ""
+                if url:
+                    ip = [self.resolve_hostname(url)]
+                else:
+                    return True
             matches_descr = re.findall(r"descr:\s*(.*)\s*", output)
 
             matches_netname = re.findall(r"NetName:\s*(.*)\s*", output)

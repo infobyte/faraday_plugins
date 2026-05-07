@@ -55,8 +55,9 @@ class AmapPlugin(PluginBase):
                     printable_banner,
                     None]
 
-            if address != self.args.m:
-                hostnames = [self.args.m]
+            cli_target = getattr(self.args, "m", None) if self.args else None
+            if cli_target and address != cli_target:
+                hostnames = [cli_target]
             else:
                 hostnames = None
             h_id = self.createAndAddHost(address, hostnames=hostnames)
@@ -76,7 +77,11 @@ class AmapPlugin(PluginBase):
     file_arg_re = re.compile(r"^.*(-o \s*[^\s]+\s+(?:-m|)).*$")
 
     def get_info(self, data):
-        if self.args.__getattribute__("6"):
+        # `self.args` is only populated when the plugin runs under CLI mode
+        # (processCommandString). When loading from a report file we never see
+        # the original arguments, so default to IPv4 colon-separated parsing.
+        is_v6 = bool(self.args) and getattr(self.args, "6", False)
+        if is_v6:
             f = re.search(
                 r"^\[(.*)\]:(.*):(.*):(.*):(.*):(.*):(.*):(.*)",
                 data)

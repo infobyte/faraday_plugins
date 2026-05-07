@@ -55,7 +55,9 @@ class SslyzeXmlParser:
         protocols.append(tree.xpath('//tlsv1_3'))
 
         for protocol in protocols:
-            if protocol[0].attrib['isProtocolSupported'] == "True":
+            if not protocol:
+                continue
+            if protocol[0].attrib.get('isProtocolSupported') == "True":
                 protocol_supported.append(protocol[0])
 
         return protocol_supported
@@ -108,10 +110,15 @@ class SslyzePlugin(PluginXMLFormat):
 
     def parseOutputString(self, output):
         parser = SslyzeXmlParser(output)
-        host = parser.target[0].attrib['host']
-        ip = parser.target[0].attrib['ip']
-        port = parser.target[0].attrib['port']
-        protocol = parser.target[0].attrib['tlsWrappedProtocol']
+        if not parser.target:
+            return
+        target = parser.target[0]
+        host = target.attrib.get('host', '')
+        ip = target.attrib.get('ip', host)
+        port = target.attrib.get('port', '443')
+        # Older sslyze versions exposed `tlsWrappedProtocol`; newer ones don't.
+        # Default to "https" when the attribute is missing.
+        protocol = target.attrib.get('tlsWrappedProtocol', 'https')
         cipher = parser.cipher_suite
 
         # Creating host
@@ -125,8 +132,12 @@ class SslyzePlugin(PluginXMLFormat):
         )
 
         # Checking if certificate matches
-        certificate = parser.certificate[0].attrib['certificateMatchesServerHostname']
-        server_hostname = parser.certificate[0].attrib['serverHostname']
+        if not parser.certificate:
+            certificate = "true"
+            server_hostname = host
+        else:
+            certificate = parser.certificate[0].attrib.get('certificateMatchesServerHostname', 'true')
+            server_hostname = parser.certificate[0].attrib.get('serverHostname', host)
         if certificate.lower() == 'false':
             self.createAndAddVulnToService(
                 host_id,

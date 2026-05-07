@@ -4,12 +4,25 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+import json
 from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
 from lxml import etree
 
 from faraday_plugins.plugins.plugin import PluginXMLFormat
 from faraday_plugins.plugins.repo.invicti.DTO import Invicti
+
+
+SEVERITY_MAP = {
+    "Critical": "critical", "High": "high", "Medium": "med",
+    "Low": "low", "Information": "info", "Best Practice": "info",
+}
+
+
+def _strip_html(text):
+    if not text:
+        return ""
+    return BeautifulSoup(text, features="lxml").get_text(separator=" ").strip()
 
 __author__ = "Gonzalo Martinez"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -44,6 +57,11 @@ class InvictiXmlParser:
         @return xml_tree An xml tree instance. None if error.
         """
 
+        # lxml refuses str input that carries an explicit `<?xml encoding="..."?>`
+        # declaration (the spec says encoding only applies to byte streams).
+        # Re-encode to bytes when the upstream framework passed us a str.
+        if isinstance(xml_output, str):
+            xml_output = xml_output.encode("utf-8", errors="replace")
         try:
             parser = etree.XMLParser(recover=True)
             tree = etree.fromstring(xml_output, parser=parser)
@@ -62,23 +80,30 @@ class InvictiPlugin(PluginXMLFormat):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self.identifier_tag = "invicti-enterprise"
+        self.extension = [".xml", ".json"]
         self.id = "Invicti"
-        self.name = "Invicti XML Output Plugin"
-        self.plugin_version = "1.0.0"
+        self.name = "Invicti Output Plugin"
+        self.plugin_version = "1.1.0"
         self.version = "9"
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
         self.target = None
 
-    def parseOutputString(self, output):
-        """
-        This method will discard the output the shell sends, it will read it
-        from the xml where it expects it to be present.
+    def report_belongs_to(self, main_tag="", file_json_keys=None, **kwargs):
+        if main_tag == self.identifier_tag:
+            return True
+        if file_json_keys and {"Target", "Vulnerabilities"}.issubset(file_json_keys):
+            return True
+        return False
 
-        NOTE: if 'debug' is true then it is being run from a test case and the
-        output being sent is valid.
-        """
+    def parseOutputString(self, output):
+        if isinstance(output, bytes):
+            output = output.decode("utf-8", errors="replace")
+        stripped = output.lstrip()
+        if stripped.startswith("{") or stripped.startswith("["):
+            self._parse_json(output)
+            return
         parser = InvictiXmlParser(output)
         url = urlsplit(parser.invicti.target.url)
         ip = self.resolve_hostname(url.netloc)
@@ -119,6 +144,86 @@ class InvictiPlugin(PluginXMLFormat):
             if vulnerability.http_request.node is not None:
                 vuln["request"] = vulnerability.http_request.content
             self.createAndAddVulnWebToService(h_id, s_id, **vuln)
+
+
+    def _parse_json(self, output):
+        data = json.loads(output)
+        target = data.get("Target", {}) or {}
+        target_url = target.get("Url") or ""
+        url = urlsplit(target_url) if target_url else None
+        host = (url.netloc.split(":")[0] if url and url.netloc else "unknown")
+        scheme = (url.scheme if url else "http")
+        port = 443 if scheme == "https" else 80
+        if url and url.netloc and ":" in url.netloc:
+            try:
+                port = int(url.netloc.split(":")[1])
+            except ValueError:
+                pass
+
+        h_id = self.createAndAddHost(self.resolve_hostname(host), hostnames=[host])
+        s_id = self.createAndAddServiceToHost(h_id, scheme, ports=port)
+
+        for vuln in data.get("Vulnerabilities", []) or []:
+            classification = vuln.get("Classification") or {}
+            references = []
+            for fld in ("Owasp", "Wasc", "Capec", "Pci32", "Hipaa", "OwaspProactiveControls",
+                        "Iso27001"):
+                val = classification.get(fld)
+                if val:
+                    references.append(f"{fld.upper()}{val}")
+            for er in vuln.get("ExternalReferences", []) or []:
+                if isinstance(er, dict):
+                    if er.get("Url"):
+                        references.append(er["Url"])
+                elif isinstance(er, str):
+                    references.append(er)
+
+            cvss3 = {}
+            cvss31 = classification.get("Cvss31") or classification.get("Cvss") or {}
+            if cvss31:
+                vec = cvss31.get("Vector") or (cvss31.get("Base", {}) or {}).get("Vector")
+                if vec:
+                    cvss3["vector_string"] = vec
+                base_score = cvss31.get("Score") or (cvss31.get("Base", {}) or {}).get("Score")
+                if isinstance(base_score, dict):
+                    base_score = base_score.get("Value")
+                if base_score is not None:
+                    try:
+                        cvss3["base_score"] = float(base_score)
+                    except (TypeError, ValueError):
+                        pass
+
+            cwe_val = classification.get("Cwe")
+            cwe = [f"CWE-{cwe_val}"] if cwe_val else []
+
+            kw = {
+                "name": vuln.get("Name", "Invicti finding"),
+                "desc": _strip_html(vuln.get("Description", "")),
+                "severity": SEVERITY_MAP.get(vuln.get("Severity", ""), "info"),
+                "confirmed": bool(vuln.get("Confirmed")),
+                "external_id": vuln.get("LookupId", ""),
+                "ref": references,
+                "cwe": cwe,
+                "cvss3": cvss3,
+                "website": target_url,
+            }
+            vuln_url = vuln.get("Url", "") or ""
+            if vuln_url and target_url and vuln_url.startswith(target_url):
+                kw["path"] = vuln_url[len(target_url):]
+            elif vuln_url:
+                kw["path"] = vuln_url
+
+            remedy = vuln.get("RemedialProcedure") or ""
+            if remedy:
+                kw["resolution"] = _strip_html(remedy)
+            req = vuln.get("HttpRequest") or {}
+            if isinstance(req, dict) and req.get("Content"):
+                kw["request"] = req["Content"]
+            resp = vuln.get("HttpResponse") or {}
+            if isinstance(resp, dict) and resp.get("Content"):
+                kw["response"] = resp["Content"]
+
+            self.createAndAddVulnWebToService(h_id, s_id, **kw)
 
 
 def createPlugin(*args, **kwargs):

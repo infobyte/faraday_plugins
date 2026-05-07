@@ -21,35 +21,44 @@ class WfuzzPlugin(PluginBase):
         self.fail = None
         self._command_regex = re.compile(r'^(wfuzz)\s+.*?')
 
+    # ANSI escape sequence stripper, e.g. "\x1b[0K", "\x1b[31m"
+    _ansi_re = re.compile(r'\x1b\[[0-9;]*[A-Za-z]')
+
+    # wfuzz 2.4+ default-table line:
+    #   000000001:   301     0 L     0 W   0 Ch     "admin"
+    # wfuzz <2.3 line:
+    #   000001:  C=200      1 L      2 W       57 Ch      "admin"
+    _row_re = re.compile(
+        r'^(?P<id>\d+):\s+'
+        r'(?:C=)?(?P<status>\d{3})\s+'
+        r'(?P<lines>\d+)\s*L\s+'
+        r'(?P<words>\d+)\s*W\s+'
+        r'(?P<chars>\d+)\s*Ch\s+'
+        r'"(?P<request>[^"]*)"'
+    )
+
     def parseData(self, output):
-
-        data = {
-            'target' : '',
-            'findings' : []
-        }
-        for line in output:
-            # remove stdout hidden chars
-            line = ''.join([char for char in line if char in string.printable])
-            line = line.strip('\r').replace('[0K', '').replace('[0m', '')
-            if line.startswith('Target'):
-                data['target'] = line[8:].rstrip()
+        data = {'target': '', 'findings': []}
+        # Cheap pre-clean: drop ANSI sequences and CR. Wfuzz also emits the
+        # status table on a single line per result, but versions differ on
+        # whether they wrap; splitting on ESC[K gives one row per match.
+        if isinstance(output, list):
+            output = "\n".join(output)
+        cleaned = self._ansi_re.sub('', output).replace('\r', '')
+        for raw_line in cleaned.split('\n'):
+            line = raw_line.strip()
+            if line.startswith('Target:'):
+                data['target'] = line[len('Target:'):].strip()
                 continue
-            if line.startswith('0'):
-                aux = line.split('  ')
-                res = {}
-                for item in aux:
-                    if 'C=' in item:
-                        res['response'] = int(item.replace('C=', ''))
-                    elif 'L' in item and ' ' in item:
-                        res['lines'] = int(item.replace('L', ''))
-                    elif 'W' in item and ' ' in item:
-                        res['words'] = int(item.replace('W', ''))
-                    elif 'Ch' in item and ' ' in item:
-                        res['chars'] = int(item.replace('Ch', ''))
-                    else:
-                        res['request'] = item.rstrip().replace('"', '')
-                data['findings'].append(res)
-
+            m = self._row_re.match(line)
+            if m:
+                data['findings'].append({
+                    'response': int(m.group('status')),
+                    'lines': int(m.group('lines')),
+                    'words': int(m.group('words')),
+                    'chars': int(m.group('chars')),
+                    'request': m.group('request'),
+                })
         return data
 
     def parseOutputString(self, output):

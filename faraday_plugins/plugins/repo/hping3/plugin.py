@@ -46,13 +46,13 @@ class hping3(PluginBase):
         if re.match("HPING", output):
 
             sport = re.search(r"sport=(\d{1,6})", output)
-            ssport = [sport.group(1)]
             reci = re.search(r"flags=(\w{2,3})", output)
-            service = self.srv[sport.group(1)]
-
-            if reci.group(1) == "SA":
-                s_id = self.createAndAddServiceToHost(
-                    host_id, service, protocol="tcp", ports=ssport, status="open")
+            if sport and reci:
+                ssport = [sport.group(1)]
+                service = self.srv.get(sport.group(1), "unknown")
+                if reci.group(1) == "SA":
+                    s_id = self.createAndAddServiceToHost(
+                        host_id, service, protocol="tcp", ports=ssport, status="open")
 
         lineas = output.split("\n")
 

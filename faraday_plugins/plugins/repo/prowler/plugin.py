@@ -85,6 +85,21 @@ class ProwlerJsonParser:
 
 
 def parse_remediation(remediation):
+    if not isinstance(remediation, dict):
+        return str(remediation or "")
+
+    if "desc" in remediation or "references" in remediation:
+        # OCSF format (Prowler v4+)
+        parts = [remediation.get("desc", "")]
+        for url in remediation.get("references", []) or []:
+            parts.append(url)
+        return "\n".join(p for p in parts if p)
+
+    # Legacy ASFF format (Prowler v3)
+    resolution_text = ""
+    resolution_url = ""
+    NativeIaC = Terraform = CLI = Other = ""
+
     recommendation = remediation.get("Recommendation", None)
     if recommendation:
         resolution_text = recommendation.get("Text", "")
@@ -120,22 +135,91 @@ def parse_compliance(compliance: dict) -> list:
     return compliance_str_list
 
 
+def parse_ocsf_record(record):
+    """Convert a single Prowler v4+ OCSF event into the Issue dataclass.
+
+    OCSF emits status_code in {FAIL, PASS, MANUAL, ...}. We only surface FAILs
+    as vulnerabilities. PASS and MANUAL findings are skipped (caller filters).
+    """
+    finding_info = record.get("finding_info", {}) or {}
+    cloud = record.get("cloud", {}) or {}
+    account = (cloud.get("account") or {}).get("uid", "")
+    region = cloud.get("region", "AWS_REGION")
+    resources = record.get("resources") or []
+    first_resource = resources[0] if resources else {}
+    unmapped = record.get("unmapped", {}) or {}
+
+    timestamp = record.get("time_dt") or record.get("time")
+    if isinstance(timestamp, (int, float)):
+        try:
+            timestamp = datetime.fromtimestamp(timestamp)
+        except (ValueError, OSError):
+            timestamp = None
+    elif isinstance(timestamp, str):
+        try:
+            timestamp = parse(timestamp)
+        except (ValueError, TypeError):
+            timestamp = None
+
+    return Issue(
+        region=region,
+        profile=cloud.get("provider", ""),
+        severity=(record.get("severity") or "info").lower(),
+        scored=record.get("status_code", ""),
+        account=account,
+        description=finding_info.get("desc", "") or finding_info.get("title", ""),
+        status=record.get("status_code", ""),
+        status_extended=record.get("status_detail", "") or record.get("message", ""),
+        check_title=finding_info.get("title", "") or "Prowler finding",
+        check_id=finding_info.get("uid", ""),
+        timestamp=timestamp,
+        compliance=unmapped.get("compliance", {}) or {},
+        categories=unmapped.get("categories", []) or [],
+        service=(record.get("metadata", {}) or {}).get("product", {}).get("feature", {}).get("name", ""),
+        risk=record.get("risk_details", "") or unmapped.get("risk", ""),
+        doc_link=unmapped.get("related_url", "") or "",
+        remediation=record.get("remediation", {}) or {},
+        resource_arn=first_resource.get("uid", ""),
+        resource_id=first_resource.get("name", "") or first_resource.get("uid", ""),
+    )
+
+
 class ProwlerPlugin(PluginJsonFormat):
     """ Handle the AWS Prowler tool. Detects the output of the tool
-    and adds the information to Faraday.
+    and adds the information to Faraday. Supports both legacy v3 JSON-ASFF
+    and v4+ OCSF formats.
     """
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self.id = "prowler"
         self.name = "Prowler"
-        self.plugin_version = "0.1"
-        self.version = "0.0.1"
-        self.json_keys = {"Profile", "AccountId", "OrganizationsInfo", "Region"}
+        self.plugin_version = "0.2"
+        self.version = "0.0.2"
+        self.json_keys = [
+            {"Profile", "AccountId", "OrganizationsInfo", "Region"},
+            {"finding_info", "class_uid", "severity_id", "status_code", "resources"},
+        ]
+
+    def _is_ocsf(self, records):
+        if not records:
+            return False
+        first = records[0] if isinstance(records, list) else records
+        return isinstance(first, dict) and "finding_info" in first and "class_uid" in first
 
     def parseOutputString(self, output, debug=False):
-        parser = ProwlerJsonParser(output)
-        for issue in parser.issues:
+        records = json.loads(output)
+        issues = []
+        if self._is_ocsf(records):
+            for record in records:
+                if record.get("status_code") != "FAIL":
+                    continue
+                issues.append(parse_ocsf_record(record))
+        else:
+            parser = ProwlerJsonParser(output)
+            issues = parser.issues
+
+        for issue in issues:
             host_name = f"{issue.resource_id}"
             host_id = self.createAndAddHost(name=host_name,
                                             description=f"AWS Service: {issue.service} "
@@ -144,7 +228,11 @@ class ProwlerPlugin(PluginJsonFormat):
                                                         f"ARN: {issue.resource_arn}")
 
             vuln_desc = f"{issue.description}\n{issue.risk}"
-            resolution = parse_remediation(issue.remediation)
+            resolution = parse_remediation(issue.remediation) if isinstance(issue.remediation, dict) else str(issue.remediation or "")
+            compliance_violations = parse_compliance(issue.compliance) if isinstance(issue.compliance, dict) else []
+            tags = issue.categories if isinstance(issue.categories, list) else (
+                [issue.categories] if issue.categories else []
+            )
             self.createAndAddVulnToHost(
                 host_id=host_id,
                 name=issue.check_title,
@@ -154,9 +242,9 @@ class ProwlerPlugin(PluginJsonFormat):
                 resolution=resolution,
                 run_date=issue.timestamp,
                 external_id=f"{self.name.upper()}-{issue.check_id}",
-                ref=[issue.doc_link],
-                policyviolations=parse_compliance(issue.compliance),
-                tags=issue.categories,
+                ref=[issue.doc_link] if issue.doc_link else [],
+                policyviolations=compliance_violations,
+                tags=tags,
             )
 
 

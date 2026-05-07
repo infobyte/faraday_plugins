@@ -12,16 +12,32 @@ import xml.etree.ElementTree as ET
 
 
 def cleanhtml(raw_html):
-        cleanr = re.compile('<.*?>')
-        cleantext = re.sub(cleanr, '', raw_html)
-        return cleantext
+    if not raw_html:
+        return ""
+    cleanr = re.compile('<.*?>')
+    return re.sub(cleanr, '', raw_html)
 
 
 class WebInspectParser():
 
     def __init__(self, output):
+        if isinstance(output, str) and output.startswith("﻿"):
+            output = output.lstrip("﻿")
         self.xml = ET.fromstring(output)
-        self.issues = self.xml.findall("Issues/Issue")
+        # Two report shapes are in the wild:
+        #   * Older:  <Scan> ... <Issues><Issue>... </Scan>
+        #   * Newer:  <Sessions><Session>... <Issues><Issue>... </Sessions>
+        # In the newer shape each <Issue> inherits URL/Host/Port from its
+        # parent <Session>, not from its own children.
+        self.session_context = []  # list of (session_element, issue_element)
+        if self.xml.tag == "Sessions" or self.xml.find("Session") is not None:
+            for session in self.xml.findall(".//Session"):
+                for issue in session.findall("Issues/Issue"):
+                    self.session_context.append((session, issue))
+        # Always populate the plain issue list so the original parsing code
+        # (which expects Issue.find("URL") etc.) still works for the legacy
+        # shape that does carry those fields directly.
+        self.issues = self.xml.findall(".//Issues/Issue")
 
     def parse_severity(self, severity):
 
@@ -65,7 +81,14 @@ class WebInspectParser():
         }
 
         result = []
-        for issue in self.issues:
+        # Iterate either (session, issue) pairs (new shape) or just issues
+        # (legacy shape, with `session=None`).
+        if self.session_context:
+            iterator = self.session_context
+        else:
+            iterator = [(None, i) for i in self.issues]
+
+        for session, issue in iterator:
 
             obj = {
                 "Host" : {},
@@ -77,7 +100,11 @@ class WebInspectParser():
 
             for tag, obj_property in map_objects_fields.items():
 
-                value = self.return_text(tag,issue)
+                # Some fields belong to the session in the new schema; fall
+                # back to the issue when not present.
+                value = self.return_text(tag, issue)
+                if not value and session is not None:
+                    value = self.return_text(tag, session)
 
                 if value is not None:
 
@@ -120,7 +147,9 @@ class WebInspectPlugin(PluginXMLFormat):
         self.name = "Webinspect"
         self.plugin_version = "0.0.1"
         self.version = "1.0.0"
-        self.identifier_tag = ["Scan"]
+        # Both XML shapes need to be auto-detected: the older <Scan> wrapper
+        # and the newer <Sessions> top level used by current WebInspect.
+        self.identifier_tag = ["Scan", "Sessions"]
 
     def parseOutputString(self, output):
 

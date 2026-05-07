@@ -15,7 +15,8 @@ def clean_external_references(external_ref) -> List[str]:
 
 class Classification:
     def __init__(self, node):
-        self.node = node
+        # Some Acunetix360 vulnerabilities have null Classification.
+        self.node = node or {}
 
     @property
     def iso(self) -> str:
@@ -137,11 +138,11 @@ class Vulnerability:
 
     @property
     def description(self) -> str:
-        return CLEAN.sub("", self.node.get('Description', "The tool did not provide a description"))
+        return CLEAN.sub("", self.node.get('Description') or "The tool did not provide a description")
 
     @property
     def remedial_procedure(self) -> str:
-        return CLEAN.sub("", self.node.get("RemedialProcedure",""))
+        return CLEAN.sub("", self.node.get("RemedialProcedure") or "")
 
     @property
     def severity(self) -> str:
@@ -149,7 +150,7 @@ class Vulnerability:
 
     @property
     def impact(self) -> str:
-        return CLEAN.sub("", self.node.get('Impact', ""))
+        return CLEAN.sub("", self.node.get('Impact') or "")
 
     @property
     def tags(self) -> List[str]:
@@ -165,11 +166,11 @@ class Vulnerability:
 
     @property
     def remedial_actions(self) -> str:
-        return CLEAN.sub("", self.node.get('RemedialActions', ""))
+        return CLEAN.sub("", self.node.get('RemedialActions') or "")
 
     @property
     def proof_of_concept(self) -> str:
-        return CLEAN.sub("", self.node.get('ProofOfConcept', ""))
+        return CLEAN.sub("", self.node.get('ProofOfConcept') or "")
 
     @property
     def external_references(self) -> List[str]:
