@@ -70,10 +70,10 @@ class CredentialCSVPlugin(PluginCSVFormat):
                 with open(report_path, "r", encoding="utf-8", errors="ignore") as fh:
                     first_line = fh.readline().strip()
                 parts = [p.strip().lower() for p in first_line.split(":")]
-                if (len(parts) >= 2
-                        and all(p in _ALL_HEADER_NAMES for p in parts)
-                        and any(p in _USERNAME_COLS for p in parts)
-                        and any(p in _PASSWORD_COLS for p in parts)):
+                if (len(parts) >= 2 and
+                        all(p in _ALL_HEADER_NAMES for p in parts) and
+                        any(p in _USERNAME_COLS for p in parts) and
+                        any(p in _PASSWORD_COLS for p in parts)):
                     return True
             except Exception:
                 pass
