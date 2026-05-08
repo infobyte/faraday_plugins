@@ -27,11 +27,14 @@ def _is_header_line(line):
     """Return True if `line` looks like a CSV header row."""
     for delim in (",", "\t", ";", "|"):
         parts = [p.strip().lower() for p in line.split(delim)]
-        if len(parts) >= 2 and any(p in _ALL_HEADER_NAMES for p in parts):
+        if (len(parts) >= 2 and
+                any(p in _USERNAME_COLS for p in parts) and
+                any(p in _PASSWORD_COLS for p in parts)):
             return True
-    # For colon-separated headers require ALL parts to be keywords
+    # For colon-separated headers require ALL parts to be keywords and at least 3 fields
+    # (2-part lines like "user:password" are indistinguishable from real credentials).
     colon_parts = [p.strip().lower() for p in line.split(":")]
-    if len(colon_parts) >= 2 and all(p in _ALL_HEADER_NAMES for p in colon_parts):
+    if len(colon_parts) >= 3 and all(p in _ALL_HEADER_NAMES for p in colon_parts):
         return True
     return False
 
@@ -59,7 +62,7 @@ class CredentialCSVPlugin(PluginCSVFormat):
 
         # Standard CSV: the manager already extracted the headers with csv.DictReader.
         if file_csv_headers:
-            normalized = {h.strip().lower() for h in file_csv_headers}
+            normalized = {h.strip().lstrip("﻿").lower() for h in file_csv_headers}
             for combo in self.csv_headers:
                 if combo.issubset(normalized):
                     return True
@@ -67,10 +70,10 @@ class CredentialCSVPlugin(PluginCSVFormat):
         # Fallback: read first line directly for colon-separated or non-standard delimiters.
         if report_path:
             try:
-                with open(report_path, "r", encoding="utf-8", errors="ignore") as fh:
+                with open(report_path, "r", encoding="utf-8-sig", errors="ignore") as fh:
                     first_line = fh.readline().strip()
-                parts = [p.strip().lower() for p in first_line.split(":")]
-                if (len(parts) >= 2 and
+                parts = [p.strip().lstrip("﻿").lower() for p in first_line.split(":")]
+                if (len(parts) >= 3 and
                         all(p in _ALL_HEADER_NAMES for p in parts) and
                         any(p in _USERNAME_COLS for p in parts) and
                         any(p in _PASSWORD_COLS for p in parts)):
@@ -92,7 +95,7 @@ class CredentialCSVPlugin(PluginCSVFormat):
         })
 
     def parseOutputString(self, output):
-        clean = output.strip().strip("'")
+        clean = output.strip().strip("'").lstrip("﻿")
         if not clean:
             self.logger.error("Empty file")
             return
@@ -112,7 +115,7 @@ class CredentialCSVPlugin(PluginCSVFormat):
             dialect = csv.Sniffer().sniff(content[:2048])
             f.seek(0)
             reader = csv.DictReader(f, dialect=dialect)
-            headers = [h.strip().lower() for h in (reader.fieldnames or [])]
+            headers = [h.strip().lstrip("﻿").lower() for h in (reader.fieldnames or [])]
             reader.fieldnames = headers
 
             username_col = next((h for h in headers if h in _USERNAME_COLS), None)
