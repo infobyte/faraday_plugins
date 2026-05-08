@@ -31,9 +31,11 @@ def _is_header_line(line):
                 any(p in _USERNAME_COLS for p in parts) and
                 any(p in _PASSWORD_COLS for p in parts)):
             return True
-    # For colon-separated headers require ALL parts to be keywords and at least 3 fields
-    # (2-part lines like "user:password" are indistinguishable from real credentials).
     colon_parts = [p.strip().lower() for p in line.split(":")]
+    if len(colon_parts) == 2:
+        # Exactly "username_keyword:password_keyword" is unambiguously a header.
+        if colon_parts[0] in _USERNAME_COLS and colon_parts[1] in _PASSWORD_COLS:
+            return True
     if len(colon_parts) >= 3 and all(p in _ALL_HEADER_NAMES for p in colon_parts):
         return True
     return False
@@ -73,6 +75,9 @@ class CredentialCSVPlugin(PluginCSVFormat):
                 with open(report_path, "r", encoding="utf-8-sig", errors="ignore") as fh:
                     first_line = fh.readline().strip()
                 parts = [p.strip().lstrip("﻿").lower() for p in first_line.split(":")]
+                if len(parts) == 2:
+                    if parts[0] in _USERNAME_COLS and parts[1] in _PASSWORD_COLS:
+                        return True
                 if (len(parts) >= 3 and
                         all(p in _ALL_HEADER_NAMES for p in parts) and
                         any(p in _USERNAME_COLS for p in parts) and
