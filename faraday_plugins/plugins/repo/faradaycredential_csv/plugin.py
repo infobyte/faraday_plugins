@@ -25,12 +25,11 @@ _ALL_HEADER_NAMES = _USERNAME_COLS | _PASSWORD_COLS | _ENDPOINT_COLS
 
 def _is_header_line(line):
     """Return True if `line` looks like a CSV header row."""
-    # Check non-colon delimiters first (safer: a field must be a keyword, not data)
     for delim in (",", "\t", ";", "|"):
         parts = [p.strip().lower() for p in line.split(delim)]
         if len(parts) >= 2 and any(p in _ALL_HEADER_NAMES for p in parts):
             return True
-    # For colon-separated headers (e.g. "username:password"), require ALL parts to be keywords
+    # For colon-separated headers require ALL parts to be keywords
     colon_parts = [p.strip().lower() for p in line.split(":")]
     if len(colon_parts) >= 2 and all(p in _ALL_HEADER_NAMES for p in colon_parts):
         return True
@@ -45,8 +44,41 @@ class CredentialCSVPlugin(PluginCSVFormat):
         self.plugin_version = "1.0"
         self._schema_version = "1.0"
         self.extension = [".csv", ".txt"]
-        # Empty set: matches any file with the right extension (includes headerless dumps)
-        self.csv_headers = set()
+        # Match only files that have at least one username-like AND one password-like column.
+        # A list of sets: detection passes if any set is a subset of the file's headers.
+        self.csv_headers = [
+            {u, p}
+            for u in _USERNAME_COLS
+            for p in _PASSWORD_COLS
+        ]
+
+    def report_belongs_to(self, report_path="", extension="", file_csv_headers=None, **kwargs):
+        ext_match = (extension in self.extension) if isinstance(self.extension, list) else (extension == self.extension)
+        if not ext_match:
+            return False
+
+        # Standard CSV: the manager already extracted the headers with csv.DictReader.
+        if file_csv_headers:
+            normalized = {h.strip().lower() for h in file_csv_headers}
+            for combo in self.csv_headers:
+                if combo.issubset(normalized):
+                    return True
+
+        # Fallback: read first line directly for colon-separated or non-standard delimiters.
+        if report_path:
+            try:
+                with open(report_path, "r", encoding="utf-8", errors="ignore") as fh:
+                    first_line = fh.readline().strip()
+                parts = [p.strip().lower() for p in first_line.split(":")]
+                if (len(parts) >= 2
+                        and all(p in _ALL_HEADER_NAMES for p in parts)
+                        and any(p in _USERNAME_COLS for p in parts)
+                        and any(p in _PASSWORD_COLS for p in parts)):
+                    return True
+            except Exception:
+                pass
+
+        return False
 
     def _add_credential(self, username, password, endpoint=""):
         if "credentials" not in self.vulns_data:
@@ -111,7 +143,7 @@ class CredentialCSVPlugin(PluginCSVFormat):
 
         Two-field lines:  username:password
         Three-field lines: endpoint:username:password
-        Lines without colons are silently skipped (section labels, comments).
+        Lines without colons are silently skipped.
         """
         for line in lines:
             line = line.strip()
@@ -126,6 +158,12 @@ class CredentialCSVPlugin(PluginCSVFormat):
                 endpoint, username, password = parts[0].strip(), parts[1].strip(), parts[2].strip()
                 if username and password:
                     self._add_credential(username, password, endpoint)
+
+    def get_summary(self):
+        summary = super().get_summary()
+        plugin_json = self.get_data()
+        summary["credentials"] = len(plugin_json.get("credentials", []))
+        return summary
 
 
 def createPlugin(*args, **kwargs):
