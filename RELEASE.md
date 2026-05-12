@@ -1,3 +1,7 @@
+1.28.0 [May 11th, 2026]:
+---
+ * [ADD] Added Credentials plugin functionality. #398
+
 1.27.2 [Jan 26th, 2026]:
 ---
  * [MOD] Improved DirsearchJSON plugin functionality. #387
