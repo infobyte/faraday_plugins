@@ -48,10 +48,18 @@ class Crowdstrike(PluginJsonFormat):
                 tags=host_tags
             )
             cve = site.get('cve_id')
+            product = site.get('product')
             severity = site.get('severity').lower()
             cvss_vector = site.get('vector')
             references = [site.get('references')]
             vuln = site.get('cve_description')
+            name_parts = [part for part in (cve, product) if part]
+            if name_parts:
+                name = " - ".join(name_parts)
+            elif vuln:
+                name = vuln[:50]
+            else:
+                name = "Unknown vulnerability"
             remedations = []
             for rr in site.get('recommended_remediations', []):
                 remedations.append(rr.get('detail'))
@@ -69,7 +77,7 @@ class Crowdstrike(PluginJsonFormat):
                 evaluation_logic += f'Evalutaion: {evaluation.get("title")}\n\tResults: {" ".join(result)}\n'
             self.createAndAddVulnToHost(
                 host_id=host_id,
-                name=vuln[:50],
+                name=name,
                 desc=vuln,
                 severity=severity,
                 cve=cve,
