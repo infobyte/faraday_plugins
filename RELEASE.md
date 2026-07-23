@@ -1,3 +1,7 @@
+1.29.0 [July 23rd, 2026]:
+---
+ * [FIX] Crowdstrike JSON plugin now names vulns from cve_id and product. #397
+
 1.28.0 [May 11th, 2026]:
 ---
  * [ADD] Added Credentials plugin functionality. #398
