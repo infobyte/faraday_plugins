@@ -1,3 +1,7 @@
+1.30.0 [Sep 3rd, 2026]:
+---
+ * [ADD] New plugin tenableio_csv to import the CSV vulnerability export of Tenable Vulnerability Management. #410
+
 1.29.0 [July 23rd, 2026]:
 ---
  * [FIX] Crowdstrike JSON plugin now names vulns from cve_id and product. #397
