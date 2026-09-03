@@ -216,7 +216,6 @@ class NessusPlugin(PluginXMLFormat):
             if not cvss3_vector_string.startswith("CVSS:3."):
                 cvss3_vector_string = "CVSS:3.0/" + cvss3_vector_string
             main_data["cvss3"]["vector_string"] = cvss3_vector_string
-        
 
         # Nessus writes 0.0 when it assigned no score, so only a positive score is a real one
         cvss3_base_score = NessusPlugin.positive_score(item.cvss3_base_score)
