@@ -217,20 +217,42 @@ class NessusPlugin(PluginXMLFormat):
                 cvss3_vector_string = "CVSS:3.0/" + cvss3_vector_string
             main_data["cvss3"]["vector_string"] = cvss3_vector_string
         
-        if item.cvss3_base_score:
+
+        # Nessus writes 0.0 when it assigned no score, so only a positive score is a real one
+        cvss3_base_score = NessusPlugin.positive_score(item.cvss3_base_score)
+        cvss2_base_score = NessusPlugin.positive_score(item.cvss2_base_score)
+
+        if cvss3_base_score:
             main_data["cvss3"]["base_score"] = item.cvss3_base_score
-            main_data["severity"] = get_severity_from_cvss(item.cvss3_base_score)
-        
+            main_data["severity"] = get_severity_from_cvss(cvss3_base_score)
+
         if item.cvss_vector:
             main_data["cvss2"]["vector_string"] = item.cvss_vector
-        
-        if item.cvss2_base_score:
+
+        if cvss2_base_score:
             main_data["cvss2"]["base_score"] = item.cvss2_base_score
-            # If CVSSv3 score is not present, use CVSSv2 score for severity
-            if not item.cvss3_base_score:
-                main_data["severity"] = get_severity_from_cvss(item.cvss2_base_score)
-        
+
+        # Without a CVSSv3 score the severity keeps the value taken from risk_factor, which is
+        # what the report itself states. Deriving it from the CVSSv2 score instead would rate it
+        # on the CVSSv3 bands and overstate it, so that is only a fallback for a report that
+        # carries no risk factor at all.
+        if not cvss3_base_score and not item.risk_factor and cvss2_base_score:
+            main_data["severity"] = get_severity_from_cvss(cvss2_base_score)
+
         return main_data
+
+    @staticmethod
+    def positive_score(value):
+        """Return the score as a float, or None when it is absent or not positive.
+
+        The report carries the scores as strings, so a "0.0" is truthy and would
+        otherwise be taken for a real score of zero.
+        """
+        try:
+            score = float(value)
+        except (TypeError, ValueError):
+            return None
+        return score if score > 0 else None
 
 
 def createPlugin(*args, **kwargs):
