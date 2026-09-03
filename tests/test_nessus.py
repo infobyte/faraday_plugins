@@ -71,8 +71,9 @@ class TestNessusSeverity:
     def test_no_finding_is_dropped(self, vulns_by_name):
         assert len(vulns_by_name) == 10
 
-    def test_zero_cvss3_is_not_reported_as_a_score(self, vulns_by_name):
-        """An absent v3 score must not surface as a base_score of 0.0"""
+    def test_reported_scores_are_kept_as_they_come(self, vulns_by_name):
+        """A 0.0 score is ignored for the severity but still reported as the report has it,
+        so that the stored vulnerability, and its hash, do not change."""
         vuln = vulns_by_name["High with no cvss3 score"]
-        assert vuln["cvss3"].get("base_score") is None
+        assert vuln["cvss3"]["base_score"] == "0.0"
         assert vuln["cvss2"]["base_score"] == "9.3"
