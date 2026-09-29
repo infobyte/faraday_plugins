@@ -2,6 +2,8 @@
 Test cases for Google Security Command Center CSV Export Plugin
 """
 
+import csv
+import io
 from pathlib import Path
 
 from unittest.mock import Mock
@@ -18,6 +20,13 @@ CLUSTER_HOST = "//container.googleapis.com/projects/example-project/locations/us
 
 def read_report():
     return CSV_REPORT.read_text()
+
+
+def read_comma_report():
+    """The same findings as the console exports them, with "," as delimiter."""
+    output = io.StringIO()
+    csv.writer(output).writerows(csv.reader(io.StringIO(read_report()), delimiter=";"))
+    return output.getvalue()
 
 
 class TestGoogleSCCCSV:
@@ -41,6 +50,23 @@ class TestGoogleSCCCSV:
         headers = {read_report().splitlines()[0]}
 
         assert self.plugin.report_belongs_to(extension=".csv", file_csv_headers=headers)
+
+    def test_detects_comma_separated_header(self):
+        headers = set(next(csv.reader(io.StringIO(read_comma_report()))))
+
+        assert self.plugin.report_belongs_to(extension=".csv", file_csv_headers=headers)
+
+    def test_comma_export_matches_semicolon_export(self):
+        """Both delimiters must yield the same hosts and vulnerabilities"""
+        self.plugin.parseOutputString(read_report())
+        semicolon = (self.plugin.createAndAddHost.call_args_list, self.plugin.createAndAddVulnToHost.call_args_list)
+
+        self.setup_method()
+        self.plugin.parseOutputString(read_comma_report())
+        comma = (self.plugin.createAndAddHost.call_args_list, self.plugin.createAndAddVulnToHost.call_args_list)
+
+        assert len(comma[1]) == 4
+        assert comma == semicolon
 
     def test_ignores_csv_without_scc_columns(self):
         headers = {"Host;Port;Name;Description"}

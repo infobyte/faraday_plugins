@@ -26,7 +26,8 @@ __status__ = "Development"
 class GoogleSCCCSV(PluginCSVFormat):
     """Parses the CSV findings export of Google Security Command Center."""
 
-    DELIMITER = ";"
+    # The console export is "," separated; re-saved by a Spanish locale Excel it becomes ";".
+    DELIMITERS = (",", ";")
 
     SEVERITY_MAP = {
         "critical": "critical",
@@ -51,16 +52,17 @@ class GoogleSCCCSV(PluginCSVFormat):
         self._temp_file_extension = "csv"
 
     def report_belongs_to(self, file_csv_headers=None, **kwargs):
-        # The analyzer reads the headers with the default "," delimiter, so the
-        # ";" separated header of this export arrives as a single column.
+        # The analyzer reads the headers with the default "," delimiter, so a
+        # ";" separated header arrives as a single column.
         headers = set()
         for header in file_csv_headers or set():
-            headers.update(column.strip() for column in (header or "").split(self.DELIMITER))
+            headers.update(column.strip() for column in (header or "").split(";"))
         return super().report_belongs_to(file_csv_headers=headers, **kwargs)
 
     def parseOutputString(self, output, debug=False):
         csv.field_size_limit(sys.maxsize)
-        reader = csv.DictReader(io.StringIO(output.lstrip("﻿")), delimiter=self.DELIMITER)
+        output = output.lstrip("\ufeff")
+        reader = csv.DictReader(io.StringIO(output), delimiter=self.detect_delimiter(output))
         if not reader.fieldnames:
             return
 
@@ -94,6 +96,12 @@ class GoogleSCCCSV(PluginCSVFormat):
             if node_pools:
                 vuln["data"] = "\n".join(filter(None, [vuln["data"], f"Node pools: {', '.join(node_pools)}"]))
             self.createAndAddVulnToHost(host_id=host_id, **vuln)
+
+    @classmethod
+    def detect_delimiter(cls, output):
+        """Column names never contain a delimiter, so the header line tells which one is used."""
+        header = output.split("\n", 1)[0]
+        return max(cls.DELIMITERS, key=header.count)
 
     @staticmethod
     def get(row, key):
