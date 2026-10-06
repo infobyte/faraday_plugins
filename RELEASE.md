@@ -1,3 +1,8 @@
+1.31.0 [Oct 6th, 2026]:
+---
+ * [ADD] New plugin google_scc_csv to import the CSV findings export of Google Security Command Center. #409
+ * [FIX] Nessus plugin no longer takes a 0.0 CVSSv3 score for a real score, which was importing Low, Medium and High findings as informational. #411
+
 1.30.0 [Sep 3rd, 2026]:
 ---
  * [ADD] New plugin tenableio_csv to import the CSV vulnerability export of Tenable Vulnerability Management. #410
