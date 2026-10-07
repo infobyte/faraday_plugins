@@ -7,7 +7,6 @@ See the file 'doc/LICENSE' for the license information
 import binascii
 import re
 import base64
-import distutils.util  # pylint: disable=import-error
 from urllib.parse import urlsplit
 import lxml.etree as ET
 
@@ -24,6 +23,15 @@ __version__ = "1.1.0"
 __maintainer__ = "Francisco Amato"
 __email__ = "famato@infobytesec.com"
 __status__ = "Development"
+
+
+def strtobool(value):
+    normalized = value.lower()
+    if normalized in ("y", "yes", "t", "true", "on", "1"):
+        return 1
+    if normalized in ("n", "no", "f", "false", "off", "0"):
+        return 0
+    raise ValueError(f"invalid truth value {value!r}")
 
 
 class BurpXmlParser:
@@ -158,7 +166,7 @@ class Item:
         it has it.
         """
         if node is not None:
-            encoded = distutils.util.strtobool(node.get('base64', 'false'))
+            encoded = strtobool(node.get('base64', 'false'))
             if encoded:
                 text = node.text or ""
                 text += "=" * (-len(text) % 4)
