@@ -73,8 +73,17 @@ class ShodanPlugin(PluginMultiLineJsonFormat):
                 for name, vuln_info in vulns.items():
                     description = vuln_info.get('summary')
                     references = vuln_info.get('references')
-                    self.createAndAddVulnToService(h_id, s_id, name, desc=description, ref=references
-                                                   , cve=name)
+                    cvss_score = vuln_info.get('cvss')
+                    cvss2 = {}
+                    severity = vuln_info.get('severity', '')
+                    if cvss_score is not None:
+                        cvss2['base_score'] = cvss_score
+                        if not severity:
+                            severity = get_severity_from_cvss(cvss_score)
+                    self.createAndAddVulnToService(
+                        h_id, s_id, name, desc=description, ref=references,
+                        cve=name, severity=severity, cvss2=cvss2
+                    )
 
     def processCommandString(self, username, current_path, command_string):
         """
