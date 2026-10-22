@@ -6,7 +6,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginTextFormat
 
 
 __author__ = "Francisco Amato"
@@ -113,13 +113,18 @@ class FierceParser:
             self.items.append(data)
 
 
-class FiercePlugin(PluginBase):
+class FiercePlugin(PluginTextFormat):
     """
     Example plugin to parse fierce output.
     """
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
+        self.text_signatures = [
+            re.compile(r'^NS:\s+\S+.*\n(?:SOA|Zone|Wildcard):', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^Found:\s+[\w.\-]+\.\s+\([\d.]+\)', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^DNS Servers for [\w.\-]+:', re.IGNORECASE | re.MULTILINE),
+        ]
         self.id = "Fierce"
         self.name = "Fierce Output Plugin"
         self.plugin_version = "0.0.1"

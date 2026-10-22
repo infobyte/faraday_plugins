@@ -222,6 +222,10 @@ class SonarQubeAPIPlugin(PluginJsonFormat):
             {"hotspots", "components"},
             {"issues", "allBugs"},
             {"issues", "hotspotKeys"},
+            {"issues", "components"},
+            {"issues", "rules"},
+            {"issues", "total", "p", "ps"},
+            {"hotspots", "paging"},
         ]
         self.id = "sonarqubeAPI"
         self.name = "SonarQube API Plugin"

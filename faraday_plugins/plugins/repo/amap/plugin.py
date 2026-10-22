@@ -8,14 +8,18 @@ import re
 import shlex
 import socket
 
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginTextFormat
 
 
-class AmapPlugin(PluginBase):
+class AmapPlugin(PluginTextFormat):
     """ Example plugin to parse amap output."""
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
+        self.text_signatures = [
+            re.compile(r'^#\s*amap v[\d.]+', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^[\d.]+:\d+:(?:tcp|udp):(?:open|closed):', re.IGNORECASE | re.MULTILINE),
+        ]
         self.id = "Amap"
         self.name = "Amap Output Plugin"
         self.plugin_version = "0.0.3"

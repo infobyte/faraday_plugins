@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <get_results_response status="200" status_text="OK">
   <report>
+    <owner><name>admin</name></owner>
     <host>
       <ip>192.0.2.50</ip>
       <detail>

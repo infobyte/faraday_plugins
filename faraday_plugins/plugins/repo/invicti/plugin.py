@@ -90,11 +90,11 @@ class InvictiPlugin(PluginXMLFormat):
         self._current_output = None
         self.target = None
 
-    def report_belongs_to(self, main_tag="", file_json_keys=None, **kwargs):
-        if main_tag == self.identifier_tag:
-            return True
-        if file_json_keys and {"Target", "Vulnerabilities"}.issubset(file_json_keys):
-            return True
+    def report_belongs_to(self, main_tag="", file_json_keys=None, extension="", **kwargs):
+        if extension == ".xml":
+            return main_tag == self.identifier_tag
+        if extension == ".json":
+            return bool(file_json_keys) and {"Target", "Vulnerabilities", "Generated"}.issubset(file_json_keys)
         return False
 
     def parseOutputString(self, output):

@@ -67,6 +67,7 @@ class ReportAnalyzer:
         file_csv_headers = set()
         file_json_keys = set()
         files_in_zip = set()
+        file_head = ""
         logger.debug("Analyze report File")
         # Try to parse as xml
         try:
@@ -106,6 +107,11 @@ class ReportAnalyzer:
                         reader_file_string = StringIO(report_file.read().decode('utf-8'))
                         reader = csv.DictReader(reader_file_string)
                         file_csv_headers = set(reader.fieldnames)
+                        if len(file_csv_headers) == 1 and ";" in next(iter(file_csv_headers)):
+                            # semicolon separated CSV (e.g. Prowler)
+                            reader_file_string.seek(0)
+                            reader = csv.DictReader(reader_file_string, delimiter=";")
+                            file_csv_headers = set(reader.fieldnames)
                         logger.debug("Found CSV content on file: %s - Keys: %s", report_path, file_json_keys)
                     except Exception as e:
                         logger.debug("Non CSV content [%s] - %s", report_path, e)
@@ -116,6 +122,11 @@ class ReportAnalyzer:
                         except Exception as e:
                             logger.debug("Non ZIP content [%s] - %s", report_path, e)
             finally:
+                try:
+                    report_file.seek(0)
+                    file_head = report_file.read(65536).decode("utf-8", errors="replace")
+                except Exception as e:
+                    logger.debug("Could not read report head [%s] - %s", report_path, e)
                 report_file.close()
                 for _plugin_id, _plugin in self.plugin_manager.get_plugins():
                     logger.debug("Try plugin: %s", _plugin_id)
@@ -123,7 +134,7 @@ class ReportAnalyzer:
                         if _plugin.report_belongs_to(main_tag=main_tag, main_tag_attributes=main_tag_attributes,
                                                      report_path=report_path, extension=file_extension,
                                                      file_json_keys=file_json_keys, file_csv_headers=file_csv_headers,
-                                                     files_in_zip=files_in_zip):
+                                                     files_in_zip=files_in_zip, file_head=file_head):
                             plugin = _plugin
                             logger.debug("Plugin by File Found: %s", plugin.id)
                             break

@@ -17,6 +17,7 @@ years:
 We dispatch on the top-level shape and emit one Faraday vuln per finding.
 """
 import json
+import re
 from urllib.parse import urlparse
 
 from faraday_plugins.plugins.plugin import PluginJsonFormat
@@ -83,6 +84,14 @@ class SourceclearPlugin(PluginJsonFormat):
             {"_embedded"},
             {"findings"},                 # platform export
         ]
+
+    def report_belongs_to(self, file_json_keys=None, file_head="", **kwargs):
+        if not super().report_belongs_to(file_json_keys=file_json_keys, **kwargs):
+            return False
+        if file_json_keys == {"findings"}:
+            # AWS Inspector exports share the bare "findings" key
+            return re.search(r'"(?:issue_id|scan_type|context_guid)"', file_head) is not None
+        return True
 
     def parseOutputString(self, output, debug=False):
         if isinstance(output, bytes):

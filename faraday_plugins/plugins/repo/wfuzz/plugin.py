@@ -2,13 +2,17 @@ import re
 import string
 from urllib.parse import urljoin, urlparse
 
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginTextFormat
 
 
-class WfuzzPlugin(PluginBase):
+class WfuzzPlugin(PluginTextFormat):
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
+        self.text_signatures = [
+            re.compile(r'^\*\s*Wfuzz\s+[\d.]+', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^\d{6,9}:\s+(?:C=)?\d{3}\s+\d+\s*L\s+\d+\s*W\s+\d+\s*Ch\s+"', re.IGNORECASE | re.MULTILINE),
+        ]
         self.id = "Wfuzz"
         self.name = "Wfuzz Plugin"
         self.plugin_version = "0.0.1"

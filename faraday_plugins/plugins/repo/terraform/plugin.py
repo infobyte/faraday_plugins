@@ -25,6 +25,7 @@ class TerraformPlugin(PluginJsonFormat):
         self.plugin_version = "1"
         self.version = "1"
         self.json_keys = {'results'}
+        self.filter_keys = {'generator'}  # hydra -b jsonv1 also has a 'results' key
         self.framework_version = "1.0.0"
         self._temp_file_extension = "json"
 

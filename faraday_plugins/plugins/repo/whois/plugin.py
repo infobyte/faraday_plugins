@@ -7,7 +7,7 @@ See the file 'doc/LICENSE' for the license information
 import re
 import os
 
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginTextFormat
 
 
 __author__ = "Facundo de Guzmán, Esteban Guillardoy"
@@ -20,7 +20,7 @@ __email__ = "fedek@infobytesec.com"
 __status__ = "Development"
 
 
-class CmdWhoisPlugin(PluginBase):
+class CmdWhoisPlugin(PluginTextFormat):
     """
     This plugin handles whois command.
     Basically detects if user was able to connect to a device
@@ -28,6 +28,17 @@ class CmdWhoisPlugin(PluginBase):
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
+        self.text_signatures = [
+            re.compile(r'^%\s*IANA WHOIS server', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^%\s*This is the RIPE Database', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^\s*Registry Domain ID:', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^\s*Registrar WHOIS Server:', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^NetRange:\s', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^inetnum:\s', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^nserver:\s', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^\s*Name Server:\s', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^%\s*.*\b(?:ARIN|APNIC|LACNIC|AFRINIC)\b.*whois', re.IGNORECASE | re.MULTILINE),
+        ]
         self.id = "whois"
         self.name = "Whois"
         self.plugin_version = "0.0.1"

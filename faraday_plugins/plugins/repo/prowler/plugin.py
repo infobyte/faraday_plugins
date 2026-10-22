@@ -5,6 +5,8 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from dateutil.parser import parse
+import csv
+import io
 import json
 from datetime import datetime
 from dataclasses import dataclass
@@ -184,6 +186,67 @@ def parse_ocsf_record(record):
     )
 
 
+def _split_pipe(value):
+    return [item.strip() for item in (value or "").split("|") if item.strip()]
+
+
+def parse_csv_records(output):
+    """Convert Prowler CSV rows (semicolon separated) into Issue objects.
+
+    Handles the v4+ column names (ACCOUNT_UID, RESOURCE_UID...) and the v3 ones
+    (ACCOUNT_ID, RESOURCE_ARN...). Only FAIL rows are reported, like the JSON flavors.
+    """
+    if isinstance(output, bytes):
+        output = output.decode("utf-8-sig", errors="replace")
+    output = output.lstrip("\ufeff")
+    reader = csv.DictReader(io.StringIO(output), delimiter=";")
+    issues = []
+    for row in reader:
+        if (row.get("STATUS") or "").strip().upper() != "FAIL":
+            continue
+        if (row.get("MUTED") or "").strip().lower() == "true":
+            continue
+        timestamp = row.get("TIMESTAMP") or row.get("ASSESSMENT_START_TIME")
+        try:
+            timestamp = parse(timestamp) if timestamp else None
+        except (ValueError, TypeError, OverflowError):
+            timestamp = None
+        remediation = {"Recommendation": {"Text": row.get("REMEDIATION_RECOMMENDATION_TEXT", ""),
+                                          "Url": row.get("REMEDIATION_RECOMMENDATION_URL", "")},
+                       "Code": {"NativeIaC": row.get("REMEDIATION_CODE_NATIVEIAC", ""),
+                                "Terraform": row.get("REMEDIATION_CODE_TERRAFORM", ""),
+                                "CLI": row.get("REMEDIATION_CODE_CLI", ""),
+                                "Other": row.get("REMEDIATION_CODE_OTHER", "")}}
+        compliance = {}
+        for item in _split_pipe(row.get("COMPLIANCE")):
+            framework, _, controls = item.partition(":")
+            compliance[framework.strip()] = [c.strip() for c in controls.split(",") if c.strip()]
+        categories = [c.strip() for c in (row.get("CATEGORIES") or "").split(",") if c.strip()]
+        resource_arn = row.get("RESOURCE_UID") or row.get("RESOURCE_ARN") or ""
+        issues.append(Issue(
+            region=row.get("REGION") or row.get("LOCATION") or "AWS_REGION",
+            profile=row.get("AUTH_METHOD") or row.get("PROFILE") or "",
+            severity=(row.get("SEVERITY") or "info").lower(),
+            scored=row.get("STATUS", ""),
+            account=row.get("ACCOUNT_UID") or row.get("ACCOUNT_ID") or "",
+            description=row.get("DESCRIPTION", ""),
+            status=row.get("STATUS", ""),
+            status_extended=row.get("STATUS_EXTENDED", ""),
+            check_title=row.get("CHECK_TITLE") or "Prowler finding",
+            check_id=row.get("CHECK_ID", ""),
+            timestamp=timestamp,
+            compliance=compliance,
+            categories=categories,
+            service=row.get("SERVICE_NAME", ""),
+            risk=row.get("RISK", ""),
+            doc_link=row.get("RELATED_URL", ""),
+            remediation=remediation,
+            resource_arn=resource_arn,
+            resource_id=row.get("RESOURCE_NAME") or row.get("RESOURCE_ID") or resource_arn,
+        ))
+    return issues
+
+
 class ProwlerPlugin(PluginJsonFormat):
     """ Handle the AWS Prowler tool. Detects the output of the tool
     and adds the information to Faraday. Supports both legacy v3 JSON-ASFF
@@ -200,6 +263,13 @@ class ProwlerPlugin(PluginJsonFormat):
             {"Profile", "AccountId", "OrganizationsInfo", "Region"},
             {"finding_info", "class_uid", "severity_id", "status_code", "resources"},
         ]
+        self.extension = [".json", ".csv"]
+        self.csv_headers = {"CHECK_ID", "STATUS", "SEVERITY", "PROVIDER"}
+
+    def report_belongs_to(self, extension="", file_csv_headers=None, **kwargs):
+        if extension == ".csv":
+            return bool(file_csv_headers) and self.csv_headers.issubset(file_csv_headers)
+        return super().report_belongs_to(extension=extension, **kwargs)
 
     def _is_ocsf(self, records):
         if not records:
@@ -208,16 +278,15 @@ class ProwlerPlugin(PluginJsonFormat):
         return isinstance(first, dict) and "finding_info" in first and "class_uid" in first
 
     def parseOutputString(self, output, debug=False):
-        records = json.loads(output)
-        issues = []
-        if self._is_ocsf(records):
-            for record in records:
-                if record.get("status_code") != "FAIL":
-                    continue
-                issues.append(parse_ocsf_record(record))
+        text = output.decode("utf-8-sig", errors="replace") if isinstance(output, bytes) else output
+        if not text.lstrip("\ufeff").lstrip().startswith(("[", "{")):
+            issues = parse_csv_records(text)
         else:
-            parser = ProwlerJsonParser(output)
-            issues = parser.issues
+            records = json.loads(text)
+            if self._is_ocsf(records):
+                issues = [parse_ocsf_record(record) for record in records if record.get("status_code") == "FAIL"]
+            else:
+                issues = ProwlerJsonParser(text).issues
 
         for issue in issues:
             host_name = f"{issue.resource_id}"

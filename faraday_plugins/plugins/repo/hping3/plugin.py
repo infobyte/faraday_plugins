@@ -3,7 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2017  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginTextFormat
 import re
 
 __author__ = "Roberto Focke"
@@ -12,10 +12,14 @@ __license__ = ""
 __version__ = "1.0.0"
 
 
-class hping3(PluginBase):
+class hping3(PluginTextFormat):
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
+        self.text_signatures = [
+            re.compile(r'^HPING\s+\S+\s+\(', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^---\s+\S+\s+hping statistic\s+---', re.IGNORECASE | re.MULTILINE),
+        ]
         self.id = "Hping3"
         self.name = "hping3"
         self.plugin_version = "0.0.1"

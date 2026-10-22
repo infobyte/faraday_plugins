@@ -7,7 +7,7 @@ import json
 import re
 from collections import defaultdict
 
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginTextFormat
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -46,13 +46,17 @@ class HydraParser:
                 self.items.append(item)
 
 
-class HydraPlugin(PluginBase):
+class HydraPlugin(PluginTextFormat):
     """
     Example plugin to parse hydra output.
     """
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
+        self.text_signatures = [
+            re.compile(r'^Hydra v[\d.]+\b.*starting at', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^\[\d+\]\[[\w\-]+\]\s+host:\s+\S+\s+login:', re.IGNORECASE | re.MULTILINE),
+        ]
         self.id = "Hydra"
         self.name = "Hydra XML Output Plugin"
         self.plugin_version = "0.0.1"
@@ -62,7 +66,13 @@ class HydraPlugin(PluginBase):
         self.host = None
         self._use_temp_file = True
         self._temp_file_extension = "txt"
+        self.extension = [".txt", ".log", ".out", ".json"]
         self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
+
+    def report_belongs_to(self, extension="", file_json_keys=None, **kwargs):
+        if extension == ".json":
+            return bool(file_json_keys) and {"generator", "results", "quantityfound"}.issubset(file_json_keys)
+        return super().report_belongs_to(extension=extension, **kwargs)
 
     def parseOutputString(self, output):
         """Accept either Hydra stdout text or `hydra -b jsonv1 -o ...` JSON."""

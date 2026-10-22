@@ -6,7 +6,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import json
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginTextFormat
 
 
 __author__ = "Blas Moyano"
@@ -19,10 +19,14 @@ __email__ = "bmoyano@infobytesec.com"
 __status__ = "Development"
 
 
-class CmdNextNetin(PluginBase):
+class CmdNextNetin(PluginTextFormat):
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
+        self.text_signatures = [
+            re.compile(r'^\{"host":\s*"[^"]+",\s*"port":\s*"?\d+"?,.*"(?:name|probe|info)"', re.IGNORECASE | re.MULTILINE),
+        ]
+        self.extension = [".txt", ".log", ".out", ".json", ".jsonl", ".ndjson"]
         self.id = "nextnet"
         self.name = "nextnet"
         self.plugin_version = "0.0.1"
