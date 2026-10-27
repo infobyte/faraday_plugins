@@ -24,3 +24,7 @@ repos:
     hooks:
     -   id: pyupgrade
         args: [ --py3-plus , --py36-plus]
+-   repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+    -   id: gitleaks

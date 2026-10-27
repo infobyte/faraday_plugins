@@ -86,6 +86,31 @@ bandit:
   rules:
     - when: on_success
 
+gitleaks:
+  stage: SAST
+  image:
+    name: zricethezav/gitleaks:v8.21.2
+    entrypoint: [""]
+  before_script: []
+  variables:
+    GIT_DEPTH: 0
+  script:
+    # GitHub push protection rejects the mirror push if any new commit contains
+    # a secret (even fake ones in test fixtures), so scan only the new commits.
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "dev" ] || [ "$CI_COMMIT_BRANCH" = "master" ]; then
+        RANGE="$CI_COMMIT_BEFORE_SHA..$CI_COMMIT_SHA"
+        if [ "$CI_COMMIT_BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then RANGE="-1 $CI_COMMIT_SHA"; fi
+      else
+        git fetch origin dev
+        RANGE="origin/dev..$CI_COMMIT_SHA"
+      fi
+    - gitleaks git --redact --verbose --log-opts="$RANGE" .
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - when: on_success
+
 flake8:
     image: python:3.11
     stage: pre_testing
