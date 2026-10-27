@@ -128,8 +128,9 @@ class Vulnerability(Base):
 
     @property
     def cvss(self):
-        if self.node.get("cvss"):
-            return Cvss(self.node.get("cvss").get("nvd"))
+        cvss_node = self.node.get("CVSS") or self.node.get("cvss")
+        if cvss_node:
+            return Cvss(cvss_node.get("nvd") or {})
         else:
             return None
 
@@ -146,11 +147,11 @@ class Result(Base):
 
     @property
     def misconfigurations(self):
-        return [Misconfiguration(i) for i in self.node.get("Misconfigurations", [])]
+        return [Misconfiguration(i) for i in (self.node.get("Misconfigurations") or [])]
 
     @property
     def vulnerability(self):
-        return [Vulnerability(i) for i in self.node.get("Vulnerabilities", [])]
+        return [Vulnerability(i) for i in (self.node.get("Vulnerabilities") or [])]
 
     @property
     def result_type(self):
@@ -172,11 +173,19 @@ class TrivyJsonParser(Base):
 
     @property
     def results(self):
-        return [Result(i) for i in self.node.get('Results', "")]
+        # Trivy v0.x emitted the report as a top-level JSON array of Results.
+        # Trivy >= v0.20 wraps it in {"SchemaVersion": ..., "Results": [...]}.
+        if isinstance(self.node, list):
+            return [Result(i) for i in self.node]
+        return [Result(i) for i in (self.node.get('Results') or [])]
 
     @property
     def scantype(self):
+        if isinstance(self.node, list):
+            return ""
         return self.node.get('ArtifactType')
 
     def metadata(self):
-        return Metadata(self.node.get('Metadata'))
+        if isinstance(self.node, list):
+            return Metadata({})
+        return Metadata(self.node.get('Metadata') or {})

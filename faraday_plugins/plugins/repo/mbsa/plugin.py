@@ -51,7 +51,16 @@ class MbsaPlugin(PluginByExtension):
         if parser.computer_name is not None:
             hostname.append(parser.computer_name.group(2))
         if parser.scan_date is not None:
-            run_date = datetime.strptime(parser.scan_date.group(2), '%Y/%m/%d %H:%M')
+            # MBSA writes the scan date in the locale of the host that ran it.
+            # Try a handful of common formats before giving up.
+            raw = parser.scan_date.group(2).strip()
+            for fmt in ('%Y/%m/%d %H:%M', '%m/%d/%Y %H:%M', '%d/%m/%Y %H:%M',
+                        '%Y-%m-%d %H:%M', '%m-%d-%Y %H:%M'):
+                try:
+                    run_date = datetime.strptime(raw, fmt)
+                    break
+                except ValueError:
+                    continue
 
         host_id = self.createAndAddHost(
             ip,

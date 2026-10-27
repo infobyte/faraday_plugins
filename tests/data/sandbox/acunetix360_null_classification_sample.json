@@ -1,0 +1,41 @@
+{
+  "Generated": "15/01/2026 10:00 AM",
+  "Target": {
+    "Url": "http://target.example.com/",
+    "ScanId": "synth-001",
+    "Initiated": "15/01/2026 09:55 AM",
+    "Duration": "00:05:00"
+  },
+  "Vulnerabilities": [
+    {
+      "Certainty": 100,
+      "Classification": null,
+      "Confirmed": true,
+      "Description": null,
+      "FirstSeenDate": "2026-01-15T10:00:00",
+      "Impact": null,
+      "LookupId": "ac360-vuln-001",
+      "Name": "Information Disclosure",
+      "ProofOfConcept": null,
+      "RemedialActions": null,
+      "RemedialProcedure": null,
+      "Severity": "Low",
+      "Tags": [],
+      "Url": "http://target.example.com/.git/config"
+    },
+    {
+      "Certainty": 100,
+      "Classification": {"Cvss31": {"Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"}, "Cwe": "94"},
+      "Confirmed": true,
+      "Description": "Server-side template injection in the user profile.",
+      "ExternalReferences": "<a href='https://owasp.org/SSTI'>OWASP</a>",
+      "Impact": "Full server compromise possible.",
+      "LookupId": "ac360-vuln-002",
+      "Name": "Server-Side Template Injection",
+      "RemedialActions": null,
+      "RemedialProcedure": "Use the templating engine in safe mode.",
+      "Severity": "Critical",
+      "Url": "http://target.example.com/profile"
+    }
+  ]
+}

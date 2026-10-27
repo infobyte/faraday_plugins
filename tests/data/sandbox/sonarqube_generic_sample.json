@@ -1,0 +1,31 @@
+{
+  "allBugs": false,
+  "date": "2026-01-15T10:00:00Z",
+  "deltaAnalysis": false,
+  "fixMissingRule": false,
+  "hotspotKeys": [],
+  "inNewCodePeriod": false,
+  "issues": [
+    {
+      "rule": "python:S1192",
+      "severity": "MAJOR",
+      "status": "OPEN",
+      "component": "src/app.py",
+      "line": 12,
+      "description": "Define a constant instead of duplicating this literal.",
+      "message": "Define a constant instead of duplicating this literal 4 times.",
+      "key": "synthetic-issue-1"
+    },
+    {
+      "rule": "python:S4502",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "component": "src/views.py",
+      "line": 8,
+      "description": "Make sure disabling CSRF protection is safe here.",
+      "message": "Make sure disabling CSRF protection is safe here.",
+      "key": "synthetic-issue-2"
+    }
+  ],
+  "noCoverage": []
+}

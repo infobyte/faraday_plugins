@@ -1,0 +1,36 @@
+{
+  "supportToken": "synthetic-token",
+  "additionalData": {},
+  "response": [
+    {
+      "uuid": "vuln-uuid-001",
+      "name": "CVE-2022-42004",
+      "type": "SECURITY_VULNERABILITY",
+      "severity": "high",
+      "description": "Resource exhaustion vulnerability in jackson-databind.",
+      "cvss3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+      "cvss3Score": 7.5,
+      "topFix": {
+        "url": "https://github.com/FasterXML/jackson-databind/issues/3590",
+        "fixResolution": "Upgrade to 2.13.4.2 or later"
+      },
+      "component": {
+        "uuid": "comp-001",
+        "name": "jackson-databind-2.13.3.jar",
+        "componentType": "Library",
+        "libraryType": "MAVEN_ARTIFACT"
+      }
+    },
+    {
+      "uuid": "vuln-uuid-002",
+      "name": "CVE-2023-12345",
+      "type": "SECURITY_VULNERABILITY",
+      "severity": "critical",
+      "description": "Synthetic critical vulnerability for test coverage.",
+      "component": {
+        "uuid": "comp-002",
+        "name": "synthetic-lib-1.0.jar"
+      }
+    }
+  ]
+}

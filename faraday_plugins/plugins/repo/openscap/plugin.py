@@ -29,6 +29,10 @@ class OpenScapParser:
             self.tree = None
 
     def parse_xml(self, xml_output):
+        # lxml rejects str input that carries an explicit `<?xml encoding=...?>`
+        # declaration. Encode to bytes whenever the framework passed us a str.
+        if isinstance(xml_output, str):
+            xml_output = xml_output.encode("utf-8", errors="replace")
         try:
             parser = etree.XMLParser(recover=True)
             tree = etree.fromstring(xml_output, parser=parser)
@@ -137,9 +141,15 @@ class OpenScapPlugin(PluginXMLFormat):
 
     def parseOutputString(self, output):
         parser = OpenScapParser(output)
-        ips = []
+        # XCCDF benchmark documents (e.g. CIS / iOS hardening templates) carry
+        # only the rule definitions, with no TestResult element. Nothing to
+        # ingest in that case.
+        if not parser.result_data:
+            return
+        result = parser.result_data[0]
 
-        for ip in parser.result_data[0]['ips']:
+        ips = []
+        for ip in result.get('ips') or []:
             len_start_port = ip.find(":")
             if len_start_port > -1:
                 ip = ip[:len_start_port]
@@ -148,53 +158,54 @@ class OpenScapPlugin(PluginXMLFormat):
                 ips.append(ip)
             except ValueError:
                 pass
-        for ip in ips:
-            if ip != '127.0.0.1':
-                ip = ip
-                ips.remove(ip)
-                break
 
-        list_mac = parser.result_data[0]['mac']
-        for mac in list_mac:
-            if mac != '00:00:00:00:00:00':
-                mac_address = mac
-                list_mac.remove(mac_address)
-                break
+        # Pick the first non-loopback IP as the host identifier; fall back to
+        # 127.0.0.1 / hostname when no usable IP is reported.
+        host_ip = next((i for i in ips if i != '127.0.0.1'), None)
+        if host_ip is None:
+            host_ip = ips[0] if ips else (result.get('target') or 'unknown')
 
-        description = f'Title: {parser.result_data[0]["result_title"]} ' \
+        list_mac = list(result.get('mac') or [])
+        mac_address = next((m for m in list_mac if m != '00:00:00:00:00:00'), '')
+
+        description = f'Title: {result.get("result_title", "")} ' \
                       f'Ips: {ips} ' \
                       f'Macs: {list_mac}'
         host_id = self.createAndAddHost(
-            name=ip,
-            hostnames=[parser.result_data[0]['target']],
+            name=host_ip,
+            hostnames=[result.get('target')] if result.get('target') else None,
             description=description,
-            mac=mac_address
+            mac=mac_address,
         )
 
-        rules_fail = parser.result_data[0]['rule_result']
+        rules_fail = result.get('rule_result') or []
         if rules_fail:
             info_rules = parser.rule_date
-            severity = 0
 
             for rule in rules_fail:
-                vuln_run_date = datetime.strptime(
-                    rule['time'].replace('T', ' '),
-                    '%Y-%m-%d %H:%M:%S')
+                vuln_run_date = None
+                if rule.get('time'):
+                    try:
+                        vuln_run_date = datetime.strptime(
+                            rule['time'].replace('T', ' '),
+                            '%Y-%m-%d %H:%M:%S')
+                    except ValueError:
+                        vuln_run_date = None
 
-                if rule['severity'] == 'low':
-                    severity = 1
-                elif rule['severity'] == 'medium':
-                    severity = 2
-                elif rule['severity'] == 'high':
-                    severity = 3
+                sev_raw = (rule.get('severity') or '').lower()
+                severity = {'low': 1, 'medium': 2, 'high': 3}.get(sev_raw, 0)
 
-                desc = f'name: {rule["ref_name"]} - link: {rule["ref_href"]}'
+                desc = f'name: {rule.get("ref_name")} - link: {rule.get("ref_href")}'
 
+                vuln_name = rule['id']
+                vuln_data = ''
+                vuln_cve = ''
                 for info in info_rules:
                     if rule['id'] == info['rule_id']:
-                        vuln_name = info['rule_title']
-                        vuln_data = info['rule_check']
-                        vuln_cve = info['rule_ident']
+                        vuln_name = info.get('rule_title') or rule['id']
+                        vuln_data = info.get('rule_check') or ''
+                        vuln_cve = info.get('rule_ident') or ''
+                        break
 
                 self.createAndAddVulnToHost(
                     host_id,
@@ -204,7 +215,7 @@ class OpenScapPlugin(PluginXMLFormat):
                     data=vuln_data,
                     external_id=rule['id'],
                     run_date=vuln_run_date,
-                    cve=[vuln_cve])
+                    cve=[vuln_cve] if vuln_cve else [])
 
 
 def createPlugin(*args, **kwargs):

@@ -6,7 +6,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import json
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginTextFormat
 
 
 __author__ = "Blas Moyano"
@@ -19,10 +19,14 @@ __email__ = "bmoyano@infobytesec.com"
 __status__ = "Development"
 
 
-class CmdNextNetin(PluginBase):
+class CmdNextNetin(PluginTextFormat):
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
+        self.text_signatures = [
+            re.compile(r'^\{"host":\s*"[^"]+",\s*"port":\s*"?\d+"?,.*"(?:name|probe|info)"', re.IGNORECASE | re.MULTILINE),
+        ]
+        self.extension = [".txt", ".log", ".out", ".json", ".jsonl", ".ndjson"]
         self.id = "nextnet"
         self.name = "nextnet"
         self.plugin_version = "0.0.1"
@@ -39,13 +43,20 @@ class CmdNextNetin(PluginBase):
         output_lines = output_lines[:-1]
 
         for line in output_lines:
-            json_line = json.loads(line)
-            info_data = json_line.get("info", None)
+            if not line.strip():
+                continue
+            try:
+                json_line = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            info_data = json_line.get("info")
             desc = ""
             mac = None
-            if info_data is not None:
+            if isinstance(info_data, dict):
                 desc = f'Domain Tag: {info_data.get("domain", "Not tag info")}'
                 mac = info_data.get("hwaddr")
+            elif isinstance(info_data, str):
+                desc = info_data
 
             h_id = self.createAndAddHost(
                 json_line.get("host", "0.0.0.0"),

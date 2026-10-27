@@ -1,0 +1,7 @@
+HPING 8.8.8.8 (en0 8.8.8.8): NO FLAGS are set, 40 headers + 0 data bytes
+len=46 ip=8.8.8.8 ttl=119 id=0 sport=0 flags=RA seq=0 win=65535 rtt=12.0 ms
+len=46 ip=8.8.8.8 ttl=119 id=0 sport=0 flags=RA seq=1 win=65535 rtt=11.5 ms
+
+--- 8.8.8.8 hping statistic ---
+2 packets transmitted, 2 packets received, 0% packet loss
+round-trip min/avg/max = 11.5/11.7/12.0 ms

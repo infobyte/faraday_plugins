@@ -5,6 +5,7 @@ See the file "doc/LICENSE" for the license information
 
 """
 from faraday_plugins.plugins.plugin import PluginJsonFormat
+import re
 from json import loads
 
 __author__ = "Gonzalo Martinez"
@@ -27,6 +28,12 @@ class AWSInspectorJsonPlugin(PluginJsonFormat):
         self.json_keys = {"findings"}
         self.framework_version = "1.0.0"
         self._temp_file_extension = "json"
+
+    def report_belongs_to(self, file_head="", **kwargs):
+        if not super().report_belongs_to(**kwargs):
+            return False
+        # Veracode / sourceclear platform exports also carry a top level "findings" list
+        return re.search(r'"(?:issue_id|context_guid)"', file_head) is None
 
     def parseOutputString(self, output):
         # Useful docs about aws finding struct: https://docs.aws.amazon.com/inspector/v2/APIReference/API_Finding.html

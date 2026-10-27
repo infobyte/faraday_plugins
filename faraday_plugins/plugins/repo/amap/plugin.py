@@ -8,14 +8,18 @@ import re
 import shlex
 import socket
 
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginTextFormat
 
 
-class AmapPlugin(PluginBase):
+class AmapPlugin(PluginTextFormat):
     """ Example plugin to parse amap output."""
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
+        self.text_signatures = [
+            re.compile(r'^#\s*amap v[\d.]+', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^[\d.]+:\d+:(?:tcp|udp):(?:open|closed):', re.IGNORECASE | re.MULTILINE),
+        ]
         self.id = "Amap"
         self.name = "Amap Output Plugin"
         self.plugin_version = "0.0.3"
@@ -55,8 +59,9 @@ class AmapPlugin(PluginBase):
                     printable_banner,
                     None]
 
-            if address != self.args.m:
-                hostnames = [self.args.m]
+            cli_target = getattr(self.args, "m", None) if self.args else None
+            if cli_target and address != cli_target:
+                hostnames = [cli_target]
             else:
                 hostnames = None
             h_id = self.createAndAddHost(address, hostnames=hostnames)
@@ -76,7 +81,11 @@ class AmapPlugin(PluginBase):
     file_arg_re = re.compile(r"^.*(-o \s*[^\s]+\s+(?:-m|)).*$")
 
     def get_info(self, data):
-        if self.args.__getattribute__("6"):
+        # `self.args` is only populated when the plugin runs under CLI mode
+        # (processCommandString). When loading from a report file we never see
+        # the original arguments, so default to IPv4 colon-separated parsing.
+        is_v6 = bool(self.args) and getattr(self.args, "6", False)
+        if is_v6:
             f = re.search(
                 r"^\[(.*)\]:(.*):(.*):(.*):(.*):(.*):(.*):(.*)",
                 data)

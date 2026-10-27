@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<Benchmark xmlns:xccdf="http://checklists.nist.gov/xccdf/1.2">
+  <title>Synthetic XCCDF</title>
+</Benchmark>

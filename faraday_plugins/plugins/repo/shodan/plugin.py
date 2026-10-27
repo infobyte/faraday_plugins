@@ -69,12 +69,22 @@ class ShodanPlugin(PluginMultiLineJsonFormat):
             hostnames = vuln_dict.get('hostnames')
             h_id = self.createAndAddHost(ip, hostnames=hostnames)
             s_id = self.createAndAddServiceToHost(h_id, "http", protocol=transport, ports=port)
-            if vulns is not None:
-                for name, vuln_info in vulns.items():
-                    description = vuln_info.get('summary')
-                    references = vuln_info.get('references')
-                    self.createAndAddVulnToService(h_id, s_id, name, desc=description, ref=references
-                                                   , cve=name)
+            if vulns is None:
+                continue
+            # Shodan emits `vulns` either as a dict {CVE: {summary, references}}
+            # or as a flat list of CVE strings, depending on the search/download
+            # mode. Support both shapes.
+            if isinstance(vulns, dict):
+                items = vulns.items()
+            elif isinstance(vulns, list):
+                items = ((cve, {}) for cve in vulns)
+            else:
+                continue
+            for name, vuln_info in items:
+                description = (vuln_info or {}).get('summary', '') if isinstance(vuln_info, dict) else ''
+                references = (vuln_info or {}).get('references', []) if isinstance(vuln_info, dict) else []
+                self.createAndAddVulnToService(h_id, s_id, name, desc=description,
+                                               ref=references, cve=name)
 
     def processCommandString(self, username, current_path, command_string):
         """

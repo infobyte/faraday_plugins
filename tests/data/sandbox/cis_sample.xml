@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<asset-report-collection xmlns="http://scap.nist.gov/schema/asset-reporting-format/1.1"
+    xmlns:xccdf="http://checklists.nist.gov/xccdf/1.2"
+    xmlns:ai="http://scap.nist.gov/schema/asset-identification/1.1">
+  <reports>
+    <report id="rep1">
+      <content>
+        <xccdf:TestResult id="r1">
+          <xccdf:target-address>192.0.2.10</xccdf:target-address>
+          <xccdf:rule-result idref="rule_pwd_complexity" severity="medium">
+            <xccdf:result>fail</xccdf:result>
+            <xccdf:ident system="cce">CCE-12345-6</xccdf:ident>
+          </xccdf:rule-result>
+          <xccdf:rule-result idref="rule_root_login" severity="high">
+            <xccdf:result>fail</xccdf:result>
+            <xccdf:ident system="cce">CCE-67890-1</xccdf:ident>
+          </xccdf:rule-result>
+          <xccdf:rule-result idref="rule_passes" severity="low">
+            <xccdf:result>pass</xccdf:result>
+          </xccdf:rule-result>
+        </xccdf:TestResult>
+      </content>
+    </report>
+  </reports>
+  <xccdf:Benchmark id="cis-benchmark">
+    <xccdf:Rule id="rule_pwd_complexity">
+      <xccdf:title>Password complexity</xccdf:title>
+      <xccdf:description>Password must include uppercase, lowercase, digit and special char.</xccdf:description>
+    </xccdf:Rule>
+    <xccdf:Rule id="rule_root_login">
+      <xccdf:title>Root SSH login</xccdf:title>
+      <xccdf:description>SSH should not allow direct root login.</xccdf:description>
+    </xccdf:Rule>
+    <xccdf:Rule id="rule_passes">
+      <xccdf:title>Always passes</xccdf:title>
+      <xccdf:description>Sanity check.</xccdf:description>
+    </xccdf:Rule>
+  </xccdf:Benchmark>
+</asset-report-collection>

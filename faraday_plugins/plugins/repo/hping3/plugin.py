@@ -3,7 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2017  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginBase
+from faraday_plugins.plugins.plugin import PluginTextFormat
 import re
 
 __author__ = "Roberto Focke"
@@ -12,10 +12,14 @@ __license__ = ""
 __version__ = "1.0.0"
 
 
-class hping3(PluginBase):
+class hping3(PluginTextFormat):
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
+        self.text_signatures = [
+            re.compile(r'^HPING\s+\S+\s+\(', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^---\s+\S+\s+hping statistic\s+---', re.IGNORECASE | re.MULTILINE),
+        ]
         self.id = "Hping3"
         self.name = "hping3"
         self.plugin_version = "0.0.1"
@@ -46,13 +50,13 @@ class hping3(PluginBase):
         if re.match("HPING", output):
 
             sport = re.search(r"sport=(\d{1,6})", output)
-            ssport = [sport.group(1)]
             reci = re.search(r"flags=(\w{2,3})", output)
-            service = self.srv[sport.group(1)]
-
-            if reci.group(1) == "SA":
-                s_id = self.createAndAddServiceToHost(
-                    host_id, service, protocol="tcp", ports=ssport, status="open")
+            if sport and reci:
+                ssport = [sport.group(1)]
+                service = self.srv.get(sport.group(1), "unknown")
+                if reci.group(1) == "SA":
+                    s_id = self.createAndAddServiceToHost(
+                        host_id, service, protocol="tcp", ports=ssport, status="open")
 
         lineas = output.split("\n")
 

@@ -1,0 +1,1 @@
+[{"Target": "alpine:3.10", "Type": "alpine", "Vulnerabilities": [{"VulnerabilityID": "CVE-2021-36159", "PkgName": "apk-tools", "Severity": "CRITICAL", "Title": "libfetch out-of-boundary read", "Description": "Synthetic legacy Trivy report"}]}]

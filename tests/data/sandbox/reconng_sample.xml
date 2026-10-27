@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<reconng>
+<hosts>
+<item>
+<host>www.example.com</host>
+<ip_address>93.184.216.34</ip_address>
+<country>US</country>
+</item>
+<item>
+<host>api.example.com</host>
+<ip_address>93.184.216.35</ip_address>
+<country>US</country>
+</item>
+</hosts>
+</reconng>

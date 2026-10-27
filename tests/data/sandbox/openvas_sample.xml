@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<get_results_response status="200" status_text="OK">
+  <report>
+    <owner><name>admin</name></owner>
+    <host>
+      <ip>192.0.2.50</ip>
+      <detail>
+        <name>hostname</name>
+        <value>scanned-host.example.com</value>
+      </detail>
+      <detail>
+        <name>App</name>
+        <value>cpe:/a:apache:http_server:2.4.41</value>
+      </detail>
+      <detail>
+        <name>EXIT_CODE</name>
+        <value>0</value>
+      </detail>
+      <detail>
+        <name>empty_value_test</name>
+      </detail>
+    </host>
+    <results>
+      <result>
+        <name>Apache HTTP Server Out-of-Date Version</name>
+        <host>192.0.2.50</host>
+        <port>80/tcp</port>
+        <nvt oid="1.3.6.1.4.1.25623.1.0.99999">
+          <name>Apache HTTP Server Out-of-Date</name>
+          <family>Web Servers</family>
+          <cvss_base>7.5</cvss_base>
+          <refs>
+            <ref id="CVE-2021-44790" type="cve"/>
+          </refs>
+        </nvt>
+        <threat>High</threat>
+        <severity>7.5</severity>
+        <description>The Apache HTTP Server installed on the target host is out of date.</description>
+      </result>
+      <result>
+        <name>Weak SSH Algorithms Supported</name>
+        <host>192.0.2.50</host>
+        <port>22/tcp</port>
+        <nvt oid="1.3.6.1.4.1.25623.1.0.105610">
+          <name>Weak SSH Algorithms</name>
+          <family>SSH</family>
+          <cvss_base>5.3</cvss_base>
+          <refs/>
+        </nvt>
+        <threat>Medium</threat>
+        <severity>5.3</severity>
+        <description>The remote SSH server is configured to allow weak ciphers/MAC algorithms.</description>
+      </result>
+    </results>
+  </report>
+</get_results_response>

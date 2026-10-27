@@ -23,8 +23,16 @@ class GitleaksPlugin(PluginJsonFormat):
 
     def parseOutputString(self, output, debug=False):
         json_output = json.loads(output)
-        for leak in json_output:
+        # gitleaks emits a JSON array. "No findings" is `null` in some versions
+        # and `[]` in others; either way, nothing to do.
+        if not json_output:
+            return
+        if not isinstance(json_output, list):
+            return
 
+        for leak in json_output:
+            if not isinstance(leak, dict):
+                continue
             description = f"Match: {leak.get('Match')}\n" \
                           f"Secret: {leak.get('Secret')}\n" \
                           f"Commit: {leak.get('Commit')}\n" \
@@ -35,11 +43,11 @@ class GitleaksPlugin(PluginJsonFormat):
                           f"Fingerprint: {leak.get('Fingerprint')}\n"
 
             host_id = self.createAndAddHost(
-                name=leak.get('File'),
+                name=leak.get('File') or "unknown",
             )
             self.createAndAddVulnToHost(
                 host_id,
-                name=leak.get('Description'),
+                name=leak.get('Description') or leak.get('RuleID') or "Gitleaks finding",
                 desc=description,
                 severity='informational',
                 status='open',

@@ -102,8 +102,12 @@ class OpenvasXmlParser:
         details_data = defaultdict(list)
         hostnames = []
         for item in details:
-            name = self.do_clean(item.find('name').text)
-            value = self.do_clean(item.find('value').text)
+            name_el = item.find('name')
+            value_el = item.find('value')
+            if name_el is None or name_el.text is None:
+                continue
+            name = self.do_clean(name_el.text)
+            value = self.do_clean(value_el.text) if (value_el is not None and value_el.text) else ""
             if "EXIT" in name:
                 continue
             if name == 'hostname':

@@ -1,0 +1,52 @@
+[
+  {
+    "host": "weak.example.com",
+    "port": 443,
+    "protocol": "http",
+    "isPublic": false,
+    "status": "READY",
+    "startTime": 1737000000000,
+    "testTime": 1737000060000,
+    "engineVersion": "2.3.0",
+    "criteriaVersion": "2009q",
+    "endpoints": [
+      {
+        "ipAddress": "203.0.113.5",
+        "serverName": "weak.example.com",
+        "statusMessage": "Ready",
+        "grade": "C",
+        "gradeTrustIgnored": "C",
+        "hasWarnings": true,
+        "isExceptional": false,
+        "delegation": 1,
+        "details": {
+          "hostStartTime": 1737000010000,
+          "certChains": [{"id": "abc", "issues": 0}],
+          "protocols": [
+            {"id": 769, "name": "TLS", "version": "1.0"},
+            {"id": 770, "name": "TLS", "version": "1.1"},
+            {"id": 771, "name": "TLS", "version": "1.2"}
+          ],
+          "vulnBeast": true,
+          "heartbleed": false,
+          "openSslCcs": 1,
+          "supportsRc4": false,
+          "rc4Only": false,
+          "freak": false,
+          "logjam": false,
+          "drownVulnerable": false
+        }
+      }
+    ],
+    "certs": [
+      {
+        "id": 12345,
+        "subject": "CN=weak.example.com",
+        "sigAlg": "SHA1withRSA",
+        "issuerSubject": "CN=Some CA",
+        "revocationStatus": 0,
+        "issues": 0
+      }
+    ]
+  }
+]

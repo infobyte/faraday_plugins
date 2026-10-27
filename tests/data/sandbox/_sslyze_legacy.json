@@ -1,0 +1,1 @@
+{"server_scan_results": [{"server_info": {"server_location": {"hostname": "example.com", "ip_address": "203.0.113.1", "port": 443}}, "scan_commands_results": {"heartbleed": {"is_vulnerable_to_heartbleed": true}, "openssl_ccs_injection": {"is_vulnerable_to_ccs_injection": false}}}]}

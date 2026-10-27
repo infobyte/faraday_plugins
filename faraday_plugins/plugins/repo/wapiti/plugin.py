@@ -111,13 +111,12 @@ class Item:
         """
         Finds a subnode in the host node and the retrieves a value from it.
 
-        @return An attribute value
+        @return An attribute value (or empty string if the node has no text)
         """
         sub_node = node.find(subnode_xpath_expr)
-        if sub_node is not None:
+        if sub_node is not None and sub_node.text is not None:
             return sub_node.text.strip()
-
-        return None
+        return ""
 
     def get_url(self, item_node):
         target = self.get_info(item_node, 'target')
@@ -158,17 +157,21 @@ class Item:
     def get_cwe(self, node):
         refs = node.findall('references/reference')
         for ref in refs:
-            if CWE_regex.search(self.get_text_from_subnode(ref, 'title')):
-                return [CWE_regex.search(self.get_text_from_subnode(ref, 'title')).group()]
+            title = self.get_text_from_subnode(ref, 'title')
+            if title and CWE_regex.search(title):
+                return [CWE_regex.search(title).group()]
         return []
 
     def get_references(self, node):
         refs = node.findall('references/reference')
         references_list = []
         for ref in refs:
-            references_list.append('Title: ' + self.get_text_from_subnode(ref, 'title'))
-            references_list.append('URL: ' + self.get_text_from_subnode(ref, 'url'))
-
+            title = self.get_text_from_subnode(ref, 'title')
+            url = self.get_text_from_subnode(ref, 'url')
+            if title:
+                references_list.append('Title: ' + title)
+            if url:
+                references_list.append('URL: ' + url)
         return references_list
 
     def get_entries(self, node):
@@ -193,13 +196,10 @@ class Item:
         @return a severity
         """
         severity = self.get_text_from_subnode(node, 'level')
-
-        if severity == '1':
-            return 'high'
-        elif severity == '2':
-            return 'medium'
-        elif severity == '3':
-            return 'low'
+        sev_map = {'1': 'low', '2': 'med', '3': 'high', '4': 'critical'}
+        # Older Wapiti reports labelled levels in inverse order (1=high). Detect
+        # which convention is in use by checking metadata if available.
+        return sev_map.get(severity, 'info')
 
 
 class WapitiPlugin(PluginXMLFormat):

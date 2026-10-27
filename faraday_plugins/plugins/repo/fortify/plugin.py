@@ -17,10 +17,29 @@ class FortifyPlugin(PluginByExtension):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self.id = "Fortify"
-        self.name = "Fortify XML Output Plugin"
-        self.plugin_version = "0.0.1"
-        self.extension = ".fpr"
+        self.name = "Fortify Output Plugin"
+        self.plugin_version = "0.1.0"
+        self.extension = [".fpr", ".fvdl", ".xml"]
         self.open_options = {"mode": "rb"}
+
+    # The .xml extension is shared by many other plugins (metasploit, nmap, etc.).
+    # Only claim XML files that look like Fortify output (FVDL or Fortify Report).
+    def report_belongs_to(self, extension="", **kwargs):
+        if extension == ".fpr" or extension == ".fvdl":
+            return True
+        if extension == ".xml":
+            report_path = kwargs.get("report_path", "")
+            if not report_path:
+                return False
+            try:
+                with open(report_path, "rb") as f:
+                    head = f.read(2048)
+            except OSError:
+                return False
+            return b"<FVDL" in head or (
+                b"<ReportDefinition" in head and b"Fortify" in head
+            )
+        return False
 
     def _process_fvdl_vulns(self, fp):
 
@@ -74,6 +93,17 @@ class FortifyPlugin(PluginByExtension):
             )
 
     def parseOutputString(self, output):
+        # Pre-sniff: .fpr is a zip; .fvdl/ReportDefinition is XML.
+        head = output[:200] if isinstance(output, (bytes, bytearray)) else b""
+        if not head and isinstance(output, str):
+            head = output[:200].encode("utf-8", errors="replace")
+
+        # Standalone Fortify ReportDefinition XML (custom Fortify report exports
+        # with <Issue iid=...> elements inside).
+        if b"<ReportDefinition" in head:
+            self._parse_report_xml(output)
+            return True
+
         fp = FortifyParser(output)
         if fp.fvdl is not None:
             self._process_fvdl_vulns(fp)
@@ -81,6 +111,73 @@ class FortifyPlugin(PluginByExtension):
             self._process_webinspect_vulns(fp)
 
         return True
+
+    def _parse_report_xml(self, output):
+        """Parse standalone Fortify ReportDefinition XML (no zip wrapper).
+
+        Each <Issue> element gives us category/folder/abstract plus a Primary
+        block with FileName / FilePath / LineStart / Snippet / TargetFunction.
+        """
+        if isinstance(output, str):
+            output = output.encode("utf-8")
+        root = objectify.fromstring(output)
+        host_cache = {}
+
+        # Severity is exposed as Folder ("Critical"/"High"/"Medium"/"Low")
+        # or Friority. Normalise to Faraday severities.
+        sev_map = {
+            "Critical": "critical", "High": "high",
+            "Medium": "med", "Low": "low", "Informational": "info",
+        }
+
+        for issue in root.iter("{*}Issue") if hasattr(root, "iter") else []:
+            category = getattr(issue, "Category", None)
+            category_text = category.text if category is not None and category.text else "Fortify finding"
+            folder = getattr(issue, "Folder", None)
+            severity_raw = (folder.text if folder is not None and folder.text else "")
+            if not severity_raw:
+                friority = getattr(issue, "Friority", None)
+                severity_raw = friority.text if friority is not None and friority.text else ""
+            severity = sev_map.get(severity_raw, "info")
+
+            primary = getattr(issue, "Primary", None)
+            if primary is None:
+                file_name = "unknown"
+                file_path = ""
+                line_start = ""
+                snippet = ""
+                target = ""
+            else:
+                file_name = (getattr(primary, "FileName", None) and primary.FileName.text) or "unknown"
+                file_path = (getattr(primary, "FilePath", None) and primary.FilePath.text) or file_name
+                line_start = (getattr(primary, "LineStart", None) and primary.LineStart.text) or ""
+                snippet = (getattr(primary, "Snippet", None) and primary.Snippet.text) or ""
+                target = (getattr(primary, "TargetFunction", None) and primary.TargetFunction.text) or ""
+
+            host_key = file_path or file_name
+            if host_key not in host_cache:
+                host_cache[host_key] = self.createAndAddHost(host_key)
+
+            abstract = getattr(issue, "Abstract", None)
+            desc = abstract.text.strip() if abstract is not None and abstract.text else ""
+            kingdom = getattr(issue, "Kingdom", None)
+            kingdom_text = kingdom.text if kingdom is not None and kingdom.text else ""
+
+            data_lines = [
+                f"File: {file_path}",
+                f"Line: {line_start}" if line_start else "",
+                f"Target: {target}" if target else "",
+                f"Kingdom: {kingdom_text}" if kingdom_text else "",
+                f"Snippet:\n{snippet}" if snippet else "",
+            ]
+            self.createAndAddVulnToHost(
+                host_id=host_cache[host_key],
+                name=category_text,
+                desc=desc,
+                severity=severity,
+                data="\n".join(filter(None, data_lines)),
+                external_id=issue.get("iid", "") or issue.get("ruleID", ""),
+            )
 
 
 class FortifyParser:
@@ -110,19 +207,29 @@ class FortifyParser:
         self.replacements_idx2 = re.compile(r'<Replace key="(.*?)"(\slink="(.*?)")?[\s\/].*?>')
 
     def _uncompress_fpr(self, output):
-        with ZipFile(io.BytesIO(output)) as fprcontent:
-            try:
-                self.fvdl = objectify.fromstring(fprcontent.read('audit.fvdl'))
-            except KeyError:
-                pass
-            try:
-                self.webinspect = objectify.fromstring(fprcontent.read('webinspect.xml'))
-            except KeyError:
-                pass
-            try:
-                self.audit = objectify.fromstring(fprcontent.read('audit.xml'))
-            except KeyError:
-                pass
+        if isinstance(output, str):
+            output = output.encode("utf-8")
+        # Standalone .fvdl files are XML, not zip.
+        if output.startswith(b"<?xml") or output.startswith(b"<FVDL"):
+            self.fvdl = objectify.fromstring(output)
+            return
+        try:
+            with ZipFile(io.BytesIO(output)) as fprcontent:
+                try:
+                    self.fvdl = objectify.fromstring(fprcontent.read('audit.fvdl'))
+                except KeyError:
+                    pass
+                try:
+                    self.webinspect = objectify.fromstring(fprcontent.read('webinspect.xml'))
+                except KeyError:
+                    pass
+                try:
+                    self.audit = objectify.fromstring(fprcontent.read('audit.xml'))
+                except KeyError:
+                    pass
+        except Exception:
+            # Not a valid fpr — leave fvdl/webinspect None and let caller skip.
+            pass
 
     def _process_fvdl(self):
         for vuln in self.fvdl.Vulnerabilities.iterchildren():
@@ -295,13 +402,35 @@ class FortifyParser:
 
         for rule in rulepath(self.fvdl):
             if rule.get('id') == vuln.ClassInfo.ClassID:
-                for group in rule.MetaInfo.iterchildren():
+                # Some Fortify reports omit MetaInfo for certain rules.
+                meta_info = getattr(rule, "MetaInfo", None)
+                if meta_info is None:
+                    continue
+                for group in meta_info.iterchildren():
                     if group.get('name') == "Probability":
                         probability = group
                     if group.get('name') == "Impact":
                         impact = group
                     if group.get('name') == "Accuracy":
                         accuracy = group
+
+        if accuracy is None or probability is None:
+            # Without rule metadata, fall back to InstanceSeverity if available.
+            inst_sev = getattr(vuln.InstanceInfo, "InstanceSeverity", None)
+            if inst_sev is not None:
+                try:
+                    score = float(inst_sev)
+                except (TypeError, ValueError):
+                    return "info"
+                if score >= 4:
+                    return "critical"
+                if score >= 3:
+                    return "high"
+                if score >= 2:
+                    return "med"
+                if score >= 1:
+                    return "low"
+            return "info"
 
         likelihood = (accuracy * vuln.InstanceInfo.Confidence * probability) / 25
 

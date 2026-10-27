@@ -40,9 +40,14 @@ class CisPlugin(PluginXMLFormat):
         root = ET.fromstring(output)
         rules = {}
         for rule in root.findall(f".//{self.ns['xccdf']}Rule"):
+            # Real CIS reports vary in how they nest title/description.
+            # Look up by tag name instead of relying on positional access.
+            title_el = rule.find(f".//{self.ns['xccdf']}title")
+            desc_el = rule.find(f".//{self.ns['xccdf']}description")
             rules[rule.attrib['id']] = {
-                "title": rule[0].text,
-                "description": rule[1][0].text
+                "title": (title_el.text if title_el is not None and title_el.text else
+                          rule.attrib.get('id', '')),
+                "description": (desc_el.text if desc_el is not None and desc_el.text else "")
             }
         reports = root.findall(f".//{self.ns['arf']}reports")
         for report in reports:

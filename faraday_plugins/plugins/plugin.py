@@ -738,6 +738,22 @@ class PluginByExtension(PluginBase):
         return match
 
 
+class PluginTextFormat(PluginByExtension):
+    """Plain text (stdout style) reports, detected by regex signatures found in the head of the file."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.extension = [".txt", ".log", ".out"]
+        self.text_signatures = []
+
+    def report_belongs_to(self, file_head="", **kwargs):
+        match = False
+        if super().report_belongs_to(**kwargs) and file_head:
+            match = any(signature.search(file_head) for signature in self.text_signatures)
+            self.logger.debug(f"Text Signature Match: {match}")
+        return match
+
+
 class PluginXMLFormat(PluginByExtension):
 
     def __init__(self, *args, **kwargs):

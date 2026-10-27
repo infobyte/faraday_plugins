@@ -3,9 +3,11 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday_plugins.plugins.plugin import PluginBase
+import json
 import re
 from collections import defaultdict
+
+from faraday_plugins.plugins.plugin import PluginTextFormat
 
 __author__ = "Francisco Amato"
 __copyright__ = "Copyright (c) 2013, Infobyte LLC"
@@ -44,13 +46,17 @@ class HydraParser:
                 self.items.append(item)
 
 
-class HydraPlugin(PluginBase):
+class HydraPlugin(PluginTextFormat):
     """
     Example plugin to parse hydra output.
     """
 
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
+        self.text_signatures = [
+            re.compile(r'^Hydra v[\d.]+\b.*starting at', re.IGNORECASE | re.MULTILINE),
+            re.compile(r'^\[\d+\]\[[\w\-]+\]\s+host:\s+\S+\s+login:', re.IGNORECASE | re.MULTILINE),
+        ]
         self.id = "Hydra"
         self.name = "Hydra XML Output Plugin"
         self.plugin_version = "0.0.1"
@@ -60,57 +66,67 @@ class HydraPlugin(PluginBase):
         self.host = None
         self._use_temp_file = True
         self._temp_file_extension = "txt"
+        self.extension = [".txt", ".log", ".out", ".json"]
         self.xml_arg_re = re.compile(r"^.*(-o\s*[^\s]+).*$")
 
+    def report_belongs_to(self, extension="", file_json_keys=None, **kwargs):
+        if extension == ".json":
+            return bool(file_json_keys) and {"generator", "results", "quantityfound"}.issubset(file_json_keys)
+        return super().report_belongs_to(extension=extension, **kwargs)
+
     def parseOutputString(self, output):
-        """
-        This method will discard the output the shell sends, it will read it from
-        the xml where it expects it to be present.
-
-        NOTE: if 'debug' is true then it is being run from a test case and the
-        output being sent is valid.
-        """
-
-        parser = HydraParser(output)
-        hosts = defaultdict(list)
-        service = ''
-        port = ''
-
-        for item in parser.items:
-
-            service = item['plugin']
-            port = item['port']
-            hosts[item['ip']].append([item['login'], item['password']])
-
-        for k, v in hosts.items():
-            ip = self.resolve_hostname(k)
-            if ip != k:
-                hostnames = [k]
+        """Accept either Hydra stdout text or `hydra -b jsonv1 -o ...` JSON."""
+        if isinstance(output, bytes):
+            output = output.decode("utf-8", errors="replace")
+        stripped = output.lstrip()
+        items = []
+        if stripped.startswith("{"):
+            try:
+                data = json.loads(output)
+            except json.JSONDecodeError:
+                data = None
+            if isinstance(data, dict) and isinstance(data.get("results"), list):
+                for r in data["results"]:
+                    if not isinstance(r, dict):
+                        continue
+                    items.append({
+                        "ip": r.get("host", ""),
+                        "port": str(r.get("port", "")),
+                        "plugin": r.get("service", "") or r.get("module", ""),
+                        "login": r.get("login", ""),
+                        "password": r.get("password", ""),
+                    })
             else:
-                hostnames = None
+                # Not the expected JSON shape — bail without crashing.
+                return
+        else:
+            parser = HydraParser(output)
+            items = parser.items
+
+        hosts = defaultdict(list)
+        host_meta = {}
+        for item in items:
+            if not item.get("ip"):
+                continue
+            host_meta[item["ip"]] = (item.get("plugin", ""), item.get("port", ""))
+            hosts[item["ip"]].append([item.get("login", ""), item.get("password", "")])
+
+        for k, creds in hosts.items():
+            service, port = host_meta.get(k, ("", ""))
+            ip = self.resolve_hostname(k)
+            hostnames = [k] if ip != k else None
             h_id = self.createAndAddHost(ip, hostnames=hostnames)
             s_id = self.createAndAddServiceToHost(
-                h_id,
-                service,
-                ports=[port],
-                protocol="tcp",
-                status="open")
-
-            for cred in v:
-                self.createAndAddCredToService(
-                    h_id,
-                    s_id,
-                    cred[0],
-                    cred[1])
-
+                h_id, service or "unknown",
+                ports=[port] if port else [],
+                protocol="tcp", status="open")
+            for cred in creds:
+                self.createAndAddCredToService(h_id, s_id, cred[0], cred[1])
                 self.createAndAddVulnToService(
-                    h_id,
-                    s_id,
+                    h_id, s_id,
                     "Weak Credentials",
                     f"[hydra found the following credentials]\nuser:{cred[0]}\npass:{cred[1]}",
                     severity="high")
-
-        del parser
 
     def processCommandString(self, username, current_path, command_string):
         super().processCommandString(username, current_path, command_string)

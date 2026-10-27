@@ -1,0 +1,45 @@
+NS: ns1.eff.org. ns2.eff.org. ns4.eff.org.
+SOA: ns1.eff.org. (173.239.79.201)
+Zone: failure
+Wildcard: failure
+Found: feeds.eff.org. (5.39.119.224)
+Nearby:
+{'5.39.119.219': 'feeds.uri.lv.'}
+Found: lists.eff.org. (204.19.241.95)
+Nearby:
+{'204.19.241.100': 'weborigin014.mayfirst.org.',
+ '204.19.241.90': 'host006.mayfirst.org.',
+ '204.19.241.91': 'weborigin006.mayfirst.org.',
+ '204.19.241.92': 'host009.mayfirst.org.',
+ '204.19.241.93': 'weborigin007.mayfirst.org.',
+ '204.19.241.94': 'mysql008.mayfirst.org.',
+ '204.19.241.95': 'webproxy006.mayfirst.org.',
+ '204.19.241.96': 'vps011.mayfirst.org.',
+ '204.19.241.97': 'transcribe001.mayfirst.org.',
+ '204.19.241.98': 'jitsimeet002.mayfirst.org.',
+ '204.19.241.99': 'weborigin008.mayfirst.org.'}
+Found: log1.eff.org. (173.239.79.195)
+Nearby:
+{'173.239.79.193': 'gw-unwired.eff.org.',
+ '173.239.79.194': 'gw1.eff.org.',
+ '173.239.79.195': 'web2.eff.org.',
+ '173.239.79.196': 'vm1.eff.org.',
+ '173.239.79.199': 'srv1.openwireless.org.',
+ '173.239.79.200': 'observatory1.eff.org.'}
+Found: ns1.eff.org. (173.239.79.201)
+Nearby:
+{'173.239.79.201': 'ns1.eff.org.',
+ '173.239.79.202': 'lists.eff.org.',
+ '173.239.79.203': 'tor1.eff.org.',
+ '173.239.79.204': 'mail2.eff.org.',
+ '173.239.79.205': 'db1.eff.org.',
+ '173.239.79.206': 'irc.eff.org.'}
+Found: ns2.eff.org. (138.68.29.57)
+Found: ns4.eff.org. (173.239.79.197)
+Found: projects.eff.org. (173.239.79.206)
+Nearby:
+{'173.239.79.207': 'web3.eff.org.',
+ '173.239.79.208': 'nagios1.eff.org.',
+ '173.239.79.209': 'backup2.eff.org.',
+ '173.239.79.210': 'observatory6.eff.org.',
+ '173.239.79.211': 'cryptobot.eff.org.'}

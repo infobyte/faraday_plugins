@@ -40,6 +40,14 @@ class ReconngParser:
             self.parse_json_report(output)
 
     def report_format(self, output):
+        # Output may arrive as either str or bytes depending on how Faraday
+        # opens the report file. Normalise before regex matching.
+        if isinstance(output, (bytes, bytearray)):
+            try:
+                output = output.decode("utf-8", errors="replace")
+            except Exception:
+                return False
+
         xml_format_regex = re.compile(r'^<(.*?)>')
         json_format_regex = re.compile(r'(^{)')
 

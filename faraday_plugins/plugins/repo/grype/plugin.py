@@ -80,13 +80,42 @@ class GrypePlugin(PluginJsonFormat):
                     data = f"Artifact: {match['artifact']['name']}" \
                            f"Version: {match['artifact']['version']} " \
                            f"Type: {match['artifact']['type']}"
+            cvss3 = {}
+            cvss2 = {}
+            cvss4 = {}
+            cvss_list = match.get('vulnerability', {}).get('cvss') or []
+            if not cvss_list and match.get('relatedVulnerabilities'):
+                cvss_list = match['relatedVulnerabilities'][0].get('cvss') or []
+            for c in cvss_list:
+                v_str = c.get('vector')
+                base = (c.get('metrics') or {}).get('baseScore')
+                if c.get('version', '').startswith('4') and not cvss4:
+                    cvss4 = {'vector_string': v_str, 'base_score': base}
+                elif c.get('version', '').startswith('3') and not cvss3:
+                    cvss3 = {'vector_string': v_str, 'base_score': base}
+                elif c.get('version', '').startswith('2') and not cvss2:
+                    cvss2 = {'vector_string': v_str, 'base_score': base}
+
+            cwe = []
+            cwe_list = match.get('vulnerability', {}).get('cwes') or []
+            if not cwe_list and match.get('relatedVulnerabilities'):
+                cwe_list = match['relatedVulnerabilities'][0].get('cwes') or []
+            for c in cwe_list:
+                cid = c.get('cwe') if isinstance(c, dict) else c
+                if cid and cid not in cwe:
+                    cwe.append(cid)
+
             self.createAndAddVulnToHost(host_id,
                                         name=name,
                                         desc=description,
                                         ref=references,
                                         severity=severity,
                                         data=data,
-                                        cve=cve)
+                                        cve=cve,
+                                        cwe=cwe,
+                                        cvss2=cvss2,
+                                        cvss3=cvss3,
+                                        cvss4=cvss4)
 
     def processCommandString(self, username, current_path, command_string):
         super().processCommandString(username, current_path, command_string)

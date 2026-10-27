@@ -1,0 +1,2 @@
+{"host":"192.0.2.10","port":"445","name":"smb","info":"Hostname: SERVER1, Domain: WORKGROUP, OS: Windows 10"}
+{"host":"192.0.2.11","port":"3389","name":"rdp","info":"OS: Windows Server 2019"}

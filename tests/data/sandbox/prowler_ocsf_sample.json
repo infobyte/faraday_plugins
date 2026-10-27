@@ -1,0 +1,118 @@
+[
+  {
+    "metadata": {
+      "version": "1.4.0",
+      "product": {
+        "name": "Prowler",
+        "version": "4.0.0",
+        "vendor_name": "ProwlerPro",
+        "feature": {"name": "iam_root_mfa_enabled"}
+      }
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "FAIL",
+    "status_code": "FAIL",
+    "status_detail": "Hardware MFA is not enabled for the root account.",
+    "message": "IAM-001: Enable hardware MFA for the root user.",
+    "class_uid": 2003,
+    "class_name": "Detection Finding",
+    "category_uid": 2,
+    "category_name": "Findings",
+    "type_uid": 200301,
+    "type_name": "Detection Finding: Create",
+    "activity_id": 1,
+    "activity_name": "Create",
+    "time": 1737000000,
+    "time_dt": "2026-01-15T10:00:00Z",
+    "finding_info": {
+      "uid": "prowler-aws-iam_root_mfa_enabled-000000000001-us-east-1",
+      "title": "Enable hardware MFA for the root user",
+      "desc": "AWS recommends a hardware MFA device for the root user.",
+      "created_time_dt": "2026-01-15T10:00:00Z",
+      "product_uid": "prowler"
+    },
+    "cloud": {
+      "provider": "aws",
+      "region": "us-east-1",
+      "account": {"uid": "000000000001", "name": "synthetic-account", "type": "AWS Account", "type_id": 10},
+      "org": {"name": "synthetic-org", "uid": ""}
+    },
+    "resources": [{
+      "uid": "arn:aws:iam::000000000001:root",
+      "name": "000000000001",
+      "type": "AwsIamRoot",
+      "region": "us-east-1",
+      "cloud_partition": "aws"
+    }],
+    "remediation": {
+      "desc": "Enable a hardware MFA device for the root user via the IAM console.",
+      "references": ["https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_enable_physical.html"]
+    },
+    "unmapped": {
+      "compliance": {"CIS-2.0": ["1.6"], "AWS-Well-Architected": ["SEC02-BP02"]},
+      "categories": ["IAM"],
+      "related_url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html"
+    }
+  },
+  {
+    "metadata": {"version": "1.4.0", "product": {"name": "Prowler", "feature": {"name": "s3_bucket_public_access_block"}}},
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "FAIL",
+    "status_code": "FAIL",
+    "status_detail": "S3 bucket does not enforce public access block.",
+    "message": "S3-001: Enforce public access block on S3 bucket.",
+    "class_uid": 2003,
+    "class_name": "Detection Finding",
+    "time_dt": "2026-01-15T10:00:01Z",
+    "finding_info": {
+      "uid": "prowler-aws-s3_bucket_public_access_block-000000000001-synth-bucket",
+      "title": "S3 bucket should block public ACLs",
+      "desc": "Public ACLs allow unauthorized access to S3 contents."
+    },
+    "cloud": {
+      "provider": "aws",
+      "region": "us-east-1",
+      "account": {"uid": "000000000001"}
+    },
+    "resources": [{
+      "uid": "arn:aws:s3:::synth-bucket",
+      "name": "synth-bucket",
+      "type": "AwsS3Bucket",
+      "region": "us-east-1"
+    }],
+    "remediation": {
+      "desc": "Enable block_public_acls in aws_s3_bucket_public_access_block.",
+      "references": []
+    },
+    "unmapped": {"compliance": {}}
+  },
+  {
+    "metadata": {"version": "1.4.0", "product": {"name": "Prowler", "feature": {"name": "manual_check"}}},
+    "severity_id": 2,
+    "severity": "Low",
+    "status": "MANUAL",
+    "status_code": "MANUAL",
+    "status_detail": "Reviewer must inspect manually.",
+    "class_uid": 2003,
+    "time_dt": "2026-01-15T10:00:02Z",
+    "finding_info": {"uid": "manual-check", "title": "Manual check"},
+    "cloud": {"provider": "aws"},
+    "resources": [{"uid": "n/a", "name": "n/a"}],
+    "unmapped": {}
+  },
+  {
+    "metadata": {"version": "1.4.0", "product": {"name": "Prowler", "feature": {"name": "passing_check"}}},
+    "severity_id": 1,
+    "severity": "Low",
+    "status": "PASS",
+    "status_code": "PASS",
+    "class_uid": 2003,
+    "time_dt": "2026-01-15T10:00:03Z",
+    "finding_info": {"uid": "pass-check", "title": "Passes"},
+    "cloud": {"provider": "aws"},
+    "resources": [{"uid": "n/a", "name": "n/a"}],
+    "unmapped": {}
+  }
+]

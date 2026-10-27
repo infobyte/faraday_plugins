@@ -1,0 +1,33 @@
+{
+  "paging": {"pageIndex": 1, "pageSize": 100, "total": 2},
+  "components": [
+    {"key": "myproject:src/app.js", "name": "src/app.js", "longName": "src/app.js"}
+  ],
+  "hotspots": [
+    {
+      "key": "synth-hot-1",
+      "component": "myproject:src/app.js",
+      "project": "myproject",
+      "securityCategory": "xss",
+      "vulnerabilityProbability": "HIGH",
+      "status": "TO_REVIEW",
+      "line": 22,
+      "message": "Make sure disabling built-in sanitization is safe here.",
+      "author": "dev@example.com",
+      "creationDate": "2026-01-15T10:00:00+0000",
+      "ruleKey": "javascript:S5247"
+    },
+    {
+      "key": "synth-hot-2",
+      "component": "myproject:src/app.js",
+      "project": "myproject",
+      "securityCategory": "weak-cryptography",
+      "vulnerabilityProbability": "MEDIUM",
+      "status": "TO_REVIEW",
+      "line": 30,
+      "message": "Make sure that using this MD5 hash is safe here.",
+      "creationDate": "2026-01-15T10:00:01+0000",
+      "ruleKey": "javascript:S4790"
+    }
+  ]
+}

@@ -52,48 +52,61 @@ class SarifPlugin(PluginJsonFormat):
         runs = loads(output).get("runs", "")
         for run in runs:
             rules = {}
-            tool = run.get("tool",{}).get("driver",{}).get("name", "")
-            for rule in run.get("tool",{}).get("driver",{}).get("rules", []):
-                rules[rule["id"]] = rule
-            for result in run.get("results", []):
-                locations = result.get("locations",[])
+            tool = (run.get("tool") or {}).get("driver", {}).get("name", "")
+            for rule in (run.get("tool") or {}).get("driver", {}).get("rules", []) or []:
+                if isinstance(rule, dict) and rule.get("id"):
+                    rules[rule["id"]] = rule
+            for result in run.get("results", []) or []:
+                locations = result.get("locations", []) or []
+                # Some SARIF emitters omit locations entirely (e.g. Spotbugs
+                # at run level) — fall back to a placeholder host so we still
+                # surface the finding.
+                if not locations:
+                    locations = [{}]
+                rule_id = result.get("ruleId")
+                rule = rules.get(rule_id) or {}
+                # Defensive accessors so missing/None subfields don't crash.
+                short_node = rule.get("shortDescription") or {}
+                full_node = rule.get("fullDescription") or {}
+                help_node = rule.get("help") or {}
+                short_description = short_node.get("text") or markdown2text(short_node.get("markdown", "") or "")
+                desc = full_node.get("text") or markdown2text(full_node.get("markdown", "") or "")
+                help_text = help_node.get("text") or markdown2text(help_node.get("markdown", "") or "")
+                # Result-level message is a useful fallback when rule has nothing.
+                if not desc:
+                    msg_node = result.get("message") or {}
+                    desc = msg_node.get("text") or msg_node.get("markdown") or ""
+                tags_to_check = (rule.get("properties") or {}).get("tags", []) or []
+                cwe = []
+                tags = []
+                severity = self.map_severity(result.get("level", ""))
+                for tag in tags_to_check:
+                    if isinstance(tag, str) and "cwe" in tag.lower():
+                        cwe.append(tag)
+                    elif isinstance(tag, str):
+                        tags.append(tag)
+                if "Snyk Open Source" == tool.strip():
+                    external_id = result.get("ruleId")
+                else:
+                    external_id = f"{tool} {result.get('ruleId')}".strip()
+
+                name = rule.get("name") or short_description or rule_id or "SARIF finding"
+
                 for location in locations:
-                    loc = location.get("physicalLocation", {}).get("artifactLocation").get("uri")
-                    if not loc:
-                        loc = "/"
+                    phys = location.get("physicalLocation") or {}
+                    artifact = phys.get("artifactLocation") or {}
+                    loc = artifact.get("uri") or "/"
                     h_id = self.createAndAddHost(loc)
-                    rule  = rules[result.get("ruleId")]
-                    name = rule.get("name")
-                    short_description = rule.get("shortDescription").get("text") if \
-                        rule.get("shortDescription", {}).get("text") else \
-                        markdown2text(rule.get("shortDescription", {}).get("markdown", ""))
-                    desc = rule.get("fullDescription").get("text") if rule.get("fullDescription", {}).get("text") \
-                        else markdown2text(rule.get("fullDescription").get("markdown", ""))
-                    help = rule.get("help",{}).get("text") if rule.get("help",{}).get("text") \
-                        else markdown2text(rule.get("help",{}).get("markdown", ""))
-                    tags_to_check = rule.get("properties",{}).get("tags", [])
-                    cwe = []
-                    tags = []
-                    severity = self.map_severity(result.get("level", ""))
-                    for tag in tags_to_check:
-                        if "cwe" in tag.lower():
-                            cwe.append(tag)
-                        else:
-                            tags.append(tag)
-                    if "Snyk Open Source" == tool.strip():
-                        external_id = result.get('ruleId')
-                    else:
-                        external_id = f"{tool} {result.get('ruleId')}"
 
                     self.createAndAddVulnToHost(
                         host_id=h_id,
-                        name=name if name else short_description,
+                        name=name,
                         desc=desc,
-                        data=help,
+                        data=help_text,
                         tags=tags,
                         cwe=cwe,
                         severity=severity,
-                        external_id=external_id
+                        external_id=external_id,
                     )
 
 

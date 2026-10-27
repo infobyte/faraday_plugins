@@ -25,12 +25,24 @@ class TrivyJsonPlugin(PluginJsonFormat):
         self.name = "Trivy JSON Output Plugin"
         self.plugin_version = "1"
         self.version = "9"
-        self.json_keys = {'SchemaVersion'}
+        # Trivy >= v0.20 wraps results inside {SchemaVersion, Results, ...}.
+        # Older Trivy emitted a top-level array of Result objects (each with
+        # Target/Type/Vulnerabilities); the manager treats arrays by sniffing
+        # the first element's keys, so list either works.
+        self.json_keys = [
+            {"SchemaVersion"},
+            {"Target", "Vulnerabilities"},
+            {"Target", "Type", "Vulnerabilities"},
+        ]
         self.framework_version = "1.0.0"
         self._temp_file_extension = "json"
 
     def parseOutputString(self, output):
-        parser = TrivyJsonParser(loads(output))
+        node = loads(output)
+        if not node:
+            # null / empty Trivy output (e.g. scan with no findings on legacy versions)
+            return
+        parser = TrivyJsonParser(node)
         scantype = parser.scantype
         for result in parser.results:
             self.new_structure(result, scantype)
