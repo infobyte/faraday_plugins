@@ -68,7 +68,10 @@ class ShodanPlugin(PluginMultiLineJsonFormat):
             transport = vuln_dict.get('transport')
             hostnames = vuln_dict.get('hostnames')
             h_id = self.createAndAddHost(ip, hostnames=hostnames)
-            s_id = self.createAndAddServiceToHost(h_id, "http", protocol=transport, ports=port)
+            shodan_info = vuln_dict.get('_shodan')
+            module = shodan_info.get('module') if isinstance(shodan_info, dict) else None
+            service_name = module.strip() if isinstance(module, str) and module.strip() else 'unknown'
+            s_id = self.createAndAddServiceToHost(h_id, service_name, protocol=transport, ports=port)
             if vulns is not None:
                 for name, vuln_info in vulns.items():
                     description = vuln_info.get('summary')
