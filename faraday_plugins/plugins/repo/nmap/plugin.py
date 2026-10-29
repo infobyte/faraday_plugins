@@ -11,6 +11,7 @@ See the file 'doc/LICENSE' for the license information
 from lxml import etree
 from lxml.etree import XMLParser
 from faraday_plugins.plugins.plugin import PluginXMLFormat
+from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
 
 current_path = os.path.abspath(os.getcwd())
 
@@ -344,6 +345,15 @@ class ScriptVulners:
         self.table = {}
         for e in vulnerability_table.findall('elem'):
             self.table[e.get("key")] = str(e.text)
+
+        try:
+            cvss = float(self.table.get("cvss"))
+        except (TypeError, ValueError):
+            self.severity = "unclassified"
+        else:
+            self.severity = (
+                get_severity_from_cvss(cvss) if 0 <= cvss <= 10 else "unclassified"
+            )
 
         self.name = self.table["id"]
 
