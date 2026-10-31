@@ -62,10 +62,10 @@ class OpenScapParser:
 
     def get_parser_result(self, tree):
         list_result = []
-        list_ip = []
-        list_mac = []
-        list_data = []
         for result in tree:
+            list_ip = []
+            list_mac = []
+            list_data = []
             title = result.find('title', self.tree.nsmap)
             target = result.find('target', self.tree.nsmap)
             ips = result.findall('target-address', self.tree.nsmap)
@@ -137,9 +137,13 @@ class OpenScapPlugin(PluginXMLFormat):
 
     def parseOutputString(self, output):
         parser = OpenScapParser(output)
+        for result in parser.result_data:
+            self._parse_result(result, parser.rule_date)
+
+    def _parse_result(self, result, info_rules):
         ips = []
 
-        for ip in parser.result_data[0]['ips']:
+        for ip in result['ips']:
             len_start_port = ip.find(":")
             if len_start_port > -1:
                 ip = ip[:len_start_port]
@@ -154,26 +158,25 @@ class OpenScapPlugin(PluginXMLFormat):
                 ips.remove(ip)
                 break
 
-        list_mac = parser.result_data[0]['mac']
+        list_mac = result['mac'][:]
         for mac in list_mac:
             if mac != '00:00:00:00:00:00':
                 mac_address = mac
                 list_mac.remove(mac_address)
                 break
 
-        description = f'Title: {parser.result_data[0]["result_title"]} ' \
+        description = f'Title: {result["result_title"]} ' \
                       f'Ips: {ips} ' \
                       f'Macs: {list_mac}'
         host_id = self.createAndAddHost(
             name=ip,
-            hostnames=[parser.result_data[0]['target']],
+            hostnames=[result['target']],
             description=description,
             mac=mac_address
         )
 
-        rules_fail = parser.result_data[0]['rule_result']
+        rules_fail = result['rule_result']
         if rules_fail:
-            info_rules = parser.rule_date
             severity = 0
 
             for rule in rules_fail:
