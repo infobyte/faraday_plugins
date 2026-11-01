@@ -5,6 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 
+import ipaddress
 import json
 import re
 
@@ -67,6 +68,39 @@ class TenableIOJSONExport(PluginJsonFormat):
                     return hostnames[0]
         return ""
 
+    @staticmethod
+    def _first_valid_address(addresses, version: int) -> str:
+        """Canonical literal of the first parsable, non-blank address of `version`.
+
+        Non-list fields, non-string entries, blank strings, unparsable literals
+        and addresses of the other IP version are skipped; scanning continues
+        with the following entries.
+        """
+        if not isinstance(addresses, list):
+            return ""
+        for candidate in addresses:
+            if not isinstance(candidate, str):
+                continue
+            try:
+                address = ipaddress.ip_address(candidate.strip())
+            except ValueError:
+                continue
+            if address.version == version:
+                return str(address)
+        return ""
+
+    def get_primary_ip_address(self, asset_info: dict) -> str:
+        """Address identifying the asset: first valid IPv4, else first valid IPv6.
+
+        IPv4 stays preferred for dual stack assets, so previously imported
+        IPv4 hosts keep their identity. Returns "" when the asset has no usable
+        literal address (hostnames and other display fields are never resolved).
+        """
+        ipv4_address = self._first_valid_address(asset_info.get("ipv4_addresses"), 4)
+        if ipv4_address:
+            return ipv4_address
+        return self._first_valid_address(asset_info.get("ipv6_addresses"), 6)
+
     def parseOutputString(self, output: str) -> None:
         try:
             data = json.loads(output)
@@ -81,15 +115,16 @@ class TenableIOJSONExport(PluginJsonFormat):
                                 f"required field asset is missing or invalid")
                 continue
 
-            ipv4_list = asset_info.get("ipv4_addresses")
-            display_ipv4 = ""
-            if isinstance(ipv4_list, list) and len(ipv4_list) > 0:
-                display_ipv4 = ipv4_list[0] if isinstance(ipv4_list[0], str) else ""
-
             definition = vuln.get("definition", {})
             if not {"id", "name"}.issubset(definition.keys()):
                 self.logger.error(f"Omitting vulnerability {vuln.get('id', 'unknown')}: "
                                 f"definition object is missing required fields (id and/or name)")
+                continue
+
+            ip_address = self.get_primary_ip_address(asset_info)
+            if not ip_address:
+                self.logger.error(f"Omitting vulnerability {vuln.get('id', 'unknown')}: "
+                                f"asset has no usable IPv4 or IPv6 address")
                 continue
 
             hostnames = set()
@@ -102,7 +137,7 @@ class TenableIOJSONExport(PluginJsonFormat):
                 hostnames.add(display_fqdn)
 
             host_id = self.createAndAddHost(
-                name=display_ipv4.strip(),
+                name=ip_address,
                 os=asset_info.get("operating_system", "unknown"),
                 hostnames=list(hostnames)
             )
@@ -113,10 +148,10 @@ class TenableIOJSONExport(PluginJsonFormat):
                 website = display_fqdn
             elif isinstance(host_name, str) and host_name:
                 website = host_name
-            elif self.get_hostname_from_host(display_ipv4.strip()):
-                website = self.get_hostname_from_host(display_ipv4.strip())
-            elif isinstance(display_ipv4, str) and display_ipv4:
-                website = display_ipv4
+            elif self.get_hostname_from_host(ip_address):
+                website = self.get_hostname_from_host(ip_address)
+            else:
+                website = ip_address
 
             refs = [{"name": ref, "type": "other"} for ref in definition.get("see_also", [])]
 

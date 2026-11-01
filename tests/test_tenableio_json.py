@@ -469,7 +469,13 @@ class TestTenableIOJSONExport:
             assert call_args["name"] == test_case["expected_ip"]
 
     def test_ipv4_addresses_empty_or_invalid(self):
-        """Test handling of empty or invalid ipv4_addresses field"""
+        """Test handling of empty or invalid ipv4_addresses field.
+
+        Without IPv6 addresses there is no usable host identity for these
+        records, so they are skipped with an error instead of creating an empty
+        host that would merge unrelated assets (see
+        tests/test_tenableio_asset_identity.py).
+        """
         test_cases = [
             {
                 "asset": {"ipv4_addresses": []},
@@ -491,6 +497,8 @@ class TestTenableIOJSONExport:
 
         for test_case in test_cases:
             self.plugin.createAndAddHost.reset_mock()
+            self.plugin.createAndAddVulnToHost.reset_mock()
+            self.plugin.logger.error.reset_mock()
 
             test_data = [{
                 "id": f"test_{test_case['desc']}",
@@ -500,8 +508,12 @@ class TestTenableIOJSONExport:
 
             self.plugin.parseOutputString(json.dumps(test_data))
 
-            call_args = self.plugin.createAndAddHost.call_args[1]
-            assert call_args["name"] == ""
+            self.plugin.createAndAddHost.assert_not_called()
+            self.plugin.createAndAddVulnToHost.assert_not_called()
+            self.plugin.logger.error.assert_called_once_with(
+                f"Omitting vulnerability test_{test_case['desc']}: "
+                f"asset has no usable IPv4 or IPv6 address"
+            )
 
     def test_web_service_creates_web_vulnerability(self):
         """Test that web services (http, https) create VulnerabilityWeb instead of regular Vulnerability"""
