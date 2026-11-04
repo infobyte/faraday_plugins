@@ -1,0 +1,80 @@
+Name,Inventory,Inventory.Name,BusinessUnits,BusinessUnits.Name,CvssSeverity,CvssScore,CvssSource,ThreatImpact,PatchAvailable,PatchedVersions,PatchReleaseDate,InstalledPackage.Name,InstalledPackage.Version,InstalledPackage.IsInstalledByPackageManager,InstalledPackage.IsOsPackage,InstalledPackage.NonOsPackagePaths,InstalledPackage.ReachabilityStatus,CveId,Description,HasExploit,CisaKev,CisaKevDueDate,EpssProbability,Trending,UpstreamDisposition,CloudAccount,CloudAccount.Name
+CVE-2021-44228 - log4j-core.jar (2.14.1): org.apache.logging.log4j:log4j-core,1,web-frontend-vm-01,0,[],CRITICAL,10,NVD v3,"[
+  ""remote_code_execution""
+]",Yes,"[
+  ""2.15.0"",
+  ""2.12.2""
+]",2021-12-10T00:00:00+00:00,log4j-core.jar (2.14.1): org.apache.logging.log4j:log4j-core,2.14.1,false,false,"[
+  ""/opt/app/lib/log4j-core-2.14.1.jar""
+]",,CVE-2021-44228,"Apache Log4j2 JNDI features do not protect against attacker controlled LDAP endpoints, allowing remote code execution via crafted log messages.",true,true,2021-12-24T00:00:00+00:00,94.358,Yes,,1,ACME AZURE PROD
+CVE-2022-42889 - commons-text-1.9.jar (1.9): org.apache.commons:commons-text,1,web-frontend-vm-01,0,[],CRITICAL,9.8,NVD v3,"[
+  ""remote_code_execution""
+]",Yes,"[
+  ""1.10.0""
+]",2022-10-13T00:00:00+00:00,commons-text-1.9.jar (1.9): org.apache.commons:commons-text,1.9,false,false,"[
+  ""/opt/app/lib/commons-text-1.9.jar""
+]",,CVE-2022-42889,Apache Commons Text performs variable interpolation that may lead to remote code execution when processing untrusted input.,true,false,,93.912,No,,1,ACME AZURE PROD
+GHSA-9wx4-h78v-vm56 - requests-2.31.0,1,web-frontend-vm-01,0,[],MEDIUM,5.6,GitHub Security Advisory v3,,Yes,"[
+  ""2.32.0""
+]",2024-05-20T00:00:00+00:00,requests-2.31.0,2.31.0,false,false,"[
+  ""/opt/app/venv/lib/python3.11/site-packages/requests-2.31.0.dist-info/METADATA""
+]",,GHSA-9wx4-h78v-vm56,"Requests sessions keep \""verify=False\"" for subsequent requests to the same origin after the first one.",false,false,,,No,,1,ACME AZURE PROD
+CVE-2023-33201 - bcprov-jdk15on.jar (1.70): org.bouncycastle:bcprov-jdk15on,1,web-frontend-vm-01,0,[],MEDIUM,5.3,NVD v3,,No,,,bcprov-jdk15on.jar (1.70): org.bouncycastle:bcprov-jdk15on,1.70,false,false,"[
+  ""/opt/app/lib/bcprov-jdk15on-1.70.jar"",
+  ""/opt/tools/lib/bcprov-jdk15on.jar""
+]",,CVE-2023-33201,"Bouncy Castle LDAP CertStore lacks escaping when constructing LDAP search filters, leading to LDAP injection.",false,false,,0.772,No,,1,ACME AZURE PROD
+CVE-2023-44487 - libnghttp2-14,1,10.20.30.40,0,[],HIGH,7.5,NVD v3,"[
+  ""denial_of_service""
+]",Yes,"[
+  ""1.43.0-1+deb11u1""
+]",2023-10-10T00:00:00+00:00,libnghttp2-14,1.43.0-1,true,true,,,CVE-2023-44487,The HTTP/2 protocol allows a denial of service because request cancellation can reset many streams quickly (Rapid Reset).,true,true,2023-10-31T00:00:00+00:00,82.11,No,,1,ACME AZURE PROD
+CVE-2024-6387 - openssh-server,1,10.20.30.40,0,[],HIGH,8.1,CNA v3,"[
+  ""remote_code_execution""
+]",Yes,"[
+  ""1:8.4p1-5+deb11u3""
+]",2024-07-01T00:00:00+00:00,openssh-server,1:8.4p1-5+deb11u1,true,true,,,CVE-2024-6387,A signal handler race condition in sshd allows unauthenticated remote code execution as root.,true,false,,47.36,No,,1,ACME AZURE PROD
+CVE-2024-2511 - libssl1.1,1,10.20.30.40,0,[],LOW,3.7,CNA v3,"[
+  ""denial_of_service""
+]",Yes,"[
+  ""1.1.1w-0+deb11u2""
+]",2024-04-08T00:00:00+00:00,libssl1.1,1.1.1w-0+deb11u1,true,true,,,CVE-2024-2511,,false,false,,0.215,No,,1,ACME AZURE PROD
+CVE-2023-38545 - curl-7.88.1,1,aks-nodepool1-12345678-vmss000000,0,[],HIGH,9.8,CNA v3,,Yes,"[
+  ""8.4.0""
+]",2023-10-11T00:00:00+00:00,curl-7.88.1,7.88.1,false,false,"[
+  ""/usr/local/bin/curl""
+]",,CVE-2023-38545,A heap based buffer overflow in the SOCKS5 proxy handshake of curl.,false,false,,12.4,No,,1,ACME AZURE PROD
+CVE-2024-3651 - idna-3.6,1,aks-nodepool1-12345678-vmss000000,0,[],MEDIUM,6.2,CNA v4,"[
+  ""denial_of_service""
+]",Yes,"[
+  ""3.7""
+]",2024-04-11T00:00:00+00:00,idna-3.6,3.6,false,false,"[
+  ""/usr/lib/python3/dist-packages/idna-3.6.dist-info/METADATA""
+]",,CVE-2024-3651,"A crafted argument to idna.encode() can consume significant resources, leading to a denial of service.",false,false,,0.045,No,,1,ACME AZURE PROD
+GO-2024-2687 - golang.org/x/net-0.20.0,1,aks-nodepool1-12345678-vmss000000,0,[],UNKNOWN,,,,Yes,"[
+  ""0.23.0""
+]",2024-04-03T00:00:00+00:00,golang.org/x/net-0.20.0,0.20.0,false,false,"[
+  ""/usr/local/bin/kube-proxy""
+]",,GO-2024-2687,,false,false,,,No,,1,ACME AZURE PROD
+GO-2026-0001 - golang.org/x/crypto-0.38.0,1,aks-nodepool1-12345678-vmss000000,0,[],UNKNOWN,,,,No,,,golang.org/x/crypto-0.38.0,0.38.0,false,false,"[
+  ""/opt/agent/bin/agent""
+]",,GO-2026-0001,,false,false,,,No,,1,ACME AZURE PROD
+CVE-2021-44228 - log4j-core.jar (2.14.1): org.apache.logging.log4j:log4j-core,1,build-agent-02,0,[],CRITICAL,10,NVD v3,"[
+  ""remote_code_execution""
+]",Yes,"[
+  ""2.15.0"",
+  ""2.12.2""
+]",2021-12-10T00:00:00+00:00,log4j-core.jar (2.14.1): org.apache.logging.log4j:log4j-core,2.14.1,false,false,"[
+  ""/home/builder/.m2/repository/org/apache/logging/log4j/log4j-core/2.14.1/log4j-core-2.14.1.jar""
+]",,CVE-2021-44228,"Apache Log4j2 JNDI features do not protect against attacker controlled LDAP endpoints, allowing remote code execution via crafted log messages.",true,true,2021-12-24T00:00:00+00:00,94.358,Yes,,1,ACME AZURE DEV
+CVE-2012-5783 - commons-httpclient-3.1.jar (3.1): commons-httpclient:commons-httpclient,1,build-agent-02,0,[],MEDIUM,5.8,NVD v2,,Yes,"[
+  ""4.0""
+]",2012-11-04T00:00:00+00:00,commons-httpclient-3.1.jar (3.1): commons-httpclient:commons-httpclient,3.1,false,false,"[
+  ""/opt/tools/dirscan/lib/commons-httpclient-3.1.jar""
+]",,CVE-2012-5783,"Apache Commons HttpClient does not validate the server hostname against the certificate, allowing MITM attacks.",false,false,,9.254,No,,1,ACME AZURE DEV
+CVE-2026-1001 - tar-6.1.11,1,build-agent-02,0,[],LOW,2,CNA v4,"[
+  ""directory_traversal""
+]",Yes,"[
+  ""6.2.1""
+]",2026-02-02T00:00:00+00:00,tar-6.1.11,6.1.11,false,false,"[
+  ""/usr/lib/node_modules/npm/node_modules/tar/package.json""
+]",,CVE-2026-1001,Path normalization in tar may allow extracted files to escape the target directory.,false,false,,0.405,No,,1,ACME AZURE DEV
