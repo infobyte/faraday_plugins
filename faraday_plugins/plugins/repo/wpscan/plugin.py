@@ -3,6 +3,10 @@ Faraday Penetration Test IDE
 Copyright (C) 2019  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
+Modification notice (GPLv3 section 5(a)), 2026-11-07: the WPScan JSON importer now
+maps the URL hostname component (instead of netloc) and preserves an explicitly
+provided port, falling back to 443/80 only when the URL carries no port.
+
 """
 import json
 import re
@@ -31,13 +35,16 @@ class WPScanJsonParser:
 
         url_parse = urlparse(url)
         protocol = url_parse.scheme
-        hostname = url_parse.netloc
+        # The hostname component excludes userinfo, IPv6 brackets and the port;
+        # netloc would contaminate the asset hostname with all three.
+        hostname = url_parse.hostname
         port = url_parse.port
 
-        if protocol == 'https':
-            port = 443
-        elif protocol == 'http':
-            if not port:
+        if port is None:
+            # Only fill the scheme default when the URL did not carry a port.
+            if protocol == 'https':
+                port = 443
+            elif protocol == 'http':
                 port = 80
         address = self.resolve_hostname(hostname)
         return {'protocol': protocol, 'hostname': hostname, 'port': port, 'address': address}
