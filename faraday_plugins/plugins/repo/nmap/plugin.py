@@ -1,3 +1,12 @@
+# Modification notice (GNU GPLv3 section 5(a)) - 2026-11-07
+#
+# This file was modified on 2026-11-07 by a third-party contribution to
+# faraday_plugins, distributed under the GNU General Public License version 3
+# (see the copyright and license notice below).  The modification removes a
+# redundant post-processing loop in Host.__init__ that overwrote the host OS
+# value obtained from <osclass> evidence with the low-confidence "ostype"
+# attribute of a port service.  No other code was changed.
+#
 import os
 import re
 from io import BytesIO
@@ -105,12 +114,6 @@ class Host:
         self.os = self.top_os_guess()
         self.ports = [port for port in self.get_ports()]
         self.vulns = [vuln for vuln in self.get_scripts()]
-        if self.os != 'unknown':
-            for p in self.ports:
-                if p.service is not None:
-                    if p.service.ostype:
-                        self.os = p.service.ostype
-                        break
 
     def get_hostnames(self):
         """
