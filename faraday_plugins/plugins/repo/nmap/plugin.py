@@ -7,6 +7,10 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
+Modified 2026-11-07: host-script vulnerabilities now forward the description
+assembled from the script output and its <elem> key/value evidence (see the
+host-script loop in NmapPlugin.parseOutputString).
+
 """
 from lxml import etree
 from lxml.etree import XMLParser
@@ -488,7 +492,9 @@ class NmapPlugin(PluginXMLFormat):
                 v_id = self.createAndAddVulnToHost(
                     h_id,
                     v.name,
-                    desc=v.desc,
+                    # 2026-11-07: forward the assembled description (see the
+                    # modification notice at the top of this file).
+                    desc=desc,
                     ref=v.refs,
                     severity=0,
                     cve=[v.name]
