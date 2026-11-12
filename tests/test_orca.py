@@ -7,6 +7,7 @@ import io
 import json
 from pathlib import Path
 
+from faraday_plugins.plugins.manager import PluginsManager, ReportAnalyzer
 from faraday_plugins.plugins.repo.orca_csv.plugin import OrcaCSV
 from faraday_plugins.plugins.repo.orca_json.mapper import unescape_csv_text
 from faraday_plugins.plugins.repo.orca_json.plugin import OrcaJson
@@ -78,6 +79,31 @@ class TestOrcaDetection:
 
     def test_json_plugin_does_not_take_unrelated_json(self):
         assert not OrcaJson().report_belongs_to(extension=".json", file_json_keys={"Name", "Description"})
+
+
+class TestOrcaBOM:
+    """Exports re-saved by Excel as "CSV UTF-8" (or by other editors) start with a UTF-8 BOM"""
+
+    @staticmethod
+    def import_report(tmp_path, report):
+        path = tmp_path / report.name
+        path.write_bytes(b"\xef\xbb\xbf" + report.read_bytes())
+        plugin = ReportAnalyzer(PluginsManager(hostname_resolution=False)).get_plugin(str(path))
+        assert plugin is not None
+        plugin.processReport(path)
+        return plugin.id, json.loads(plugin.get_json())["hosts"]
+
+    def test_csv_with_bom(self, tmp_path):
+        plugin_id, hosts = self.import_report(tmp_path, CSV_REPORT)
+
+        assert plugin_id == "orca_csv"
+        assert hosts == parse_csv()
+
+    def test_json_with_bom(self, tmp_path):
+        plugin_id, hosts = self.import_report(tmp_path, JSON_REPORT)
+
+        assert plugin_id == "orca_json"
+        assert hosts == parse_json()
 
 
 class TestOrcaParsing:
@@ -247,6 +273,26 @@ class TestOrcaParsing:
             "Note: Resource name not reported by ORCA, findings grouped by cloud account\nCloud account: DEV")
         assert hosts["0.0.0.0"]["hostnames"] == []
         assert all(len(host["vulnerabilities"]) == 1 for host in hosts.values())
+
+    def test_unexpected_types_do_not_break_the_import(self):
+        """Fields with an unexpected type fall back to their defaults instead of failing the whole report"""
+        findings = [
+            {"Name": 123, "CveId": None, "CvssSeverity": ["HIGH"], "Inventory": "vm-x", "InstalledPackage": None,
+             "CloudAccount": "ACC"},
+            {"Name": "typed", "CveId": "CVE-2024-0001", "CvssSeverity": "HIGH", "Inventory": {"Name": 42},
+             "InstalledPackage": {"Name": ["pkg"], "NonOsPackagePaths": "/a,/b"}, "PatchedVersions": "1.2",
+             "ThreatImpact": {"unexpected": 1}, "CvssScore": [9], "BusinessUnits": {"value": [1, None, {"Name": "BU"}]}},
+            "not a finding", None, 5,
+        ]
+
+        hosts = by_ip(parse_json(json.dumps(findings)))
+
+        assert set(hosts) == {"0.0.0.0", "42"}
+        assert vulns_of(hosts["0.0.0.0"])["123"]["severity"] == "unclassified"
+        typed = vulns_of(hosts["42"])["typed"]
+        assert typed["severity"] == "high"
+        assert "  /a\n  /b" in typed["data"]
+        assert hosts["42"]["description"] == "Business units: 1, BU"
 
     def test_invalid_json_creates_nothing(self):
         assert parse_json("not json") == []

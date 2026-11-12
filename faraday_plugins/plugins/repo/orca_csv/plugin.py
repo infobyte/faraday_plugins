@@ -37,6 +37,12 @@ class OrcaCSV(OrcaFindingsMixin, PluginCSVFormat):
         self.csv_headers = {"Name", "CveId", "CvssSeverity", "Inventory.Name", "InstalledPackage.Name"}
         self._temp_file_extension = "csv"
 
+    def report_belongs_to(self, file_csv_headers=None, **kwargs):
+        # The analyzer decodes the file as plain UTF-8, so a CSV saved with a BOM (Excel "CSV UTF-8")
+        # arrives with the first column as "﻿Name".
+        headers = {(header or "").lstrip("﻿") for header in file_csv_headers or set()}
+        return super().report_belongs_to(file_csv_headers=headers, **kwargs)
+
     def parseOutputString(self, output, debug=False):
         csv.field_size_limit(sys.maxsize)
         output = output.lstrip("﻿")

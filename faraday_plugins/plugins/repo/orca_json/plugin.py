@@ -35,7 +35,8 @@ class OrcaJson(OrcaFindingsMixin, PluginJsonFormat):
 
     def parseOutputString(self, output, debug=False):
         try:
-            findings = json.loads(output)
+            # A BOM is accepted by the analyzer (it reads bytes) but not by json.loads on a str.
+            findings = json.loads(output.lstrip("﻿"))
         except ValueError:
             self.logger.error("ORCA JSON report could not be decoded")
             return
