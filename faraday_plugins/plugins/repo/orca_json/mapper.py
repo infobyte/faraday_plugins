@@ -13,6 +13,8 @@ import ipaddress
 import json
 import re
 
+from faraday_plugins.plugins.plugins_utils import get_severity_from_cvss
+
 CVE_RE = re.compile(r"^CVE-\d{4}-\d{4,}$", re.IGNORECASE)
 
 ADVISORY_URLS = (
@@ -74,14 +76,25 @@ def as_list(value):
     return items
 
 
-def unescape_csv_text(value):
-    """The CSV export escapes quotes JSON style on top of the CSV doubling: ``=\\""refresh\\""``.
+def unique(items):
+    """Keeps the first occurrence order, without empty values."""
+    return list(dict.fromkeys(item for item in items if item))
 
-    Cells holding a JSON array keep their escapes, they are valid there.
+
+def unescape_csv_text(value):
+    """The CSV export writes text cells JSON escaped, on top of the CSV quote doubling: ``=\\""refresh\\""``.
+
+    Only cells showing an escaped quote are decoded, as a whole JSON string so an escaped
+    backslash (``\\\\``) is decoded too; a cell that is not a valid JSON string is kept as is,
+    and cells without that mark (``C:\\dir``) are never touched. JSON array cells keep
+    their escapes, they are decoded later as JSON.
     """
-    if not isinstance(value, str) or value.lstrip().startswith(("[", "{")):
+    if not isinstance(value, str) or '\\"' not in value or value.lstrip().startswith(("[", "{")):
         return value
-    return value.replace('\\"', '"')
+    try:
+        return json.loads(f'"{value}"', strict=False)
+    except ValueError:
+        return value
 
 
 def csv_row_to_finding(row):
@@ -107,19 +120,31 @@ def csv_row_to_finding(row):
 
 
 class OrcaFindingsMixin:
-    """Creates hosts and vulns from ORCA findings; used by the CSV and JSON plugins."""
+    """Creates hosts and vulns from ORCA findings; used by the CSV and JSON plugins.
+
+    Faraday identifies a host only by its name (``Inventory.Name``) and a host vuln by
+    its name and description, so resources sharing a name in different cloud accounts
+    end up as one host, and the same finding on them as one vuln. Both are built from
+    all their findings, so no account, business unit or package path is lost.
+    """
 
     def process_findings(self, findings):
         hosts = {}
         for finding in findings:
             if not isinstance(finding, dict) or not (as_text(finding.get("Name")) or as_text(finding.get("CveId"))):
                 continue
-            host = self.map_host(finding)
-            host_id = hosts.get(host["name"])
-            if host_id is None:
-                host_id = self.createAndAddHost(**host)
-                hosts[host["name"]] = host_id
-            self.createAndAddVulnToHost(host_id=host_id, **self.map_vuln(finding))
+            host = hosts.setdefault(self.host_name(finding), {"findings": [], "vulns": {}})
+            host["findings"].append(finding)
+            vuln = self.map_vuln(finding)
+            host["vulns"].setdefault((vuln["name"], vuln["desc"]), (vuln, []))[1].append(finding)
+
+        for name, host in hosts.items():
+            host_id = self.createAndAddHost(**self.map_host(name, host["findings"]))
+            for vuln, vuln_findings in host["vulns"].values():
+                if len(vuln_findings) > 1:
+                    vuln["data"] = self.map_data(vuln_findings[0], vuln_findings)
+                    vuln["tags"] = unique(tag for item in vuln_findings for tag in self.map_tags(item))
+                self.createAndAddVulnToHost(host_id=host_id, **vuln)
 
     @staticmethod
     def nested(finding, parent, child):
@@ -133,13 +158,33 @@ class OrcaFindingsMixin:
             return []
         return as_list(units.get("value", units.get("Name")))
 
-    def map_host(self, finding):
-        """``Inventory.Name`` identifies the cloud resource; it is kept as is, IP or not."""
-        name = as_text(self.nested(finding, "Inventory", "Name")) or UNKNOWN_ASSET
+    @classmethod
+    def cloud_account(cls, finding):
+        return as_text(cls.nested(finding, "CloudAccount", "Name"))
+
+    @classmethod
+    def resource_name(cls, finding):
+        return as_text(cls.nested(finding, "Inventory", "Name"))
+
+    @classmethod
+    def host_name(cls, finding):
+        """``Inventory.Name`` identifies the cloud resource; it is kept as is, IP or not.
+
+        The export has no other resource identifier, so findings without it are grouped
+        by cloud account to keep accounts apart, and only fall to 0.0.0.0 without both.
+        """
+        return cls.resource_name(finding) or cls.cloud_account(finding) or UNKNOWN_ASSET
+
+    def map_host(self, name, findings):
+        accounts = unique(self.cloud_account(finding) for finding in findings)
+        units = unique(unit for finding in findings for unit in self.business_units(finding))
+        unnamed = "" if any(self.resource_name(finding) for finding in findings) else \
+            "Resource name not reported by ORCA, findings grouped by cloud account"
         description = "\n".join(
             f"{label}: {value}" for label, value in (
-                ("Cloud account", as_text(self.nested(finding, "CloudAccount", "Name"))),
-                ("Business units", ", ".join(self.business_units(finding))),
+                ("Note", unnamed),
+                ("Cloud accounts" if len(accounts) > 1 else "Cloud account", ", ".join(accounts)),
+                ("Business units", ", ".join(units)),
             ) if value
         )
         return {
@@ -164,24 +209,39 @@ class OrcaFindingsMixin:
             "resolution": self.map_resolution(finding, package),
             "data": self.map_data(finding),
             "external_id": vuln_id or None,
-            "severity": SEVERITY_MAP.get(as_text(finding.get("CvssSeverity")).lower(), "unclassified"),
+            "severity": self.map_severity(finding),
             "ref": self.map_refs(vuln_id),
             "cve": [vuln_id.upper()] if CVE_RE.match(vuln_id) else [],
             "tags": self.map_tags(finding),
         }
 
+    @staticmethod
+    def map_severity(finding):
+        """``CvssSeverity`` first; when missing or UNKNOWN, derived from ``CvssScore`` if there is one."""
+        severity = SEVERITY_MAP.get(as_text(finding.get("CvssSeverity")).lower())
+        if severity:
+            return severity
+        score = as_text(finding.get("CvssScore"))
+        # get_severity_from_cvss returns None for an out of range score.
+        return (get_severity_from_cvss(score) if score else None) or "unclassified"
+
     def map_resolution(self, finding, package):
         patched = as_list(finding.get("PatchedVersions"))
         package = package or "the affected package"
-        if patched:
-            resolution = f"Upgrade {package} to version {' or '.join(patched)} or later."
-            release = as_text(finding.get("PatchReleaseDate"))
-            if release:
-                resolution += f" Patch released on {release}."
-            return resolution
-        if as_text(finding.get("PatchAvailable")).lower() == "no":
-            return f"No patched version of {package} is available yet."
-        return ""
+        if not patched:
+            if as_text(finding.get("PatchAvailable")).lower() == "no":
+                return f"No patched version of {package} is available yet."
+            return ""
+        if len(patched) == 1:
+            resolution = f"Upgrade {package} to version {patched[0]} or later."
+        else:
+            # Several versions usually are fixes on different branches (2.15.0 and the 2.12.2 backport),
+            # so "or later" would wrongly cover versions in between, like 2.13.0.
+            resolution = f"Upgrade {package} to one of the fixed versions: {', '.join(patched)}."
+        release = as_text(finding.get("PatchReleaseDate"))
+        if release:
+            resolution += f" Patch released on {release}."
+        return resolution
 
     @staticmethod
     def map_refs(vuln_id):
@@ -200,7 +260,10 @@ class OrcaFindingsMixin:
             tags.append("trending")
         return tags
 
-    def map_data(self, finding):
+    def map_data(self, finding, merged=None):
+        """``merged`` holds every finding folded into this vuln, to list all their accounts and paths."""
+        merged = merged or [finding]
+        accounts = unique(self.cloud_account(item) for item in merged)
         package_type = ""
         is_os_package = self.nested(finding, "InstalledPackage", "IsOsPackage")
         if as_text(is_os_package):
@@ -227,10 +290,11 @@ class OrcaFindingsMixin:
                 ("CISA KEV due date", as_text(finding.get("CisaKevDueDate"))),
                 ("EPSS probability", as_text(finding.get("EpssProbability"))),
                 ("Upstream disposition", as_text(finding.get("UpstreamDisposition"))),
-                ("Cloud account", as_text(self.nested(finding, "CloudAccount", "Name"))),
+                ("Cloud accounts" if len(accounts) > 1 else "Cloud account", ", ".join(accounts)),
             ) if value
         ]
-        paths = as_list(self.nested(finding, "InstalledPackage", "NonOsPackagePaths"))
+        paths = unique(path for item in merged
+                       for path in as_list(self.nested(item, "InstalledPackage", "NonOsPackagePaths")))
         if paths:
             lines.append("Package paths:")
             lines.extend(f"  {path}" for path in paths)

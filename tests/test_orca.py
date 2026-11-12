@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 from faraday_plugins.plugins.repo.orca_csv.plugin import OrcaCSV
+from faraday_plugins.plugins.repo.orca_json.mapper import unescape_csv_text
 from faraday_plugins.plugins.repo.orca_json.plugin import OrcaJson
 
 DUMMY_FILES_FOLDER = Path.cwd() / "tests" / "data" / "orca"
@@ -119,8 +120,8 @@ class TestOrcaParsing:
         assert vuln["desc"].startswith("Apache Log4j2 JNDI features")
         assert vuln["refs"] == [{"name": "https://nvd.nist.gov/vuln/detail/CVE-2021-44228", "type": "other"}]
         assert vuln["resolution"] == (
-            "Upgrade log4j-core.jar (2.14.1): org.apache.logging.log4j:log4j-core to version 2.15.0 or 2.12.2 "
-            "or later. Patch released on 2021-12-10T00:00:00+00:00.")
+            "Upgrade log4j-core.jar (2.14.1): org.apache.logging.log4j:log4j-core to one of the fixed versions: "
+            "2.15.0, 2.12.2. Patch released on 2021-12-10T00:00:00+00:00.")
         assert set(vuln["tags"]) == {"exploit_available", "cisa_kev", "trending"}
         assert "CVSS score: 10 (NVD v3)" in vuln["data"]
         assert "Threat impact: remote_code_execution" in vuln["data"]
@@ -141,11 +142,40 @@ class TestOrcaParsing:
 
         assert vulns["GO-2024-2687 - golang.org/x/net-0.20.0"]["severity"] == "unclassified"
 
+    def test_severity_falls_back_to_cvss_score(self):
+        missing = json_finding(Name="missing", CvssScore=9.8)
+        del missing["CvssSeverity"]
+        findings = [
+            missing,
+            json_finding(Name="unknown", CvssSeverity="UNKNOWN", CvssScore="5.3"),
+            json_finding(Name="reported", CvssSeverity="LOW", CvssScore=9.8),
+            json_finding(Name="no score", CvssSeverity="UNKNOWN"),
+            json_finding(Name="bad score", CvssSeverity="", CvssScore="n/a"),
+            json_finding(Name="out of range", CvssSeverity="", CvssScore=11),
+        ]
+
+        vulns = vulns_of(parse_json(json.dumps(findings))[0])
+
+        assert {name: vuln["severity"] for name, vuln in vulns.items()} == {
+            "missing": "critical",
+            "unknown": "med",
+            "reported": "low",
+            "no score": "unclassified",
+            "bad score": "unclassified",
+            "out of range": "unclassified",
+        }
+
     def test_missing_description_is_built_from_the_package(self):
         vuln = vulns_of(by_ip(parse_json())["10.20.30.40"])["CVE-2024-2511 - libssl1.1"]
 
         assert vuln["desc"] == "CVE-2024-2511 affects libssl1.1 1.1.1w-0+deb11u1."
         assert "Package type: OS package" in vuln["data"]
+
+    def test_single_fixed_version_or_later(self):
+        vuln = vulns_of(by_ip(parse_json())["web-frontend-vm-01"])["GHSA-9wx4-h78v-vm56 - requests-2.31.0"]
+
+        assert vuln["resolution"] == (
+            "Upgrade requests-2.31.0 to version 2.32.0 or later. Patch released on 2024-05-20T00:00:00+00:00.")
 
     def test_without_patch(self):
         vuln = vulns_of(by_ip(parse_json())["aks-nodepool1-12345678-vmss000000"])[
@@ -161,6 +191,18 @@ class TestOrcaParsing:
         assert '"verify=False"' in vuln["desc"]
         assert "\\" not in vuln["desc"]
 
+    def test_unescape_csv_text(self):
+        # JSON escaped text, as the export writes it: escaped quotes and backslashes are decoded.
+        assert unescape_csv_text('http-equiv=\\"refresh\\"') == 'http-equiv="refresh"'
+        assert unescape_csv_text('regex \\\\d+ in \\"pattern\\"') == 'regex \\d+ in "pattern"'
+        assert unescape_csv_text('path \\\\\\"quoted\\"') == 'path \\"quoted"'
+        # Without an escaped quote nothing is decoded: backslashes in paths are kept.
+        assert unescape_csv_text("C:\\new\\dir") == "C:\\new\\dir"
+        # Not a valid JSON string (unescaped quote): kept as is.
+        assert unescape_csv_text('say "hi" and \\"bye\\"') == 'say "hi" and \\"bye\\"'
+        # JSON array cells are left for the JSON decoding.
+        assert unescape_csv_text('[\n  "a\\"b"\n]') == '[\n  "a\\"b"\n]'
+
     def test_business_units_in_host_description(self):
         finding = json_finding(BusinessUnits={"count": 2, "value": [{"Name": "Payments"}, "Retail"]})
 
@@ -168,14 +210,43 @@ class TestOrcaParsing:
 
         assert host["description"] == "Cloud account: ACCOUNT\nBusiness units: Payments, Retail"
 
-    def test_missing_inventory_does_not_drop_the_finding(self):
-        finding = json_finding()
-        del finding["Inventory"]
+    def test_same_resource_name_in_two_accounts(self):
+        """Faraday keys hosts by name, so both resources share a host that lists every account"""
+        dev = json_finding(CloudAccount={"Name": "DEV"}, BusinessUnits={"count": 1, "value": ["Retail"]},
+                           InstalledPackage={"Name": "pkg-1.0", "Version": "1.0", "NonOsPackagePaths": ["/dev/pkg"]})
+        prod = json_finding(CloudAccount={"Name": "PROD"}, HasExploit=True,
+                            InstalledPackage={"Name": "pkg-1.0", "Version": "1.0", "NonOsPackagePaths": ["/prod/pkg"]})
+        prod_only = json_finding(Name="CVE-2024-0002 - pkg-1.0", CveId="CVE-2024-0002",
+                                 CloudAccount={"Name": "PROD"})
 
-        hosts = parse_json(json.dumps([finding]))
+        hosts = parse_json(json.dumps([dev, prod, prod_only]))
 
-        assert hosts[0]["ip"] == "0.0.0.0"
-        assert len(hosts[0]["vulnerabilities"]) == 1
+        assert len(hosts) == 1
+        assert hosts[0]["description"] == "Cloud accounts: DEV, PROD\nBusiness units: Retail"
+        vulns = vulns_of(hosts[0])
+        assert len(vulns) == 2
+        merged = vulns["CVE-2024-0001 - pkg-1.0"]
+        assert "Cloud accounts: DEV, PROD" in merged["data"]
+        assert "  /dev/pkg\n  /prod/pkg" in merged["data"]
+        assert merged["tags"] == ["exploit_available"]
+        assert "Cloud account: PROD" in vulns["CVE-2024-0002 - pkg-1.0"]["data"]
+
+    def test_missing_inventory_is_grouped_by_cloud_account(self):
+        """Without a resource name, findings of different accounts must not end in the same host"""
+        dev = json_finding(CloudAccount={"Name": "DEV"})
+        prod = json_finding(CloudAccount={"Name": "PROD"})
+        orphan = json_finding()
+        for finding in (dev, prod, orphan):
+            del finding["Inventory"]
+        del orphan["CloudAccount"]
+
+        hosts = by_ip(parse_json(json.dumps([dev, prod, orphan])))
+
+        assert set(hosts) == {"DEV", "PROD", "0.0.0.0"}
+        assert hosts["DEV"]["description"] == (
+            "Note: Resource name not reported by ORCA, findings grouped by cloud account\nCloud account: DEV")
+        assert hosts["0.0.0.0"]["hostnames"] == []
+        assert all(len(host["vulnerabilities"]) == 1 for host in hosts.values())
 
     def test_invalid_json_creates_nothing(self):
         assert parse_json("not json") == []
