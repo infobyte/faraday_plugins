@@ -1,0 +1,8 @@
+# Fake secrets in the gitleaks plugin test fixture, added in 0781b37 (#399)
+# and replaced with REDACTED-* values in b86685ba.
+0781b37eaaa1f5d9ed01a37e30a9307bd750c159:tests/data/sandbox/gitleaks_sample.json:github-pat:29
+0781b37eaaa1f5d9ed01a37e30a9307bd750c159:tests/data/sandbox/gitleaks_sample.json:github-pat:30
+0781b37eaaa1f5d9ed01a37e30a9307bd750c159:tests/data/sandbox/gitleaks_sample.json:private-key:49
+0781b37eaaa1f5d9ed01a37e30a9307bd750c159:tests/data/sandbox/gitleaks_sample.json:private-key:50
+0781b37eaaa1f5d9ed01a37e30a9307bd750c159:tests/data/sandbox/gitleaks_sample.json:aws-access-token:69
+0781b37eaaa1f5d9ed01a37e30a9307bd750c159:tests/data/sandbox/gitleaks_sample.json:aws-access-token:70
